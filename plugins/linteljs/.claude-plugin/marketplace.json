@@ -1,0 +1,11 @@
+{
+  "name": "linteljs",
+  "owner": { "name": "Faran Ali" },
+  "plugins": [
+    {
+      "name": "linteljs",
+      "source": "./",
+      "description": "LintelJS project standards and safety hooks"
+    }
+  ]
+}

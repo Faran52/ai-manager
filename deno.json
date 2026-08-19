@@ -1,0 +1,31 @@
+{
+  "name": "ai-chat-manager",
+  "version": "0.1.0",
+  "tasks": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "desktop": "astro build && deno desktop .",
+    "desktop:dev": "deno desktop . --hmr",
+    "desktop:build": "deno desktop . --output ./dist/AIChatManager.app"
+  },
+  "desktop": {
+    "app": {
+      "name": "AI Chat Manager",
+      "identifier": "com.linteljs.ai-chat-manager"
+    },
+    "backend": "webview",
+    "output": {
+      "macos": "./dist/AIChatManager.app"
+    }
+  },
+  "exports": "./dist/server/entry.mjs",
+  "compilerOptions": {
+    "checkJs": false,
+    "paths": {
+      "*types.js": [
+        "./scripts/types/dist-stubs.d.ts"
+      ]
+    }
+  }
+}

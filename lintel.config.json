@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Faran52/linteljs/main/schemas/lintel.config.v1.schema.json",
+  "schemaVersion": 1,
+  "target": "astro",
+  "browser": "chrome",
+  "hostedFramework": "react",
+  "testing": "vitest",
+  "packageManager": "pnpm",
+  "libraries": [
+    "tailwind"
+  ],
+  "store": false,
+  "typeSafety": "strict",
+  "agents": [
+    "claude-code",
+    "codex"
+  ],
+  "plugins": [
+    "ponytail",
+    "context7",
+    "frontend-design"
+  ]
+}

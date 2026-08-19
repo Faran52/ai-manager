@@ -1,0 +1,16 @@
+{
+  "name": "linteljs",
+  "version": "1.0.0",
+  "description": "LintelJS project standards and safety hooks",
+  "author": { "name": "Faran Ali" },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "LintelJS",
+    "shortDescription": "Project structure, type-safety, and verification rules",
+    "longDescription": "Applies the generated project's LintelJS structure, typing, testing, and verification standards.",
+    "developerName": "Faran Ali",
+    "category": "Developer Tools",
+    "capabilities": ["Instructions", "Lifecycle hooks"],
+    "defaultPrompt": ["Apply this project's LintelJS standards to my task."]
+  }
+}
