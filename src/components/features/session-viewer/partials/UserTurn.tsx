@@ -1,0 +1,76 @@
+import { Terminal } from 'lucide-react';
+
+import { cn } from '@utils/cnUtils';
+
+import { TruncatedText } from '@ui/index';
+
+import { defaultMessageFilters } from '../messageFilters';
+
+import type { ToolOutcome, UserTurnEntry } from '@services/history/historyService';
+import type { FC } from 'react';
+import type { MessageContentFilters } from '../messageFilters';
+
+export interface UserTurnProps {
+  readonly entry: UserTurnEntry;
+  readonly orphans: readonly ToolOutcome[];
+  readonly filters?: MessageContentFilters;
+}
+
+export const UserTurn: FC<UserTurnProps> = ({
+  entry,
+  orphans,
+  filters = defaultMessageFilters().content,
+}) => {
+  const hasBubble = (filters.text && entry.text.length > 0) || (filters.commands && entry.command != null);
+
+  return (
+    <article
+      className="flex flex-col items-end gap-1.5"
+      data-user-turn
+      data-meta={entry.meta ? 'true' : 'false'}
+      data-timestamp={entry.timestamp}
+    >
+      {filters.commands && entry.command != null && (
+        <span className="
+          inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1
+          font-mono text-xs text-primary
+        "
+        >
+          <Terminal className="size-3.5" />
+          {entry.command}
+        </span>
+      )}
+      {filters.text && entry.text.length > 0 && (
+        <p
+          className={cn(
+            `
+              max-w-[85%] rounded-2xl rounded-br-sm px-3.5 py-2 text-sm/relaxed
+              whitespace-pre-wrap
+            `,
+            entry.meta
+              ? 'bg-muted text-muted-foreground'
+              : 'bg-primary text-primary-foreground shadow-sm',
+          )}
+        >
+          {entry.text}
+        </p>
+      )}
+      {!hasBubble && filters.tools && orphans.length === 0 && (
+        <span className="mr-auto text-xs text-muted-foreground" data-empty-user-turn>
+          tool results below
+        </span>
+      )}
+      {filters.tools && (
+        <div className="w-full space-y-2">
+          {orphans.map((outcome) => {
+            if (outcome.text == null) {
+              return null;
+            }
+
+            return <TruncatedText key={outcome.toolUseId} label="result" text={outcome.text} />;
+          })}
+        </div>
+      )}
+    </article>
+  );
+};

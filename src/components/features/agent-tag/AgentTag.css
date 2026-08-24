@@ -1,0 +1,152 @@
+@layer components {
+  .agent-tag {
+    --agent-light: #52525b;
+    --agent-dark: #d4d4d8;
+
+    display: inline-block;
+    max-width: 7.5rem;
+    padding: 0.2rem 0.4rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.625rem;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--agent-light);
+    white-space: nowrap;
+    background: color-mix(in srgb, currentcolor 14%, transparent);
+    border-radius: 999px;
+  }
+
+  .agent-tag[data-agent="claude"] {
+    --agent-light: #b45309;
+    --agent-dark: #fcd34d;
+  }
+
+  .agent-tag[data-agent="codebuddy"] {
+    --agent-light: #0284c7;
+    --agent-dark: #38bdf8;
+  }
+
+  .agent-tag[data-agent="codex"] {
+    --agent-light: #16a34a;
+    --agent-dark: #4ade80;
+  }
+
+  .agent-tag[data-agent="continue"] {
+    --agent-light: #4d7c0f;
+    --agent-dark: #bef264;
+  }
+
+  .agent-tag[data-agent="copilot"] {
+    --agent-light: #6639ba;
+    --agent-dark: #d2a8ff;
+  }
+
+  .agent-tag[data-agent="cline"],
+  .agent-tag[data-agent="pi"] {
+    --agent-light: #0d9488;
+    --agent-dark: #2dd4bf;
+  }
+
+  .agent-tag[data-agent="crush"] {
+    --agent-light: #db2777;
+    --agent-dark: #f472b6;
+  }
+
+  .agent-tag[data-agent="cursor"] {
+    --agent-light: #d04200;
+    --agent-dark: #ff6a2a;
+  }
+
+  .agent-tag[data-agent="cursor-agent"],
+  .agent-tag[data-agent="qwen"] {
+    --agent-light: #7c3aed;
+    --agent-dark: #a78bfa;
+  }
+
+  .agent-tag[data-agent="forgecode"],
+  .agent-tag[data-agent="vibe"] {
+    --agent-light: #c2410c;
+    --agent-dark: #fdba74;
+  }
+
+  .agent-tag[data-agent="gemini"] {
+    --agent-light: #9333ea;
+    --agent-dark: #c084fc;
+  }
+
+  .agent-tag[data-agent="goose"] {
+    --agent-light: #dc2626;
+    --agent-dark: #f87171;
+  }
+
+  .agent-tag[data-agent="grok"] {
+    --agent-light: #27272a;
+    --agent-dark: #e4e4e7;
+  }
+
+  .agent-tag[data-agent="kimi"] {
+    --agent-light: #c026d3;
+    --agent-dark: #f0abfc;
+  }
+
+  .agent-tag[data-agent="kiro"] {
+    --agent-light: #059669;
+    --agent-dark: #34d399;
+  }
+
+  .agent-tag[data-agent="llm"] {
+    --agent-light: #475569;
+    --agent-dark: #94a3b8;
+  }
+
+  .agent-tag[data-agent="ompi"] {
+    --agent-light: #0f766e;
+    --agent-dark: #5eead4;
+  }
+
+  .agent-tag[data-agent="opencode"],
+  .agent-tag[data-agent="trae"] {
+    --agent-light: #2563eb;
+    --agent-dark: #93c5fd;
+  }
+
+  .agent-tag[data-agent="openinterpreter"] {
+    --agent-light: #57534e;
+    --agent-dark: #a8a29e;
+  }
+
+  .agent-tag[data-agent="openhands"] {
+    --agent-light: #4b5563;
+    --agent-dark: #d1d5db;
+  }
+
+  .agent-tag[data-agent="pearai"] {
+    --agent-light: #a16207;
+    --agent-dark: #fde047;
+  }
+
+  .agent-tag[data-agent="zed"] {
+    --agent-light: #525252;
+    --agent-dark: #a3a3a3;
+  }
+
+  .agent-tag[data-agent="aider"] {
+    --agent-light: #e11d48;
+    --agent-dark: #fb7185;
+  }
+
+  .agent-tag[data-agent="amazonq"] {
+    --agent-light: #52525b;
+    --agent-dark: #a1a1aa;
+  }
+
+  .agent-tag[data-agent="antigravity"] {
+    --agent-light: #4f46e5;
+    --agent-dark: #a5b4fc;
+  }
+
+  .dark .agent-tag {
+    color: var(--agent-dark);
+  }
+}
