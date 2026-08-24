@@ -1,0 +1,46 @@
+@layer components {
+  .menu-item,
+  .menu-checkbox-item {
+    display: flex;
+    gap: 0.55rem;
+    align-items: center;
+    width: 100%;
+    padding: 0.5rem 0.625rem;
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    text-align: left;
+    border-radius: 0.5rem;
+    transition: color 120ms ease, background-color 120ms ease;
+  }
+
+  .menu-item:focus-visible,
+  .menu-checkbox-item:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+  }
+
+  .menu-item:hover,
+  .menu-checkbox-item:hover {
+    color: var(--foreground);
+    background: var(--accent);
+  }
+
+  .menu-checkbox-indicator {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    color: transparent;
+    border: 1px solid color-mix(in srgb, var(--muted-foreground) 65%, transparent);
+    border-radius: 0.3rem;
+  }
+
+  .menu-checkbox-indicator[data-checked="true"] {
+    color: var(--primary-foreground);
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+
+}

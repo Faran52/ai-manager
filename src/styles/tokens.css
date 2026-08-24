@@ -1,0 +1,77 @@
+/* shadcn reserves --accent for hover surfaces, so the brand accent rides --primary. */
+
+/* Registered so the accent can cross-fade; an unregistered custom property cannot transition. */
+@property --primary {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #1f7a6d;
+}
+
+:root {
+  --background: #fbfbfa;
+  --card: #fff;
+  --popover: #fff;
+  --foreground: #1a1c20;
+  --muted: #f2f0ec;
+  --muted-foreground: #6b6862;
+  --border: #e6e4e0;
+  --input: #e6e4e0;
+  --accent: #e8e4dd;
+  --accent-foreground: #1a1c20;
+  --primary: #1f7a6d;
+  --primary-foreground: #fff;
+  --secondary: #f2f0ec;
+  --secondary-foreground: #1a1c20;
+  --ring: var(--primary);
+  --ok: #1f7a6d;
+  --warn: #b26a15;
+  --destructive: #b23a32;
+  --destructive-foreground: #fff;
+  --radius: 0.375rem;
+}
+
+.dark {
+  --background: #16181c;
+  --card: #1d2026;
+  --popover: #1d2026;
+  --foreground: #e8e6e3;
+  --muted: #22252b;
+  --muted-foreground: #9a9691;
+  --border: #2a2e35;
+  --input: #2a2e35;
+  --accent: #2b2f37;
+  --accent-foreground: #e8e6e3;
+  --primary: #2f9e8f;
+  --primary-foreground: #10241f;
+  --secondary: #22252b;
+  --secondary-foreground: #e8e6e3;
+  --ok: #2f9e8f;
+  --warn: #d98a2b;
+  --destructive: #d2544b;
+  --destructive-foreground: #1d0f0e;
+}
+
+[data-accent="teal"] { --primary: #1f7a6d; }
+[data-accent="iris"] { --primary: #5457d6; }
+[data-accent="amber"] { --primary: #a96d0e; }
+[data-accent="rose"] { --primary: #c2404f; }
+[data-accent="lime"] { --primary: #5c8a20; }
+[data-accent="sky"] { --primary: #2a7fa6; }
+
+.dark[data-accent="teal"],
+.dark [data-accent="teal"] { --primary: #2f9e8f; }
+
+.dark[data-accent="iris"],
+.dark [data-accent="iris"] { --primary: #7c7ff0; }
+
+.dark[data-accent="amber"],
+.dark [data-accent="amber"] { --primary: #e0a23c; }
+
+.dark[data-accent="rose"],
+.dark [data-accent="rose"] { --primary: #e4707c; }
+
+.dark[data-accent="lime"],
+.dark [data-accent="lime"] { --primary: #8fc44a; }
+
+.dark[data-accent="sky"],
+.dark [data-accent="sky"] { --primary: #4fb3de; }
