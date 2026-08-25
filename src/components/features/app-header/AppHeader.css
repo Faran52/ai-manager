@@ -1,0 +1,29 @@
+@layer components {
+  .toolbar-button {
+    display: inline-flex;
+    gap: 0.3rem;
+    align-items: center;
+    justify-content: center;
+    height: 1.75rem;
+    padding-inline: 0.55rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    border-radius: 0.5rem;
+    transition: color 140ms ease, background-color 140ms ease;
+  }
+
+  .toolbar-button:hover {
+    color: var(--accent-foreground);
+    background: var(--accent);
+  }
+
+  .toolbar-button:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+  }
+
+  .toolbar-button [data-open="true"] {
+    transform: rotate(180deg);
+  }
+}

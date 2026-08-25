@@ -1,0 +1,154 @@
+import {
+  Check,
+  ChevronRight,
+  FileText,
+  Plug,
+  TriangleAlert,
+} from 'lucide-react';
+
+import { agentOption } from '@config/agents';
+
+import { cn } from '@utils/cnUtils';
+import {
+  formatTimeAgo,
+  shortPath,
+  sizeLabel,
+} from '@utils/formatUtils';
+
+import { Badge } from '@ui/index';
+
+import { agentIsConfigured } from '../agentConfigured';
+
+import { AgentDetailRow } from './AgentDetailRow';
+import { PluginInventory } from './PluginInventory';
+
+import type { AgentSetup, InstalledPlugin } from '@services/agents/agentsService';
+import type { FC } from 'react';
+
+export interface AgentCardProps {
+  readonly setup: AgentSetup;
+  readonly projectPath: string;
+  readonly plugins: readonly InstalledPlugin[];
+  readonly sessionCount: number;
+  readonly nowMs: number;
+  readonly flagged?: boolean | undefined;
+}
+
+const GUTTER = 'flex w-4 shrink-0 justify-center';
+const COUNT = 'w-24 shrink-0 font-mono text-xs whitespace-nowrap text-muted-foreground';
+
+export const AgentCard: FC<AgentCardProps> = ({
+  setup,
+  projectPath,
+  plugins,
+  sessionCount,
+  nowMs,
+  flagged = false,
+}) => {
+  const isClaude = setup.agent === 'claude';
+  const configured = agentIsConfigured(setup, plugins);
+  const enabledPlugins = plugins.filter((plugin) => {
+    return plugin.enabled;
+  }).length;
+  const sessions = sessionCount > 0 && (
+    <span className="font-mono text-xs text-muted-foreground">
+      {`${String(sessionCount)} sessions`}
+    </span>
+  );
+
+  if (!configured) {
+    return (
+      <div
+        data-configured="false"
+        className="flex items-center gap-2 py-1 pr-2 pl-1"
+      >
+        <span className={GUTTER} aria-hidden="true">
+          <span className="size-1.5 rounded-full bg-muted-foreground/40" />
+        </span>
+        <h4 className="text-sm text-muted-foreground">{agentOption(setup.agent).label}</h4>
+        <Badge>Not set up</Badge>
+        <span className="ml-auto">{sessions}</span>
+      </div>
+    );
+  }
+
+  return (
+    <details
+      data-configured="true"
+      open={flagged}
+      className={cn('group rounded-md border bg-card', flagged
+        ? 'border-warn/50'
+        : 'border-border')}
+    >
+      <summary className="
+        flex cursor-default list-none items-center gap-2 rounded-md py-1.5 pr-2
+        pl-1
+        hover:bg-muted-foreground/5
+        focus-visible:outline-2 focus-visible:outline-offset-2
+        focus-visible:outline-primary
+      "
+      >
+        <span className={GUTTER} aria-hidden="true">
+          {flagged
+            ? <TriangleAlert className="size-3.5 text-warn" />
+            : <Check className="size-3.5 text-ok" />}
+        </span>
+        {!flagged && <span className="sr-only">Ready</span>}
+        <h4 className="w-32 shrink-0 truncate text-sm font-semibold">
+          {agentOption(setup.agent).label}
+        </h4>
+        <span className={COUNT}>{`MCP ${String(setup.mcpServers.length)}`}</span>
+        <span className={COUNT}>{`Rules ${String(setup.rules.length)}`}</span>
+        {isClaude && (
+          <span className={COUNT}>
+            {`Plugins ${String(enabledPlugins)}/${String(plugins.length)}`}
+          </span>
+        )}
+        <span className="ml-auto flex items-center gap-2">
+          {flagged && <Badge tone="warn">Check setup</Badge>}
+          {sessions}
+          <ChevronRight className="
+            size-3.5 text-muted-foreground transition-transform
+            group-open:rotate-90
+          "
+          />
+        </span>
+      </summary>
+      <div className="border-t border-border p-2">
+        <dl className="grid gap-1.5 text-xs">
+          <AgentDetailRow icon={<Plug className="size-3" />} label="MCP">
+            {setup.mcpServers.length === 0
+              ? <span className="text-muted-foreground">None</span>
+              : setup.mcpServers.map((server) => {
+                  return (
+                    <Badge key={`${server.scope}-${server.name}`} title={server.source}>
+                      {server.name}
+                      <span className="ml-1 opacity-70">{server.scope}</span>
+                    </Badge>
+                  );
+                })}
+          </AgentDetailRow>
+          <AgentDetailRow icon={<FileText className="size-3" />} label="Rules">
+            {setup.rules.length === 0
+              ? <span className="text-muted-foreground">None</span>
+              : setup.rules.map((rule) => {
+                  return (
+                    <Badge
+                      key={rule.path}
+                      tone={rule.bytes === 0 ? 'warn' : 'neutral'}
+                      title={rule.bytes === 0 ? `${rule.path} · ${rule.scope} · empty` : `${rule.path} · ${rule.scope}`}
+                    >
+                      {shortPath(rule.path, projectPath)}
+                      <span className="ml-1 opacity-70">
+                        {`${sizeLabel(rule.bytes)} · ${formatTimeAgo(rule.modifiedMs, nowMs)}`}
+                      </span>
+                    </Badge>
+                  );
+                })}
+          </AgentDetailRow>
+        </dl>
+        {isClaude && <PluginInventory plugins={plugins} />}
+      </div>
+    </details>
+  );
+};
