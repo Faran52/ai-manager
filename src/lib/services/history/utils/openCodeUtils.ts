@@ -11,6 +11,7 @@ import { humanPreview, humanTitle } from '@utils/titleUtils';
 
 import { parseToolInput, splitUserText } from '../../session/utils/parserUtils';
 
+import { conversationMessageCount } from './outcomeUtils';
 import { databaseFiles } from './sqliteUtils';
 
 import type { AgentId } from '@config/agents';
@@ -18,6 +19,7 @@ import type { JsonObject } from '@utils/jsonUtils';
 import type { SQLOutputValue } from 'node:sqlite';
 import type {
   AssistantBlock,
+  AssistantTurnEntry,
   HistoryEntry,
   ProjectSummary,
   SessionSummary,
@@ -170,6 +172,29 @@ const optionalString = (payload: JsonObject, key: string): string | undefined =>
   const value = payload[key];
 
   return typeof value === 'string' ? value : undefined;
+};
+
+const optionalNumber = (payload: JsonObject, key: string): number | undefined => {
+  const value = payload[key];
+
+  return typeof value === 'number' ? value : undefined;
+};
+
+const usageFromMessage = (payload: JsonObject): AssistantTurnEntry['usage'] => {
+  const tokens = isJsonObject(payload.tokens) ? payload.tokens : undefined;
+
+  if (tokens == null) {
+    return undefined;
+  }
+
+  const cache = isJsonObject(tokens.cache) ? tokens.cache : EMPTY_PAYLOAD;
+
+  return {
+    inputTokens: optionalNumber(tokens, 'input') ?? 0,
+    outputTokens: optionalNumber(tokens, 'output') ?? 0,
+    cacheCreationTokens: optionalNumber(cache, 'write') ?? 0,
+    cacheReadTokens: optionalNumber(cache, 'read') ?? 0,
+  };
 };
 
 const rawInputOf = (state: JsonObject): RawToolInput => {
@@ -340,6 +365,10 @@ const buildSession = (database: DatabaseSync, sessionId: string): SessionBuild =
       uuid: message.mid,
       timestamp: new Date(stamp).toISOString(),
       sidechain: false,
+      model: stringField(payload, 'modelID'),
+      stopReason: stringField(payload, 'finish'),
+      usage: usageFromMessage(payload),
+      costUsd: optionalNumber(payload, 'cost'),
       blocks,
     });
 
@@ -358,7 +387,7 @@ const buildSession = (database: DatabaseSync, sessionId: string): SessionBuild =
 
   return {
     entries,
-    messageCount: messages.length,
+    messageCount: conversationMessageCount(entries),
     firstMs,
     lastMs,
     preview,

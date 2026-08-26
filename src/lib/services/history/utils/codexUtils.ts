@@ -11,8 +11,11 @@ import { humanPreview } from '@utils/titleUtils';
 
 import { parseToolInput, splitUserText } from '../../session/utils/parserUtils';
 
+import { conversationMessageCount } from './outcomeUtils';
+
 import type {
   AssistantBlock,
+  AssistantTurnEntry,
   HistoryEntry,
   ProjectSummary,
   SessionSummary,
@@ -31,11 +34,25 @@ interface CodexPayload {
   readonly content?: readonly CodexContentPart[] | undefined;
   readonly cwd?: string | undefined;
   readonly id?: string | undefined;
+  readonly info?: CodexTokenInfo | undefined;
+  readonly input?: string | undefined;
   readonly model?: string | undefined;
   readonly name?: string | undefined;
-  readonly output?: string | undefined;
+  readonly output?: string | readonly CodexContentPart[] | undefined;
   readonly role?: string | undefined;
+  readonly summary?: readonly CodexContentPart[] | undefined;
   readonly type?: string | undefined;
+}
+
+interface CodexRawTokenUsage {
+  readonly cached_input_tokens?: number | undefined;
+  readonly cache_write_input_tokens?: number | undefined;
+  readonly input_tokens?: number | undefined;
+  readonly output_tokens?: number | undefined;
+}
+
+interface CodexTokenInfo {
+  readonly last_token_usage?: CodexRawTokenUsage | undefined;
 }
 
 interface CodexLine {
@@ -109,11 +126,22 @@ const textContent = (payload: CodexPayload): string => {
   }).join('\n\n');
 };
 
+const outputContent = (payload: CodexPayload): string => {
+  if (typeof payload.output === 'string') {
+    return payload.output;
+  }
+
+  return (payload.output ?? []).flatMap((part) => {
+    return part.text == null ? [] : [part.text];
+  }).join('\n\n');
+};
+
 const commandFrom = (payload: CodexPayload): ToolCall => {
-  const args = payload.arguments == null ? undefined : parsedJson(payload.arguments);
+  const rawArguments = payload.arguments ?? payload.input;
+  const args = rawArguments == null ? undefined : parsedJson(rawArguments);
   const commandArgs = isCommandArguments(args) ? args : undefined;
   const command = commandArgs?.cmd ?? commandArgs?.command;
-  const name = payload.name === 'exec_command' ? 'Bash' : (payload.name ?? 'tool');
+  const name = payload.name === 'exec_command' || payload.name === 'exec' ? 'Bash' : (payload.name ?? 'tool');
 
   return {
     id: payload.call_id ?? payload.id ?? '',
@@ -123,8 +151,9 @@ const commandFrom = (payload: CodexPayload): ToolCall => {
 };
 
 const outcomeFrom = (payload: CodexPayload): ToolOutcome => {
-  const parsed = payload.output == null ? undefined : parsedJson(payload.output);
-  const text = isCommandOutput(parsed) ? parsed.output : payload.output;
+  const output = outputContent(payload);
+  const parsed = output.length === 0 ? undefined : parsedJson(output);
+  const text = isCommandOutput(parsed) ? parsed.output : (output || undefined);
 
   return {
     toolUseId: payload.call_id ?? '',
@@ -132,6 +161,36 @@ const outcomeFrom = (payload: CodexPayload): ToolOutcome => {
     text,
     images: [],
   };
+};
+
+const usageFrom = (payload: CodexPayload): AssistantTurnEntry['usage'] => {
+  const usage = payload.info?.last_token_usage;
+
+  if (usage == null) {
+    return undefined;
+  }
+
+  return {
+    inputTokens: usage.input_tokens ?? 0,
+    outputTokens: usage.output_tokens ?? 0,
+    cacheCreationTokens: usage.cache_write_input_tokens ?? 0,
+    cacheReadTokens: usage.cached_input_tokens ?? 0,
+  };
+};
+
+const absorbUsage = (scan: CodexScan, payload: CodexPayload): void => {
+  const usage = usageFrom(payload);
+  const index = scan.entries.findLastIndex((entry) => {
+    return entry.kind === 'assistant';
+  });
+  const entry = scan.entries[index];
+
+  if (usage != null && entry?.kind === 'assistant') {
+    scan.entries[index] = {
+      ...entry,
+      usage,
+    };
+  }
 };
 
 const absorbTimestamp = (scan: CodexScan, timestamp: string): void => {
@@ -191,7 +250,7 @@ const absorbResponseItem = (scan: CodexScan, payload: CodexPayload, timestamp: s
     return;
   }
 
-  if (payload.type === 'function_call') {
+  if (payload.type === 'function_call' || payload.type === 'custom_tool_call') {
     const block: AssistantBlock = {
       blockType: 'tool-use',
       call: commandFrom(payload),
@@ -206,7 +265,7 @@ const absorbResponseItem = (scan: CodexScan, payload: CodexPayload, timestamp: s
       blocks: [block],
     });
   }
-  else if (payload.type === 'function_call_output') {
+  else if (payload.type === 'function_call_output' || payload.type === 'custom_tool_call_output') {
     scan.entries.push({
       kind: 'user',
       uuid,
@@ -216,6 +275,25 @@ const absorbResponseItem = (scan: CodexScan, payload: CodexPayload, timestamp: s
       text: '',
       outcomes: [outcomeFrom(payload)],
     });
+  }
+  else if (payload.type === 'reasoning') {
+    const thinking = (payload.summary ?? []).flatMap((part) => {
+      return part.text == null ? [] : [part.text];
+    }).join('\n\n');
+
+    if (thinking.length > 0) {
+      scan.entries.push({
+        kind: 'assistant',
+        uuid,
+        timestamp,
+        sidechain: false,
+        model: scan.model,
+        blocks: [{
+          blockType: 'thinking',
+          thinking,
+        }],
+      });
+    }
   }
 };
 
@@ -241,6 +319,9 @@ const absorbCodexLine = (scan: CodexScan, line: CodexLine): void => {
   }
   else if (line.type === 'response_item' && payload != null) {
     absorbResponseItem(scan, payload, timestamp);
+  }
+  else if (line.type === 'event_msg' && payload?.type === 'token_count') {
+    absorbUsage(scan, payload);
   }
 };
 
@@ -332,9 +413,7 @@ export const listCodexSessions = async (codexDir: string, projectId: string): Pr
       filePath: session.filePath,
       projectId,
       title: session.title,
-      messageCount: session.entries.filter((entry) => {
-        return entry.kind === 'user' || entry.kind === 'assistant';
-      }).length,
+      messageCount: conversationMessageCount(session.entries),
       firstTimestampMs: session.firstTimestampMs,
       lastTimestampMs: Math.max(session.lastTimestampMs, session.modifiedMs),
       modifiedMs: session.modifiedMs,
@@ -371,7 +450,7 @@ export const listCodexProjects = async (codexDir: string): Promise<readonly Proj
       actualPath: cwd === 'unknown' ? undefined : cwd,
       sessionCount: projectSessions.length,
       messageCount: projectSessions.reduce((total, session) => {
-        return total + session.entries.length;
+        return total + conversationMessageCount(session.entries);
       }, 0),
       lastActivityMs: projectSessions.reduce((latest, session) => {
         return Math.max(latest, session.lastTimestampMs, session.modifiedMs);

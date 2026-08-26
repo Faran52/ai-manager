@@ -326,3 +326,72 @@ test('loads a virtual OpenCode session page from its synthetic reference', async
     total: 1,
   });
 });
+
+test('does not count metadata, tool calls, or tool-result envelopes as messages', async () => {
+  const root = await claudeDir();
+  const filePath = join(root, 'semantic-count.jsonl');
+
+  await writeFile(filePath, [
+    JSON.stringify({
+      type: 'user',
+      uuid: 'u1',
+      timestamp: '2026-01-01T00:00:00Z',
+      message: {
+        role: 'user',
+        content: 'Question',
+      },
+    }),
+    JSON.stringify({
+      type: 'assistant',
+      uuid: 'a1',
+      timestamp: '2026-01-01T00:00:01Z',
+      message: {
+        role: 'assistant',
+        content: [{
+          type: 'tool_use',
+          id: 'call-1',
+          name: 'Read',
+          input: { file_path: join(root, 'a') },
+        }],
+      },
+    }),
+    JSON.stringify({
+      type: 'user',
+      uuid: 'u2',
+      timestamp: '2026-01-01T00:00:02Z',
+      message: {
+        role: 'user',
+        content: [{
+          type: 'tool_result',
+          tool_use_id: 'call-1',
+          content: 'result',
+        }],
+      },
+    }),
+    JSON.stringify({
+      type: 'assistant',
+      uuid: 'a2',
+      timestamp: '2026-01-01T00:00:03Z',
+      message: {
+        role: 'assistant',
+        content: [{
+          type: 'text',
+          text: 'Answer',
+        }],
+      },
+    }),
+  ].join('\n'));
+
+  const page = await loadSessionPage(
+    filePath,
+    {
+      offset: 0,
+      limit: 10,
+      includeSidechain: false,
+    },
+    'claude',
+    rootsFor(root),
+  );
+
+  expect(page?.messageCount).toBe(2);
+});

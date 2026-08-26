@@ -5,16 +5,28 @@ import {
   extname,
 } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
+import { zstdDecompressSync } from 'node:zlib';
 
 import { appConfig } from '@config/appConfig';
 
+import {
+  isJsonArray,
+  isJsonObject,
+  parseJsonContainer,
+} from '@utils/jsonUtils';
 import { containedIn } from '@utils/pathUtils';
 import { humanPreview } from '@utils/titleUtils';
 
+import { splitUserText } from '../../session/utils/parserUtils';
+
+import { conversationMessageCount, firstUserMessageText } from './outcomeUtils';
 import { parseStructuredHistory } from './structuredUtils';
 
 import type { AgentId } from '@config/agents';
+import type { JsonObject, JsonValue } from '@utils/jsonUtils';
+import type { SQLOutputValue } from 'node:sqlite';
 import type {
+  AssistantBlock,
   HistoryEntry,
   ProjectSummary,
   SessionSummary,
@@ -22,7 +34,31 @@ import type {
 
 interface SqliteReference {
   readonly databasePath: string;
+  readonly decoder?: SqliteDecoder | undefined;
+  readonly sessionId?: string | undefined;
   readonly table: string;
+}
+
+type SqliteDecoder = 'cursor' | 'goose' | 'table' | 'zed';
+type SqliteEntry = Exclude<HistoryEntry, { kind: 'summary' }>;
+
+interface DecodedSqliteSession {
+  readonly actualSessionId: string;
+  readonly cwd: string;
+  readonly entries: readonly SqliteEntry[];
+  readonly firstTimestampMs: number;
+  readonly lastTimestampMs: number;
+  readonly title?: string | undefined;
+}
+
+interface CursorBubbleHeader {
+  readonly bubbleId: string;
+  readonly type: number;
+}
+
+interface TimestampRange {
+  readonly firstTimestampMs: number;
+  readonly lastTimestampMs: number;
 }
 
 interface SqliteSession {
@@ -44,7 +80,10 @@ const isSqliteReference = (value: unknown): value is SqliteReference => {
     && 'databasePath' in value
     && typeof value.databasePath === 'string'
     && 'table' in value
-    && typeof value.table === 'string';
+    && typeof value.table === 'string'
+    && (!('decoder' in value) || value.decoder === 'cursor' || value.decoder === 'goose'
+      || value.decoder === 'table' || value.decoder === 'zed')
+    && (!('sessionId' in value) || typeof value.sessionId === 'string');
 };
 
 export const encodeReference = (reference: SqliteReference): string => {
@@ -116,6 +155,402 @@ const entriesFromTable = (database: DatabaseSync, table: string, fallbackMs: num
   }
 };
 
+const sqliteText = (value: SQLOutputValue | undefined): string => {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  return value instanceof Uint8Array ? Buffer.from(value).toString() : '';
+};
+
+const jsonString = (value: JsonValue | undefined): string | undefined => {
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+};
+
+const jsonNumber = (value: JsonValue | undefined): number | undefined => {
+  return typeof value === 'number' ? value : undefined;
+};
+
+const objectAt = (record: JsonObject, key: string): JsonObject | undefined => {
+  const value = record[key];
+
+  return isJsonObject(value) ? value : undefined;
+};
+
+const timestampRange = (entries: readonly SqliteEntry[]): TimestampRange => {
+  const stamps = entries.map((entry) => {
+    return Date.parse(entry.timestamp);
+  });
+
+  return {
+    firstTimestampMs: Math.min(...stamps),
+    lastTimestampMs: Math.max(...stamps),
+  };
+};
+
+const tableSet = (database: DatabaseSync): ReadonlySet<string> => {
+  return new Set(tableNames(database));
+};
+
+const cursorBubbleHeaders = (metadata: JsonObject): readonly CursorBubbleHeader[] => {
+  const headers = metadata.fullConversationHeadersOnly;
+
+  if (!isJsonArray(headers)) {
+    return [];
+  }
+
+  return headers.flatMap((header) => {
+    if (!isJsonObject(header)) {
+      return [];
+    }
+
+    const bubbleId = jsonString(header.bubbleId);
+    const type = jsonNumber(header.type);
+
+    return bubbleId == null || type == null
+      ? []
+      : [{
+          bubbleId,
+          type,
+        }];
+  });
+};
+
+const cursorThinkingBlocks = (bubble: JsonObject): readonly AssistantBlock[] => {
+  const values = bubble.allThinkingBlocks;
+
+  if (!isJsonArray(values)) {
+    return [];
+  }
+
+  return values.flatMap((value) => {
+    let text: string | undefined;
+
+    if (typeof value === 'string') {
+      text = value;
+    }
+    else if (isJsonObject(value)) {
+      text = jsonString(value.text);
+    }
+
+    return text == null || text.length === 0
+      ? []
+      : [{
+          blockType: 'thinking',
+          thinking: text,
+        }];
+  });
+};
+
+const cursorEntry = (
+  header: CursorBubbleHeader,
+  bubble: JsonObject,
+  metadata: JsonObject,
+  fallbackMs: number,
+): SqliteEntry | undefined => {
+  const text = jsonString(bubble.text) ?? '';
+  const rawTimestamp = jsonNumber(bubble.createdAt) ?? jsonNumber(metadata.createdAt) ?? fallbackMs;
+  const timestamp = new Date(rawTimestamp).toISOString();
+
+  if (header.type === 1) {
+    const splitText = splitUserText(text);
+
+    return {
+      kind: 'user',
+      uuid: header.bubbleId,
+      timestamp,
+      sidechain: false,
+      meta: splitText.meta,
+      text: splitText.text,
+      ...(splitText.injectedText == null ? {} : { injectedText: splitText.injectedText }),
+      outcomes: [],
+    };
+  }
+
+  if (header.type !== 2) {
+    return undefined;
+  }
+
+  const modelConfig = objectAt(metadata, 'modelConfig');
+  const blocks: AssistantBlock[] = [...cursorThinkingBlocks(bubble)];
+
+  if (text.length > 0) {
+    blocks.push({
+      blockType: 'text',
+      text,
+    });
+  }
+
+  if (blocks.length === 0) {
+    return undefined;
+  }
+
+  return {
+    kind: 'assistant',
+    uuid: header.bubbleId,
+    timestamp,
+    sidechain: false,
+    model: modelConfig == null ? undefined : jsonString(modelConfig.modelName),
+    blocks,
+  };
+};
+
+const cursorWorkspace = (metadata: JsonObject, databasePath: string): string => {
+  const identifier = objectAt(metadata, 'workspaceIdentifier');
+  const uri = identifier == null ? undefined : objectAt(identifier, 'uri');
+
+  return (uri == null ? undefined : jsonString(uri.fsPath)) ?? dirname(databasePath);
+};
+
+const cursorMetadataHeaders = (
+  database: DatabaseSync,
+  tables: ReadonlySet<string>,
+): ReadonlyMap<string, JsonObject> => {
+  const headers = new Map<string, JsonObject>();
+
+  if (!tables.has('ItemTable')) {
+    return headers;
+  }
+
+  const row = database.prepare("SELECT value FROM ItemTable WHERE key = 'composer.composerHeaders'").get();
+  const value = parseJsonContainer(sqliteText(row?.value));
+  const composers = isJsonObject(value) && isJsonArray(value.allComposers) ? value.allComposers : [];
+
+  for (const composer of composers) {
+    if (!isJsonObject(composer)) {
+      continue;
+    }
+
+    const id = jsonString(composer.composerId);
+
+    if (id != null) {
+      headers.set(id, composer);
+    }
+  }
+
+  return headers;
+};
+
+const cursorSessions = (
+  database: DatabaseSync,
+  databasePath: string,
+  fallbackMs: number,
+): readonly DecodedSqliteSession[] => {
+  const tables = tableSet(database);
+
+  if (!tables.has('cursorDiskKV')) {
+    return [];
+  }
+
+  const rows = database.prepare(
+    "SELECT key, value FROM cursorDiskKV WHERE key LIKE 'composerData:%' OR key LIKE 'bubbleId:%'",
+  ).all();
+  const headersById = cursorMetadataHeaders(database, tables);
+  const metadataById = new Map<string, JsonObject>();
+  const bubbleByKey = new Map<string, JsonObject>();
+
+  for (const row of rows) {
+    const key = sqliteText(row.key);
+    const value = parseJsonContainer(sqliteText(row.value));
+
+    if (!isJsonObject(value)) {
+      continue;
+    }
+
+    if (key.startsWith('composerData:')) {
+      metadataById.set(key.slice('composerData:'.length), value);
+    }
+    else {
+      bubbleByKey.set(key, value);
+    }
+  }
+
+  return [...metadataById].flatMap(([sessionId, metadata]) => {
+    const header = headersById.get(sessionId);
+    const merged = header == null
+      ? metadata
+      : {
+          ...header,
+          ...metadata,
+        };
+    const conversationMap = objectAt(merged, 'conversationMap');
+    const headers = cursorBubbleHeaders(merged);
+    const entries = headers.flatMap((header) => {
+      const bubble = bubbleByKey.get(`bubbleId:${sessionId}:${header.bubbleId}`)
+        ?? (conversationMap == null ? undefined : objectAt(conversationMap, header.bubbleId));
+      const entry = bubble == null ? undefined : cursorEntry(header, bubble, merged, fallbackMs);
+
+      return entry == null ? [] : [entry];
+    });
+
+    if (entries.length === 0) {
+      return [];
+    }
+
+    return [{
+      actualSessionId: sessionId,
+      cwd: cursorWorkspace(merged, databasePath),
+      entries,
+      ...timestampRange(entries),
+      title: jsonString(merged.name),
+    }];
+  });
+};
+
+const gooseEntries = (
+  database: DatabaseSync,
+  sessionId: string,
+  fallbackMs: number,
+): readonly SqliteEntry[] => {
+  const rows = database.prepare(
+    'SELECT id, role, content_json, created_timestamp FROM messages WHERE session_id = ? ORDER BY id ASC',
+  ).all(sessionId);
+
+  return rows.flatMap((row) => {
+    const role = sqliteText(row.role);
+    const content = parseJsonContainer(sqliteText(row.content_json));
+    const timestamp = typeof row.created_timestamp === 'number' ? row.created_timestamp : fallbackMs;
+
+    return parseStructuredHistory(JSON.stringify({
+      id: String(row.id),
+      role,
+      content,
+      timestamp,
+    }), '.json', fallbackMs);
+  });
+};
+
+const gooseSessions = (
+  database: DatabaseSync,
+  fallbackMs: number,
+): readonly DecodedSqliteSession[] => {
+  const tables = tableSet(database);
+
+  if (!tables.has('sessions') || !tables.has('messages')) {
+    return [];
+  }
+
+  return database.prepare(
+    'SELECT id, name, working_dir, created_at, updated_at FROM sessions ORDER BY updated_at DESC',
+  ).all().flatMap((row) => {
+    const sessionId = sqliteText(row.id);
+    const entries = gooseEntries(database, sessionId, fallbackMs);
+
+    if (sessionId.length === 0 || entries.length === 0) {
+      return [];
+    }
+
+    const range = timestampRange(entries);
+
+    return [{
+      actualSessionId: sessionId,
+      cwd: sqliteText(row.working_dir) || 'unknown',
+      entries,
+      firstTimestampMs: range.firstTimestampMs,
+      lastTimestampMs: range.lastTimestampMs,
+      title: sqliteText(row.name) || undefined,
+    }];
+  });
+};
+
+const zedData = (dataType: string, value: SQLOutputValue | undefined): string => {
+  if (!(value instanceof Uint8Array)) {
+    return sqliteText(value);
+  }
+
+  return dataType.toLowerCase() === 'zstd'
+    ? zstdDecompressSync(value).toString()
+    : Buffer.from(value).toString();
+};
+
+const zedSessions = (
+  database: DatabaseSync,
+  databasePath: string,
+  fallbackMs: number,
+): readonly DecodedSqliteSession[] => {
+  if (!tableSet(database).has('threads')) {
+    return [];
+  }
+
+  return database.prepare(
+    'SELECT id, summary, updated_at, data_type, data FROM threads ORDER BY updated_at DESC',
+  ).all().flatMap((row) => {
+    try {
+      const sessionId = sqliteText(row.id);
+      const content = zedData(sqliteText(row.data_type), row.data);
+      const entries = parseStructuredHistory(content, '.json', fallbackMs);
+
+      if (sessionId.length === 0 || entries.length === 0) {
+        return [];
+      }
+
+      return [{
+        actualSessionId: sessionId,
+        cwd: dirname(databasePath),
+        entries,
+        ...timestampRange(entries),
+        title: sqliteText(row.summary) || undefined,
+      }];
+    }
+    catch {
+      return [];
+    }
+  });
+};
+
+const decodedSessions = (
+  agent: AgentId,
+  database: DatabaseSync,
+  databasePath: string,
+  fallbackMs: number,
+): readonly DecodedSqliteSession[] => {
+  if (agent === 'cursor') {
+    return cursorSessions(database, databasePath, fallbackMs);
+  }
+
+  if (agent === 'goose') {
+    return gooseSessions(database, fallbackMs);
+  }
+
+  return zedSessions(database, databasePath, fallbackMs);
+};
+
+const decoderFor = (agent: AgentId, tables: ReadonlySet<string>): SqliteDecoder | undefined => {
+  if (agent === 'cursor' && tables.has('cursorDiskKV')) {
+    return 'cursor';
+  }
+
+  if (agent === 'goose' && tables.has('sessions') && tables.has('messages')) {
+    return 'goose';
+  }
+
+  return agent === 'zed' && tables.has('threads') ? 'zed' : undefined;
+};
+
+const tableForDecoder = (decoder: SqliteDecoder): string => {
+  if (decoder === 'zed') {
+    return 'threads';
+  }
+
+  return decoder === 'goose' ? 'messages' : 'cursorDiskKV';
+};
+
+const sessionsForReference = (
+  database: DatabaseSync,
+  reference: SqliteReference,
+  fallbackMs: number,
+): readonly DecodedSqliteSession[] => {
+  if (reference.decoder === 'cursor') {
+    return cursorSessions(database, reference.databasePath, fallbackMs);
+  }
+
+  if (reference.decoder === 'goose') {
+    return gooseSessions(database, fallbackMs);
+  }
+
+  return zedSessions(database, reference.databasePath, fallbackMs);
+};
+
 const sessionsFromDatabase = async (
   agent: AgentId,
   databasePath: string,
@@ -129,6 +564,38 @@ const sessionsFromDatabase = async (
 
     database = openedDatabase;
 
+    const decoder = decoderFor(agent, tableSet(openedDatabase));
+
+    if (decoder != null) {
+      return decodedSessions(agent, openedDatabase, databasePath, info.mtimeMs).map((session) => {
+        const preview = firstUserMessageText(session.entries);
+
+        return {
+          entries: session.entries,
+          summary: {
+            agent,
+            actualSessionId: session.actualSessionId,
+            id: `${basename(databasePath)}:${session.actualSessionId}`,
+            filePath: encodeReference({
+              databasePath,
+              decoder,
+              sessionId: session.actualSessionId,
+              table: tableForDecoder(decoder),
+            }),
+            projectId: session.cwd,
+            title: session.title,
+            preview: preview == null ? undefined : humanPreview(preview, appConfig.previewLength),
+            messageCount: conversationMessageCount(session.entries),
+            firstTimestampMs: session.firstTimestampMs,
+            lastTimestampMs: session.lastTimestampMs,
+            modifiedMs: info.mtimeMs,
+            sizeBytes: info.size,
+            cwd: session.cwd,
+          },
+        };
+      });
+    }
+
     return tableNames(openedDatabase).flatMap((table) => {
       const entries = entriesFromTable(openedDatabase, table, info.mtimeMs);
 
@@ -141,9 +608,7 @@ const sessionsFromDatabase = async (
       const stamps = entries.map((entry) => {
         return Date.parse(entry.timestamp);
       }).filter(Number.isFinite);
-      const preview = entries.find((entry) => {
-        return entry.kind === 'user';
-      });
+      const preview = firstUserMessageText(entries);
 
       return [{
         entries,
@@ -156,10 +621,8 @@ const sessionsFromDatabase = async (
             table,
           }),
           projectId,
-          preview: preview?.kind === 'user'
-            ? humanPreview(preview.text, appConfig.previewLength)
-            : undefined,
-          messageCount: entries.length,
+          preview: preview == null ? undefined : humanPreview(preview, appConfig.previewLength),
+          messageCount: conversationMessageCount(entries),
           firstTimestampMs: Math.min(...stamps),
           lastTimestampMs: Math.max(...stamps),
           modifiedMs: info.mtimeMs,
@@ -251,6 +714,14 @@ export const loadSqliteEntries = async (
 
   try {
     database = new DatabaseSync(reference.databasePath, { readOnly: true });
+
+    if (reference.decoder != null && reference.decoder !== 'table' && reference.sessionId != null) {
+      const sessions = sessionsForReference(database, reference, Date.now());
+
+      return sessions.find((session) => {
+        return session.actualSessionId === reference.sessionId;
+      })?.entries;
+    }
 
     return entriesFromTable(database, reference.table, Date.now());
   }

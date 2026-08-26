@@ -73,7 +73,11 @@ export const resolveAgentPaths = ({
     'continue': [envPath(env, 'CONTINUE_GLOBAL_DIR', join(home, '.continue', 'sessions'))],
     'copilot': [join(home, '.copilot', 'session-state'), join(vscode, 'workspaceStorage')],
     'crush': commonProjects,
-    'cursor': [join(cursor, 'workspaceStorage'), join(home, '.cursor')],
+    'cursor': [
+      join(cursor, 'globalStorage', 'state.vscdb'),
+      join(cursor, 'workspaceStorage'),
+      join(home, '.cursor'),
+    ],
     'cursor-agent': [join(home, '.cursor', 'projects')],
     'forgecode': [join(home, '.forge', '.forge.db')],
     'gemini': [envPath(env, 'GEMINI_CLI_HOME', join(home, '.gemini'))],

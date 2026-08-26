@@ -22,10 +22,6 @@ export const UserTurn: FC<UserTurnProps> = ({
   filters = defaultMessageFilters().content,
 }) => {
   const injectedText = filters.text ? entry.injectedText : undefined;
-  const hasInjectedText = injectedText != null;
-  const hasBubble = (filters.text && entry.text.length > 0)
-    || hasInjectedText
-    || (filters.commands && entry.command != null);
 
   return (
     <article
@@ -68,11 +64,6 @@ export const UserTurn: FC<UserTurnProps> = ({
             <CodeLine text={injectedText} />
           </div>
         </details>
-      )}
-      {!hasBubble && filters.tools && orphans.length === 0 && (
-        <span className="mr-auto text-xs text-muted-foreground" data-empty-user-turn>
-          tool results below
-        </span>
       )}
       {filters.tools && (
         <div className="w-full space-y-2">

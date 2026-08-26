@@ -96,7 +96,7 @@ describe('message filters', () => {
       throw new Error('filter fixtures missing');
     }
 
-    expect(countVisibleEntries(entries, defaults)).toBe(6);
+    expect(countVisibleEntries(entries, defaults)).toBe(5);
     expect(assistant.kind === 'assistant' && assistant.blocks.every((block) => {
       return blockIsVisible(block, defaults);
     })).toBe(true);

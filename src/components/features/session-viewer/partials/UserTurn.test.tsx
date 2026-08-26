@@ -67,21 +67,6 @@ describe('UserTurn', () => {
     expect(document.querySelector('[data-user-turn][data-meta="true"]')).not.toBeNull();
     expect(screen.getByText('trace')).toBeDefined();
   });
-
-  test('offers a placeholder for bare tool-result turns', () => {
-    render(
-      <UserTurn
-        entry={{
-          ...base,
-          text: '',
-          command: undefined,
-        }}
-        orphans={[]}
-      />,
-    );
-
-    expect(screen.getByText('tool results below')).toBeDefined();
-  });
 });
 
 test('keeps injected context collapsed beside the real user message', () => {

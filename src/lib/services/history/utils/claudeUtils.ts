@@ -22,6 +22,8 @@ import {
   USER_MARKER,
 } from '../constants';
 
+import { isConversationMessage } from './outcomeUtils';
+
 import type { Dirent } from 'node:fs';
 import type { ProjectSummary, SessionSummary } from '../types';
 
@@ -30,6 +32,7 @@ interface SessionMeta {
   readonly summary?: string | undefined;
   readonly preview?: string | undefined;
   readonly messageCount: number;
+  readonly turnCount: number;
   readonly firstTimestampMs: number;
   readonly lastTimestampMs: number;
   readonly cwd?: string | undefined;
@@ -51,6 +54,7 @@ interface RawTitleLine {
 
 interface MetaScan {
   messageCount: number;
+  turnCount: number;
   firstTimestampMs: number;
   lastTimestampMs: number;
   summary?: string | undefined;
@@ -105,6 +109,7 @@ const quotedValue = (line: string, prefix: string): string | undefined => {
 const newScan = (): MetaScan => {
   return {
     messageCount: 0,
+    turnCount: 0,
     firstTimestampMs: Number.POSITIVE_INFINITY,
     lastTimestampMs: 0,
   };
@@ -171,7 +176,12 @@ const absorbLine = (scan: MetaScan, rawLine: string): void => {
     return;
   }
 
-  scan.messageCount += 1;
+  scan.turnCount += 1;
+  const entry = parseHistoryLine(rawLine);
+
+  if (entry != null && isConversationMessage(entry)) {
+    scan.messageCount += 1;
+  }
 
   if (scan.preview == null && rawLine.includes(USER_MARKER)) {
     scan.preview = genuineUserPreview(rawLine);
@@ -190,6 +200,7 @@ const extractSessionMeta = (content: string): SessionMeta => {
     summary: scan.summary,
     preview: scan.preview,
     messageCount: scan.messageCount,
+    turnCount: scan.turnCount,
     firstTimestampMs: Number.isFinite(scan.firstTimestampMs) ? scan.firstTimestampMs : 0,
     lastTimestampMs: scan.lastTimestampMs,
     cwd: truncateCwd(scan.cwd),
@@ -269,7 +280,7 @@ export const listSessions = async (
     const meta = await sessionMetaFor(filePath);
     const facts = await fileFacts(filePath);
 
-    if (meta == null || facts == null || meta.messageCount === 0) {
+    if (meta == null || facts == null || meta.turnCount === 0) {
       continue;
     }
 

@@ -124,7 +124,21 @@ beforeEach(async () => {
     type: 'text',
     text: '',
   });
-  addMessage(database, 'msg_2', 'ses_a', 'assistant', 2_000);
+  addRawMessage(database, 'msg_2', 'ses_a', 2_000, {
+    role: 'assistant',
+    modelID: 'stealth/ox-alpha',
+    providerID: 'openrouter',
+    cost: 0.25,
+    finish: 'tool-calls',
+    tokens: {
+      input: 10,
+      output: 3,
+      cache: {
+        write: 2,
+        read: 4,
+      },
+    },
+  });
   addPart(database, 'part_3', 'msg_2', 2_000, {
     type: 'reasoning',
     text: 'pondering',
@@ -144,7 +158,10 @@ beforeEach(async () => {
     type: 'text',
     text: 'Answer text',
   });
-  addMessage(database, 'msg_3', 'ses_a', 'assistant', 3_000);
+  addRawMessage(database, 'msg_3', 'ses_a', 3_000, {
+    role: 'assistant',
+    tokens: {},
+  });
   addPart(database, 'part_6', 'msg_3', 3_000, {
     type: 'tool',
     tool: 'read',
@@ -369,7 +386,7 @@ describe('listOpenCodeSessions', () => {
       projectId: '/repo/alpha',
       cwd: '/repo/alpha',
       preview: 'First question',
-      messageCount: 3,
+      messageCount: 2,
       firstTimestampMs: 1_000,
     });
   });
@@ -455,7 +472,7 @@ describe('listOpenCodeProjects', () => {
       name: 'alpha',
       actualPath: '/repo/alpha',
       sessionCount: 1,
-      messageCount: 3,
+      messageCount: 2,
     });
   });
 });
@@ -474,6 +491,15 @@ describe('loadOpenCodeEntries', () => {
     expect(entries?.[1]).toMatchObject({
       kind: 'assistant',
       uuid: 'msg_2',
+      model: 'stealth/ox-alpha',
+      stopReason: 'tool-calls',
+      usage: {
+        inputTokens: 10,
+        outputTokens: 3,
+        cacheCreationTokens: 2,
+        cacheReadTokens: 4,
+      },
+      costUsd: 0.25,
       blocks: [
         {
           blockType: 'thinking',
@@ -643,7 +669,7 @@ describe('loadOpenCodeEntries', () => {
     });
 
     expect(gamma?.preview).toBe('beta');
-    expect(gamma?.messageCount).toBe(2);
+    expect(gamma?.messageCount).toBe(0);
 
     const gammaEntries = await loadOpenCodeEntries(reference('ses_e'), [root]);
 

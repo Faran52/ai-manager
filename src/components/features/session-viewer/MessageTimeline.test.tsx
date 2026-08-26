@@ -82,6 +82,31 @@ describe('MessageTimeline', () => {
     }
 
     expect(screen.getByText('error')).toBeDefined();
+    expect(document.querySelector('[data-empty-user-turn]')).toBeNull();
+  });
+
+  test('renders named outcomes whose calls are missing', () => {
+    render(
+      <MessageTimeline entries={[
+        {
+          kind: 'user',
+          uuid: 'orphan',
+          timestamp: 't',
+          sidechain: false,
+          meta: true,
+          text: '',
+          outcomes: [{
+            toolUseId: 'missing',
+            status: 'error',
+            text: 'unmatched result',
+            images: [],
+          }],
+        },
+      ]}
+      />,
+    );
+
+    expect(screen.getByText('unmatched result')).toBeDefined();
   });
 });
 

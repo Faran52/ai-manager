@@ -5,6 +5,7 @@ import { agentOption } from '@config/agents';
 import { LruCache } from '@utils/lruCacheUtils';
 
 import { loadAgentEntries } from '../../agents/agentsService';
+import { conversationMessageCount } from '../../history/utils/outcomeUtils';
 
 import type { AgentId } from '@config/agents';
 import type { HistoryEntry } from '../../history/types';
@@ -101,14 +102,10 @@ export const loadSessionPage = async (
   const start = Math.min(Math.max(request.offset, 0), visible.length);
   const end = Math.min(start + Math.max(request.limit, 0), visible.length);
 
-  const messageCount = visible.filter((entry) => {
-    return entry.kind === 'user' || entry.kind === 'assistant';
-  }).length;
-
   return {
     entries: visible.slice(start, end),
     total: visible.length,
-    messageCount,
+    messageCount: conversationMessageCount(visible),
     hasMore: end < visible.length,
     nextOffset: end,
   };

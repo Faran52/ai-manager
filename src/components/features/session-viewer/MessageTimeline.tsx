@@ -104,7 +104,7 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({ entries, filters = d
       {entries.map((entry, index) => {
         const hidden = entry.kind !== 'summary' && entry.sidechain;
 
-        if (!entryIsVisible(entry, filters)) {
+        if (!entryIsVisible(entry, filters, pairs)) {
           return null;
         }
 

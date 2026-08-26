@@ -1,4 +1,10 @@
-import type { AssistantBlock, HistoryEntry } from '@services/history/historyService';
+import { pairToolOutcomes } from '@services/history/historyService';
+
+import type {
+  AssistantBlock,
+  HistoryEntry,
+  ToolOutcome,
+} from '@services/history/historyService';
 
 export interface MessageRoleFilters {
   readonly human: boolean;
@@ -50,15 +56,33 @@ export const blockIsVisible = (block: AssistantBlock, filters: MessageFilters): 
   }
 };
 
-export const entryIsVisible = (entry: HistoryEntry, filters: MessageFilters): boolean => {
+export const entryIsVisible = (
+  entry: HistoryEntry,
+  filters: MessageFilters,
+  pairs?: ReadonlyMap<string, ToolOutcome>,
+): boolean => {
   switch (entry.kind) {
-    case 'user':
+    case 'user': {
+      const pairedOutcomeOnly = pairs != null
+        && entry.text.length === 0
+        && entry.injectedText == null
+        && entry.command == null
+        && entry.outcomes.length > 0
+        && entry.outcomes.every((outcome) => {
+          return pairs.has(outcome.toolUseId);
+        });
+
+      if (pairedOutcomeOnly) {
+        return false;
+      }
+
       return filters.roles.human && (
         (filters.content.text && entry.text.length > 0)
         || (filters.content.text && entry.injectedText != null)
         || (filters.content.commands && entry.command != null)
         || (filters.content.tools && entry.outcomes.length > 0)
       );
+    }
     case 'assistant':
       return filters.roles.ai && entry.blocks.some((block) => {
         return blockIsVisible(block, filters);
@@ -70,8 +94,10 @@ export const entryIsVisible = (entry: HistoryEntry, filters: MessageFilters): bo
 };
 
 export const countVisibleEntries = (entries: readonly HistoryEntry[], filters: MessageFilters): number => {
+  const pairs = pairToolOutcomes(entries);
+
   return entries.filter((entry) => {
-    return entryIsVisible(entry, filters);
+    return entryIsVisible(entry, filters, pairs);
   }).length;
 };
 

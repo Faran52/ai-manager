@@ -3,4 +3,9 @@
 export * from './types';
 export * from './utils/claudeRawUtils';
 export { findAgentProject } from './utils/lookupUtils';
-export { pairToolOutcomes } from './utils/outcomeUtils';
+export {
+  conversationMessageCount,
+  firstUserMessageText,
+  isConversationMessage,
+  pairToolOutcomes,
+} from './utils/outcomeUtils';

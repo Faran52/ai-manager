@@ -124,8 +124,42 @@ describe('parseCodexHistory', () => {
         output: 'raw',
       }),
       line('response_item', { type: 'function_call_output' }),
+      line('response_item', {
+        type: 'custom_tool_call',
+        id: 'custom-1',
+        call_id: 'c3',
+        name: 'exec',
+        input: '{"cmd":"pnpm check"}',
+      }),
+      line('response_item', {
+        type: 'custom_tool_call_output',
+        id: 'custom-output-1',
+        call_id: 'c3',
+        output: [{
+          type: 'input_text',
+          text: 'all green',
+        }],
+      }),
+      line('response_item', {
+        type: 'reasoning',
+        id: 'reasoning-1',
+        summary: [{
+          type: 'summary_text',
+          text: 'Checking the gate',
+        }],
+      }),
       line('response_item', { type: 'unsupported' }),
-      line('event_msg', { type: 'token_count' }),
+      line('event_msg', {
+        type: 'token_count',
+        info: {
+          last_token_usage: {
+            input_tokens: 10,
+            cached_input_tokens: 4,
+            cache_write_input_tokens: 2,
+            output_tokens: 3,
+          },
+        },
+      }),
     ].join('\n');
     const parsed = parseCodexHistory(content);
 
@@ -134,15 +168,41 @@ describe('parseCodexHistory', () => {
       cwd: '/repo',
       title: 'First question',
     });
-    expect(parsed.entries).toHaveLength(11);
+    expect(parsed.entries).toHaveLength(14);
     expect(JSON.stringify(parsed.entries)).toContain('pnpm test');
+    expect(JSON.stringify(parsed.entries)).toContain('pnpm check');
+    expect(JSON.stringify(parsed.entries)).toContain('all green');
+    expect(JSON.stringify(parsed.entries)).toContain('Checking the gate');
     expect(JSON.stringify(parsed.entries)).toContain('Conversation compacted');
     expect(JSON.stringify(parsed.entries)).toContain('raw');
+    expect(parsed.entries.at(-1)).toMatchObject({
+      kind: 'assistant',
+      usage: {
+        inputTokens: 10,
+        outputTokens: 3,
+        cacheCreationTokens: 2,
+        cacheReadTokens: 4,
+      },
+    });
   });
 
   test('uses fallbacks for incomplete history', () => {
     const parsed = parseCodexHistory([
       line('turn_context', { cwd: '/fallback' }),
+      line('event_msg', {
+        type: 'token_count',
+        info: { last_token_usage: {} },
+      }),
+      line('event_msg', { type: 'token_count' }),
+      line('response_item', {
+        type: 'reasoning',
+        summary: [{ type: 'summary_text' }],
+      }),
+      line('response_item', { type: 'reasoning' }),
+      line('response_item', {
+        type: 'custom_tool_call_output',
+        output: [{ type: 'input_text' }],
+      }),
       line('response_item', {
         type: 'message',
         role: 'user',

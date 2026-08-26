@@ -19,6 +19,8 @@ import { humanPreview } from '@utils/titleUtils';
 
 import { splitUserText } from '../../session/utils/parserUtils';
 
+import { conversationMessageCount, firstUserMessageText } from './outcomeUtils';
+
 import type { AgentId } from '@config/agents';
 import type { JsonObject, JsonValue } from '@utils/jsonUtils';
 import type {
@@ -413,9 +415,7 @@ const structuredSession = async (
     }).filter(Number.isFinite);
     const projectId = projectIdFor(root, filePath);
     const id = basename(filePath, extname(filePath));
-    const preview = entries.find((entry) => {
-      return entry.kind === 'user';
-    });
+    const preview = firstUserMessageText(entries);
 
     return {
       entries,
@@ -425,10 +425,8 @@ const structuredSession = async (
         id,
         filePath,
         projectId,
-        preview: preview?.kind === 'user'
-          ? humanPreview(preview.text, appConfig.previewLength)
-          : undefined,
-        messageCount: entries.length,
+        preview: preview == null ? undefined : humanPreview(preview, appConfig.previewLength),
+        messageCount: conversationMessageCount(entries),
         firstTimestampMs: Math.min(...stamps),
         lastTimestampMs: Math.max(...stamps),
         modifiedMs: info.mtimeMs,
