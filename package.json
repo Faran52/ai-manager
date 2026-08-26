@@ -16,6 +16,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:css": "stylelint \"src/**/*.css\" --allow-empty-input",
+    "lint:css:fix": "stylelint \"src/**/*.css\" --fix --allow-empty-input",
+    "lint:types": "find src -type f \\( -name '*.ts' -o -name '*.tsx' -o -name '*.astro' \\) -exec node scripts/checkBannedPatterns.ts {} +",
     "typecheck": "astro sync && astro check",
     "test": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage",
@@ -23,15 +25,13 @@
     "prepare": "astro sync && husky",
     "desktop": "astro build && node scripts/stubMissingImports.ts && deno desktop -E -R -S .",
     "desktop:dev": "deno desktop -E -R -S . --hmr",
-    "desktop:build": "astro build && node scripts/stubMissingImports.ts && deno desktop -E -R -S . --output ./dist/AIChatManager.app",
-    "lint:types": "find src -type f \\( -name '*.ts' -o -name '*.tsx' -o -name '*.astro' \\) -exec node scripts/checkBannedPatterns.ts {} +",
-    "lint:css:fix": "stylelint \"src/**/*.css\" --fix --allow-empty-input"
+    "desktop:build": "astro build && node scripts/stubMissingImports.ts && deno desktop -E -R -S . --output ./dist/AIChatManager.app"
   },
   "dependencies": {
     "@astrojs/node": "^11.1.4",
     "@fontsource-variable/ibm-plex-sans": "^5.3.0",
     "@fontsource/ibm-plex-mono": "^5.3.0",
-    "astro": "^7.2.7",
+    "astro": "^7.2.6",
     "clsx": "^2.1.1",
     "lucide-react": "^1.34.0",
     "motion": "^13.1.1",
