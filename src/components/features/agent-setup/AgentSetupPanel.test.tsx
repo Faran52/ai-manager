@@ -64,6 +64,7 @@ test('lists every configured agent with its servers and rules', () => {
   );
 
   expect(screen.getByText('2 of 3 agents set up for this project')).toBeDefined();
+  expect(screen.getByRole('heading', { name: 'Configured agents look healthy' })).toBeDefined();
   expect(screen.getByText('Claude Code')).toBeDefined();
   expect(screen.getByText('Codex CLI')).toBeDefined();
   expect(screen.getByText('Gemini CLI')).toBeDefined();

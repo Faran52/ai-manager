@@ -99,10 +99,13 @@ describe('SidebarPane', () => {
   });
 
   test('filters both lists case-insensitively', async () => {
+    const selected = project('p1', 'webapp');
+
     render(
       <SidebarPane
         {...base}
-        projects={[project('p1', 'webapp'), project('p2', 'cli-tool')]}
+        projects={[selected, project('p2', 'cli-tool')]}
+        selectedProject={selected}
         sessions={[session('a', 'Login fix'), session('b', 'Deploy pipeline')]}
       />,
     );
@@ -127,6 +130,37 @@ describe('SidebarPane', () => {
     );
 
     expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(screen.getByText('Select a project')).toBeDefined();
+    expect(screen.getByLabelText('Filter sessions').hasAttribute('disabled')).toBe(true);
+  });
+
+  test('uses singular session counts and distinguishes empty session states', async () => {
+    const selected = {
+      ...project('p1', 'webapp'),
+      sessionCount: 1,
+    };
+    const { rerender } = render(
+      <SidebarPane
+        {...base}
+        projects={[selected]}
+        selectedProject={selected}
+        sessions={[]}
+      />,
+    );
+
+    expect(screen.getByText('1 session')).toBeDefined();
+    expect(screen.getByText('No sessions yet')).toBeDefined();
+
+    rerender(
+      <SidebarPane
+        {...base}
+        projects={[selected]}
+        selectedProject={selected}
+        sessions={[session('a', 'Login fix')]}
+      />,
+    );
+    await userEvent.type(screen.getByLabelText('Filter sessions'), 'deploy');
+
     expect(screen.getByText('No sessions match')).toBeDefined();
   });
 });
@@ -151,6 +185,7 @@ describe('SidebarPane selection highlighting', () => {
 
 describe('SidebarPane haystack sources', () => {
   test('matches against summary and preview when the title is absent', async () => {
+    const selected = project('p1', 'webapp');
     const summaryOnly = {
       ...session('c', ''),
       title: undefined,
@@ -165,7 +200,12 @@ describe('SidebarPane haystack sources', () => {
     };
 
     render(
-      <SidebarPane {...base} projects={[project('p1', 'webapp')]} sessions={[summaryOnly, previewOnly]} />,
+      <SidebarPane
+        {...base}
+        projects={[selected]}
+        selectedProject={selected}
+        sessions={[summaryOnly, previewOnly]}
+      />,
     );
 
     await userEvent.type(screen.getByLabelText('Filter sessions'), 'splines');

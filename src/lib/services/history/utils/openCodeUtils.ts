@@ -9,7 +9,7 @@ import { isJsonObject, parseJsonContainer } from '@utils/jsonUtils';
 import { containedIn } from '@utils/pathUtils';
 import { humanPreview, humanTitle } from '@utils/titleUtils';
 
-import { isMetaText, parseToolInput } from '../../session/utils/parserUtils';
+import { parseToolInput, splitUserText } from '../../session/utils/parserUtils';
 
 import { databaseFiles } from './sqliteUtils';
 
@@ -309,10 +309,10 @@ const buildSession = (database: DatabaseSync, sessionId: string): SessionBuild =
 
     if (payload.role === 'user') {
       const text = userTextFrom(parts);
-      const meta = isMetaText(text);
+      const splitText = splitUserText(text);
 
-      if (!meta && preview == null) {
-        preview = humanPreview(text, appConfig.previewLength);
+      if (!splitText.meta && preview == null) {
+        preview = humanPreview(splitText.text, appConfig.previewLength);
       }
 
       entries.push({
@@ -320,8 +320,9 @@ const buildSession = (database: DatabaseSync, sessionId: string): SessionBuild =
         uuid: message.mid,
         timestamp: new Date(stamp).toISOString(),
         sidechain: false,
-        meta,
-        text,
+        meta: splitText.meta,
+        text: splitText.text,
+        ...(splitText.injectedText == null ? {} : { injectedText: splitText.injectedText }),
         outcomes: [],
       });
 

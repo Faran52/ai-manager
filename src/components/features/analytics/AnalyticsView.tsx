@@ -20,6 +20,7 @@ import {
 
 import {
   ActivityHeatmap,
+  AnalyticsPanel,
   BarList,
   TopSessions,
 } from './partials';
@@ -91,18 +92,30 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
         />
         <MetricCard
           label="Tokens"
-          value={formatTokens(totalTokens)}
-          hint={`${formatTokens(stats.totals.cacheReadTokens)} cache reads`}
+          value={stats.totals.usageRecorded ? formatTokens(totalTokens) : 'Not recorded'}
+          hint={stats.totals.usageRecorded
+            ? `${formatTokens(stats.totals.cacheReadTokens)} cache reads`
+            : undefined}
           icon={<Coins className="size-3.5" />}
         />
         <MetricCard
           label="Compute time"
-          value={formatDurationMs(stats.totals.durationMs)}
-          hint={`${formatCost(stats.totals.costUsd)} recorded cost`}
+          value={stats.totals.usageRecorded ? formatDurationMs(stats.totals.durationMs) : 'Not recorded'}
+          hint={stats.totals.usageRecorded
+            ? `${formatCost(stats.totals.costUsd)} recorded cost`
+            : undefined}
         />
       </div>
 
-      <ActivityHeatmap activity={stats.activity} />
+      {stats.totals.usageRecorded
+        ? <ActivityHeatmap activity={stats.activity} />
+        : (
+            <AnalyticsPanel title="Activity">
+              <p className="mt-3 text-sm text-muted-foreground">
+                Token activity isn't recorded for this agent.
+              </p>
+            </AnalyticsPanel>
+          )}
 
       <div className="
         grid gap-4
@@ -129,7 +142,11 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
         />
       </div>
 
-      <TopSessions sessions={stats.topSessions} onOpenSession={onOpenSession} />
+      <TopSessions
+        sessions={stats.topSessions}
+        usageRecorded={stats.totals.usageRecorded}
+        onOpenSession={onOpenSession}
+      />
 
     </div>
   );

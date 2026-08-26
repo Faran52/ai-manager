@@ -2,7 +2,7 @@ import { Terminal } from 'lucide-react';
 
 import { cn } from '@utils/cnUtils';
 
-import { TruncatedText } from '@ui/index';
+import { CodeLine, TruncatedText } from '@ui/index';
 
 import { defaultMessageFilters } from '../messageFilters';
 
@@ -21,7 +21,11 @@ export const UserTurn: FC<UserTurnProps> = ({
   orphans,
   filters = defaultMessageFilters().content,
 }) => {
-  const hasBubble = (filters.text && entry.text.length > 0) || (filters.commands && entry.command != null);
+  const injectedText = filters.text ? entry.injectedText : undefined;
+  const hasInjectedText = injectedText != null;
+  const hasBubble = (filters.text && entry.text.length > 0)
+    || hasInjectedText
+    || (filters.commands && entry.command != null);
 
   return (
     <article
@@ -54,6 +58,16 @@ export const UserTurn: FC<UserTurnProps> = ({
         >
           {entry.text}
         </p>
+      )}
+      {injectedText != null && (
+        <details className="max-w-[85%] text-left" data-injected-context>
+          <summary className="cursor-pointer text-xs text-muted-foreground">
+            Injected context
+          </summary>
+          <div className="mt-1">
+            <CodeLine text={injectedText} />
+          </div>
+        </details>
       )}
       {!hasBubble && filters.tools && orphans.length === 0 && (
         <span className="mr-auto text-xs text-muted-foreground" data-empty-user-turn>

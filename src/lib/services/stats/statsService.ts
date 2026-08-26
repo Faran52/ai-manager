@@ -45,6 +45,7 @@ export interface SessionTokenTotals {
 export interface ProjectStats {
   readonly projectId: string;
   readonly totals: {
+    readonly usageRecorded: boolean;
     readonly sessions: number;
     readonly messages: number;
     readonly inputTokens: number;
@@ -61,6 +62,7 @@ export interface ProjectStats {
 }
 
 interface Accumulator {
+  usageRecorded: boolean;
   messages: number;
   inputTokens: number;
   outputTokens: number;
@@ -124,6 +126,9 @@ const addUsage = (accumulator: Accumulator, entry: HistoryEntry): void => {
   }
 
   accumulator.messages += 1;
+  accumulator.usageRecorded ||= entry.usage != null
+    || entry.costUsd != null
+    || entry.durationMs != null;
 
   const usage = entry.usage ?? EMPTY_USAGE;
 
@@ -198,6 +203,7 @@ export const computeProjectStats = async (
   }
 
   const accumulator: Accumulator = {
+    usageRecorded: false,
     messages: 0,
     inputTokens: 0,
     outputTokens: 0,
@@ -247,7 +253,7 @@ export const computeProjectStats = async (
   }
 
   const topSessions = [...perSession].sort((left, right) => {
-    return right.tokens - left.tokens;
+    return right.tokens - left.tokens || right.messages - left.messages;
   }).slice(0, 5);
   const activity = [...accumulator.days.values()].sort((left, right) => {
     return left.date.localeCompare(right.date);
@@ -256,6 +262,7 @@ export const computeProjectStats = async (
   return {
     projectId,
     totals: {
+      usageRecorded: accumulator.usageRecorded,
       sessions: sessions.length,
       messages: accumulator.messages,
       inputTokens: accumulator.inputTokens,

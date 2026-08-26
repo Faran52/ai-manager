@@ -56,7 +56,7 @@ describe('parseStructuredHistory', () => {
           },
           {
             role: 'user',
-            message: { text: 'Nested text' },
+            message: { text: 'Nested text\n<environment_context>hidden</environment_context>' },
           },
           {
             role: 'user',
@@ -89,6 +89,7 @@ describe('parseStructuredHistory', () => {
     expect(entries[3]).toMatchObject({
       kind: 'user',
       text: 'Nested text',
+      injectedText: '<environment_context>hidden</environment_context>',
     });
     expect(entries[4]).toMatchObject({
       kind: 'user',

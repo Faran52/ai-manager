@@ -8,6 +8,7 @@ export interface TextInputProps {
   readonly placeholder?: string;
   readonly label: string;
   readonly className?: string;
+  readonly disabled?: boolean;
 }
 
 export const TextInput: FC<TextInputProps> = ({
@@ -16,6 +17,7 @@ export const TextInput: FC<TextInputProps> = ({
   placeholder,
   label,
   className,
+  disabled = false,
 }) => {
   return (
     <input
@@ -26,6 +28,7 @@ export const TextInput: FC<TextInputProps> = ({
       }}
       placeholder={placeholder}
       aria-label={label}
+      disabled={disabled}
       className={cn(
         `
           h-8 w-full rounded-md border border-transparent bg-muted px-2.5
@@ -34,6 +37,7 @@ export const TextInput: FC<TextInputProps> = ({
         `
           placeholder:text-muted-foreground
           focus:border-ring focus:bg-background
+          disabled:cursor-not-allowed disabled:opacity-50
         `,
         className,
       )}

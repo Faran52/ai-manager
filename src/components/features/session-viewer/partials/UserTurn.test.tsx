@@ -84,6 +84,42 @@ describe('UserTurn', () => {
   });
 });
 
+test('keeps injected context collapsed beside the real user message', () => {
+  const { rerender } = render(
+    <UserTurn
+      entry={{
+        ...base,
+        text: 'Fix this.',
+        injectedText: '<environment_context>hidden</environment_context>',
+      }}
+      orphans={[]}
+    />,
+  );
+
+  expect(screen.getByText('Fix this.')).toBeDefined();
+  expect(screen.getByText('Injected context')).toBeDefined();
+  expect(document.querySelector('details')?.hasAttribute('open')).toBe(false);
+
+  rerender(
+    <UserTurn
+      entry={{
+        ...base,
+        text: 'Fix this.',
+        injectedText: '<environment_context>hidden</environment_context>',
+      }}
+      filters={{
+        text: false,
+        thinking: true,
+        tools: true,
+        commands: true,
+      }}
+      orphans={[]}
+    />,
+  );
+
+  expect(screen.queryByText('Injected context')).toBeNull();
+});
+
 describe('UserTurn orphans without text', () => {
   test('skips them instead of rendering empty blocks', () => {
     render(

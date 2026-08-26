@@ -146,6 +146,7 @@ export interface UserTurnEntry extends TurnBase {
   readonly kind: 'user';
   readonly meta: boolean;
   readonly text: string;
+  readonly injectedText?: string | undefined;
   readonly command?: string | undefined;
   readonly outcomes: readonly ToolOutcome[];
 }

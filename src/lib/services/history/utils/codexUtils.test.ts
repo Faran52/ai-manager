@@ -182,7 +182,7 @@ describe('parseCodexHistory', () => {
       line('response_item', {
         type: 'message',
         role: 'user',
-        content: [{ text: 'Fix the parser' }],
+        content: [{ text: 'Fix the parser\n<recommended_plugins>catalog</recommended_plugins>' }],
       }),
     ].join('\n'));
 
@@ -194,6 +194,8 @@ describe('parseCodexHistory', () => {
     expect(parsed.entries[1]).toMatchObject({
       kind: 'user',
       meta: false,
+      text: 'Fix the parser',
+      injectedText: '<recommended_plugins>catalog</recommended_plugins>',
     });
   });
 

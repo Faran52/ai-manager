@@ -92,6 +92,40 @@ describe('parseHistoryLine', () => {
     expect(entry).toMatchObject({ meta: true });
   });
 
+  test('separates injected context appended to a real user message', () => {
+    const entry = parseFields({
+      type: 'user',
+      uuid: 'u1',
+      timestamp: 't1',
+      message: {
+        role: 'user',
+        content: [
+          'Fix all of these.',
+          '<recommended_plugins>',
+          'plugin catalog',
+          '</recommended_plugins>',
+          '<environment_context>',
+          'workspace details',
+          '</environment_context>',
+        ].join('\n'),
+      },
+    });
+
+    expect(entry).toMatchObject({
+      kind: 'user',
+      meta: false,
+      text: 'Fix all of these.',
+      injectedText: [
+        '<recommended_plugins>',
+        'plugin catalog',
+        '</recommended_plugins>',
+        '<environment_context>',
+        'workspace details',
+        '</environment_context>',
+      ].join('\n'),
+    });
+  });
+
   test('falls back to empty identity fields when absent', () => {
     const entry = parseFields({
       type: 'user',

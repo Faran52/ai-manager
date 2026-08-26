@@ -9,7 +9,7 @@ import { appConfig } from '@config/appConfig';
 
 import { humanPreview } from '@utils/titleUtils';
 
-import { isMetaText, parseToolInput } from '../../session/utils/parserUtils';
+import { parseToolInput, splitUserText } from '../../session/utils/parserUtils';
 
 import type {
   AssistantBlock,
@@ -147,10 +147,10 @@ const absorbMessage = (scan: CodexScan, payload: CodexPayload, timestamp: string
   const text = textContent(payload);
 
   if (payload.role === 'user') {
-    const meta = isMetaText(text);
+    const splitText = splitUserText(text);
 
-    if (!meta) {
-      scan.title ??= humanPreview(text, appConfig.previewLength);
+    if (!splitText.meta) {
+      scan.title ??= humanPreview(splitText.text, appConfig.previewLength);
     }
 
     scan.entries.push({
@@ -158,8 +158,9 @@ const absorbMessage = (scan: CodexScan, payload: CodexPayload, timestamp: string
       uuid,
       timestamp,
       sidechain: false,
-      meta,
-      text,
+      meta: splitText.meta,
+      text: splitText.text,
+      ...(splitText.injectedText == null ? {} : { injectedText: splitText.injectedText }),
       outcomes: [],
     });
   }

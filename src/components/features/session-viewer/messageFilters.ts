@@ -55,6 +55,7 @@ export const entryIsVisible = (entry: HistoryEntry, filters: MessageFilters): bo
     case 'user':
       return filters.roles.human && (
         (filters.content.text && entry.text.length > 0)
+        || (filters.content.text && entry.injectedText != null)
         || (filters.content.commands && entry.command != null)
         || (filters.content.tools && entry.outcomes.length > 0)
       );

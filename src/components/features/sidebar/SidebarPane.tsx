@@ -358,7 +358,9 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                     text-[11px] text-muted-foreground
                   "
                   >
-                    <span className="shrink-0">{`${String(project.sessionCount)} sessions`}</span>
+                    <span className="shrink-0">
+                      {`${String(project.sessionCount)} ${project.sessionCount === 1 ? 'session' : 'sessions'}`}
+                    </span>
                     <AgentTag agent={project.agent} />
                     <span className="shrink-0">{formatTimeAgo(project.lastActivityMs, nowMs)}</span>
                   </span>
@@ -408,6 +410,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
             onInput={setSessionFilter}
             label="Filter sessions"
             placeholder="Filter sessions"
+            disabled={selectedProject == null}
           />
         </div>
         <ul className="min-h-0 flex-1 overflow-y-auto px-2 pb-4">
@@ -497,11 +500,31 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
               <Spinner />
             </li>
           )}
-          {sessionsStatus === 'ready' && visibleSessions.length === 0 && (
+          {sessionsStatus === 'ready' && selectedProject == null && (
+            <EmptyState
+              icon={<FolderClosed className="size-8" />}
+              title="Select a project"
+              hint="Choose a project above to view its sessions."
+            />
+          )}
+          {sessionsStatus === 'ready'
+            && selectedProject != null
+            && sessions.length === 0
+            && sessionFilter.trim().length === 0 && (
+            <EmptyState
+              icon={<MessagesSquare className="size-8" />}
+              title="No sessions yet"
+              hint="This project has no stored sessions."
+            />
+          )}
+          {sessionsStatus === 'ready'
+            && selectedProject != null
+            && visibleSessions.length === 0
+            && (sessions.length > 0 || sessionFilter.trim().length > 0) && (
             <EmptyState
               icon={<Search className="size-8" />}
               title="No sessions match"
-              hint="Adjust the filter or pick another project."
+              hint="Adjust the session filter."
             />
           )}
         </ul>

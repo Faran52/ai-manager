@@ -1,7 +1,7 @@
 import {
   COMMAND_ARGS,
   COMMAND_NAME,
-  META_PREFIXES,
+  INJECTED_CONTEXT_PREFIXES,
   WRAPPED_BLOCK,
 } from '../constants';
 
@@ -30,17 +30,53 @@ import type {
   RawToolUseResult,
 } from '../../history/utils/claudeRawUtils';
 
-// Injected preamble the user never typed; unmarked, it becomes the session title.
-export const isMetaText = (text: string): boolean => {
-  if (META_PREFIXES.some((prefix) => {
-    return text.startsWith(prefix);
-  })) {
-    return true;
+interface SplitUserText {
+  readonly text: string;
+  readonly injectedText?: string | undefined;
+  readonly meta: boolean;
+}
+
+const injectionBoundary = (text: string): number | undefined => {
+  let boundary = Number.POSITIVE_INFINITY;
+
+  for (const prefix of INJECTED_CONTEXT_PREFIXES) {
+    const direct = text.startsWith(prefix) ? 0 : text.indexOf(`\n${prefix}`);
+
+    if (direct >= 0) {
+      boundary = Math.min(boundary, direct === 0 ? 0 : direct + 1);
+    }
+  }
+
+  return Number.isFinite(boundary) ? boundary : undefined;
+};
+
+// Context injectors append their payload, so the first marker is the safe display boundary.
+export const splitUserText = (text: string): SplitUserText => {
+  const boundary = injectionBoundary(text);
+
+  if (boundary != null) {
+    const visible = text.slice(0, boundary).trimEnd();
+
+    return {
+      text: visible,
+      injectedText: text.slice(boundary).trim(),
+      meta: visible.length === 0,
+    };
   }
 
   const tag = WRAPPED_BLOCK.exec(text)?.[1];
+  const wrapped = tag != null && text.includes(`</${tag}>`);
 
-  return tag != null && text.includes(`</${tag}>`);
+  return wrapped
+    ? {
+        text: '',
+        injectedText: text,
+        meta: true,
+      }
+    : {
+        text,
+        meta: false,
+      };
 };
 
 const isRawHistoryLine = (value: unknown): value is RawHistoryLine => {
@@ -351,6 +387,7 @@ const parseUserTurn = (raw: RawHistoryLine): UserTurnEntry | undefined => {
     );
   });
   const text = userText(typeof payload.content === 'string' ? payload.content : undefined, blocks);
+  const splitText = splitUserText(text);
   const command = typeof payload.content === 'string' ? commandLabel(payload.content) : undefined;
 
   return {
@@ -358,8 +395,9 @@ const parseUserTurn = (raw: RawHistoryLine): UserTurnEntry | undefined => {
     uuid: raw.uuid ?? '',
     timestamp: raw.timestamp ?? '',
     sidechain: raw.isSidechain === true,
-    meta: raw.isMeta === true || isMetaText(text),
-    text: command != null ? '' : text,
+    meta: raw.isMeta === true || splitText.meta,
+    text: command != null ? '' : splitText.text,
+    ...(splitText.injectedText == null ? {} : { injectedText: splitText.injectedText }),
     command,
     outcomes,
   };

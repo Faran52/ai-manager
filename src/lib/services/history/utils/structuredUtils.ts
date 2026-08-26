@@ -17,7 +17,7 @@ import { appConfig } from '@config/appConfig';
 import { isJsonObject, parseJsonContainer } from '@utils/jsonUtils';
 import { humanPreview } from '@utils/titleUtils';
 
-import { isMetaText } from '../../session/utils/parserUtils';
+import { splitUserText } from '../../session/utils/parserUtils';
 
 import type { AgentId } from '@config/agents';
 import type { JsonObject, JsonValue } from '@utils/jsonUtils';
@@ -231,13 +231,16 @@ const entryFrom = (record: JsonObject, index: number, fallbackMs: number): Struc
     };
   }
 
+  const splitText = splitUserText(text);
+
   return {
     kind: 'user',
     uuid,
     timestamp,
     sidechain: false,
-    meta: isMetaText(text),
-    text,
+    meta: splitText.meta,
+    text: splitText.text,
+    ...(splitText.injectedText == null ? {} : { injectedText: splitText.injectedText }),
     outcomes: [],
   };
 };

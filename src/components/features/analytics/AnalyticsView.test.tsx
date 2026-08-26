@@ -14,6 +14,7 @@ import type { ProjectStats } from '@services/stats/statsService';
 const stats: ProjectStats = {
   projectId: 'p',
   totals: {
+    usageRecorded: true,
     sessions: 3,
     messages: 12_000,
     inputTokens: 1_000,
@@ -123,6 +124,37 @@ describe('AnalyticsView without ranked sessions', () => {
     );
 
     expect(document.querySelector('[data-top-sessions]')).not.toBeNull();
+  });
+});
+
+describe('AnalyticsView without recorded usage', () => {
+  test('labels unavailable metrics and replaces the empty token heatmap', () => {
+    render(
+      <AnalyticsView
+        stats={{
+          ...stats,
+          totals: {
+            ...stats.totals,
+            usageRecorded: false,
+            inputTokens: 0,
+            outputTokens: 0,
+            cacheReadTokens: 0,
+            costUsd: 0,
+            durationMs: 0,
+          },
+        }}
+        status="ready"
+        projectName="webapp"
+        onOpenSession={() => {
+          return undefined;
+        }}
+      />,
+    );
+
+    expect(screen.getAllByText('Not recorded')).toHaveLength(2);
+    expect(screen.getByText("Token activity isn't recorded for this agent.")).toBeDefined();
+    expect(screen.getByText('5 turns')).toBeDefined();
+    expect(document.querySelector('[data-activity-heatmap]')).toBeNull();
   });
 });
 

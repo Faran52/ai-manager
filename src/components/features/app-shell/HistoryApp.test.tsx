@@ -277,6 +277,7 @@ describe('HistoryApp cross-view flows', () => {
           stats: {
             projectId: 'proj-b',
             totals: {
+              usageRecorded: true,
               sessions: 1,
               messages: 1,
               inputTokens: 0,

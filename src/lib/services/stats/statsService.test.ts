@@ -110,6 +110,7 @@ describe('computeProjectStats', () => {
     const stats = await computeProjectStats(dir, 'proj');
 
     expect(stats?.totals).toMatchObject({
+      usageRecorded: true,
       sessions: 2,
       messages: 3,
       inputTokens: 35,
@@ -230,8 +231,45 @@ describe('Codex project statistics', () => {
         },
       }),
     ].join('\n'));
+    await writeFile(join(dir, 'sessions', 'rollout-long.jsonl'), [
+      JSON.stringify({
+        type: 'session_meta',
+        timestamp: '2026-01-01T00:00:00Z',
+        payload: {
+          id: 'long',
+          cwd: '/repo',
+        },
+      }),
+      JSON.stringify({
+        type: 'response_item',
+        timestamp: '2026-01-01T00:00:00Z',
+        payload: {
+          type: 'message',
+          role: 'assistant',
+          content: [{ text: 'First' }],
+        },
+      }),
+      JSON.stringify({
+        type: 'response_item',
+        timestamp: '2026-01-01T00:01:00Z',
+        payload: {
+          type: 'message',
+          role: 'assistant',
+          content: [{ text: 'Second' }],
+        },
+      }),
+    ].join('\n'));
 
-    expect((await computeProjectStats(dir, '/repo', 'codex'))?.totals.sessions).toBe(1);
+    const stats = await computeProjectStats(dir, '/repo', 'codex');
+
+    expect(stats?.totals).toMatchObject({
+      sessions: 2,
+      usageRecorded: false,
+    });
+    expect(stats?.topSessions[0]).toMatchObject({
+      messages: 2,
+    });
+    expect(stats?.topSessions[0]?.filePath.endsWith('rollout-long.jsonl')).toBe(true);
   });
 });
 

@@ -24,6 +24,7 @@ const PROJECT: ProjectSummary = {
 const stats: ProjectStats = {
   projectId: 'p',
   totals: {
+    usageRecorded: true,
     sessions: 1,
     messages: 2,
     inputTokens: 3,
