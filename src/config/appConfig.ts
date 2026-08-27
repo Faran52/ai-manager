@@ -1,4 +1,6 @@
 export interface AppConfig {
+  // Kept in step with package.json and deno.json, the updater compares against it.
+  readonly version: string;
   readonly pageSize: number;
   readonly maxPageSize: number;
   readonly previewLength: number;
@@ -8,6 +10,7 @@ export interface AppConfig {
 }
 
 export const appConfig: AppConfig = {
+  version: '0.0.1',
   pageSize: 120,
   maxPageSize: 400,
   previewLength: 140,

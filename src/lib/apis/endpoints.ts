@@ -20,6 +20,7 @@ import {
   renameSession,
 } from '@services/session/sessionService';
 import { computeProjectStats } from '@services/stats/statsService';
+import { checkForUpdate, updateConfigFromEnv } from '@services/updates';
 
 import {
   clampLimit,
@@ -32,6 +33,7 @@ import {
 
 import type { AgentId } from '@config/agents';
 import type { AgentRoots } from '@services/agents/agentsService';
+import type { UpdateConfig } from '@services/updates';
 import type {
   AgentSetupBody,
   ListSessionsBody,
@@ -45,6 +47,11 @@ export interface EndpointDeps {
   readonly claudeDir?: string;
   readonly codexDir?: string;
   readonly home?: string;
+}
+
+export interface UpdateEndpointDeps {
+  readonly config?: UpdateConfig | undefined;
+  readonly updateDeps?: Parameters<typeof checkForUpdate>[1] | undefined;
 }
 
 const isAgent = (value: unknown): value is AgentId => {
@@ -212,6 +219,18 @@ export const handleProjectStats = async (request: Request, deps?: EndpointDeps):
     const stats = await computeProjectStats(pathsFor(roots, body.agent), body.projectId, body.agent);
 
     return jsonOk({ stats: stats ?? null });
+  });
+};
+
+export const handleUpdateCheck = (deps?: UpdateEndpointDeps): Promise<Response> => {
+  return withJsonErrors(async () => {
+    const config = deps?.config ?? updateConfigFromEnv();
+
+    if (config == null) {
+      return jsonOk({ update: { stage: 'unsupported' } });
+    }
+
+    return jsonOk({ update: await checkForUpdate(config, deps?.updateDeps) });
   });
 };
 
