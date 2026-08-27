@@ -7,14 +7,12 @@ import {
   basename,
   dirname,
   extname,
-  join,
   relative,
 } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { appConfig } from '@config/appConfig';
 
-import { isJsonObject, parseJsonContainer } from '@utils/jsonUtils';
+import { parseJsonContainer } from '@utils/jsonUtils';
 import { humanPreview } from '@utils/titleUtils';
 
 import { splitUserText } from '../../session/utils/parserUtils';
@@ -44,9 +42,6 @@ interface WalkOptions {
   readonly agent: AgentId;
   readonly maxDepth: number;
 }
-
-// Copilot's other folders hold attachments and logs, which are not chats.
-const COPILOT_CHAT_DIRS = ['/transcripts/', '/chatSessions/'];
 
 const supportedExtensions = new Set(['.json', '.jsonl', '.md', '.ndjson', '.txt']);
 
@@ -314,12 +309,6 @@ const isAgentFile = (agent: AgentId, filePath: string): boolean => {
     return name.startsWith('.aider') && (name.endsWith('.md') || name.endsWith('.jsonl'));
   }
 
-  if (agent === 'copilot') {
-    return COPILOT_CHAT_DIRS.some((dir) => {
-      return filePath.includes(dir);
-    }) && name.endsWith('.jsonl');
-  }
-
   return supportedExtensions.has(extname(name));
 };
 
@@ -365,37 +354,6 @@ const projectIdFor = (root: string, filePath: string): string => {
   return folder.length === 0 ? basename(root) : folder;
 };
 
-const WORKSPACE_DEPTH = 3;
-
-const workspaceRecordFolder = async (dir: string): Promise<string | undefined> => {
-  try {
-    const parsed = parseJsonContainer(await readFile(join(dir, 'workspace.json'), 'utf8'));
-    const folder = isJsonObject(parsed) ? parsed.folder : undefined;
-
-    return typeof folder === 'string' ? fileURLToPath(folder) : undefined;
-  }
-  catch {
-    return undefined;
-  }
-};
-
-// VS Code keys chat storage by an opaque hash; the real folder lives in a record above it.
-const workspaceFolder = async (filePath: string): Promise<string | undefined> => {
-  let dir = dirname(filePath);
-
-  for (let level = 0; level < WORKSPACE_DEPTH; level += 1) {
-    const folder = await workspaceRecordFolder(dir);
-
-    if (folder != null) {
-      return folder;
-    }
-
-    dir = dirname(dir);
-  }
-
-  return undefined;
-};
-
 const structuredSession = async (
   agent: AgentId,
   root: string,
@@ -431,7 +389,7 @@ const structuredSession = async (
         lastTimestampMs: Math.max(...stamps),
         modifiedMs: info.mtimeMs,
         sizeBytes: info.size,
-        cwd: await workspaceFolder(filePath) ?? dirname(filePath),
+        cwd: dirname(filePath),
       },
     };
   }

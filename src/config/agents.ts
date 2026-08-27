@@ -34,7 +34,7 @@ export type SessionArtifact = 'file' | 'directory' | 'shared-db';
 export interface AgentOption {
   readonly id: AgentId;
   readonly label: string;
-  readonly format: 'claude' | 'codex' | 'files' | 'sqlite' | 'opencode';
+  readonly format: 'claude' | 'codex' | 'copilot' | 'files' | 'sqlite' | 'opencode';
   readonly artifact: SessionArtifact;
   readonly canDelete: boolean;
   readonly canDeleteProject: boolean;
@@ -89,7 +89,7 @@ export const agentOptions: readonly AgentOption[] = [
   {
     id: 'copilot',
     label: 'GitHub Copilot',
-    format: 'files',
+    format: 'copilot',
     artifact: 'file',
     canDelete: true,
     canDeleteProject: false,

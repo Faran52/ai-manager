@@ -49,9 +49,9 @@ test('uses platform-specific editor locations and default paths', () => {
     env: {},
   });
 
-  expect(mac.copilot[1]).toContain('Library/Application Support/Code/User/workspaceStorage');
+  expect(mac.copilot[0]).toContain('Library/Application Support/Code/User/workspaceStorage');
   expect(mac.zed[0]).toContain('Library/Application Support/Zed');
-  expect(windows.copilot[1]).toContain('AppData/Roaming/Code/User/workspaceStorage');
+  expect(windows.copilot[0]).toContain('AppData/Roaming/Code/User/workspaceStorage');
   expect(windows.cursor[0]).toContain('AppData/Roaming/Cursor/User/globalStorage/state.vscdb');
   expect(windows.cursor[1]).toContain('AppData/Roaming/Cursor/User/workspaceStorage');
   expect(mac.claude[0]).toBe('/Users/me/.claude');

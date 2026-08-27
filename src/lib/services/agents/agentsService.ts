@@ -11,6 +11,11 @@ import {
   parseCodexHistory,
 } from '../history/utils/codexUtils';
 import {
+  listCopilotProjects,
+  listCopilotSessions,
+  loadCopilotEntries,
+} from '../history/utils/copilotUtils';
+import {
   listOpenCodeProjects,
   listOpenCodeSessions,
   loadOpenCodeEntries,
@@ -189,6 +194,17 @@ const structuredEntries = async (
   return loadStructuredEntries(filePath);
 };
 
+const copilotEntries = async (
+  filePath: string,
+  allowedRoots: readonly string[],
+): Promise<readonly HistoryEntry[] | undefined> => {
+  if (!await containedIn(allowedRoots, filePath)) {
+    return undefined;
+  }
+
+  return loadCopilotEntries(filePath);
+};
+
 const ROUTES_BY_FORMAT: Record<AgentOption['format'], FormatRoutes> = {
   claude: claudeRoutes,
   codex: codexRoutes,
@@ -196,6 +212,11 @@ const ROUTES_BY_FORMAT: Record<AgentOption['format'], FormatRoutes> = {
     projects: listStructuredProjects,
     sessions: listStructuredSessions,
     entries: structuredEntries,
+  },
+  copilot: {
+    projects: listCopilotProjects,
+    sessions: listCopilotSessions,
+    entries: copilotEntries,
   },
   sqlite: {
     projects: listSqliteProjects,

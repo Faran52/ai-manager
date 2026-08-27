@@ -71,7 +71,7 @@ export const resolveAgentPaths = ({
     'codebuddy': [join(home, '.codebuddy')],
     'codex': [envPath(env, 'CODEX_HOME', join(home, '.codex'))],
     'continue': [envPath(env, 'CONTINUE_GLOBAL_DIR', join(home, '.continue', 'sessions'))],
-    'copilot': [join(home, '.copilot', 'session-state'), join(vscode, 'workspaceStorage')],
+    'copilot': [join(vscode, 'workspaceStorage')],
     'crush': commonProjects,
     'cursor': [
       join(cursor, 'globalStorage', 'state.vscdb'),

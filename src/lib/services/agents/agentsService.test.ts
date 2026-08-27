@@ -296,3 +296,25 @@ test('loadAgentEntries refuses structured files outside their roots', async () =
 
   await expect(loadAgentEntries(file, 'continue', [root])).resolves.toBeUndefined();
 });
+
+test('loadAgentEntries refuses copilot journals outside their roots', async () => {
+  const outside = await mkdtemp(join(tmpdir(), 'copilot-outside-'));
+  const file = join(outside, 'chat.jsonl');
+
+  await writeFile(file, JSON.stringify({
+    kind: 0,
+    v: {
+      sessionId: 'outside',
+      requests: [{
+        requestId: 'r0',
+        timestamp: Date.parse('2026-02-01T10:00:00.000Z'),
+        message: { text: 'Prompt' },
+        response: [{ value: 'Reply' }],
+      }],
+    },
+  }));
+
+  const root = await mkdtemp(join(tmpdir(), 'copilot-root-'));
+
+  await expect(loadAgentEntries(file, 'copilot', [root])).resolves.toBeUndefined();
+});
