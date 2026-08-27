@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Check, Palette } from 'lucide-react';
 
@@ -23,6 +24,7 @@ const LABELS: Record<AccentName, string> = {
 };
 
 export const AccentPicker: FC = () => {
+  const { t } = useTranslation('common');
   const { accent, setAccent } = useAccent();
   const [open, setOpen] = useState(false);
 
@@ -31,7 +33,7 @@ export const AccentPicker: FC = () => {
       <Button
         size="sm"
         variant="ghost"
-        title="Change accent colour"
+        title={t('accentChange')}
         onClick={() => {
           setOpen(!open);
         }}
@@ -41,7 +43,7 @@ export const AccentPicker: FC = () => {
       <PopupMenu
         open={open}
         align="right"
-        label="Accent colour"
+        label={t('accent')}
         onClose={() => {
           setOpen(false);
         }}

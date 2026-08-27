@@ -27,5 +27,6 @@
   "tryRefreshing": "请尝试从顶栏刷新。",
   "stderr": "stderr",
   "output": "输出",
-  "result": "结果"
+  "result": "结果",
+  "userAndAssistant": "用户与助手消息"
 }

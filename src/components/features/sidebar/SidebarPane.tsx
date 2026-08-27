@@ -3,6 +3,7 @@ import {
   useMemo,
   useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import {
   CheckSquare2,
@@ -79,6 +80,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
   onDeleteSession,
   nowMs,
 }) => {
+  const { t } = useTranslation('sidebar');
   const [projectFilter, setProjectFilter] = useState('');
   const [projectsHeight, setProjectsHeight] = useState(() => {
     const stored = Number(localStorage.getItem(projectsPaneStorageKey));
@@ -272,7 +274,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
     sessionHeaderAction = (
       <button
         type="button"
-        aria-label="Cancel session selection"
+        aria-label={t('cancelSelection')}
         onClick={exitSelectionMode}
         className="sidebar-section-action"
       >
@@ -284,7 +286,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
     sessionHeaderAction = (
       <button
         type="button"
-        aria-label="Select sessions"
+        aria-label={t('selectSessions')}
         onClick={() => {
           setMenuTarget(null);
           setSelectionMode(true);
@@ -316,8 +318,8 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
           <TextInput
             value={projectFilter}
             onInput={setProjectFilter}
-            label="Filter projects"
-            placeholder="Filter projects"
+            label={t('filterProjects')}
+            placeholder={t('filterProjects')}
           />
         </div>
         <ul className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
@@ -377,7 +379,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
       </section>
 
       <PaneDivider
-        label="Resize projects and sessions"
+        label={t('resize')}
         value={projectsHeight}
         min={MIN_PANE}
         max={MAX_PANE}
@@ -391,7 +393,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
       <section className="flex min-h-0 flex-1 flex-col">
         <SectionHeader
           icon={<MessagesSquare className="size-3.5" />}
-          label="Sessions"
+          label={t('sessions')}
           action={sessionHeaderAction}
         />
         {selectionMode && (
@@ -408,8 +410,8 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
           <TextInput
             value={sessionFilter}
             onInput={setSessionFilter}
-            label="Filter sessions"
-            placeholder="Filter sessions"
+            label={t('filterSessions')}
+            placeholder={t('filterSessions')}
             disabled={selectedProject == null}
           />
         </div>
@@ -503,8 +505,8 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
           {sessionsStatus === 'ready' && selectedProject == null && (
             <EmptyState
               icon={<FolderClosed className="size-8" />}
-              title="Select a project"
-              hint="Choose a project above to view its sessions."
+              title={t('selectProject')}
+              hint={t('selectProjectHint')}
             />
           )}
           {sessionsStatus === 'ready'
@@ -513,8 +515,8 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
             && sessionFilter.trim().length === 0 && (
             <EmptyState
               icon={<MessagesSquare className="size-8" />}
-              title="No sessions yet"
-              hint="This project has no stored sessions."
+              title={t('noSessionsYet')}
+              hint={t('noStoredSessions')}
             />
           )}
           {sessionsStatus === 'ready'
@@ -523,8 +525,8 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
             && (sessions.length > 0 || sessionFilter.trim().length > 0) && (
             <EmptyState
               icon={<Search className="size-8" />}
-              title="No sessions match"
-              hint="Adjust the session filter."
+              title={t('noSessionsMatch')}
+              hint={t('adjustFilter')}
             />
           )}
         </ul>

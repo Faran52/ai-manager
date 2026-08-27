@@ -37,5 +37,7 @@
   "renamedTitles": "你重新命名過的工作階段標題",
   "sessionTitle": "工作階段標題",
   "popularAgents": "熱門代理",
-  "moreSupported": "更多支援的代理"
+  "moreSupported": "更多支援的代理",
+  "noStoredSessions": "此專案沒有已儲存的工作階段。",
+  "adjustFilter": "請調整工作階段篩選條件。"
 }

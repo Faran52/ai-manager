@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import { HeartPulse } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -69,12 +71,13 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
   sessionCounts,
   nowMs,
 }) => {
+  const { t } = useTranslation('setup');
   if (!projectSelected) {
     return (
       <EmptyState
         icon={<HeartPulse className="size-5" />}
-        title="No project selected"
-        hint="Choose a project to see which agents are set up for it."
+        title={t('noProjectSelected', { ns: 'sidebar' })}
+        hint={t('chooseProject')}
       />
     );
   }
@@ -83,7 +86,7 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
     return (
       <EmptyState
         icon={<HeartPulse className="size-5" />}
-        title="Project location unknown"
+        title={t('projectLocationUnknown', { ns: 'sidebar' })}
         hint="This project has no folder on disk, so its agent setup cannot be read."
       />
     );
@@ -148,17 +151,17 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
       <ProjectTrustCard trust={trust} />
       {usage != null && <ProjectUsageCard usage={usage} nowMs={nowMs} />}
       {flagged.length > 0 && (
-        <Group name="needs-attention" label="Needs attention">
+        <Group name="needs-attention" label={t('needsAttention')}>
           {flagged.map(card)}
         </Group>
       )}
       {healthy.length > 0 && (
-        <Group name="set-up" label="Set up">
+        <Group name="set-up" label={t('setUp')}>
           {healthy.map(card)}
         </Group>
       )}
       {unconfigured.length > 0 && (
-        <Group name="not-set-up" label="Not set up here">
+        <Group name="not-set-up" label={t('notSetUpHere')}>
           {unconfigured.map(card)}
         </Group>
       )}

@@ -27,5 +27,6 @@
   "tryRefreshing": "ヘッダーから更新してみてください。",
   "stderr": "stderr",
   "output": "出力",
-  "result": "結果"
+  "result": "結果",
+  "userAndAssistant": "ユーザーとアシスタントのメッセージ"
 }

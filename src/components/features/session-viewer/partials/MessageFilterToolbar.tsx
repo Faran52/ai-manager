@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import {
   ChevronDown,
@@ -40,6 +41,7 @@ export const MessageFilterToolbar: FC<MessageFilterToolbarProps> = ({
   visible,
   onChange,
 }) => {
+  const { t } = useTranslation('session');
   const [open, setOpen] = useState(false);
   const options: readonly FilterOption[] = [
     {
@@ -106,7 +108,7 @@ export const MessageFilterToolbar: FC<MessageFilterToolbarProps> = ({
           type="button"
           aria-haspopup="menu"
           aria-expanded={open}
-          aria-label="Filter messages"
+          aria-label={t('filterMessages')}
           onPointerDown={(event) => {
             event.stopPropagation();
           }}
@@ -126,7 +128,7 @@ export const MessageFilterToolbar: FC<MessageFilterToolbarProps> = ({
           onClose={() => {
             setOpen(false);
           }}
-          label="Message filters"
+          label={t('messageFilters')}
           align="left"
         >
           <p className="
@@ -201,8 +203,8 @@ export const MessageFilterToolbar: FC<MessageFilterToolbarProps> = ({
       {active && (
         <button
           type="button"
-          aria-label="Reset conversation filters"
-          title="Reset filters"
+          aria-label={t('resetConversationFilters')}
+          title={t('resetFilters')}
           onClick={() => {
             onChange(defaultMessageFilters());
           }}

@@ -37,5 +37,7 @@
   "renamedTitles": "名前を変更したセッションのタイトル",
   "sessionTitle": "セッション名",
   "popularAgents": "よく使われるエージェント",
-  "moreSupported": "その他の対応エージェント"
+  "moreSupported": "その他の対応エージェント",
+  "noStoredSessions": "このプロジェクトには保存されたセッションがありません。",
+  "adjustFilter": "セッションの絞り込み条件を調整してください。"
 }

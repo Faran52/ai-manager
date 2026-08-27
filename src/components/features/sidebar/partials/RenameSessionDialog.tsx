@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { agentOption } from '@config/agents';
 
@@ -27,6 +28,7 @@ export const RenameSessionDialog: FC<RenameSessionDialogProps> = ({
   onClose,
   onConfirm,
 }) => {
+  const { t } = useTranslation('sidebar');
   const target = useLastPresent(session);
   const [syncedFrom, setSyncedFrom] = useState<SessionSummary | null>(null);
   const [title, setTitle] = useState('');
@@ -55,7 +57,7 @@ export const RenameSessionDialog: FC<RenameSessionDialogProps> = ({
                 {`Rename in ${agentOption(target.agent).label}`}
               </h2>
               <div className="mt-4">
-                <TextInput value={title} onInput={setTitle} label="Session title" placeholder="Session title" />
+                <TextInput value={title} onInput={setTitle} label={t('sessionTitle')} placeholder={t('sessionTitle')} />
               </div>
               <div className="mt-5 flex justify-end gap-2">
                 <Button variant="ghost" disabled={busy} onClick={onClose}>Cancel</Button>

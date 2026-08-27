@@ -11,5 +11,6 @@
   "plugin": "プラグイン",
   "marketplace": "マーケットプレイス",
   "rules": "ルール",
-  "mcp": "MCP"
+  "mcp": "MCP",
+  "chooseProject": "プロジェクトを選ぶと、設定済みのエージェントが表示されます。"
 }

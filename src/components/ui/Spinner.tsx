@@ -1,8 +1,12 @@
+import { useTranslation } from 'react-i18next';
+
 import type { FC } from 'react';
 
 export const Spinner: FC = () => {
+  const { t } = useTranslation('common');
+
   return (
-    <span role="status" aria-label="loading" className="inline-flex">
+    <span role="status" aria-label={t('loading')} className="inline-flex">
       <svg
         viewBox="0 0 24 24"
         fill="none"

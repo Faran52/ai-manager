@@ -3,6 +3,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import {
   CircleAlert,
@@ -43,6 +44,7 @@ export const SessionViewer: FC<SessionViewerProps> = ({
   sessionTitle,
   highlightTimestamp,
 }) => {
+  const { t } = useTranslation('session');
   const [includeSidechain, setIncludeSidechain] = useState(false);
   const [filters, setFilters] = useState(defaultMessageFilters);
   const supportsSidechains = agentOption(agent).supportsSidechains === true;
@@ -73,15 +75,15 @@ export const SessionViewer: FC<SessionViewerProps> = ({
       <div className="flex flex-1 items-center justify-center" data-viewer-empty>
         <EmptyState
           icon={<FileText className="size-10" />}
-          title="No session selected"
-          hint="Pick a project and a session from the sidebar."
+          title={t('noSessionSelected')}
+          hint={t('pickSession')}
         />
       </div>
     );
   }
 
   const baseLabel = sessionTitle ?? filePath.split('/').at(-1);
-  const title = baseLabel != null && baseLabel.length > 0 ? baseLabel : 'Session';
+  const title = baseLabel != null && baseLabel.length > 0 ? baseLabel : t('session', { ns: 'common' });
 
   let body: ReactNode;
 
@@ -137,7 +139,7 @@ export const SessionViewer: FC<SessionViewerProps> = ({
           </p>
         </div>
         <div className="ms-auto flex shrink-0 items-center gap-1.5">
-          <Badge tone="accent" title="User and assistant messages">
+          <Badge tone="accent" title={t('userAndAssistant')}>
             <MessageSquare className="size-3" />
             {`${String(feed.messageCount)} ${feed.messageCount === 1 ? 'message' : 'messages'}`}
           </Badge>
@@ -152,7 +154,7 @@ export const SessionViewer: FC<SessionViewerProps> = ({
                   return !value;
                 });
               }}
-              title="Include nested subagent messages"
+              title={t('includeSubagents')}
             >
               <ListFilter className="size-3.5" />
               Include subagent activity

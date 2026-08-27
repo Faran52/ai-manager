@@ -11,5 +11,6 @@
   "plugin": "Plugin",
   "marketplace": "Marketplace",
   "rules": "Rules",
-  "mcp": "MCP"
+  "mcp": "MCP",
+  "chooseProject": "Choose a project to see which agents are set up for it."
 }

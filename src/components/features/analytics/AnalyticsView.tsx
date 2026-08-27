@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import {
   BarChart3,
   CircleAlert,
@@ -41,6 +43,7 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
   projectName,
   onOpenSession,
 }) => {
+  const { t } = useTranslation('analytics');
   if (status === 'loading') {
     return (
       <div className="flex flex-1 items-center justify-center" data-analytics-loading>
@@ -77,21 +80,21 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
       "
       >
         <MetricCard
-          label="Sessions"
+          label={t('sessions', { ns: 'sidebar' })}
           value={String(stats.totals.sessions)}
           icon={(
             <MessagesSquare className="size-3.5" />
           )}
         />
         <MetricCard
-          label="Assistant turns"
+          label={t('assistantTurns')}
           value={formatTokens(stats.totals.messages)}
           icon={(
             <Zap className="size-3.5" />
           )}
         />
         <MetricCard
-          label="Tokens"
+          label={t('tokens')}
           value={stats.totals.usageRecorded ? formatTokens(totalTokens) : 'Not recorded'}
           hint={stats.totals.usageRecorded
             ? `${formatTokens(stats.totals.cacheReadTokens)} cache reads`
@@ -99,7 +102,7 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
           icon={<Coins className="size-3.5" />}
         />
         <MetricCard
-          label="Compute time"
+          label={t('computeTime')}
           value={stats.totals.usageRecorded ? formatDurationMs(stats.totals.durationMs) : 'Not recorded'}
           hint={stats.totals.usageRecorded
             ? `${formatCost(stats.totals.costUsd)} recorded cost`
@@ -110,7 +113,7 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
       {stats.totals.usageRecorded
         ? <ActivityHeatmap activity={stats.activity} />
         : (
-            <AnalyticsPanel title="Activity">
+            <AnalyticsPanel title={t('activity')}>
               <p className="mt-3 text-sm text-muted-foreground">
                 Token activity isn't recorded for this agent.
               </p>
@@ -123,7 +126,7 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
       "
       >
         <BarList
-          title="Models by requests"
+          title={t('models')}
           items={stats.models.map((model) => {
             return {
               label: model.model,
@@ -132,7 +135,7 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
           })}
         />
         <BarList
-          title="Tool calls"
+          title={t('toolCalls')}
           items={stats.tools.slice(0, 10).map((tool) => {
             return {
               label: tool.tool,

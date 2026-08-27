@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import { CheckCheck, Trash2 } from 'lucide-react';
 
 import type { FC } from 'react';
@@ -15,6 +17,7 @@ export const SessionSelectionBar: FC<SessionSelectionBarProps> = ({
   onToggleAll,
   onDelete,
 }) => {
+  const { t } = useTranslation('sidebar');
   return (
     <div className="session-selection-bar">
       <span className="session-selection-count">{`${String(selectedCount)} selected`}</span>
@@ -29,7 +32,7 @@ export const SessionSelectionBar: FC<SessionSelectionBarProps> = ({
       </button>
       <button
         type="button"
-        aria-label="Delete selected"
+        aria-label={t('deleteSelected')}
         disabled={selectedCount === 0}
         onClick={onDelete}
         className="session-selection-delete"

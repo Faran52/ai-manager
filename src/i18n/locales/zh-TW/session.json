@@ -27,5 +27,6 @@
   "tryRefreshing": "請嘗試從頂列重新整理。",
   "stderr": "stderr",
   "output": "輸出",
-  "result": "結果"
+  "result": "結果",
+  "userAndAssistant": "使用者與助理訊息"
 }

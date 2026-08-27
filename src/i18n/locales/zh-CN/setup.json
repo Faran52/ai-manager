@@ -11,5 +11,6 @@
   "plugin": "插件",
   "marketplace": "市场",
   "rules": "规则",
-  "mcp": "MCP"
+  "mcp": "MCP",
+  "chooseProject": "选择一个项目以查看为其配置的智能体。"
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import {
   Check,
@@ -29,6 +30,7 @@ export const ExportMenu: FC<ExportMenuProps> = ({
   project,
   title,
 }) => {
+  const { t } = useTranslation('session');
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const markdown = (): string => {
@@ -67,7 +69,7 @@ export const ExportMenu: FC<ExportMenuProps> = ({
         Export
         <ChevronDown className="size-3 transition-transform" data-open={open} />
       </button>
-      <PopupMenu open={open} onClose={close} label="Export session">
+      <PopupMenu open={open} onClose={close} label={t('export')}>
         <MenuItem
           icon={copied
             ? <Check className="size-3.5 text-ok" />

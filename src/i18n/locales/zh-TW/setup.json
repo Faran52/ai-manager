@@ -11,5 +11,6 @@
   "plugin": "外掛",
   "marketplace": "市集",
   "rules": "規則",
-  "mcp": "MCP"
+  "mcp": "MCP",
+  "chooseProject": "選擇一個專案以查看為其設定的代理。"
 }

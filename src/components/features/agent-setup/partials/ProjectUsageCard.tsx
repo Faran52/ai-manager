@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import { Coins } from 'lucide-react';
 
 import {
@@ -18,6 +20,7 @@ export interface ProjectUsageCardProps {
 }
 
 export const ProjectUsageCard: FC<ProjectUsageCardProps> = ({ usage, nowMs }) => {
+  const { t } = useTranslation('analytics');
   const topModelCost = Math.max(0, ...usage.models.map((model) => {
     return model.costUsd;
   }));
@@ -39,13 +42,13 @@ export const ProjectUsageCard: FC<ProjectUsageCardProps> = ({ usage, nowMs }) =>
         sm:grid-cols-4
       "
       >
-        <MetricCard label="Spend" value={formatCost(usage.costUsd)} />
+        <MetricCard label={t('spend')} value={formatCost(usage.costUsd)} />
         <MetricCard
-          label="In / out"
+          label={t('inOut')}
           value={`${formatTokens(usage.inputTokens)} / ${formatTokens(usage.outputTokens)}`}
         />
-        <MetricCard label="Cache reads" value={formatTokens(usage.cacheReadTokens)} />
-        <MetricCard label="Time" value={formatDurationMs(usage.durationMs)} />
+        <MetricCard label={t('cacheReads')} value={formatTokens(usage.cacheReadTokens)} />
+        <MetricCard label={t('time')} value={formatDurationMs(usage.durationMs)} />
       </div>
       {usage.models.length > 0 && (
         <ul className="mt-2 grid gap-1 border-t border-border pt-2">

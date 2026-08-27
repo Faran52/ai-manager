@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import {
   BarChart3,
@@ -36,6 +37,7 @@ export const AppHeader: FC<AppHeaderProps> = ({
   themeMode,
   onThemeChange,
 }) => {
+  const { t } = useTranslation('common');
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -117,7 +119,7 @@ export const AppHeader: FC<AppHeaderProps> = ({
         </nav>
 
         <div className="ms-auto flex items-center gap-0.5">
-          <Button size="sm" variant="ghost" onClick={onOpenSearch} title="Search all chats (press /)">
+          <Button size="sm" variant="ghost" onClick={onOpenSearch} title={t('searchAllChats')}>
             <Search className="size-3.5" />
             Search all chats
             <kbd className="
@@ -136,7 +138,7 @@ export const AppHeader: FC<AppHeaderProps> = ({
               setRefreshing(true);
               onReload();
             }}
-            title={refreshing ? 'Refreshing conversation history' : 'Refresh conversation history'}
+            title={refreshing ? t('refreshing') : t('refresh')}
           >
             <RefreshCw className={cn('size-3.5', refreshing && 'animate-spin')} />
           </Button>
@@ -145,7 +147,7 @@ export const AppHeader: FC<AppHeaderProps> = ({
           <ThemePicker mode={themeMode} onChange={onThemeChange} />
         </div>
       </header>
-      <Toast message={refreshing ? 'Refreshing conversation history…' : null} />
+      <Toast message={refreshing ? t('refreshingToast') : null} />
     </>
   );
 };

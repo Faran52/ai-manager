@@ -37,5 +37,7 @@
   "renamedTitles": "이름을 변경한 세션 제목",
   "sessionTitle": "세션 제목",
   "popularAgents": "인기 에이전트",
-  "moreSupported": "추가 지원 에이전트"
+  "moreSupported": "추가 지원 에이전트",
+  "noStoredSessions": "이 프로젝트에는 저장된 세션이 없습니다.",
+  "adjustFilter": "세션 필터를 조정하세요."
 }

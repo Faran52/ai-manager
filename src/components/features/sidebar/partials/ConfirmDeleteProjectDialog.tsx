@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import { FolderX, TriangleAlert } from 'lucide-react';
 
 import { agentOption } from '@config/agents';
@@ -20,6 +22,7 @@ export const ConfirmDeleteProjectDialog: FC<ConfirmDeleteProjectDialogProps> = (
   onClose,
   onConfirm,
 }) => {
+  const { t } = useTranslation('common');
   const open = project != null;
   const target = useLastPresent(project);
   const agentLabel = target == null ? 'the agent' : agentOption(target.agent).label;
@@ -56,7 +59,7 @@ export const ConfirmDeleteProjectDialog: FC<ConfirmDeleteProjectDialogProps> = (
           </p>
         </div>
       )}
-      confirmLabel="Delete permanently"
+      confirmLabel={t('deletePermanently')}
       busyLabel="Deleting…"
       busy={busy}
       onClose={onClose}

@@ -3,6 +3,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Search as SearchIcon } from 'lucide-react';
 
@@ -29,6 +30,7 @@ export const SearchDialog: FC<SearchDialogProps> = ({
   projectNames,
   onJump,
 }) => {
+  const { t } = useTranslation('common');
   const [term, setTerm] = useState('');
   const [prevOpen, setPrevOpen] = useState(open);
   const debounceRef = useRef<number | undefined>(undefined);
@@ -82,8 +84,8 @@ export const SearchDialog: FC<SearchDialogProps> = ({
             ref={inputRef}
             data-search-input
             value={term}
-            placeholder="Search messages across all projects…"
-            aria-label="Search history"
+            placeholder={t('searchPlaceholder')}
+            aria-label={t('searchHistory')}
             onChange={(event) => {
               setTerm(event.currentTarget.value);
             }}

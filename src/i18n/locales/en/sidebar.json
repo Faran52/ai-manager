@@ -37,5 +37,7 @@
   "renamedTitles": "Any session titles you renamed",
   "sessionTitle": "Session title",
   "popularAgents": "Popular agents",
-  "moreSupported": "More supported"
+  "moreSupported": "More supported",
+  "noStoredSessions": "This project has no stored sessions.",
+  "adjustFilter": "Adjust the session filter."
 }

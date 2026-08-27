@@ -27,5 +27,6 @@
   "tryRefreshing": "헤더에서 새로고침해 보세요.",
   "stderr": "stderr",
   "output": "출력",
-  "result": "결과"
+  "result": "결과",
+  "userAndAssistant": "사용자 및 어시스턴트 메시지"
 }

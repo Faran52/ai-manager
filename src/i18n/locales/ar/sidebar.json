@@ -37,5 +37,7 @@
   "renamedTitles": "أي عناوين جلسات قمت بإعادة تسميتها",
   "sessionTitle": "عنوان الجلسة",
   "popularAgents": "الوكلاء الشائعون",
-  "moreSupported": "مدعوم أيضًا"
+  "moreSupported": "مدعوم أيضًا",
+  "noStoredSessions": "لا يحتوي هذا المشروع على جلسات مخزَّنة.",
+  "adjustFilter": "عدّل عامل تصفية الجلسات."
 }

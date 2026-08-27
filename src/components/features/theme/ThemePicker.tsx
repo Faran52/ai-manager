@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import {
   Check,
@@ -40,6 +41,7 @@ const DETAIL: Record<ThemeMode, { readonly label: string;
 };
 
 export const ThemePicker: FC<ThemePickerProps> = ({ mode, onChange }) => {
+  const { t } = useTranslation('common');
   const [open, setOpen] = useState(false);
   const active = DETAIL[mode];
 
@@ -58,7 +60,7 @@ export const ThemePicker: FC<ThemePickerProps> = ({ mode, onChange }) => {
       <PopupMenu
         open={open}
         align="right"
-        label="Theme"
+        label={t('theme')}
         onClose={() => {
           setOpen(false);
         }}

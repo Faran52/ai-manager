@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import {
   Check,
@@ -30,6 +31,7 @@ export const AgentFilterBar: FC<AgentFilterBarProps> = ({
   counts,
   onChange,
 }) => {
+  const { t } = useTranslation('sidebar');
   const [open, setOpen] = useState(false);
   const allSelected = active.length === 0;
   const summary = allSelected
@@ -112,12 +114,12 @@ export const AgentFilterBar: FC<AgentFilterBarProps> = ({
         onClose={() => {
           setOpen(false);
         }}
-        label="AI agent filters"
+        label={t('agentFilters')}
       >
         <div className="max-h-72 w-full overflow-y-auto p-0.5">
           <button
             type="button"
-            aria-label="All agents"
+            aria-label={t('allAgents')}
             aria-pressed={allSelected}
             data-selected={allSelected}
             onClick={() => {

@@ -6,6 +6,7 @@ export default getViteConfig({
   test: {
     globals: true,
     environment: 'happy-dom',
+    setupFiles: ['./__mocks__/setupTests.ts'],
     coverage: {
       provider: 'v8',
       include: ['src/**/*.{ts,tsx,mts,js,jsx,mjs}'],

@@ -27,5 +27,6 @@
   "tryRefreshing": "جرّب التحديث من الشريط العلوي.",
   "stderr": "stderr",
   "output": "المخرجات",
-  "result": "النتيجة"
+  "result": "النتيجة",
+  "userAndAssistant": "رسائل المستخدم والمساعد"
 }

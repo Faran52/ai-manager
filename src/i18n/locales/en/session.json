@@ -27,5 +27,6 @@
   "tryRefreshing": "Try refreshing from the header.",
   "stderr": "stderr",
   "output": "output",
-  "result": "result"
+  "result": "result",
+  "userAndAssistant": "User and assistant messages"
 }

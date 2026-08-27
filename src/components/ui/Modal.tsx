@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { AnimatePresence, motion } from 'motion/react';
 
@@ -23,6 +24,7 @@ export const Modal: FC<ModalProps> = ({
   children,
   widthClass = 'max-w-xl',
 }) => {
+  const { t } = useTranslation('common');
   const surfaceRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef(onClose);
 
@@ -69,7 +71,7 @@ export const Modal: FC<ModalProps> = ({
         >
           <button
             type="button"
-            aria-label="Close dialog"
+            aria-label={t('closeDialog')}
             onClick={onClose}
             className="absolute inset-0 cursor-default"
           />
