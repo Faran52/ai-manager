@@ -45,5 +45,15 @@
   "sessionCount_two": "جلستان",
   "sessionCount_few": "{{count}} جلسات",
   "sessionCount_many": "{{count}} جلسة",
-  "sessionCount_other": "{{count}} جلسة"
+  "sessionCount_other": "{{count}} جلسة",
+  "select": "تحديد",
+  "all": "الكل",
+  "deleteProjectConfirm": "حذف سجل المشروع نهائيًا؟",
+  "cannotBeUndone": "لا يمكن التراجع عن هذا.",
+  "messageCount_zero": "لا رسائل",
+  "messageCount_one": "رسالة واحدة",
+  "messageCount_two": "رسالتان",
+  "messageCount_few": "{{count}} رسائل",
+  "messageCount_many": "{{count}} رسالة",
+  "messageCount_other": "{{count}} رسالة"
 }

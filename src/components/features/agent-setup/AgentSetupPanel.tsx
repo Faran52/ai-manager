@@ -87,7 +87,7 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
       <EmptyState
         icon={<HeartPulse className="size-5" />}
         title={t('projectLocationUnknown', { ns: 'sidebar' })}
-        hint="This project has no folder on disk, so its agent setup cannot be read."
+        hint={t('noFolderOnDisk')}
       />
     );
   }
@@ -124,10 +124,9 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
     );
   };
 
-  const subject = flagged.length === 1 ? 'agent needs' : 'agents need';
   const verdict = flagged.length === 0
     ? t('healthy')
-    : `${String(flagged.length)} ${subject} attention`;
+    : t('needsAttentionCount', { count: flagged.length });
 
   return (
     <motion.div
@@ -144,7 +143,10 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
           {verdict}
         </h2>
         <p className="mt-0.5 font-mono text-xs text-muted-foreground">
-          {`${String(configured.length)} of ${String(setups.length)} agents set up for this project`}
+          {t('agentsSetUp', {
+            configured: configured.length,
+            total: setups.length,
+          })}
         </p>
       </header>
       <SetupFindings findings={findings} />

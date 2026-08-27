@@ -49,7 +49,7 @@ describe('ToolExecutionCard', () => {
   test('opens immediately when the result failed and shows streams', () => {
     render(<ToolExecutionCard call={bashCall} outcome={errorOutcome} />);
 
-    expect(screen.getByText('error')).toBeDefined();
+    expect(screen.getByText('Error')).toBeDefined();
     expect(screen.getByText('stack trace')).toBeDefined();
     expect(screen.getByText('npm err!')).toBeDefined();
   });
@@ -313,7 +313,7 @@ describe('ToolExecutionCard input rows and image fallbacks', () => {
     }
 
     expect(screen.getByText('killed')).toBeDefined();
-    expect(screen.getByText('interrupted')).toBeDefined();
+    expect(screen.getByText('Interrupted')).toBeDefined();
   });
 });
 

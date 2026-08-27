@@ -45,7 +45,10 @@ export const PluginInventory: FC<PluginInventoryProps> = ({ plugins }) => {
       "
       >
         <Blocks className="size-3" />
-        {`Plugins ${String(active.length)}/${String(plugins.length)}`}
+        {t('pluginsCount', {
+          enabled: active.length,
+          total: plugins.length,
+        })}
       </h5>
       {plugins.length === 0
         ? <p className="text-xs text-muted-foreground">{t('none', { ns: 'common' })}</p>
@@ -90,7 +93,9 @@ export const PluginInventory: FC<PluginInventoryProps> = ({ plugins }) => {
                             ? plugin.marketplace
                             : <span className="text-warn">{`${plugin.marketplace} ?`}</span>}
                         </td>
-                        <td className={cn(CELL, 'text-muted-foreground')}>{plugin.scope}</td>
+                        <td className={cn(CELL, 'text-muted-foreground')}>
+                          {plugin.scope === 'project' ? t('scopeProject') : t('scopeUser')}
+                        </td>
                         <td className={cn(CELL, 'text-muted-foreground/70')}>
                           {version.length > 0 ? version : '·'}
                         </td>
@@ -98,7 +103,7 @@ export const PluginInventory: FC<PluginInventoryProps> = ({ plugins }) => {
                           ? 'text-ok'
                           : 'text-muted-foreground')}
                         >
-                          {plugin.enabled ? 'on' : 'off'}
+                          {plugin.enabled ? t('stateOn') : t('stateOff')}
                         </td>
                       </tr>
                     );

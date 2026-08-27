@@ -12,5 +12,18 @@
   "marketplace": "市集",
   "rules": "規則",
   "mcp": "MCP",
-  "chooseProject": "選擇一個專案以查看為其設定的代理。"
+  "chooseProject": "選擇一個專案以查看為其設定的代理。",
+  "noFolderOnDisk": "此專案在磁碟上沒有資料夾，因此無法讀取其代理設定。",
+  "agentsSetUp": "此專案已設定 {{total}} 個代理中的 {{configured}} 個",
+  "needsAttentionCount_one": "{{count}} 個代理需要注意",
+  "needsAttentionCount_other": "{{count}} 個代理需要注意",
+  "sessionsCount_one": "{{count}} 個工作階段",
+  "sessionsCount_other": "{{count}} 個工作階段",
+  "mcpCount": "MCP {{count}}",
+  "rulesCount": "規則 {{count}}",
+  "pluginsCount": "外掛 {{enabled}}/{{total}}",
+  "stateOn": "開",
+  "stateOff": "關",
+  "scopeUser": "使用者",
+  "scopeProject": "專案"
 }

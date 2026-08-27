@@ -83,7 +83,7 @@ describe('AssistantTurn', () => {
 
     expect(screen.getAllByText('Thinking')).toHaveLength(2);
     expect(screen.getAllByText('Bash').length).toBeGreaterThan(0);
-    expect(screen.getByText('error')).toBeDefined();
+    expect(screen.getByText('Error')).toBeDefined();
   });
 
   test('hides the chip row when no metadata exists', () => {

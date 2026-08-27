@@ -60,8 +60,8 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
             ? <CircleAlert className="size-10" />
             : <BarChart3 className="size-10" />}
           title={status === 'error'
-            ? `Couldn't load analytics for ${projectName}`
-            : `No analytics for ${projectName}`}
+            ? t('loadFailedFor', { project: projectName })
+            : t('noAnalyticsFor', { project: projectName })}
           hint={status === 'error'
             ? t('tryRefreshing')
             : t('selectProjectWithSessions')}
@@ -97,7 +97,7 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
           label={t('tokens')}
           value={stats.totals.usageRecorded ? formatTokens(totalTokens) : t('notRecorded', { ns: 'common' })}
           hint={stats.totals.usageRecorded
-            ? `${formatTokens(stats.totals.cacheReadTokens)} cache reads`
+            ? t('cacheReadsValue', { value: formatTokens(stats.totals.cacheReadTokens) })
             : undefined}
           icon={<Coins className="size-3.5" />}
         />
@@ -107,7 +107,7 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
             ? formatDurationMs(stats.totals.durationMs)
             : t('notRecorded', { ns: 'common' })}
           hint={stats.totals.usageRecorded
-            ? `${formatCost(stats.totals.costUsd)} recorded cost`
+            ? t('recordedCost', { value: formatCost(stats.totals.costUsd) })
             : undefined}
         />
       </div>
@@ -117,7 +117,7 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
         : (
             <AnalyticsPanel title={t('activity')}>
               <p className="mt-3 text-sm text-muted-foreground">
-                Token activity isn't recorded for this agent.
+                {t('tokenActivityMissing')}
               </p>
             </AnalyticsPanel>
           )}

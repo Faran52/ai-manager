@@ -29,7 +29,7 @@ export const ProjectUsageCard: FC<ProjectUsageCardProps> = ({ usage, nowMs }) =>
     <section className="rounded-md border border-border bg-card p-2.5">
       <h3 className="flex items-center gap-2 text-sm font-semibold">
         <Coins className="size-4 text-muted-foreground" />
-        Recorded usage
+        {t('recordedUsage')}
         <span className="
           ms-auto font-mono text-xs font-normal text-muted-foreground
         "

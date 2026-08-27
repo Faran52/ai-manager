@@ -15,5 +15,14 @@
   "turn": "turn",
   "turns": "turns",
   "tryRefreshing": "Try refreshing from the header.",
-  "lastActive": "last active {{when}}"
+  "lastActive": "last active {{when}}",
+  "recordedUsage": "Recorded usage",
+  "turnCount_one": "{{count}} turn",
+  "turnCount_other": "{{count}} turns",
+  "tokenActivityMissing": "Token activity isn't recorded for this agent.",
+  "loadFailedFor": "Couldn't load analytics for {{project}}",
+  "noAnalyticsFor": "No analytics for {{project}}",
+  "cacheReadsValue": "{{value}} cache reads",
+  "recordedCost": "{{value}} recorded cost",
+  "heatmapDay": "{{date}} · {{tokens}} tokens"
 }

@@ -15,5 +15,14 @@
   "turn": "輪",
   "turns": "輪",
   "tryRefreshing": "請嘗試從頂列重新整理。",
-  "lastActive": "最後活動於 {{when}}"
+  "lastActive": "最後活動於 {{when}}",
+  "recordedUsage": "已記錄的用量",
+  "turnCount_one": "{{count}} 輪",
+  "turnCount_other": "{{count}} 輪",
+  "tokenActivityMissing": "此代理未記錄權杖活動。",
+  "loadFailedFor": "無法載入 {{project}} 的分析",
+  "noAnalyticsFor": "沒有 {{project}} 的分析",
+  "cacheReadsValue": "{{value}} 次快取讀取",
+  "recordedCost": "已記錄成本 {{value}}",
+  "heatmapDay": "{{date}} · {{tokens}} 權杖"
 }

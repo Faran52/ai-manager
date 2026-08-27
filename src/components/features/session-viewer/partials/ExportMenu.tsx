@@ -66,7 +66,7 @@ export const ExportMenu: FC<ExportMenuProps> = ({
         className="toolbar-button"
       >
         <Download className="size-3.5" />
-        Export
+        {t('exportAction')}
         <ChevronDown className="size-3 transition-transform" data-open={open} />
       </button>
       <PopupMenu open={open} onClose={close} label={t('export')}>
@@ -93,7 +93,7 @@ export const ExportMenu: FC<ExportMenuProps> = ({
             });
           }}
         >
-          Markdown file
+          {t('exportMarkdown')}
         </MenuItem>
         <MenuItem
           icon={<FileJson className="size-3.5" />}
@@ -103,7 +103,7 @@ export const ExportMenu: FC<ExportMenuProps> = ({
             });
           }}
         >
-          JSON file
+          {t('exportJson')}
         </MenuItem>
       </PopupMenu>
       {copied && <span className="sr-only" role="status">{t('copied', { ns: 'common' })}</span>}

@@ -12,5 +12,18 @@
   "marketplace": "マーケットプレイス",
   "rules": "ルール",
   "mcp": "MCP",
-  "chooseProject": "プロジェクトを選ぶと、設定済みのエージェントが表示されます。"
+  "chooseProject": "プロジェクトを選ぶと、設定済みのエージェントが表示されます。",
+  "noFolderOnDisk": "このプロジェクトはディスク上にフォルダーがないため、エージェント設定を読み取れません。",
+  "agentsSetUp": "このプロジェクトでは {{total}} 個中 {{configured}} 個のエージェントが設定済みです",
+  "needsAttentionCount_one": "{{count}} 個のエージェントに確認が必要です",
+  "needsAttentionCount_other": "{{count}} 個のエージェントに確認が必要です",
+  "sessionsCount_one": "{{count}} 件のセッション",
+  "sessionsCount_other": "{{count}} 件のセッション",
+  "mcpCount": "MCP {{count}}",
+  "rulesCount": "ルール {{count}}",
+  "pluginsCount": "プラグイン {{enabled}}/{{total}}",
+  "stateOn": "オン",
+  "stateOff": "オフ",
+  "scopeUser": "ユーザー",
+  "scopeProject": "プロジェクト"
 }

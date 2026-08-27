@@ -32,7 +32,7 @@ export const ConfirmDeleteProjectDialog: FC<ConfirmDeleteProjectDialogProps> = (
       open={open}
       labelledBy="delete-project-title"
       icon={<FolderX className="size-4 text-destructive" />}
-      heading="Delete project history permanently?"
+      heading={t('deleteProjectConfirm')}
       description={(
         <div className="mt-2 text-sm">
           <p className="text-muted-foreground">
@@ -52,7 +52,7 @@ export const ConfirmDeleteProjectDialog: FC<ConfirmDeleteProjectDialogProps> = (
           "
           >
             <TriangleAlert className="size-3.5 shrink-0" aria-hidden />
-            This cannot be undone.
+            {t('cannotBeUndone')}
           </p>
           <p className="mt-2 text-xs text-muted-foreground">
             Your source project folder on disk is untouched; only the agent's stored history is removed.

@@ -278,7 +278,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
         onClick={exitSelectionMode}
         className="sidebar-section-action"
       >
-        Cancel
+        {t('cancel', { ns: 'common' })}
       </button>
     );
   }
@@ -293,7 +293,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
         }}
         className="sidebar-section-action"
       >
-        Select
+        {t('select')}
       </button>
     );
   }
@@ -490,7 +490,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                   >
                     <span>{formatTimeAgo(session.lastTimestampMs, nowMs, i18n.language)}</span>
                     <span>
-                      {`${String(session.messageCount)} ${session.messageCount === 1 ? 'message' : 'messages'}`}
+                      {t('messageCount', { count: session.messageCount })}
                     </span>
                   </span>
                 </button>

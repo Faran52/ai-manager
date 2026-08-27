@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import { formatTokens } from '@utils/formatUtils';
 
 import { AnalyticsPanel } from './AnalyticsPanel';
@@ -16,14 +18,15 @@ export const TopSessions: FC<TopSessionsProps> = ({
   onOpenSession,
   usageRecorded = true,
 }) => {
+  const { t } = useTranslation('analytics');
   return (
-    <AnalyticsPanel title="Top sessions">
+    <AnalyticsPanel title={t('topSessions')}>
       <ul
         className="-mx-2 mt-2 divide-y divide-border"
         data-top-sessions
       >
         {sessions.map((session) => {
-          const turnLabel = `${String(session.messages)} ${session.messages === 1 ? 'turn' : 'turns'}`;
+          const turnLabel = t('turnCount', { count: session.messages });
           const usageLabel = usageRecorded ? formatTokens(session.tokens) : turnLabel;
 
           return (

@@ -12,5 +12,18 @@
   "marketplace": "마켓플레이스",
   "rules": "규칙",
   "mcp": "MCP",
-  "chooseProject": "프로젝트를 선택하면 설정된 에이전트를 확인할 수 있습니다."
+  "chooseProject": "프로젝트를 선택하면 설정된 에이전트를 확인할 수 있습니다.",
+  "noFolderOnDisk": "이 프로젝트는 디스크에 폴더가 없어 에이전트 설정을 읽을 수 없습니다.",
+  "agentsSetUp": "이 프로젝트에 에이전트 {{total}}개 중 {{configured}}개가 설정되었습니다",
+  "needsAttentionCount_one": "에이전트 {{count}}개에 확인이 필요합니다",
+  "needsAttentionCount_other": "에이전트 {{count}}개에 확인이 필요합니다",
+  "sessionsCount_one": "세션 {{count}}개",
+  "sessionsCount_other": "세션 {{count}}개",
+  "mcpCount": "MCP {{count}}",
+  "rulesCount": "규칙 {{count}}",
+  "pluginsCount": "플러그인 {{enabled}}/{{total}}",
+  "stateOn": "켜짐",
+  "stateOff": "꺼짐",
+  "scopeUser": "사용자",
+  "scopeProject": "프로젝트"
 }

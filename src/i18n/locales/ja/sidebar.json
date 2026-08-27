@@ -41,5 +41,11 @@
   "noStoredSessions": "このプロジェクトには保存されたセッションがありません。",
   "adjustFilter": "セッションの絞り込み条件を調整してください。",
   "sessionCount_one": "{{count}} 件のセッション",
-  "sessionCount_other": "{{count}} 件のセッション"
+  "sessionCount_other": "{{count}} 件のセッション",
+  "select": "選択",
+  "all": "すべて",
+  "deleteProjectConfirm": "プロジェクトの履歴を完全に削除しますか？",
+  "cannotBeUndone": "この操作は取り消せません。",
+  "messageCount_one": "{{count}} 件のメッセージ",
+  "messageCount_other": "{{count}} 件のメッセージ"
 }

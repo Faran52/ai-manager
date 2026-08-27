@@ -37,5 +37,6 @@
   "navSessions": "Sessions",
   "navAnalytics": "Analytics",
   "navHealth": "Health",
-  "searchAllChatsLabel": "Search all chats"
+  "searchAllChatsLabel": "Search all chats",
+  "typeTwoCharacters": "Type at least two characters."
 }

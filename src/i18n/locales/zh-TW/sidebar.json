@@ -41,5 +41,11 @@
   "noStoredSessions": "此專案沒有已儲存的工作階段。",
   "adjustFilter": "請調整工作階段篩選條件。",
   "sessionCount_one": "{{count}} 個工作階段",
-  "sessionCount_other": "{{count}} 個工作階段"
+  "sessionCount_other": "{{count}} 個工作階段",
+  "select": "選擇",
+  "all": "全部",
+  "deleteProjectConfirm": "永久刪除專案紀錄？",
+  "cannotBeUndone": "此操作無法復原。",
+  "messageCount_one": "{{count}} 則訊息",
+  "messageCount_other": "{{count}} 則訊息"
 }

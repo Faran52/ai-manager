@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { formatTokens } from '@utils/formatUtils';
 
@@ -19,6 +20,7 @@ interface ActivityDay {
 }
 
 export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
+  const { t } = useTranslation('analytics');
   const [today] = useState(() => {
     return new Date();
   });
@@ -46,7 +48,7 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
   }
 
   return (
-    <AnalyticsPanel title="Activity">
+    <AnalyticsPanel title={t('activity')}>
       <div
         className="mt-3 flex flex-wrap gap-1"
         role="img"
@@ -57,7 +59,10 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
           return (
             <span
               key={day.date}
-              title={`${day.date} · ${formatTokens(day.tokens)} tokens`}
+              title={t('heatmapDay', {
+                date: day.date,
+                tokens: formatTokens(day.tokens),
+              })}
               data-level={String(levelFor(day.tokens, peak))}
               className={`
                 size-3 rounded-sm

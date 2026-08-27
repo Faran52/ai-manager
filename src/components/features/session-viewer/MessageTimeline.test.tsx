@@ -81,7 +81,7 @@ describe('MessageTimeline', () => {
       await userEvent.click(button);
     }
 
-    expect(screen.getByText('error')).toBeDefined();
+    expect(screen.getByText('Error')).toBeDefined();
     expect(document.querySelector('[data-empty-user-turn]')).toBeNull();
   });
 

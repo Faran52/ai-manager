@@ -15,5 +15,14 @@
   "turn": "턴",
   "turns": "턴",
   "tryRefreshing": "헤더에서 새로고침해 보세요.",
-  "lastActive": "마지막 활동 {{when}}"
+  "lastActive": "마지막 활동 {{when}}",
+  "recordedUsage": "기록된 사용량",
+  "turnCount_one": "{{count}} 턴",
+  "turnCount_other": "{{count}} 턴",
+  "tokenActivityMissing": "이 에이전트는 토큰 활동을 기록하지 않습니다.",
+  "loadFailedFor": "{{project}}의 분석을 불러오지 못했습니다",
+  "noAnalyticsFor": "{{project}}에 대한 분석이 없습니다",
+  "cacheReadsValue": "캐시 읽기 {{value}}",
+  "recordedCost": "기록된 비용 {{value}}",
+  "heatmapDay": "{{date}} · 토큰 {{tokens}}"
 }

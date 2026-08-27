@@ -41,5 +41,11 @@
   "noStoredSessions": "该项目没有已存储的会话。",
   "adjustFilter": "请调整会话筛选条件。",
   "sessionCount_one": "{{count}} 个会话",
-  "sessionCount_other": "{{count}} 个会话"
+  "sessionCount_other": "{{count}} 个会话",
+  "select": "选择",
+  "all": "全部",
+  "deleteProjectConfirm": "永久删除项目历史？",
+  "cannotBeUndone": "此操作无法撤销。",
+  "messageCount_one": "{{count}} 条消息",
+  "messageCount_other": "{{count}} 条消息"
 }

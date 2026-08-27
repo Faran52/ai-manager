@@ -15,5 +15,14 @@
   "turn": "ターン",
   "turns": "ターン",
   "tryRefreshing": "ヘッダーから更新してみてください。",
-  "lastActive": "最終アクティビティ {{when}}"
+  "lastActive": "最終アクティビティ {{when}}",
+  "recordedUsage": "記録された使用状況",
+  "turnCount_one": "{{count}} ターン",
+  "turnCount_other": "{{count}} ターン",
+  "tokenActivityMissing": "このエージェントではトークンの記録がありません。",
+  "loadFailedFor": "{{project}} の分析を読み込めませんでした",
+  "noAnalyticsFor": "{{project}} の分析はありません",
+  "cacheReadsValue": "キャッシュ読み取り {{value}}",
+  "recordedCost": "記録されたコスト {{value}}",
+  "heatmapDay": "{{date}} · {{tokens}} トークン"
 }

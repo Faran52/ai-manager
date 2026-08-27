@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import { Terminal } from 'lucide-react';
 
 import { cn } from '@utils/cnUtils';
@@ -21,6 +23,7 @@ export const UserTurn: FC<UserTurnProps> = ({
   orphans,
   filters = defaultMessageFilters().content,
 }) => {
+  const { t } = useTranslation('session');
   const injectedText = filters.text ? entry.injectedText : undefined;
 
   return (
@@ -58,7 +61,7 @@ export const UserTurn: FC<UserTurnProps> = ({
       {injectedText != null && (
         <details className="max-w-[85%] text-start" data-injected-context>
           <summary className="cursor-pointer text-xs text-muted-foreground">
-            Injected context
+            {t('injectedContext')}
           </summary>
           <div className="mt-1">
             <CodeLine text={injectedText} />

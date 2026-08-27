@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import { cn } from '@utils/cnUtils';
 import { formatCost } from '@utils/formatUtils';
 
@@ -24,6 +26,7 @@ export const AssistantTurn: FC<AssistantTurnProps> = ({
   visibleBlocks = entry.blocks,
   outcomeFor,
 }) => {
+  const { t } = useTranslation('session');
   const usage = entry.usage;
 
   return (
@@ -33,8 +36,10 @@ export const AssistantTurn: FC<AssistantTurnProps> = ({
       `)}
       >
         {entry.model != null && <Badge>{entry.model}</Badge>}
-        {usage != null && usage.outputTokens > 0 && <Badge>{`${String(usage.outputTokens)} out`}</Badge>}
-        {usage != null && usage.cacheReadTokens > 0 && <Badge>{`${String(usage.cacheReadTokens)} cached`}</Badge>}
+        {usage != null && usage.outputTokens > 0 && <Badge>{t('outTokens', { count: usage.outputTokens })}</Badge>}
+        {usage != null && usage.cacheReadTokens > 0 && (
+          <Badge>{t('cachedTokens', { count: usage.cacheReadTokens })}</Badge>
+        )}
         {entry.costUsd != null && entry.costUsd > 0 && <Badge>{formatCost(entry.costUsd)}</Badge>}
       </div>
       {visibleBlocks.map((block, index) => {

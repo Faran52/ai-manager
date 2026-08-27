@@ -100,7 +100,7 @@ export const SearchDialog: FC<SearchDialogProps> = ({
       <div className="max-h-[55vh] overflow-y-auto p-2" data-search-results>
         {!hasQuery && (
           <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-            Type at least two characters.
+            {t('typeTwoCharacters')}
           </p>
         )}
         {hasQuery && search.phase === 'loading' && (

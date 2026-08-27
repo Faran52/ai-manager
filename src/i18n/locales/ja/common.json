@@ -37,5 +37,6 @@
   "navSessions": "セッション",
   "navAnalytics": "分析",
   "navHealth": "状態",
-  "searchAllChatsLabel": "すべてのチャットを検索"
+  "searchAllChatsLabel": "すべてのチャットを検索",
+  "typeTwoCharacters": "2 文字以上入力してください。"
 }

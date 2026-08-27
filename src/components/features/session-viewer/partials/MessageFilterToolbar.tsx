@@ -46,7 +46,7 @@ export const MessageFilterToolbar: FC<MessageFilterToolbarProps> = ({
   const options: readonly FilterOption[] = [
     {
       key: 'human',
-      label: 'User',
+      label: t('user'),
       menuLabel: t('userMessages'),
       active: filters.roles.human,
     },
@@ -58,7 +58,7 @@ export const MessageFilterToolbar: FC<MessageFilterToolbarProps> = ({
     },
     {
       key: 'text',
-      label: 'Text',
+      label: t('text'),
       menuLabel: t('textMessages'),
       active: filters.content.text,
     },
@@ -85,10 +85,12 @@ export const MessageFilterToolbar: FC<MessageFilterToolbarProps> = ({
   const hiddenOptions = options.filter((option) => {
     return !option.active;
   });
-  const itemLabel = total === 1 ? 'item' : 'items';
   const countLabel = active
-    ? `${String(visible)} of ${String(total)} items shown`
-    : `${String(total)} ${itemLabel} loaded`;
+    ? t('itemsShown', {
+        visible,
+        total,
+      })
+    : t('itemsLoaded', { count: total });
 
   const toggle = (key: MessageFilterKey): void => {
     onChange(toggleMessageFilter(filters, key));
@@ -120,7 +122,7 @@ export const MessageFilterToolbar: FC<MessageFilterToolbarProps> = ({
           className={cn('toolbar-button', active && 'bg-primary/10 text-primary')}
         >
           <Filter className="size-3.5" />
-          Filter messages
+          {t('filterMessages')}
           <ChevronDown className="size-3" data-open={open} />
         </button>
         <PopupMenu
@@ -136,7 +138,7 @@ export const MessageFilterToolbar: FC<MessageFilterToolbarProps> = ({
             text-muted-foreground uppercase
           "
           >
-            Participants
+            {t('participants')}
           </p>
           {options.slice(0, 2).map((option) => {
             return (
@@ -157,7 +159,7 @@ export const MessageFilterToolbar: FC<MessageFilterToolbarProps> = ({
             text-muted-foreground uppercase
           "
           >
-            Content
+            {t('contentHeading')}
           </p>
           {options.slice(2).map((option) => {
             return (
@@ -185,7 +187,7 @@ export const MessageFilterToolbar: FC<MessageFilterToolbarProps> = ({
           <button
             key={option.key}
             type="button"
-            aria-label={`Show ${option.menuLabel}`}
+            aria-label={t('showFilter', { name: option.menuLabel })}
             onClick={() => {
               toggle(option.key);
             }}
@@ -195,7 +197,7 @@ export const MessageFilterToolbar: FC<MessageFilterToolbarProps> = ({
               hover:bg-primary/15
             "
           >
-            {`${option.label} hidden`}
+            {t('filterHidden', { name: option.label })}
             <X className="size-3" />
           </button>
         );

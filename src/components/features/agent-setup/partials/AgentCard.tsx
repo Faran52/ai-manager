@@ -55,7 +55,7 @@ export const AgentCard: FC<AgentCardProps> = ({
   }).length;
   const sessions = sessionCount > 0 && (
     <span className="font-mono text-xs text-muted-foreground">
-      {`${String(sessionCount)} sessions`}
+      {t('sessionsCount', { count: sessionCount })}
     </span>
   );
 
@@ -100,11 +100,14 @@ export const AgentCard: FC<AgentCardProps> = ({
         <h4 className="w-32 shrink-0 truncate text-sm font-semibold">
           {agentOption(setup.agent).label}
         </h4>
-        <span className={COUNT}>{`MCP ${String(setup.mcpServers.length)}`}</span>
-        <span className={COUNT}>{`Rules ${String(setup.rules.length)}`}</span>
+        <span className={COUNT}>{t('mcpCount', { count: setup.mcpServers.length })}</span>
+        <span className={COUNT}>{t('rulesCount', { count: setup.rules.length })}</span>
         {isClaude && (
           <span className={COUNT}>
-            {`Plugins ${String(enabledPlugins)}/${String(plugins.length)}`}
+            {t('pluginsCount', {
+              enabled: enabledPlugins,
+              total: plugins.length,
+            })}
           </span>
         )}
         <span className="ms-auto flex items-center gap-2">
@@ -119,7 +122,7 @@ export const AgentCard: FC<AgentCardProps> = ({
       </summary>
       <div className="border-t border-border p-2">
         <dl className="grid gap-1.5 text-xs">
-          <AgentDetailRow icon={<Plug className="size-3" />} label="MCP">
+          <AgentDetailRow icon={<Plug className="size-3" />} label={t('mcp')}>
             {setup.mcpServers.length === 0
               ? <span className="text-muted-foreground">{t('none', { ns: 'common' })}</span>
               : setup.mcpServers.map((server) => {
@@ -131,7 +134,7 @@ export const AgentCard: FC<AgentCardProps> = ({
                   );
                 })}
           </AgentDetailRow>
-          <AgentDetailRow icon={<FileText className="size-3" />} label="Rules">
+          <AgentDetailRow icon={<FileText className="size-3" />} label={t('rules')}>
             {setup.rules.length === 0
               ? <span className="text-muted-foreground">{t('none', { ns: 'common' })}</span>
               : setup.rules.map((rule) => {

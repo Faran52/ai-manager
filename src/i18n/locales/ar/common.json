@@ -37,5 +37,6 @@
   "navSessions": "الجلسات",
   "navAnalytics": "التحليلات",
   "navHealth": "الحالة",
-  "searchAllChatsLabel": "البحث في كل المحادثات"
+  "searchAllChatsLabel": "البحث في كل المحادثات",
+  "typeTwoCharacters": "اكتب حرفين على الأقل."
 }

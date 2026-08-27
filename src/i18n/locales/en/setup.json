@@ -12,5 +12,18 @@
   "marketplace": "Marketplace",
   "rules": "Rules",
   "mcp": "MCP",
-  "chooseProject": "Choose a project to see which agents are set up for it."
+  "chooseProject": "Choose a project to see which agents are set up for it.",
+  "noFolderOnDisk": "This project has no folder on disk, so its agent setup cannot be read.",
+  "agentsSetUp": "{{configured}} of {{total}} agents set up for this project",
+  "needsAttentionCount_one": "{{count}} agent needs attention",
+  "needsAttentionCount_other": "{{count}} agents need attention",
+  "sessionsCount_one": "{{count}} session",
+  "sessionsCount_other": "{{count}} sessions",
+  "mcpCount": "MCP {{count}}",
+  "rulesCount": "Rules {{count}}",
+  "pluginsCount": "Plugins {{enabled}}/{{total}}",
+  "stateOn": "on",
+  "stateOff": "off",
+  "scopeUser": "user",
+  "scopeProject": "project"
 }

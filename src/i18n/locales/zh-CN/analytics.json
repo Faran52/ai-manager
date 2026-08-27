@@ -15,5 +15,14 @@
   "turn": "轮",
   "turns": "轮",
   "tryRefreshing": "请尝试从顶栏刷新。",
-  "lastActive": "最后活动于 {{when}}"
+  "lastActive": "最后活动于 {{when}}",
+  "recordedUsage": "已记录的用量",
+  "turnCount_one": "{{count}} 轮",
+  "turnCount_other": "{{count}} 轮",
+  "tokenActivityMissing": "该智能体未记录令牌活动。",
+  "loadFailedFor": "无法加载 {{project}} 的分析",
+  "noAnalyticsFor": "没有 {{project}} 的分析",
+  "cacheReadsValue": "{{value}} 次缓存读取",
+  "recordedCost": "已记录成本 {{value}}",
+  "heatmapDay": "{{date}} · {{tokens}} 令牌"
 }

@@ -37,5 +37,6 @@
   "navSessions": "会话",
   "navAnalytics": "分析",
   "navHealth": "健康度",
-  "searchAllChatsLabel": "搜索所有对话"
+  "searchAllChatsLabel": "搜索所有对话",
+  "typeTwoCharacters": "请至少输入两个字符。"
 }

@@ -12,5 +12,18 @@
   "marketplace": "市场",
   "rules": "规则",
   "mcp": "MCP",
-  "chooseProject": "选择一个项目以查看为其配置的智能体。"
+  "chooseProject": "选择一个项目以查看为其配置的智能体。",
+  "noFolderOnDisk": "该项目在磁盘上没有文件夹，因此无法读取其智能体配置。",
+  "agentsSetUp": "该项目已配置 {{total}} 个智能体中的 {{configured}} 个",
+  "needsAttentionCount_one": "{{count}} 个智能体需要关注",
+  "needsAttentionCount_other": "{{count}} 个智能体需要关注",
+  "sessionsCount_one": "{{count}} 个会话",
+  "sessionsCount_other": "{{count}} 个会话",
+  "mcpCount": "MCP {{count}}",
+  "rulesCount": "规则 {{count}}",
+  "pluginsCount": "插件 {{enabled}}/{{total}}",
+  "stateOn": "开",
+  "stateOff": "关",
+  "scopeUser": "用户",
+  "scopeProject": "项目"
 }

@@ -28,7 +28,7 @@ export const SessionSelectionBar: FC<SessionSelectionBarProps> = ({
         className="session-selection-action"
       >
         <CheckCheck className="size-3" />
-        {allSelected ? t('clear', { ns: 'common' }) : 'All'}
+        {allSelected ? t('clear', { ns: 'common' }) : t('all')}
       </button>
       <button
         type="button"
@@ -38,7 +38,7 @@ export const SessionSelectionBar: FC<SessionSelectionBarProps> = ({
         className="session-selection-delete"
       >
         <Trash2 className="size-3" />
-        Delete
+        {t('delete', { ns: 'common' })}
       </button>
     </div>
   );

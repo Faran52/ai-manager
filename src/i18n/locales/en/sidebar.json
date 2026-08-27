@@ -41,5 +41,11 @@
   "noStoredSessions": "This project has no stored sessions.",
   "adjustFilter": "Adjust the session filter.",
   "sessionCount_one": "{{count}} session",
-  "sessionCount_other": "{{count}} sessions"
+  "sessionCount_other": "{{count}} sessions",
+  "select": "Select",
+  "all": "All",
+  "deleteProjectConfirm": "Delete project history permanently?",
+  "cannotBeUndone": "This cannot be undone.",
+  "messageCount_one": "{{count}} message",
+  "messageCount_other": "{{count}} messages"
 }

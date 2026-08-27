@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { AlertTriangle, ChevronDown } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
@@ -23,6 +24,12 @@ export interface ToolExecutionCardProps {
   readonly outcome?: ToolOutcome | undefined;
 }
 
+const STATUS_LABELS: Record<ToolStatus, string> = {
+  ok: 'statusOk',
+  error: 'statusError',
+  interrupted: 'statusInterrupted',
+};
+
 const STATUS_TONES: Record<ToolStatus, string> = {
   ok: 'bg-ok/10 text-ok',
   error: 'bg-destructive/10 text-destructive',
@@ -30,6 +37,7 @@ const STATUS_TONES: Record<ToolStatus, string> = {
 };
 
 export const ToolExecutionCard: FC<ToolExecutionCardProps> = ({ call, outcome }) => {
+  const { t } = useTranslation('session');
   const status: ToolStatus = outcome?.status ?? 'ok';
   const [open, setOpen] = useState(status === 'error');
   const isDiff = call.input.kind === 'file-edit' || call.input.kind === 'multi-edit';
@@ -63,7 +71,7 @@ export const ToolExecutionCard: FC<ToolExecutionCardProps> = ({ call, outcome })
           ms-auto rounded-sm px-1.5 py-0.5 text-[10px] tracking-wide uppercase
         `, STATUS_TONES[status])}
         >
-          {status}
+          {t(STATUS_LABELS[status])}
         </span>
         <ChevronDown className={cn(`
           size-3.5 shrink-0 text-muted-foreground transition-transform
@@ -98,7 +106,7 @@ export const ToolExecutionCard: FC<ToolExecutionCardProps> = ({ call, outcome })
                 <p className="flex items-center gap-1 text-xs text-destructive">
                   <AlertTriangle className="size-3.5" />
                   {' '}
-                  The tool reported an error without details.
+                  {t('toolErrorNoDetails')}
                 </p>
               )}
             </div>

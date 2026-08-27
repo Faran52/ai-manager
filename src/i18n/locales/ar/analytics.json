@@ -15,5 +15,18 @@
   "turn": "دور",
   "turns": "أدوار",
   "tryRefreshing": "جرّب التحديث من الشريط العلوي.",
-  "lastActive": "آخر نشاط {{when}}"
+  "lastActive": "آخر نشاط {{when}}",
+  "recordedUsage": "الاستخدام المُسجَّل",
+  "tokenActivityMissing": "لا يُسجَّل نشاط الرموز لهذا الوكيل.",
+  "loadFailedFor": "تعذّر تحميل تحليلات {{project}}",
+  "noAnalyticsFor": "لا توجد تحليلات لـ {{project}}",
+  "cacheReadsValue": "{{value}} قراءة مخزّنة",
+  "recordedCost": "تكلفة مُسجَّلة {{value}}",
+  "heatmapDay": "{{date}} · {{tokens}} رمز",
+  "turnCount_zero": "لا أدوار",
+  "turnCount_one": "دور واحد",
+  "turnCount_two": "دوران",
+  "turnCount_few": "{{count}} أدوار",
+  "turnCount_many": "{{count}} دورًا",
+  "turnCount_other": "{{count}} دور"
 }

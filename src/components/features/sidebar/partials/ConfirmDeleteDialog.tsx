@@ -49,7 +49,7 @@ export const ConfirmDeleteDialog: FC<ConfirmDeleteDialogProps> = ({
           "
           >
             <TriangleAlert className="size-3.5 shrink-0" aria-hidden />
-            This cannot be undone.
+            {t('cannotBeUndone')}
           </p>
         </div>
       )}

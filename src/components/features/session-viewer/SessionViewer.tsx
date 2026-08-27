@@ -109,7 +109,7 @@ export const SessionViewer: FC<SessionViewerProps> = ({
         {feed.hasMore && (
           <div className="flex justify-center pt-4 pb-2">
             <Button variant="subtle" onClick={feed.loadMore} data-load-more>
-              {`Load more (${String(remaining)} remaining)`}
+              {t('loadMore', { count: remaining })}
             </Button>
           </div>
         )}
@@ -143,7 +143,7 @@ export const SessionViewer: FC<SessionViewerProps> = ({
         <div className="ms-auto flex shrink-0 items-center gap-1.5">
           <Badge tone="accent" title={t('userAndAssistant')}>
             <MessageSquare className="size-3" />
-            {`${String(feed.messageCount)} ${feed.messageCount === 1 ? 'message' : 'messages'}`}
+            {t('messageCount', { count: feed.messageCount })}
           </Badge>
 
           {supportsSidechains && (
@@ -159,7 +159,7 @@ export const SessionViewer: FC<SessionViewerProps> = ({
               title={t('includeSubagents')}
             >
               <ListFilter className="size-3.5" />
-              Include subagent activity
+              {t('includeSubagentActivity')}
             </Button>
           )}
           <ExportMenu entries={feed.entries} project={projectLabel} title={title} />
