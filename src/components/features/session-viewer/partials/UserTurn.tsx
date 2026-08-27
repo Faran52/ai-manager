@@ -75,7 +75,7 @@ export const UserTurn: FC<UserTurnProps> = ({
               return null;
             }
 
-            return <TruncatedText key={outcome.toolUseId} label="result" text={outcome.text} />;
+            return <TruncatedText key={outcome.toolUseId} label={t('result')} text={outcome.text} />;
           })}
         </div>
       )}

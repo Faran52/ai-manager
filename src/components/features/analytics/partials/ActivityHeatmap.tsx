@@ -52,7 +52,7 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
       <div
         className="mt-3 flex flex-wrap gap-1"
         role="img"
-        aria-label="daily activity heatmap"
+        aria-label={t('dailyHeatmap')}
         data-activity-heatmap
       >
         {days.map((day) => {

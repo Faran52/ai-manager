@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import { TruncatedText } from '@ui/index';
 
 import { OutcomeImages } from './OutcomeImages';
@@ -10,6 +12,7 @@ export interface OutcomeBodyProps {
 }
 
 export const OutcomeBody: FC<OutcomeBodyProps> = ({ outcome }) => {
+  const { t } = useTranslation('session');
   const hasText = outcome.text != null && outcome.text.length > 0;
 
   if (!hasText && (outcome.stderr == null || outcome.stderr.length === 0)) {
@@ -18,9 +21,9 @@ export const OutcomeBody: FC<OutcomeBodyProps> = ({ outcome }) => {
 
   return (
     <div className="space-y-2">
-      {hasText && <TruncatedText label="output" text={outcome.text} />}
+      {hasText && <TruncatedText label={t('output')} text={outcome.text} />}
       {outcome.stderr != null && outcome.stderr.length > 0 && (
-        <TruncatedText label="stderr" text={outcome.stderr} />
+        <TruncatedText label={t('stderr')} text={outcome.stderr} />
       )}
       {outcome.images.length > 0 && <OutcomeImages outcome={outcome} />}
     </div>
