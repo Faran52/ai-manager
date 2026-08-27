@@ -4,6 +4,11 @@ import { agentOption, agentOptions } from '@config/agents';
 
 import { containedIn } from '@utils/pathUtils';
 
+import {
+  listAntigravityProjects,
+  listAntigravitySessions,
+  loadAntigravityEntries,
+} from '../history/utils/antigravityUtils';
 import { listProjects, listSessions } from '../history/utils/claudeUtils';
 import {
   listCodexProjects,
@@ -201,6 +206,17 @@ const structuredEntries = async (
   return loadStructuredEntries(filePath);
 };
 
+const antigravityEntries = async (
+  filePath: string,
+  allowedRoots: readonly string[],
+): Promise<readonly HistoryEntry[] | undefined> => {
+  if (!await containedIn(allowedRoots, filePath)) {
+    return undefined;
+  }
+
+  return loadAntigravityEntries(filePath);
+};
+
 const geminiEntries = async (
   filePath: string,
   allowedRoots: readonly string[],
@@ -235,6 +251,11 @@ const ROUTES_BY_FORMAT: Record<AgentOption['format'], FormatRoutes> = {
     projects: listCopilotProjects,
     sessions: listCopilotSessions,
     entries: copilotEntries,
+  },
+  antigravity: {
+    projects: listAntigravityProjects,
+    sessions: listAntigravitySessions,
+    entries: antigravityEntries,
   },
   gemini: {
     projects: listGeminiProjects,

@@ -24,8 +24,10 @@ Reads transcripts straight off disk. No daemon, no account, no telemetry.
 | GitHub Copilot | VS Code `chatSessions` journals | yes |
 | OpenCode | SQLite store | yes |
 | Cursor | `state.vscdb` (`cursorDiskKV`) | yes |
+| Gemini CLI | `~/.gemini/tmp/*/chats` logs | yes |
+| Antigravity CLI | `~/.gemini/antigravity-cli` brain transcripts | step markers |
 | Goose, Zed, Amazon Q, Kiro, ForgeCode | SQLite | varies |
-| Gemini CLI, Cline, Aider, Continue, Qwen and ~15 more | files | text only |
+| Cline, Aider, Continue, Qwen and ~15 more | files | text only |
 
 Every agent normalises into one timeline model, so the viewer looks the same
 whichever tool produced the session.

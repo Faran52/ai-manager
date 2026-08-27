@@ -346,3 +346,24 @@ test('loadAgentEntries reads gemini logs and refuses ones outside their roots', 
 
   await expect(loadAgentEntries(file, 'gemini', [outside])).resolves.toBeUndefined();
 });
+
+test('loadAgentEntries reads antigravity transcripts and refuses ones outside their roots', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'antigravity-root-'));
+  const logs = join(root, 'brain', 'conv-1', '.system_generated', 'logs');
+
+  await mkdir(logs, { recursive: true });
+
+  const file = join(logs, 'transcript_full.jsonl');
+
+  await writeFile(file, JSON.stringify({
+    source: 'USER_EXPLICIT',
+    created_at: '2026-04-01T08:00:00.000Z',
+    content: 'Hello Antigravity',
+  }));
+
+  await expect(loadAgentEntries(file, 'antigravity', [root])).resolves.toHaveLength(1);
+
+  const outside = await mkdtemp(join(tmpdir(), 'antigravity-outside-'));
+
+  await expect(loadAgentEntries(file, 'antigravity', [outside])).resolves.toBeUndefined();
+});

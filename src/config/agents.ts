@@ -34,7 +34,7 @@ export type SessionArtifact = 'file' | 'directory' | 'shared-db';
 export interface AgentOption {
   readonly id: AgentId;
   readonly label: string;
-  readonly format: 'claude' | 'codex' | 'copilot' | 'files' | 'gemini' | 'sqlite' | 'opencode';
+  readonly format: 'antigravity' | 'claude' | 'codex' | 'copilot' | 'files' | 'gemini' | 'sqlite' | 'opencode';
   readonly artifact: SessionArtifact;
   readonly canDelete: boolean;
   readonly canDeleteProject: boolean;
@@ -115,7 +115,7 @@ export const agentOptions: readonly AgentOption[] = [
   readOnlyAgent('kiro', 'Kiro', 'sqlite', true),
   readOnlyAgent('goose', 'Goose', 'sqlite', true),
   readOnlyAgent('qwen', 'Qwen Code', 'files', true),
-  readOnlyAgent('antigravity', 'Antigravity', 'files'),
+  readOnlyAgent('antigravity', 'Antigravity', 'antigravity'),
   readOnlyAgent('cursor-agent', 'Cursor Agent', 'files'),
   readOnlyAgent('forgecode', 'ForgeCode', 'sqlite'),
   readOnlyAgent('codebuddy', 'CodeBuddy Code', 'claude'),
