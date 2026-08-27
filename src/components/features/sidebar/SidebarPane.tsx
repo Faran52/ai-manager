@@ -80,7 +80,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
   onDeleteSession,
   nowMs,
 }) => {
-  const { t } = useTranslation('sidebar');
+  const { t, i18n } = useTranslation('sidebar');
   const [projectFilter, setProjectFilter] = useState('');
   const [projectsHeight, setProjectsHeight] = useState(() => {
     const stored = Number(localStorage.getItem(projectsPaneStorageKey));
@@ -364,7 +364,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                       {t('sessionCount', { count: project.sessionCount })}
                     </span>
                     <AgentTag agent={project.agent} />
-                    <span className="shrink-0">{formatTimeAgo(project.lastActivityMs, nowMs)}</span>
+                    <span className="shrink-0">{formatTimeAgo(project.lastActivityMs, nowMs, i18n.language)}</span>
                   </span>
                 </button>
               </li>
@@ -488,7 +488,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                     text-muted-foreground
                   "
                   >
-                    <span>{formatTimeAgo(session.lastTimestampMs, nowMs)}</span>
+                    <span>{formatTimeAgo(session.lastTimestampMs, nowMs, i18n.language)}</span>
                     <span>
                       {`${String(session.messageCount)} ${session.messageCount === 1 ? 'message' : 'messages'}`}
                     </span>

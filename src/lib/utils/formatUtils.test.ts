@@ -51,10 +51,15 @@ describe('formatTimeAgo', () => {
   const now = Date.UTC(2026, 0, 10, 12, 0, 0);
 
   test('buckets elapsed time into friendly labels', () => {
-    expect(formatTimeAgo(now - 30_000, now)).toBe('just now');
+    expect(formatTimeAgo(now - 30_000, now)).toBe('now');
     expect(formatTimeAgo(now - 5 * 60_000, now)).toBe('5m ago');
     expect(formatTimeAgo(now - 3 * 3_600_000, now)).toBe('3h ago');
     expect(formatTimeAgo(now - 2 * 86_400_000, now)).toBe('2d ago');
+  });
+
+  test('renders each locale in its own words', () => {
+    expect(formatTimeAgo(now - 2 * 86_400_000, now, 'ar')).toContain('يومين');
+    expect(formatTimeAgo(now - 3 * 3_600_000, now, 'ja')).toBe('3時間前');
   });
 
   test('falls back to a date for older timestamps', () => {

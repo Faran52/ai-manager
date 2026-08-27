@@ -14,5 +14,6 @@
   "selectProjectWithSessions": "اختر مشروعًا يحتوي على جلسات مُسجَّلة.",
   "turn": "دور",
   "turns": "أدوار",
-  "tryRefreshing": "جرّب التحديث من الشريط العلوي."
+  "tryRefreshing": "جرّب التحديث من الشريط العلوي.",
+  "lastActive": "آخر نشاط {{when}}"
 }

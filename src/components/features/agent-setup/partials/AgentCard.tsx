@@ -47,7 +47,7 @@ export const AgentCard: FC<AgentCardProps> = ({
   nowMs,
   flagged = false,
 }) => {
-  const { t } = useTranslation('setup');
+  const { t, i18n } = useTranslation('setup');
   const isClaude = setup.agent === 'claude';
   const configured = agentIsConfigured(setup, plugins);
   const enabledPlugins = plugins.filter((plugin) => {
@@ -143,7 +143,7 @@ export const AgentCard: FC<AgentCardProps> = ({
                     >
                       {shortPath(rule.path, projectPath)}
                       <span className="ms-1 opacity-70">
-                        {`${sizeLabel(rule.bytes)} · ${formatTimeAgo(rule.modifiedMs, nowMs)}`}
+                        {`${sizeLabel(rule.bytes)} · ${formatTimeAgo(rule.modifiedMs, nowMs, i18n.language)}`}
                       </span>
                     </Badge>
                   );

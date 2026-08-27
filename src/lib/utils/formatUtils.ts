@@ -49,32 +49,32 @@ export const formatDateTime = (timestampMs: number): string => {
   });
 };
 
-export const formatTimeAgo = (timestampMs: number, nowMs: number): string => {
+// Intl carries each locale's wording, plurals and numerals, including the
+// Arabic dual, so none of this needs translating by hand.
+export const formatTimeAgo = (timestampMs: number, nowMs: number, locale = 'en'): string => {
   const elapsed = nowMs - timestampMs;
 
   if (elapsed < MINUTE_MS) {
-    return 'just now';
+    return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(0, 'second');
   }
 
-  if (elapsed < HOUR_MS) {
-    const minutes = Math.floor(elapsed / MINUTE_MS);
+  const relative = new Intl.RelativeTimeFormat(locale, { style: 'narrow' });
 
-    return `${String(minutes)}m ago`;
+  if (elapsed < HOUR_MS) {
+    return relative.format(-Math.floor(elapsed / MINUTE_MS), 'minute');
   }
 
   if (elapsed < DAY_MS) {
-    const hours = Math.floor(elapsed / HOUR_MS);
-
-    return `${String(hours)}h ago`;
+    return relative.format(-Math.floor(elapsed / HOUR_MS), 'hour');
   }
 
   const days = Math.floor(elapsed / DAY_MS);
 
   if (days < 30) {
-    return `${String(days)}d ago`;
+    return relative.format(-days, 'day');
   }
 
-  return new Date(timestampMs).toLocaleDateString('en-GB', {
+  return new Date(timestampMs).toLocaleDateString(locale, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',

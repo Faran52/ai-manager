@@ -14,5 +14,6 @@
   "selectProjectWithSessions": "Select a project with recorded sessions.",
   "turn": "turn",
   "turns": "turns",
-  "tryRefreshing": "Try refreshing from the header."
+  "tryRefreshing": "Try refreshing from the header.",
+  "lastActive": "last active {{when}}"
 }

@@ -20,7 +20,7 @@ export interface ProjectUsageCardProps {
 }
 
 export const ProjectUsageCard: FC<ProjectUsageCardProps> = ({ usage, nowMs }) => {
-  const { t } = useTranslation('analytics');
+  const { t, i18n } = useTranslation('analytics');
   const topModelCost = Math.max(0, ...usage.models.map((model) => {
     return model.costUsd;
   }));
@@ -34,7 +34,7 @@ export const ProjectUsageCard: FC<ProjectUsageCardProps> = ({ usage, nowMs }) =>
           ms-auto font-mono text-xs font-normal text-muted-foreground
         "
         >
-          {`last active ${formatTimeAgo(usage.lastActiveMs, nowMs)}`}
+          {t('lastActive', { when: formatTimeAgo(usage.lastActiveMs, nowMs, i18n.language) })}
         </span>
       </h3>
       <div className="

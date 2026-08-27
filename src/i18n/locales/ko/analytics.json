@@ -14,5 +14,6 @@
   "selectProjectWithSessions": "기록된 세션이 있는 프로젝트를 선택하세요.",
   "turn": "턴",
   "turns": "턴",
-  "tryRefreshing": "헤더에서 새로고침해 보세요."
+  "tryRefreshing": "헤더에서 새로고침해 보세요.",
+  "lastActive": "마지막 활동 {{when}}"
 }
