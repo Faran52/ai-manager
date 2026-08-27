@@ -82,7 +82,7 @@ export const AppHeader: FC<AppHeaderProps> = ({
 
         <nav
           className="ms-3 flex items-center gap-1 rounded-lg bg-muted p-0.5"
-          aria-label="Views"
+          aria-label={t('navSessions')}
         >
           <Button
             size="sm"
@@ -92,7 +92,7 @@ export const AppHeader: FC<AppHeaderProps> = ({
             }}
             pressed={view === 'sessions'}
           >
-            Sessions
+            {t('navSessions')}
           </Button>
           <Button
             size="sm"
@@ -103,7 +103,7 @@ export const AppHeader: FC<AppHeaderProps> = ({
             pressed={view === 'analytics'}
           >
             <BarChart3 className="size-3.5" />
-            Analytics
+            {t('navAnalytics')}
           </Button>
           <Button
             size="sm"
@@ -114,14 +114,14 @@ export const AppHeader: FC<AppHeaderProps> = ({
             pressed={view === 'health'}
           >
             <HeartPulse className="size-3.5" />
-            Health
+            {t('navHealth')}
           </Button>
         </nav>
 
         <div className="ms-auto flex items-center gap-0.5">
           <Button size="sm" variant="ghost" onClick={onOpenSearch} title={t('searchAllChats')}>
             <Search className="size-3.5" />
-            Search all chats
+            {t('searchAllChatsLabel')}
             <kbd className="
               ms-1 rounded-sm border border-border px-1 font-mono text-[10px]
               text-muted-foreground

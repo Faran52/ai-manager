@@ -33,5 +33,9 @@
   "refresh": "Refresh conversation history",
   "refreshing": "Refreshing conversation history",
   "refreshingToast": "Refreshing conversation history…",
-  "accentSky": "Sky"
+  "accentSky": "Sky",
+  "navSessions": "Sessions",
+  "navAnalytics": "Analytics",
+  "navHealth": "Health",
+  "searchAllChatsLabel": "Search all chats"
 }

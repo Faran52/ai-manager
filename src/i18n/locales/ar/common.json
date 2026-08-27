@@ -33,5 +33,9 @@
   "refresh": "تحديث سجل المحادثات",
   "refreshing": "جارٍ تحديث سجل المحادثات",
   "refreshingToast": "جارٍ تحديث سجل المحادثات…",
-  "accentSky": "سماوي"
+  "accentSky": "سماوي",
+  "navSessions": "الجلسات",
+  "navAnalytics": "التحليلات",
+  "navHealth": "الحالة",
+  "searchAllChatsLabel": "البحث في كل المحادثات"
 }

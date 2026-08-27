@@ -20,8 +20,13 @@ const bundleFor = (language: string, namespace: Namespace): Bundle => {
   return resources[language as 'en'][namespace];
 };
 
+const baseKey = (key: string): string => {
+  return key.replace(/_(zero|one|two|few|many|other)$/u, '');
+};
+
 const sortedKeys = (bundle: Bundle): readonly string[] => {
-  return Object.keys(bundle).sort(byText);
+  // Plural suffixes differ by language, Arabic carries six forms where English has two.
+  return [...new Set(Object.keys(bundle).map(baseKey))].sort(byText);
 };
 
 const placeholdersIn = (value: string): readonly string[] => {
@@ -56,16 +61,20 @@ describe('locale parity', () => {
     }
   });
 
-  test('interpolation placeholders survive translation', () => {
+  // A translation may drop a placeholder, Arabic says "one session" without the
+  // numeral. Inventing one is the real bug, it would render a literal brace.
+  test('translations never introduce an unknown placeholder', () => {
     for (const namespace of namespaces) {
-      for (const [key, english] of Object.entries(resources.en[namespace])) {
-        const expected = placeholdersIn(english);
+      for (const language of languages) {
+        for (const [key, translated] of Object.entries(bundleFor(language.id, namespace))) {
+          const base = baseKey(key);
+          const allowed = Object.entries(resources.en[namespace]).flatMap(([englishKey, value]) => {
+            return baseKey(englishKey) === base ? placeholdersIn(value) : [];
+          });
 
-        for (const language of languages) {
-          const translated = bundleFor(language.id, namespace)[key] ?? '';
-
-          expect(placeholdersIn(translated), `${language.id}/${namespace}/${key}`)
-            .toEqual(expected);
+          for (const placeholder of placeholdersIn(translated)) {
+            expect(allowed, `${language.id}/${namespace}/${key}`).toContain(placeholder);
+          }
         }
       }
     }

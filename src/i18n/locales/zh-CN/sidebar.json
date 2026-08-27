@@ -39,5 +39,7 @@
   "popularAgents": "常用智能体",
   "moreSupported": "更多支持的智能体",
   "noStoredSessions": "该项目没有已存储的会话。",
-  "adjustFilter": "请调整会话筛选条件。"
+  "adjustFilter": "请调整会话筛选条件。",
+  "sessionCount_one": "{{count}} 个会话",
+  "sessionCount_other": "{{count}} 个会话"
 }

@@ -307,7 +307,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
       data-sidebar
     >
       <section className="flex min-h-32 shrink-0 flex-col" style={{ height: projectsHeight }}>
-        <SectionHeader icon={<FolderClosed className="size-3.5" />} label="Projects" />
+        <SectionHeader icon={<FolderClosed className="size-3.5" />} label={t('projects')} />
         <AgentFilterBar
           active={activeAgents}
           available={availableAgents}
@@ -361,7 +361,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                   "
                   >
                     <span className="shrink-0">
-                      {`${String(project.sessionCount)} ${project.sessionCount === 1 ? 'session' : 'sessions'}`}
+                      {t('sessionCount', { count: project.sessionCount })}
                     </span>
                     <AgentTag agent={project.agent} />
                     <span className="shrink-0">{formatTimeAgo(project.lastActivityMs, nowMs)}</span>

@@ -33,5 +33,9 @@
   "refresh": "대화 기록 새로고침",
   "refreshing": "대화 기록 새로고침 중",
   "refreshingToast": "대화 기록을 새로고침하는 중…",
-  "accentSky": "스카이"
+  "accentSky": "스카이",
+  "navSessions": "세션",
+  "navAnalytics": "분석",
+  "navHealth": "상태",
+  "searchAllChatsLabel": "모든 대화 검색"
 }

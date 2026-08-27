@@ -39,5 +39,7 @@
   "popularAgents": "よく使われるエージェント",
   "moreSupported": "その他の対応エージェント",
   "noStoredSessions": "このプロジェクトには保存されたセッションがありません。",
-  "adjustFilter": "セッションの絞り込み条件を調整してください。"
+  "adjustFilter": "セッションの絞り込み条件を調整してください。",
+  "sessionCount_one": "{{count}} 件のセッション",
+  "sessionCount_other": "{{count}} 件のセッション"
 }

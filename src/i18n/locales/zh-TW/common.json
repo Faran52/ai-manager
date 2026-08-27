@@ -33,5 +33,9 @@
   "refresh": "重新整理對話紀錄",
   "refreshing": "正在重新整理對話紀錄",
   "refreshingToast": "正在重新整理對話紀錄…",
-  "accentSky": "天藍"
+  "accentSky": "天藍",
+  "navSessions": "工作階段",
+  "navAnalytics": "分析",
+  "navHealth": "健康度",
+  "searchAllChatsLabel": "搜尋所有對話"
 }

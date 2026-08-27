@@ -39,5 +39,7 @@
   "popularAgents": "인기 에이전트",
   "moreSupported": "추가 지원 에이전트",
   "noStoredSessions": "이 프로젝트에는 저장된 세션이 없습니다.",
-  "adjustFilter": "세션 필터를 조정하세요."
+  "adjustFilter": "세션 필터를 조정하세요.",
+  "sessionCount_one": "세션 {{count}}개",
+  "sessionCount_other": "세션 {{count}}개"
 }

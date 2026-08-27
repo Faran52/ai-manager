@@ -33,5 +33,9 @@
   "refresh": "刷新对话历史",
   "refreshing": "正在刷新对话历史",
   "refreshingToast": "正在刷新对话历史…",
-  "accentSky": "天蓝"
+  "accentSky": "天蓝",
+  "navSessions": "会话",
+  "navAnalytics": "分析",
+  "navHealth": "健康度",
+  "searchAllChatsLabel": "搜索所有对话"
 }
