@@ -136,7 +136,7 @@ export const SessionViewer: FC<SessionViewerProps> = ({
             {projectLabel}
           </p>
         </div>
-        <div className="ml-auto flex shrink-0 items-center gap-1.5">
+        <div className="ms-auto flex shrink-0 items-center gap-1.5">
           <Badge tone="accent" title="User and assistant messages">
             <MessageSquare className="size-3" />
             {`${String(feed.messageCount)} ${feed.messageCount === 1 ? 'message' : 'messages'}`}

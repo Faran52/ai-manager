@@ -51,7 +51,7 @@ export const ToolExecutionCard: FC<ToolExecutionCardProps> = ({ call, outcome })
         }}
         aria-expanded={open}
         className="
-          flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs
+          flex w-full items-center gap-2 px-3 py-1.5 text-start text-xs
           font-medium text-foreground
           hover:bg-muted/70
         "
@@ -60,7 +60,7 @@ export const ToolExecutionCard: FC<ToolExecutionCardProps> = ({ call, outcome })
           {call.name}
         </span>
         <span className={cn(`
-          ml-auto rounded-sm px-1.5 py-0.5 text-[10px] tracking-wide uppercase
+          ms-auto rounded-sm px-1.5 py-0.5 text-[10px] tracking-wide uppercase
         `, STATUS_TONES[status])}
         >
           {status}

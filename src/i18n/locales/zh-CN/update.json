@@ -1,0 +1,8 @@
+{
+  "available": "版本 {{version}} 可用",
+  "install": "安装并重启",
+  "later": "稍后",
+  "downloading": "正在下载更新…",
+  "restartRequired": "重启以完成更新",
+  "upToDate": "已是最新版本"
+}

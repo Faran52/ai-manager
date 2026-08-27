@@ -5,6 +5,7 @@ import {
   useState,
 } from 'react';
 
+import { initI18n } from '@i18n/index';
 import { motion, MotionConfig } from 'motion/react';
 
 import {
@@ -38,6 +39,8 @@ import type { SessionTokenTotals } from '@services/stats/statsService';
 import type { FC, ReactNode } from 'react';
 
 const EMPTY_PROJECTS: readonly ProjectSummary[] = [];
+
+initI18n();
 
 export const HistoryApp: FC = () => {
   const projects = useProjects();

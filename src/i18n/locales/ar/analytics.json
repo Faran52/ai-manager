@@ -1,0 +1,17 @@
+{
+  "activity": "النشاط",
+  "dailyHeatmap": "خريطة النشاط اليومي",
+  "topSessions": "أبرز الجلسات",
+  "models": "النماذج حسب الطلبات",
+  "tokens": "الرموز",
+  "toolCalls": "استدعاءات الأدوات",
+  "assistantTurns": "أدوار المساعد",
+  "cacheReads": "قراءات الذاكرة المؤقتة",
+  "computeTime": "زمن المعالجة",
+  "inOut": "وارد / صادر",
+  "spend": "التكلفة",
+  "time": "الوقت",
+  "selectProjectWithSessions": "اختر مشروعًا يحتوي على جلسات مُسجَّلة.",
+  "turn": "دور",
+  "turns": "أدوار"
+}

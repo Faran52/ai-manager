@@ -1,0 +1,15 @@
+{
+  "setUp": "セットアップ",
+  "checkSetup": "設定を確認",
+  "notSetUp": "未設定",
+  "notSetUpHere": "ここでは未設定",
+  "needsAttention": "確認が必要",
+  "healthy": "設定済みのエージェントは正常です",
+  "scope": "スコープ",
+  "state": "状態",
+  "version": "バージョン",
+  "plugin": "プラグイン",
+  "marketplace": "マーケットプレイス",
+  "rules": "ルール",
+  "mcp": "MCP"
+}

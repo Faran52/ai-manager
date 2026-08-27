@@ -11,6 +11,7 @@ import {
 import { cn } from '@utils/cnUtils';
 
 import { Button, Toast } from '@ui/index';
+import { LanguagePicker } from '@features/language';
 import { AccentPicker, ThemePicker } from '@features/theme';
 
 import type { ThemeMode } from '@features/theme';
@@ -78,7 +79,7 @@ export const AppHeader: FC<AppHeaderProps> = ({
         </div>
 
         <nav
-          className="ml-3 flex items-center gap-1 rounded-lg bg-muted p-0.5"
+          className="ms-3 flex items-center gap-1 rounded-lg bg-muted p-0.5"
           aria-label="Views"
         >
           <Button
@@ -115,12 +116,12 @@ export const AppHeader: FC<AppHeaderProps> = ({
           </Button>
         </nav>
 
-        <div className="ml-auto flex items-center gap-0.5">
+        <div className="ms-auto flex items-center gap-0.5">
           <Button size="sm" variant="ghost" onClick={onOpenSearch} title="Search all chats (press /)">
             <Search className="size-3.5" />
             Search all chats
             <kbd className="
-              ml-1 rounded-sm border border-border px-1 font-mono text-[10px]
+              ms-1 rounded-sm border border-border px-1 font-mono text-[10px]
               text-muted-foreground
             "
             >
@@ -140,6 +141,7 @@ export const AppHeader: FC<AppHeaderProps> = ({
             <RefreshCw className={cn('size-3.5', refreshing && 'animate-spin')} />
           </Button>
           <AccentPicker />
+          <LanguagePicker />
           <ThemePicker mode={themeMode} onChange={onThemeChange} />
         </div>
       </header>

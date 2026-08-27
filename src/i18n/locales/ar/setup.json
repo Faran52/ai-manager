@@ -1,0 +1,15 @@
+{
+  "setUp": "إعداد",
+  "checkSetup": "فحص الإعداد",
+  "notSetUp": "غير مُعد",
+  "notSetUpHere": "غير مُعد هنا",
+  "needsAttention": "يحتاج إلى انتباه",
+  "healthy": "الوكلاء المُعدّون يبدون سليمين",
+  "scope": "النطاق",
+  "state": "الحالة",
+  "version": "الإصدار",
+  "plugin": "إضافة",
+  "marketplace": "المتجر",
+  "rules": "القواعد",
+  "mcp": "MCP"
+}

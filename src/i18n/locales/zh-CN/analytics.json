@@ -1,0 +1,17 @@
+{
+  "activity": "活动",
+  "dailyHeatmap": "每日活动热力图",
+  "topSessions": "热门会话",
+  "models": "按请求数统计的模型",
+  "tokens": "令牌",
+  "toolCalls": "工具调用",
+  "assistantTurns": "助手轮次",
+  "cacheReads": "缓存读取",
+  "computeTime": "计算时间",
+  "inOut": "输入 / 输出",
+  "spend": "花费",
+  "time": "时间",
+  "selectProjectWithSessions": "请选择一个有记录会话的项目。",
+  "turn": "轮",
+  "turns": "轮"
+}

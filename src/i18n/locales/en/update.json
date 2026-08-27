@@ -1,0 +1,8 @@
+{
+  "available": "Version {{version}} is available",
+  "install": "Install and restart",
+  "later": "Later",
+  "downloading": "Downloading update…",
+  "restartRequired": "Restart to finish updating",
+  "upToDate": "You are up to date"
+}

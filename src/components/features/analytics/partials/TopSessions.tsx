@@ -34,7 +34,7 @@ export const TopSessions: FC<TopSessionsProps> = ({
                   onOpenSession(session);
                 }}
                 className="
-                  flex w-full items-center gap-3 rounded-md p-2 text-left
+                  flex w-full items-center gap-3 rounded-md p-2 text-start
                   hover:bg-accent
                 "
               >

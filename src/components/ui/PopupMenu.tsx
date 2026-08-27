@@ -107,8 +107,8 @@ export const PopupMenu: FC<PopupMenuProps> = ({
             `,
             position == null && 'absolute top-full mt-1.5',
             position == null && (align === 'left'
-              ? 'left-0 origin-top-left'
-              : 'right-0 origin-top-right'),
+              ? 'inset-s-0 origin-top-left'
+              : 'inset-e-0 origin-top-right'),
             position != null && 'fixed origin-top-left',
           )}
         >

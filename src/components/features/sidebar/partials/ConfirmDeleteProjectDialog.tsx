@@ -36,7 +36,7 @@ export const ConfirmDeleteProjectDialog: FC<ConfirmDeleteProjectDialogProps> = (
             {`Everything ${agentLabel} has stored for “${target?.name ?? ''}” will be permanently deleted.`}
           </p>
           <ul className="
-            mt-2 list-disc pl-5 text-xs text-muted-foreground
+            mt-2 list-disc ps-5 text-xs text-muted-foreground
             marker:text-muted-foreground/50
           "
           >

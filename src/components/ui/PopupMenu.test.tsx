@@ -77,5 +77,5 @@ test('left-aligns an anchored menu when requested', () => {
     </PopupMenu>,
   );
 
-  expect(screen.getByRole('menu').className).toContain('left-0');
+  expect(screen.getByRole('menu').className).toContain('inset-s-0');
 });

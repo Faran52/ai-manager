@@ -1,0 +1,8 @@
+{
+  "available": "バージョン {{version}} が利用できます",
+  "install": "インストールして再起動",
+  "later": "後で",
+  "downloading": "アップデートをダウンロード中…",
+  "restartRequired": "再起動して更新を完了してください",
+  "upToDate": "最新の状態です"
+}

@@ -1,0 +1,15 @@
+{
+  "setUp": "设置",
+  "checkSetup": "检查设置",
+  "notSetUp": "未设置",
+  "notSetUpHere": "此处未设置",
+  "needsAttention": "需要关注",
+  "healthy": "已配置的智能体状态正常",
+  "scope": "范围",
+  "state": "状态",
+  "version": "版本",
+  "plugin": "插件",
+  "marketplace": "市场",
+  "rules": "规则",
+  "mcp": "MCP"
+}

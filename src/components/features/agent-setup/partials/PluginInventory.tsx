@@ -9,7 +9,7 @@ export interface PluginInventoryProps {
   readonly plugins: readonly InstalledPlugin[];
 }
 
-const CELL = 'truncate py-1 pr-4 text-left align-middle';
+const CELL = 'truncate py-1 pe-4 text-start align-middle';
 const HEAD = cn(CELL, `
   sticky top-0 bg-card text-[10px] font-medium tracking-wider
   text-muted-foreground uppercase
@@ -58,7 +58,7 @@ export const PluginInventory: FC<PluginInventoryProps> = ({ plugins }) => {
               >
                 <thead>
                   <tr className="border-b border-border">
-                    <th scope="col" className={cn(HEAD, 'w-[30%] pl-2')}>Plugin</th>
+                    <th scope="col" className={cn(HEAD, 'w-[30%] ps-2')}>Plugin</th>
                     <th scope="col" className={cn(HEAD, 'w-[30%]')}>Marketplace</th>
                     <th scope="col" className={cn(HEAD, 'w-[14%]')}>Scope</th>
                     <th scope="col" className={cn(HEAD, 'w-[16%]')}>Version</th>
@@ -76,7 +76,7 @@ export const PluginInventory: FC<PluginInventoryProps> = ({ plugins }) => {
                           text-muted-foreground
                         `)}
                       >
-                        <td className={cn(CELL, 'pl-2', !plugin.enabled && `
+                        <td className={cn(CELL, 'ps-2', !plugin.enabled && `
                           line-through
                         `)}
                         >

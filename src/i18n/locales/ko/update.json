@@ -1,0 +1,8 @@
+{
+  "available": "버전 {{version}}을(를) 사용할 수 있습니다",
+  "install": "설치 후 다시 시작",
+  "later": "나중에",
+  "downloading": "업데이트 다운로드 중…",
+  "restartRequired": "업데이트를 마치려면 다시 시작하세요",
+  "upToDate": "최신 상태입니다"
+}

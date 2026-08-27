@@ -1,0 +1,15 @@
+{
+  "setUp": "設定",
+  "checkSetup": "檢查設定",
+  "notSetUp": "未設定",
+  "notSetUpHere": "此處未設定",
+  "needsAttention": "需要注意",
+  "healthy": "已設定的代理狀態正常",
+  "scope": "範圍",
+  "state": "狀態",
+  "version": "版本",
+  "plugin": "外掛",
+  "marketplace": "市集",
+  "rules": "規則",
+  "mcp": "MCP"
+}

@@ -1,0 +1,17 @@
+{
+  "activity": "Activity",
+  "dailyHeatmap": "daily activity heatmap",
+  "topSessions": "Top sessions",
+  "models": "Models by requests",
+  "tokens": "Tokens",
+  "toolCalls": "Tool calls",
+  "assistantTurns": "Assistant turns",
+  "cacheReads": "Cache reads",
+  "computeTime": "Compute time",
+  "inOut": "In / out",
+  "spend": "Spend",
+  "time": "Time",
+  "selectProjectWithSessions": "Select a project with recorded sessions.",
+  "turn": "turn",
+  "turns": "turns"
+}

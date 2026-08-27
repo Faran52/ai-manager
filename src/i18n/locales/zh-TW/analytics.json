@@ -1,0 +1,17 @@
+{
+  "activity": "活動",
+  "dailyHeatmap": "每日活動熱圖",
+  "topSessions": "熱門工作階段",
+  "models": "依請求數統計的模型",
+  "tokens": "權杖",
+  "toolCalls": "工具呼叫",
+  "assistantTurns": "助理輪次",
+  "cacheReads": "快取讀取",
+  "computeTime": "運算時間",
+  "inOut": "輸入 / 輸出",
+  "spend": "花費",
+  "time": "時間",
+  "selectProjectWithSessions": "請選擇有記錄工作階段的專案。",
+  "turn": "輪",
+  "turns": "輪"
+}

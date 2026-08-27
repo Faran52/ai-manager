@@ -28,7 +28,7 @@ export const ProjectUsageCard: FC<ProjectUsageCardProps> = ({ usage, nowMs }) =>
         <Coins className="size-4 text-muted-foreground" />
         Recorded usage
         <span className="
-          ml-auto font-mono text-xs font-normal text-muted-foreground
+          ms-auto font-mono text-xs font-normal text-muted-foreground
         "
         >
           {`last active ${formatTimeAgo(usage.lastActiveMs, nowMs)}`}

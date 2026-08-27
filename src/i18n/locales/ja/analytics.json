@@ -1,0 +1,17 @@
+{
+  "activity": "アクティビティ",
+  "dailyHeatmap": "日別アクティビティのヒートマップ",
+  "topSessions": "上位のセッション",
+  "models": "リクエスト数別のモデル",
+  "tokens": "トークン",
+  "toolCalls": "ツール呼び出し",
+  "assistantTurns": "アシスタントのターン",
+  "cacheReads": "キャッシュ読み取り",
+  "computeTime": "処理時間",
+  "inOut": "入力 / 出力",
+  "spend": "コスト",
+  "time": "時間",
+  "selectProjectWithSessions": "記録されたセッションのあるプロジェクトを選んでください。",
+  "turn": "ターン",
+  "turns": "ターン"
+}

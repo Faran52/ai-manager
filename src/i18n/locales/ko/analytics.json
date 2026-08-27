@@ -1,0 +1,17 @@
+{
+  "activity": "활동",
+  "dailyHeatmap": "일별 활동 히트맵",
+  "topSessions": "주요 세션",
+  "models": "요청 수별 모델",
+  "tokens": "토큰",
+  "toolCalls": "도구 호출",
+  "assistantTurns": "어시스턴트 턴",
+  "cacheReads": "캐시 읽기",
+  "computeTime": "연산 시간",
+  "inOut": "입력 / 출력",
+  "spend": "비용",
+  "time": "시간",
+  "selectProjectWithSessions": "기록된 세션이 있는 프로젝트를 선택하세요.",
+  "turn": "턴",
+  "turns": "턴"
+}

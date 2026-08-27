@@ -1,0 +1,15 @@
+{
+  "setUp": "Set up",
+  "checkSetup": "Check setup",
+  "notSetUp": "Not set up",
+  "notSetUpHere": "Not set up here",
+  "needsAttention": "Needs attention",
+  "healthy": "Configured agents look healthy",
+  "scope": "Scope",
+  "state": "State",
+  "version": "Version",
+  "plugin": "Plugin",
+  "marketplace": "Marketplace",
+  "rules": "Rules",
+  "mcp": "MCP"
+}

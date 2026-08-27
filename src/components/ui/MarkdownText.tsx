@@ -70,7 +70,7 @@ export const MarkdownText: FC<MarkdownTextProps> = ({ text }) => {
         prose-sm space-y-2 wrap-break-word
         [&_h1]:text-base
         [&_h2]:text-sm
-        [&_li]:ml-4
+        [&_li]:ms-4
         [&_ol]:list-decimal
         [&_ul]:list-disc
       "

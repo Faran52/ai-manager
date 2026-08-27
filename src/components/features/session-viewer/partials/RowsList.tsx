@@ -11,7 +11,7 @@ export const RowsList: FC<RowsListProps> = ({ rows }) => {
       {rows.map((row, index) => {
         return (
           <div key={`${row.label}-${String(index)}`} className="flex gap-2">
-            <dt className="w-20 shrink-0 text-right text-muted-foreground">
+            <dt className="w-20 shrink-0 text-end text-muted-foreground">
               {row.label}
             </dt>
             <dd className="font-mono break-all text-foreground">

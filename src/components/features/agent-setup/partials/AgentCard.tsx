@@ -60,14 +60,14 @@ export const AgentCard: FC<AgentCardProps> = ({
     return (
       <div
         data-configured="false"
-        className="flex items-center gap-2 py-1 pr-2 pl-1"
+        className="flex items-center gap-2 py-1 ps-1 pe-2"
       >
         <span className={GUTTER} aria-hidden="true">
           <span className="size-1.5 rounded-full bg-muted-foreground/40" />
         </span>
         <h4 className="text-sm text-muted-foreground">{agentOption(setup.agent).label}</h4>
         <Badge>Not set up</Badge>
-        <span className="ml-auto">{sessions}</span>
+        <span className="ms-auto">{sessions}</span>
       </div>
     );
   }
@@ -81,8 +81,8 @@ export const AgentCard: FC<AgentCardProps> = ({
         : 'border-border')}
     >
       <summary className="
-        flex cursor-default list-none items-center gap-2 rounded-md py-1.5 pr-2
-        pl-1
+        flex cursor-default list-none items-center gap-2 rounded-md py-1.5 ps-1
+        pe-2
         hover:bg-muted-foreground/5
         focus-visible:outline-2 focus-visible:outline-offset-2
         focus-visible:outline-primary
@@ -104,7 +104,7 @@ export const AgentCard: FC<AgentCardProps> = ({
             {`Plugins ${String(enabledPlugins)}/${String(plugins.length)}`}
           </span>
         )}
-        <span className="ml-auto flex items-center gap-2">
+        <span className="ms-auto flex items-center gap-2">
           {flagged && <Badge tone="warn">Check setup</Badge>}
           {sessions}
           <ChevronRight className="
@@ -123,7 +123,7 @@ export const AgentCard: FC<AgentCardProps> = ({
                   return (
                     <Badge key={`${server.scope}-${server.name}`} title={server.source}>
                       {server.name}
-                      <span className="ml-1 opacity-70">{server.scope}</span>
+                      <span className="ms-1 opacity-70">{server.scope}</span>
                     </Badge>
                   );
                 })}
@@ -139,7 +139,7 @@ export const AgentCard: FC<AgentCardProps> = ({
                       title={rule.bytes === 0 ? `${rule.path} · ${rule.scope} · empty` : `${rule.path} · ${rule.scope}`}
                     >
                       {shortPath(rule.path, projectPath)}
-                      <span className="ml-1 opacity-70">
+                      <span className="ms-1 opacity-70">
                         {`${sizeLabel(rule.bytes)} · ${formatTimeAgo(rule.modifiedMs, nowMs)}`}
                       </span>
                     </Badge>

@@ -62,6 +62,9 @@
       "@config/*": [
         "./src/config/*"
       ],
+      "@i18n/*": [
+        "./src/i18n/*"
+      ],
       "@mocks/*": [
         "./__mocks__/*"
       ]

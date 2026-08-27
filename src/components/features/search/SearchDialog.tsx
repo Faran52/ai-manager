@@ -131,7 +131,7 @@ export const SearchDialog: FC<SearchDialogProps> = ({
                     }}
                     data-search-hit
                     className="
-                      w-full rounded-md px-2 py-1.5 text-left
+                      w-full rounded-md px-2 py-1.5 text-start
                       hover:bg-accent
                     "
                   >

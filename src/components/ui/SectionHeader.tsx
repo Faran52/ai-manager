@@ -19,7 +19,7 @@ export const SectionHeader: FC<SectionHeaderProps> = ({
     >
       {icon}
       <span>{label}</span>
-      {action != null && <span className="ml-auto tracking-normal normal-case">{action}</span>}
+      {action != null && <span className="ms-auto tracking-normal normal-case">{action}</span>}
     </div>
   );
 };

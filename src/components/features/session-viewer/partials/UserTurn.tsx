@@ -56,7 +56,7 @@ export const UserTurn: FC<UserTurnProps> = ({
         </p>
       )}
       {injectedText != null && (
-        <details className="max-w-[85%] text-left" data-injected-context>
+        <details className="max-w-[85%] text-start" data-injected-context>
           <summary className="cursor-pointer text-xs text-muted-foreground">
             Injected context
           </summary>

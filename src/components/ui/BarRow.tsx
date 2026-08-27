@@ -28,7 +28,7 @@ export const BarRow: FC<BarRowProps> = ({
         />
       </span>
       <span className="
-        w-14 shrink-0 text-right font-mono text-xs text-muted-foreground
+        w-14 shrink-0 text-end font-mono text-xs text-muted-foreground
       "
       >
         {formatValue(value)}
