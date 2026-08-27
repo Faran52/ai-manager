@@ -14,6 +14,7 @@ import {
   test,
 } from 'vitest';
 
+import { pairToolOutcomes } from './outcomeUtils';
 import {
   listSqliteProjects,
   listSqliteSessions,
@@ -482,5 +483,128 @@ describe('SQLite history discovery', () => {
     createDatabase(join(deep, 'hidden.db'));
 
     expect(await listSqliteProjects('cursor', [root])).toEqual([]);
+  });
+  test('renders Cursor tool calls, their results and single thought bubbles', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'cursor-tools-'));
+    const filePath = join(root, 'state.vscdb');
+    const database = new DatabaseSync(filePath);
+
+    database.exec(`
+      CREATE TABLE cursorDiskKV (key TEXT UNIQUE, value BLOB);
+      CREATE TABLE ItemTable (key TEXT UNIQUE, value BLOB);
+    `);
+    database.prepare('INSERT INTO cursorDiskKV VALUES (?, ?)')
+      .run('composerData:composer-2', Buffer.from(JSON.stringify({
+        composerId: 'composer-2',
+        createdAt: 1_767_225_600_000,
+        fullConversationHeadersOnly: [
+          {
+            bubbleId: 'u1',
+            type: 1,
+          },
+          {
+            bubbleId: 'thought',
+            type: 2,
+          },
+          {
+            bubbleId: 'tool-ok',
+            type: 2,
+          },
+          {
+            bubbleId: 'tool-bad',
+            type: 2,
+          },
+          {
+            bubbleId: 'tool-unmapped',
+            type: 2,
+          },
+        ],
+      })));
+    database.prepare('INSERT INTO cursorDiskKV VALUES (?, ?)')
+      .run('bubbleId:composer-2:u1', Buffer.from(JSON.stringify({
+        type: 1,
+        text: 'Read the readme',
+        createdAt: 1_767_225_600_000,
+      })));
+    database.prepare('INSERT INTO cursorDiskKV VALUES (?, ?)')
+      .run('bubbleId:composer-2:thought', Buffer.from(JSON.stringify({
+        type: 2,
+        isThought: true,
+        text: 'Considering the request',
+        createdAt: 1_767_225_600_500,
+      })));
+    database.prepare('INSERT INTO cursorDiskKV VALUES (?, ?)')
+      .run('bubbleId:composer-2:tool-ok', Buffer.from(JSON.stringify({
+        type: 2,
+        text: '# Title',
+        createdAt: 1_767_225_601_000,
+        toolFormerData: {
+          name: 'read_file',
+          toolCallId: 'call-1',
+          status: 'completed',
+          rawArgs: JSON.stringify({ file_path: '/repo/README.md' }),
+        },
+      })));
+    database.prepare('INSERT INTO cursorDiskKV VALUES (?, ?)')
+      .run('bubbleId:composer-2:tool-bad', Buffer.from(JSON.stringify({
+        type: 2,
+        text: 'command not found',
+        createdAt: 1_767_225_602_000,
+        toolFormerData: {
+          name: 'run_terminal_cmd',
+          status: 'rejected',
+          rawArgs: 'not-json',
+        },
+      })));
+    database.prepare('INSERT INTO cursorDiskKV VALUES (?, ?)')
+      .run('bubbleId:composer-2:tool-unmapped', Buffer.from(JSON.stringify({
+        type: 2,
+        text: '',
+        createdAt: 1_767_225_603_000,
+        toolFormerData: { toolCallId: 'call-3' },
+      })));
+    database.close();
+
+    const sessions = await listSqliteSessions('cursor', [filePath]);
+    const entries = await loadSqliteEntries(sessions[0]?.filePath ?? '', [filePath]);
+    const outcomes = pairToolOutcomes(entries ?? []);
+
+    expect(entries?.[1]).toMatchObject({
+      kind: 'assistant',
+      blocks: [{
+        blockType: 'thinking',
+        thinking: 'Considering the request',
+      }],
+    });
+    expect(entries?.[2]).toMatchObject({
+      kind: 'assistant',
+      blocks: [{
+        blockType: 'tool-use',
+        call: {
+          id: 'call-1',
+          name: 'Read',
+          input: {
+            kind: 'file-read',
+            path: '/repo/README.md',
+          },
+        },
+      }],
+    });
+    expect(outcomes.get('call-1')).toMatchObject({
+      status: 'ok',
+      text: '# Title',
+    });
+    expect(outcomes.get('tool-bad')).toMatchObject({ status: 'error' });
+    expect(outcomes.get('call-3')?.text).toBeUndefined();
+
+    const names = (entries ?? []).flatMap((entry) => {
+      return entry.kind === 'assistant'
+        ? entry.blocks.flatMap((block) => {
+            return block.blockType === 'tool-use' ? [block.call.name] : [];
+          })
+        : [];
+    });
+
+    expect(names).toEqual(['Read', 'Bash', 'Tool']);
   });
 });

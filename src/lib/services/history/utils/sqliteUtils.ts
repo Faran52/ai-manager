@@ -17,7 +17,7 @@ import {
 import { containedIn } from '@utils/pathUtils';
 import { humanPreview } from '@utils/titleUtils';
 
-import { splitUserText } from '../../session/utils/parserUtils';
+import { parseToolInput, splitUserText } from '../../session/utils/parserUtils';
 
 import { conversationMessageCount, firstUserMessageText } from './outcomeUtils';
 import { parseStructuredHistory } from './structuredUtils';
@@ -30,7 +30,10 @@ import type {
   HistoryEntry,
   ProjectSummary,
   SessionSummary,
+  ToolOutcome,
+  ToolStatus,
 } from '../types';
+import type { RawToolInput } from './claudeRawUtils';
 
 interface SqliteReference {
   readonly databasePath: string;
@@ -64,6 +67,11 @@ interface TimestampRange {
 interface SqliteSession {
   readonly summary: SessionSummary;
   readonly entries: readonly HistoryEntry[];
+}
+
+interface CursorToolParts {
+  readonly block: AssistantBlock;
+  readonly outcome: ToolOutcome;
 }
 
 export const databaseExtensions = new Set(['.db', '.sqlite', '.sqlite3', '.vscdb']);
@@ -218,6 +226,15 @@ const cursorBubbleHeaders = (metadata: JsonObject): readonly CursorBubbleHeader[
 
 const cursorThinkingBlocks = (bubble: JsonObject): readonly AssistantBlock[] => {
   const values = bubble.allThinkingBlocks;
+  const thought = jsonString(bubble.text) ?? '';
+
+  // Older bubbles carry a single thought on the bubble itself.
+  if (bubble.isThought === true && thought.length > 0) {
+    return [{
+      blockType: 'thinking',
+      thinking: thought,
+    }];
+  }
 
   if (!isJsonArray(values)) {
     return [];
@@ -242,12 +259,76 @@ const cursorThinkingBlocks = (bubble: JsonObject): readonly AssistantBlock[] => 
   });
 };
 
+// Cursor names its tools after its own commands, the viewer speaks the shared set.
+const CURSOR_TOOL_NAMES = new Map<string, string>([
+  ['read_file', 'Read'],
+  ['view_file', 'Read'],
+  ['write_to_file', 'Write'],
+  ['create_file', 'Write'],
+  ['edit_file', 'Write'],
+  ['execute_command', 'Bash'],
+  ['run_terminal_cmd', 'Bash'],
+  ['list_directory', 'Glob'],
+  ['list_dir', 'Glob'],
+  ['search_files', 'Grep'],
+  ['codebase_search', 'Grep'],
+  ['grep_search', 'Grep'],
+  ['web_search', 'WebSearch'],
+  ['web_fetch', 'WebFetch'],
+  ['fetch_url', 'WebFetch'],
+]);
+
+const cursorToolStatus = (status: string | undefined): ToolStatus => {
+  return status === 'error' || status === 'rejected' ? 'error' : 'ok';
+};
+
+const cursorToolArguments = (rawArgs: string | undefined): RawToolInput => {
+  const parsed = parseJsonContainer(rawArgs ?? '{}');
+
+  return isJsonObject(parsed) ? (parsed) : {};
+};
+
+// Cursor keeps the call on the assistant bubble and its result in the same bubble's text.
+const cursorToolParts = (
+  bubble: JsonObject,
+  bubbleId: string,
+  text: string,
+): CursorToolParts | undefined => {
+  const data = objectAt(bubble, 'toolFormerData');
+
+  if (data == null) {
+    return undefined;
+  }
+
+  const name = CURSOR_TOOL_NAMES.get(jsonString(data.name) ?? '')
+    ?? jsonString(data.name)
+    ?? 'Tool';
+  const toolUseId = jsonString(data.toolCallId) ?? bubbleId;
+
+  return {
+    block: {
+      blockType: 'tool-use',
+      call: {
+        id: toolUseId,
+        name,
+        input: parseToolInput(name, cursorToolArguments(jsonString(data.rawArgs))),
+      },
+    },
+    outcome: {
+      toolUseId,
+      status: cursorToolStatus(jsonString(data.status)),
+      text: text.length > 0 ? text : undefined,
+      images: [],
+    },
+  };
+};
+
 const cursorEntry = (
   header: CursorBubbleHeader,
   bubble: JsonObject,
   metadata: JsonObject,
   fallbackMs: number,
-): SqliteEntry | undefined => {
+): readonly SqliteEntry[] => {
   const text = jsonString(bubble.text) ?? '';
   const rawTimestamp = jsonNumber(bubble.createdAt) ?? jsonNumber(metadata.createdAt) ?? fallbackMs;
   const timestamp = new Date(rawTimestamp).toISOString();
@@ -255,7 +336,7 @@ const cursorEntry = (
   if (header.type === 1) {
     const splitText = splitUserText(text);
 
-    return {
+    return [{
       kind: 'user',
       uuid: header.bubbleId,
       timestamp,
@@ -264,17 +345,21 @@ const cursorEntry = (
       text: splitText.text,
       ...(splitText.injectedText == null ? {} : { injectedText: splitText.injectedText }),
       outcomes: [],
-    };
+    }];
   }
 
   if (header.type !== 2) {
-    return undefined;
+    return [];
   }
 
   const modelConfig = objectAt(metadata, 'modelConfig');
+  const toolParts = cursorToolParts(bubble, header.bubbleId, text);
   const blocks: AssistantBlock[] = [...cursorThinkingBlocks(bubble)];
 
-  if (text.length > 0) {
+  if (toolParts != null) {
+    blocks.push(toolParts.block);
+  }
+  else if (text.length > 0 && bubble.isThought !== true) {
     blocks.push({
       blockType: 'text',
       text,
@@ -282,10 +367,10 @@ const cursorEntry = (
   }
 
   if (blocks.length === 0) {
-    return undefined;
+    return [];
   }
 
-  return {
+  const assistant: SqliteEntry = {
     kind: 'assistant',
     uuid: header.bubbleId,
     timestamp,
@@ -293,6 +378,21 @@ const cursorEntry = (
     model: modelConfig == null ? undefined : jsonString(modelConfig.modelName),
     blocks,
   };
+
+  if (toolParts == null) {
+    return [assistant];
+  }
+
+  // Outcomes ride on a user turn so pairToolOutcomes can link them to the call.
+  return [assistant, {
+    kind: 'user',
+    uuid: `${header.bubbleId}-outcomes`,
+    timestamp,
+    sidechain: false,
+    meta: false,
+    text: '',
+    outcomes: [toolParts.outcome],
+  }];
 };
 
 const cursorWorkspace = (metadata: JsonObject, databasePath: string): string => {
@@ -378,9 +478,7 @@ const cursorSessions = (
     const entries = headers.flatMap((header) => {
       const bubble = bubbleByKey.get(`bubbleId:${sessionId}:${header.bubbleId}`)
         ?? (conversationMap == null ? undefined : objectAt(conversationMap, header.bubbleId));
-      const entry = bubble == null ? undefined : cursorEntry(header, bubble, merged, fallbackMs);
-
-      return entry == null ? [] : [entry];
+      return bubble == null ? [] : cursorEntry(header, bubble, merged, fallbackMs);
     });
 
     if (entries.length === 0) {
