@@ -103,7 +103,7 @@ hands off to an installer and exits.
 Set `UPDATE_FEED_URL` (and `UPDATE_PUBLIC_KEY` to require signed manifests).
 Without a feed the app simply never offers updates.
 
-Cutting a release is one tag push; see [docs/RELEASING.md](docs/RELEASING.md).
+Cutting a release is one tag push; see [RELEASE.md](RELEASE.md).
 
 ## Architecture
 

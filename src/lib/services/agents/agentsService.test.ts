@@ -74,9 +74,12 @@ test('aggregates projects and dispatches session discovery by agent', async () =
   });
   const projects = await listAgentProjects(roots);
 
+  // Membership, not order: codex counts file mtime as activity and claude does not.
   expect(projects.map((project) => {
     return project.agent;
-  })).toEqual(['codex', 'claude']);
+  }).sort((left, right) => {
+    return left.localeCompare(right);
+  })).toEqual(['claude', 'codex']);
   expect(await listAgentSessions(roots, 'claude', 'p')).toHaveLength(1);
   expect(await listAgentSessions(roots, 'codex', '/c')).toHaveLength(1);
   expect(await listAgentSessions(roots, 'codex')).toHaveLength(1);

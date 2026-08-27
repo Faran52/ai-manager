@@ -32,6 +32,8 @@ import {
 } from '../history/utils/structuredUtils';
 import { parseHistoryLine } from '../session/utils/parserUtils';
 
+import { compareProjects } from './utils/orderUtils';
+
 import type { AgentId, AgentOption } from '@config/agents';
 import type {
   HistoryEntry,
@@ -239,9 +241,7 @@ export const listAgentProjects = async (roots: AgentRoots): Promise<readonly Pro
     return routesFor(option.id).projects(option.id, roots[option.id]);
   }));
 
-  return projects.flat().sort((left, right) => {
-    return right.lastActivityMs - left.lastActivityMs;
-  });
+  return projects.flat().sort(compareProjects);
 };
 
 export const listAgentSessions = async (
