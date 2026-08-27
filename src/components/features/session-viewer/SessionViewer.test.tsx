@@ -262,7 +262,11 @@ describe('SessionViewer states', () => {
     );
     await screen.findByText('the question');
 
-    expect(scrollSpy).toHaveBeenCalledTimes(1);
+    // The entries arriving and the scroll effect running are separate commits,
+    // so sampling the spy the moment the text appears is a race.
+    await waitFor(() => {
+      expect(scrollSpy).toHaveBeenCalledTimes(1);
+    });
     expect(scrollSpy).toHaveBeenCalledWith({ block: 'center' });
   });
 

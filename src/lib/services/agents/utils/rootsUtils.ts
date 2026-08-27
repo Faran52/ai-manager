@@ -80,7 +80,7 @@ export const resolveAgentPaths = ({
     ],
     'cursor-agent': [join(home, '.cursor', 'projects')],
     'forgecode': [join(home, '.forge', '.forge.db')],
-    'gemini': [envPath(env, 'GEMINI_CLI_HOME', join(home, '.gemini'))],
+    'gemini': [join(envPath(env, 'GEMINI_CLI_HOME', join(home, '.gemini')), 'tmp')],
     'goose': [join(data, 'goose', 'sessions', 'sessions.db')],
     'grok': [join(home, '.grok', 'sessions')],
     'kimi': [join(home, '.kimi')],

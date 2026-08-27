@@ -16,6 +16,11 @@ import {
   loadCopilotEntries,
 } from '../history/utils/copilotUtils';
 import {
+  listGeminiProjects,
+  listGeminiSessions,
+  loadGeminiEntries,
+} from '../history/utils/geminiUtils';
+import {
   listOpenCodeProjects,
   listOpenCodeSessions,
   loadOpenCodeEntries,
@@ -196,6 +201,17 @@ const structuredEntries = async (
   return loadStructuredEntries(filePath);
 };
 
+const geminiEntries = async (
+  filePath: string,
+  allowedRoots: readonly string[],
+): Promise<readonly HistoryEntry[] | undefined> => {
+  if (!await containedIn(allowedRoots, filePath)) {
+    return undefined;
+  }
+
+  return loadGeminiEntries(filePath);
+};
+
 const copilotEntries = async (
   filePath: string,
   allowedRoots: readonly string[],
@@ -219,6 +235,11 @@ const ROUTES_BY_FORMAT: Record<AgentOption['format'], FormatRoutes> = {
     projects: listCopilotProjects,
     sessions: listCopilotSessions,
     entries: copilotEntries,
+  },
+  gemini: {
+    projects: listGeminiProjects,
+    sessions: listGeminiSessions,
+    entries: geminiEntries,
   },
   sqlite: {
     projects: listSqliteProjects,

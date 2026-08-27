@@ -29,7 +29,7 @@ test('resolves every agent path on Linux with environment overrides', () => {
   expect(paths.claude).toEqual(['/claude']);
   expect(paths.codex).toEqual(['/codex']);
   expect(paths.continue).toEqual(['/continue']);
-  expect(paths.gemini).toEqual(['/gemini']);
+  expect(paths.gemini).toEqual(['/gemini/tmp']);
   expect(paths.openinterpreter).toEqual(['/interpreter']);
   expect(paths.qwen).toEqual(['/qwen']);
   expect(paths.vibe).toContain('/vibe');

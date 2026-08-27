@@ -34,7 +34,7 @@ export type SessionArtifact = 'file' | 'directory' | 'shared-db';
 export interface AgentOption {
   readonly id: AgentId;
   readonly label: string;
-  readonly format: 'claude' | 'codex' | 'copilot' | 'files' | 'sqlite' | 'opencode';
+  readonly format: 'claude' | 'codex' | 'copilot' | 'files' | 'gemini' | 'sqlite' | 'opencode';
   readonly artifact: SessionArtifact;
   readonly canDelete: boolean;
   readonly canDeleteProject: boolean;
@@ -107,7 +107,7 @@ export const agentOptions: readonly AgentOption[] = [
     canRename: false,
     popular: true,
   },
-  readOnlyAgent('gemini', 'Gemini CLI', 'files', true),
+  readOnlyAgent('gemini', 'Gemini CLI', 'gemini', true),
   readOnlyAgent('cline', 'Cline / Roo / Kilo', 'files', true),
   readOnlyAgent('aider', 'Aider', 'files', true),
   readOnlyAgent('continue', 'Continue', 'files', true),

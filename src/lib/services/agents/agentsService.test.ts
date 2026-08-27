@@ -321,3 +321,28 @@ test('loadAgentEntries refuses copilot journals outside their roots', async () =
 
   await expect(loadAgentEntries(file, 'copilot', [root])).resolves.toBeUndefined();
 });
+
+test('loadAgentEntries reads gemini logs and refuses ones outside their roots', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'gemini-root-'));
+  const chats = join(root, 'hash-a', 'chats');
+
+  await mkdir(chats, { recursive: true });
+  await writeFile(join(root, 'hash-a', '.project_root'), '/repo/alpha');
+  await writeFile(join(chats, 'session-1.jsonl'), [
+    JSON.stringify({ sessionId: 'sess-1' }),
+    JSON.stringify({
+      id: 'u1',
+      type: 'user',
+      timestamp: '2026-03-01T09:00:00.000Z',
+      content: 'Hello Gemini',
+    }),
+  ].join('\n'));
+
+  const file = join(chats, 'session-1.jsonl');
+
+  await expect(loadAgentEntries(file, 'gemini', [root])).resolves.toHaveLength(1);
+
+  const outside = await mkdtemp(join(tmpdir(), 'gemini-outside-'));
+
+  await expect(loadAgentEntries(file, 'gemini', [outside])).resolves.toBeUndefined();
+});
