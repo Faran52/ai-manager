@@ -1,4 +1,5 @@
 import {
+  cleanup,
   render,
   screen,
   waitFor,
@@ -15,6 +16,8 @@ import {
 import { SessionViewer } from './SessionViewer';
 
 afterEach(() => {
+  // Unmount first, a viewer left mounted would refetch against the real fetch.
+  cleanup();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -481,9 +484,12 @@ describe('SessionViewer title fallbacks', () => {
     clickSpy.mockRestore();
   });
 
-  test('uses the generic title when the file path has no basename', () => {
+  test('uses the generic title when the file path has no basename', async () => {
+    stubPage();
+
     render(<SessionViewer filePath="/" projectLabel="p" sessionTitle={undefined} highlightTimestamp={undefined} />);
 
     expect(screen.getByText('Session')).toBeDefined();
+    await screen.findByText('the question');
   });
 });
