@@ -58,8 +58,8 @@ export const AppHeader: FC<AppHeaderProps> = ({
     <>
       <header
         className="
-          flex h-12 shrink-0 items-center gap-3 border-b border-border
-          bg-card/90 px-3 backdrop-blur-xl
+          flex h-12 shrink-0 items-center gap-3 border-b border-border bg-card
+          px-3
         "
         data-app-header
       >

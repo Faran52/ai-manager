@@ -86,24 +86,14 @@ export const PopupMenu: FC<PopupMenuProps> = ({
           role="menu"
           aria-label={label}
           style={style}
-          initial={{
-            opacity: 0,
-            scale: 0.98,
-          }}
-          animate={{
-            opacity: 1,
-            scale: 1,
-          }}
-          exit={{
-            opacity: 0,
-            scale: 0.98,
-          }}
+          initial={{ scale: 0.98 }}
+          animate={{ scale: 1 }}
+          exit={{ scale: 0.98 }}
           transition={popoverTransition}
           className={cn(
             `
               z-50 w-64 max-w-[calc(100vw-1rem)] overflow-hidden rounded-xl
-              border border-border bg-popover/95 p-1 shadow-2xl shadow-black/25
-              backdrop-blur-xl
+              border border-border bg-popover p-1 shadow-2xl shadow-black/25
             `,
             position == null && 'absolute top-full mt-1.5',
             position == null && (align === 'left'
