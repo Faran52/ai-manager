@@ -80,3 +80,11 @@ export interface AgentSetupResponse {
   readonly plugins: readonly InstalledPlugin[];
   readonly trust: ProjectTrust;
 }
+
+export interface UpdateCheckResponse {
+  readonly update: {
+    readonly notes?: string | undefined;
+    readonly stage: string;
+    readonly version?: string | undefined;
+  };
+}

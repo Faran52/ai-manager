@@ -31,6 +31,7 @@ import { SearchDialog } from '@features/search';
 import { SessionViewer } from '@features/session-viewer';
 import { SidebarPane } from '@features/sidebar';
 import { useTheme } from '@features/theme';
+import { UpdateBanner } from '@features/updates';
 
 import type { AgentId } from '@config/agents';
 import type { AppView } from '@features/app-header';
@@ -231,6 +232,7 @@ export const HistoryApp: FC = () => {
     <MotionConfig reducedMotion="user">
       <div className="flex h-dvh overflow-hidden bg-background text-foreground">
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          <UpdateBanner />
           <AppHeader
             view={view}
             onViewChange={setView}

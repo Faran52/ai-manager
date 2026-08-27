@@ -14,6 +14,7 @@ import type {
   SessionMutationBody,
   SessionsResponse,
   StatsResponse,
+  UpdateCheckResponse,
 } from './contracts';
 
 interface EndpointDefinition<T extends object> {
@@ -50,6 +51,10 @@ const isStatsResponse = (value: object): value is StatsResponse => {
   return 'stats' in value;
 };
 
+const isUpdateCheck = (value: object): value is UpdateCheckResponse => {
+  return 'update' in value;
+};
+
 const isMutationResponse = (value: object): value is MutationResponse => {
   return 'ok' in value && value.ok === true;
 };
@@ -73,6 +78,11 @@ const SEARCH: EndpointDefinition<SearchResponse> = {
   path: '/api/search',
   accepts: isSearchOutcome,
   label: 'search results',
+};
+const UPDATE_CHECK: EndpointDefinition<UpdateCheckResponse> = {
+  path: '/api/update-check',
+  accepts: isUpdateCheck,
+  label: 'update check',
 };
 const STATS: EndpointDefinition<StatsResponse> = {
   path: '/api/stats',
@@ -153,6 +163,10 @@ const requestEndpoint = async <T extends object>(endpoint: EndpointDefinition<T>
   }
 
   throw new Error(`${endpoint.label} returned an unexpected shape`);
+};
+
+export const fetchUpdateCheck = (): Promise<UpdateCheckResponse> => {
+  return requestEndpoint(UPDATE_CHECK, {});
 };
 
 export const fetchProjects = (): Promise<ProjectsResponse> => {
