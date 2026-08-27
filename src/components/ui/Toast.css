@@ -1,8 +1,8 @@
 @layer components {
   .toast {
     position: fixed;
+    inset-inline-end: 1rem;
     top: 3.75rem;
-    right: 1rem;
     z-index: 60;
     padding: 0.55rem 0.75rem;
     font-size: 0.75rem;

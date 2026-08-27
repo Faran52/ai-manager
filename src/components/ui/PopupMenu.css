@@ -8,7 +8,7 @@
     padding: 0.5rem 0.625rem;
     font-size: 0.75rem;
     color: var(--muted-foreground);
-    text-align: left;
+    text-align: start;
     border-radius: 0.5rem;
     transition: color 120ms ease, background-color 120ms ease;
   }
