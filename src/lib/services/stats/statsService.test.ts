@@ -411,4 +411,60 @@ describe('structured and SQLite statistics', () => {
 
     expect((await computeProjectStats(databasePath, sqlite, 'goose'))?.totals.sessions).toBe(1);
   });
+  test('loads copilot journals and opencode databases for stats', async () => {
+    const copilotRoot = await newDir();
+    const sessions = join(copilotRoot, 'hash-1', 'chatSessions');
+
+    await mkdir(sessions, { recursive: true });
+    await writeFile(join(sessions, 'chat.jsonl'), JSON.stringify({
+      kind: 0,
+      v: {
+        sessionId: 'stats-session',
+        requests: [{
+          requestId: 'r0',
+          timestamp: Date.parse('2026-07-01T09:00:00Z'),
+          modelId: 'copilot/kimi-k3',
+          promptTokens: 10,
+          completionTokens: 20,
+          message: { text: 'Prompt' },
+          response: [{ value: 'Reply' }],
+        }],
+      },
+    }), 'utf8');
+
+    expect((await computeProjectStats(copilotRoot, 'unknown', 'copilot'))?.totals.sessions).toBe(1);
+
+    const openCodeRoot = await newDir();
+    const databasePath = join(openCodeRoot, 'opencode.db');
+    const database = new DatabaseSync(databasePath);
+
+    database.exec(`
+      CREATE TABLE session (
+        id TEXT PRIMARY KEY, title TEXT, directory TEXT, parent_id TEXT,
+        time_created INTEGER, time_updated INTEGER
+      );
+      CREATE TABLE message (
+        id TEXT PRIMARY KEY, session_id TEXT, time_created INTEGER, data TEXT
+      );
+      CREATE TABLE part (
+        id TEXT PRIMARY KEY, message_id TEXT, session_id TEXT,
+        time_created INTEGER, data TEXT
+      );
+    `);
+    database.prepare(
+      'INSERT INTO session (id, title, directory, parent_id, time_created, time_updated) VALUES (?, ?, ?, ?, ?, ?)',
+    ).run('ses_a', 'Session', '/repo/alpha', null, 1_000, 2_000);
+    database.prepare(
+      'INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)',
+    ).run('msg_1', 'ses_a', 1_000, JSON.stringify({ role: 'user' }));
+    database.prepare(
+      'INSERT INTO part (id, message_id, session_id, time_created, data) VALUES (?, ?, ?, ?, ?)',
+    ).run('part_1', 'msg_1', 'ses_a', 1_000, JSON.stringify({
+      type: 'text',
+      text: 'First question',
+    }));
+    database.close();
+
+    expect((await computeProjectStats(openCodeRoot, '/repo/alpha', 'opencode'))?.totals.sessions).toBe(1);
+  });
 });

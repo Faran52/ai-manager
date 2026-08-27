@@ -2,6 +2,8 @@ import { agentOption } from '@config/agents';
 
 import { listSessions } from '../history/utils/claudeUtils';
 import { listCodexSessions } from '../history/utils/codexUtils';
+import { listCopilotSessions } from '../history/utils/copilotUtils';
+import { listOpenCodeSessions } from '../history/utils/openCodeUtils';
 import { listSqliteSessions } from '../history/utils/sqliteUtils';
 import { listStructuredSessions } from '../history/utils/structuredUtils';
 import { loadSessionEntriesOrEmpty } from '../session/utils/loaderUtils';
@@ -81,6 +83,14 @@ const sessionsForStats = async (
   agent: AgentId,
 ): Promise<readonly SessionSummary[]> => {
   const format = agentOption(agent).format;
+
+  if (format === 'copilot') {
+    return listCopilotSessions(agent, agentDirs, projectId);
+  }
+
+  if (format === 'opencode') {
+    return listOpenCodeSessions(agent, agentDirs, projectId);
+  }
 
   if (format === 'codex') {
     const sessions = await Promise.all(agentDirs.map(async (agentDir) => {
