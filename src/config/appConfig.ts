@@ -10,7 +10,7 @@ export interface AppConfig {
 }
 
 export const appConfig: AppConfig = {
-  version: '0.0.1',
+  version: '0.1.0',
   pageSize: 120,
   maxPageSize: 400,
   previewLength: 140,

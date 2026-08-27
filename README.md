@@ -103,6 +103,8 @@ hands off to an installer and exits.
 Set `UPDATE_FEED_URL` (and `UPDATE_PUBLIC_KEY` to require signed manifests).
 Without a feed the app simply never offers updates.
 
+Cutting a release is one tag push; see [docs/RELEASING.md](docs/RELEASING.md).
+
 ## Architecture
 
 LintelJS layout (`plugins/linteljs/skills/linteljs/SKILL.md` is the contract):
@@ -136,7 +138,6 @@ imports go through its facade (`@services/<domain>`); lint enforces this.
 - Archive manager, MCP server/preset managers
 - Subagent (sidechain) transcript drill-down, board/kanban view,
   screenshot capture, WebUI remote-login mode
-- Signed and notarised release builds
 
 ## License
 

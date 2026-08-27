@@ -1,7 +1,7 @@
 {
   "name": "ai-chat-manager",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "license": "MIT",
   "engines": {
     "node": ">=24.19.0",
@@ -21,11 +21,15 @@
     "typecheck": "astro sync && astro check",
     "test": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage",
-    "check": "pnpm lint && pnpm lint:types && pnpm lint:css && pnpm typecheck && pnpm test:coverage && pnpm build",
+    "check": "pnpm lint && pnpm lint:types && pnpm lint:css && pnpm typecheck && pnpm version:check && pnpm test:coverage && pnpm build",
     "prepare": "astro sync && husky",
     "desktop": "astro build && node scripts/stubMissingImports.ts && deno desktop -E -R -S .",
     "desktop:dev": "deno desktop -E -R -S . --hmr",
-    "desktop:build": "astro build && node scripts/stubMissingImports.ts && deno desktop -E -R -S . --output ./dist/AIChatManager.app"
+    "desktop:build": "astro build && node scripts/stubMissingImports.ts && deno desktop -E -R -S . --output ./dist/AIChatManager.app",
+    "version:check": "node scripts/syncVersion.ts",
+    "version:set": "node scripts/syncVersion.ts",
+    "release:key": "node scripts/generateUpdateKey.ts",
+    "release:manifest": "node scripts/buildReleaseManifest.ts"
   },
   "dependencies": {
     "@astrojs/node": "^11.1.4",

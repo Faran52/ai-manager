@@ -1,0 +1,258 @@
+# Pushing the tag is the whole release: `git tag v0.1.0 && git push origin v0.1.0`
+# builds, signs and publishes. Separate from ci.yml, which `lintel sync` overwrites.
+#
+# Updates replace the whole bundle rather than patching it. Patching breaks a
+# signed macOS bundle (denoland/deno#36574) and Windows cannot apply patches at
+# all, so one strategy serves every platform.
+#
+# ponytail: the guard job reruns `pnpm check` rather than polling ci.yml's run on
+# the same commit, the way lintel's release.yml waits for its 11-minute e2e.
+# Nothing here is that expensive, and the three build jobs are gated behind it
+# anyway, so rerunning the cheap gate is less code than a cross-workflow poll.
+#
+# Secrets. A missing one degrades that platform to unsigned rather than failing:
+#   UPDATE_SIGNING_KEY           Ed25519 private key (PEM) from `pnpm release:key`
+#   MACOS_CERTIFICATE            base64 of the Developer ID Application .p12
+#   MACOS_CERTIFICATE_PASSWORD   password for that .p12
+#   MACOS_SIGN_IDENTITY          "Developer ID Application: Name (TEAMID)"
+#   APPLE_ID, APPLE_TEAM_ID      notarization account
+#   APPLE_APP_PASSWORD           app-specific password for notarytool
+#   WINDOWS_CERTIFICATE          base64 of the code-signing .pfx
+#   WINDOWS_CERTIFICATE_PASSWORD password for that .pfx
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+env:
+  # First Deno release carrying the bundle-signature fix (#36574). Below this,
+  # a built bundle fails `codesign --verify` before an update is ever applied.
+  DENO_VERSION: v2.9.6
+  NODE_VERSION: 24.19.0
+
+jobs:
+  guard:
+    name: refuse a release that is not ready
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      # The tag names the version. The updater compares releases against the
+      # version baked into the app, so a tag that disagrees would ship a build
+      # nobody can be offered.
+      - name: Verify the app is at the version the tag names
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          node scripts/syncVersion.ts
+          BAKED="$(node -p "require('./package.json').version")"
+          if [ "$VERSION" != "$BAKED" ]; then
+            echo "Tag $GITHUB_REF_NAME names $VERSION, but the app is built as $BAKED" >&2
+            echo "Run: pnpm version:set $VERSION" >&2
+            exit 1
+          fi
+
+      # Read before anything builds, because a release whose notes turn out to be
+      # empty is one nobody can fix afterwards without editing it by hand.
+      - name: Verify the changelog describes this version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if ! grep -qxF "## $VERSION" CHANGELOG.md; then
+            echo "CHANGELOG.md has no '## $VERSION' section." >&2
+            echo "The release notes are written from it, so this would publish an empty release." >&2
+            exit 1
+          fi
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+
+  macos:
+    needs: guard
+    runs-on: macos-14
+    env:
+      MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+      MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+      MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      - name: Import signing certificate
+        if: env.MACOS_CERTIFICATE != ''
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/build.keychain"
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          echo "$MACOS_CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 900 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" \
+            -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" > /dev/null
+          security list-keychain -d user -s "$KEYCHAIN" login.keychain
+          rm -f "$RUNNER_TEMP/cert.p12"
+
+      # The identity carries a team id, so it is injected rather than committed.
+      - name: Set the signing identity
+        if: env.MACOS_SIGN_IDENTITY != ''
+        run: |
+          python3 - <<'PY'
+          import json, os
+          config = json.load(open('deno.json'))
+          config.setdefault('desktop', {}).setdefault('macos', {})['codesignIdentity'] = os.environ['MACOS_SIGN_IDENTITY']
+          json.dump(config, open('deno.json', 'w'), indent=2)
+          PY
+
+      - name: Build the app bundle
+        run: |
+          deno desktop -E -R -S . --output ./dist/AIChatManager.app
+          # ditto keeps the bundle's symlinks and extended attributes; zip does not.
+          ditto -c -k --keepParent ./dist/AIChatManager.app ./AIChatManager-macos.zip
+
+      - name: Verify the signature survived packaging
+        if: env.MACOS_SIGN_IDENTITY != ''
+        run: codesign --verify --deep --strict --verbose=2 ./dist/AIChatManager.app
+
+      - name: Notarize and staple
+        if: env.APPLE_ID != ''
+        run: |
+          xcrun notarytool submit ./AIChatManager-macos.zip \
+            --apple-id "$APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_APP_PASSWORD" \
+            --wait
+          xcrun stapler staple ./dist/AIChatManager.app
+          # Re-zip so the published archive carries the stapled ticket.
+          rm -f ./AIChatManager-macos.zip
+          ditto -c -k --keepParent ./dist/AIChatManager.app ./AIChatManager-macos.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: ./AIChatManager-macos.zip
+
+  linux:
+    needs: guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: deno desktop -E -R -S . --output ./AIChatManager-linux.AppImage
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: ./AIChatManager-linux.AppImage
+
+  windows:
+    needs: guard
+    runs-on: windows-latest
+    env:
+      WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+      WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: deno desktop -E -R -S . --output ./AIChatManager-windows.msi
+
+      - name: Sign the installer
+        if: env.WINDOWS_CERTIFICATE != ''
+        shell: pwsh
+        run: |
+          $pfx = "$env:RUNNER_TEMP\cert.pfx"
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
+          & signtool sign /f $pfx /p $env:WINDOWS_CERTIFICATE_PASSWORD `
+            /tr http://timestamp.digicert.com /td sha256 /fd sha256 `
+            .\AIChatManager-windows.msi
+          Remove-Item $pfx
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: ./AIChatManager-windows.msi
+
+  publish:
+    needs: [macos, linux, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      # Writes the GitHub release on the tag that triggered this run.
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      # The changelog section for this version. Generated notes still follow
+      # underneath: they answer "which commits", this answers "what changed",
+      # and the second is what someone arriving at the release came for.
+      - name: Compose the release notes from the changelog
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk -v heading="## $VERSION" '
+            $0 == heading { found = 1; next }
+            found && /^## / { exit }
+            found
+          ' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+
+      - name: Build the update manifest
+        env:
+          UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
+        run: node scripts/buildReleaseManifest.ts "${GITHUB_REF_NAME#v}" artifacts/*
+
+      - uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
+        with:
+          tag_name: ${{ github.ref_name }}
+          body_path: ${{ runner.temp }}/notes.md
+          generate_release_notes: true
+          files: |
+            artifacts/*
+            latest.json
