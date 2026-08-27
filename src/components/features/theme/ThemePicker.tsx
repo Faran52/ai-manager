@@ -24,18 +24,19 @@ export interface ThemePickerProps {
 
 const ORDER: readonly ThemeMode[] = ['light', 'dark', 'system'];
 
+// Keys, not text, the map lives outside the component where t is unavailable.
 const DETAIL: Record<ThemeMode, { readonly label: string;
   readonly icon: ReactNode; }> = {
   light: {
-    label: 'Light',
+    label: 'themeLight',
     icon: <Sun className="size-3.5" />,
   },
   dark: {
-    label: 'Dark',
+    label: 'themeDark',
     icon: <Moon className="size-3.5" />,
   },
   system: {
-    label: 'Match system',
+    label: 'themeSystem',
     icon: <Monitor className="size-3.5" />,
   },
 };
@@ -50,7 +51,7 @@ export const ThemePicker: FC<ThemePickerProps> = ({ mode, onChange }) => {
       <Button
         size="sm"
         variant="ghost"
-        title={`Theme: ${active.label}`}
+        title={`${t('theme')}: ${t(active.label)}`}
         onClick={() => {
           setOpen(!open);
         }}
@@ -76,7 +77,7 @@ export const ThemePicker: FC<ThemePickerProps> = ({ mode, onChange }) => {
               }}
             >
               <span className="flex w-full items-center justify-between gap-3">
-                {DETAIL[option].label}
+                {t(DETAIL[option].label)}
                 {option === mode && <Check className="size-3.5 text-primary" />}
               </span>
             </MenuItem>

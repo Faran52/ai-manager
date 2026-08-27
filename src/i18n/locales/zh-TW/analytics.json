@@ -13,5 +13,6 @@
   "time": "時間",
   "selectProjectWithSessions": "請選擇有記錄工作階段的專案。",
   "turn": "輪",
-  "turns": "輪"
+  "turns": "輪",
+  "tryRefreshing": "請嘗試從頂列重新整理。"
 }

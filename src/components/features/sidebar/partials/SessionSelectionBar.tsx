@@ -23,12 +23,12 @@ export const SessionSelectionBar: FC<SessionSelectionBarProps> = ({
       <span className="session-selection-count">{`${String(selectedCount)} selected`}</span>
       <button
         type="button"
-        aria-label={allSelected ? 'Clear selected sessions' : 'Select all sessions'}
+        aria-label={allSelected ? t('clearSelected') : t('selectAllSessions')}
         onClick={onToggleAll}
         className="session-selection-action"
       >
         <CheckCheck className="size-3" />
-        {allSelected ? 'Clear' : 'All'}
+        {allSelected ? t('clear', { ns: 'common' }) : 'All'}
       </button>
       <button
         type="button"

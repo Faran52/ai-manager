@@ -63,8 +63,8 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
             ? `Couldn't load analytics for ${projectName}`
             : `No analytics for ${projectName}`}
           hint={status === 'error'
-            ? 'Try refreshing from the header.'
-            : 'Select a project with recorded sessions.'}
+            ? t('tryRefreshing')
+            : t('selectProjectWithSessions')}
         />
       </div>
     );
@@ -95,7 +95,7 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
         />
         <MetricCard
           label={t('tokens')}
-          value={stats.totals.usageRecorded ? formatTokens(totalTokens) : 'Not recorded'}
+          value={stats.totals.usageRecorded ? formatTokens(totalTokens) : t('notRecorded', { ns: 'common' })}
           hint={stats.totals.usageRecorded
             ? `${formatTokens(stats.totals.cacheReadTokens)} cache reads`
             : undefined}
@@ -103,7 +103,9 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
         />
         <MetricCard
           label={t('computeTime')}
-          value={stats.totals.usageRecorded ? formatDurationMs(stats.totals.durationMs) : 'Not recorded'}
+          value={stats.totals.usageRecorded
+            ? formatDurationMs(stats.totals.durationMs)
+            : t('notRecorded', { ns: 'common' })}
           hint={stats.totals.usageRecorded
             ? `${formatCost(stats.totals.costUsd)} recorded cost`
             : undefined}

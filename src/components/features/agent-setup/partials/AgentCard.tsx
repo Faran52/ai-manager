@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import {
   Check,
   ChevronRight,
@@ -45,6 +47,7 @@ export const AgentCard: FC<AgentCardProps> = ({
   nowMs,
   flagged = false,
 }) => {
+  const { t } = useTranslation('setup');
   const isClaude = setup.agent === 'claude';
   const configured = agentIsConfigured(setup, plugins);
   const enabledPlugins = plugins.filter((plugin) => {
@@ -66,7 +69,7 @@ export const AgentCard: FC<AgentCardProps> = ({
           <span className="size-1.5 rounded-full bg-muted-foreground/40" />
         </span>
         <h4 className="text-sm text-muted-foreground">{agentOption(setup.agent).label}</h4>
-        <Badge>Not set up</Badge>
+        <Badge>{t('notSetUp')}</Badge>
         <span className="ms-auto">{sessions}</span>
       </div>
     );
@@ -93,7 +96,7 @@ export const AgentCard: FC<AgentCardProps> = ({
             ? <TriangleAlert className="size-3.5 text-warn" />
             : <Check className="size-3.5 text-ok" />}
         </span>
-        {!flagged && <span className="sr-only">Ready</span>}
+        {!flagged && <span className="sr-only">{t('ready', { ns: 'common' })}</span>}
         <h4 className="w-32 shrink-0 truncate text-sm font-semibold">
           {agentOption(setup.agent).label}
         </h4>
@@ -105,7 +108,7 @@ export const AgentCard: FC<AgentCardProps> = ({
           </span>
         )}
         <span className="ms-auto flex items-center gap-2">
-          {flagged && <Badge tone="warn">Check setup</Badge>}
+          {flagged && <Badge tone="warn">{t('checkSetup')}</Badge>}
           {sessions}
           <ChevronRight className="
             size-3.5 text-muted-foreground transition-transform
@@ -118,7 +121,7 @@ export const AgentCard: FC<AgentCardProps> = ({
         <dl className="grid gap-1.5 text-xs">
           <AgentDetailRow icon={<Plug className="size-3" />} label="MCP">
             {setup.mcpServers.length === 0
-              ? <span className="text-muted-foreground">None</span>
+              ? <span className="text-muted-foreground">{t('none', { ns: 'common' })}</span>
               : setup.mcpServers.map((server) => {
                   return (
                     <Badge key={`${server.scope}-${server.name}`} title={server.source}>
@@ -130,7 +133,7 @@ export const AgentCard: FC<AgentCardProps> = ({
           </AgentDetailRow>
           <AgentDetailRow icon={<FileText className="size-3" />} label="Rules">
             {setup.rules.length === 0
-              ? <span className="text-muted-foreground">None</span>
+              ? <span className="text-muted-foreground">{t('none', { ns: 'common' })}</span>
               : setup.rules.map((rule) => {
                   return (
                     <Badge

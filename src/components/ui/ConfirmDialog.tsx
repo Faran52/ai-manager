@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import { Button } from './Button';
 import { Modal } from './Modal';
 
@@ -29,6 +31,7 @@ export const ConfirmDialog: FC<ConfirmDialogProps> = ({
   onClose,
   onConfirm,
 }) => {
+  const { t } = useTranslation('common');
   return (
     <Modal open={open} onClose={onClose} labelledBy={labelledBy} widthClass="max-w-md">
       <div className="p-5">
@@ -41,7 +44,7 @@ export const ConfirmDialog: FC<ConfirmDialogProps> = ({
         </h2>
         {description}
         <div className="mt-5 flex justify-end gap-2">
-          <Button variant="ghost" disabled={busy} onClick={onClose}>Cancel</Button>
+          <Button variant="ghost" disabled={busy} onClick={onClose}>{t('cancel')}</Button>
           <Button
             variant="primary"
             disabled={busy}

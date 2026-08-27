@@ -13,5 +13,6 @@
   "time": "时间",
   "selectProjectWithSessions": "请选择一个有记录会话的项目。",
   "turn": "轮",
-  "turns": "轮"
+  "turns": "轮",
+  "tryRefreshing": "请尝试从顶栏刷新。"
 }

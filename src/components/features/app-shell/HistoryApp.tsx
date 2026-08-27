@@ -4,6 +4,7 @@ import {
   useMemo,
   useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { initI18n } from '@i18n/index';
 import { motion, MotionConfig } from 'motion/react';
@@ -43,6 +44,7 @@ const EMPTY_PROJECTS: readonly ProjectSummary[] = [];
 initI18n();
 
 export const HistoryApp: FC = () => {
+  const { t } = useTranslation('sidebar');
   const projects = useProjects();
   const [selectedProject, setSelectedProject] = useState<ProjectSummary | null>(null);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
@@ -200,7 +202,7 @@ export const HistoryApp: FC = () => {
       <AnalyticsView
         stats={stats.data}
         status={stats.status}
-        projectName={selectedProject?.name ?? 'No project'}
+        projectName={selectedProject?.name ?? t('noProject')}
         onOpenSession={openStatsSession}
       />
     ),

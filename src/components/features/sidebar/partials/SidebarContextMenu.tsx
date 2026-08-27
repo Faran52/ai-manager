@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import {
   Clipboard,
   FileText,
@@ -56,6 +58,7 @@ export const SidebarContextMenu: FC<SidebarContextMenuProps> = ({
   onRenameSession,
   onDeleteSession,
 }) => {
+  const { t } = useTranslation('sidebar');
   const projectPath = target.kind === 'project' ? target.project.actualPath : undefined;
   const sessionAgent = target.kind === 'session' ? agentOption(target.session.agent) : undefined;
   const resumeCommand = sessionAgent?.resumeCommand;
@@ -71,28 +74,28 @@ export const SidebarContextMenu: FC<SidebarContextMenuProps> = ({
 
   const menu = target.kind === 'project'
     ? {
-        label: 'Project actions',
+        label: t('projectActions'),
         title: target.project.name,
         actions: [
           ...(projectPath == null
             ? []
             : [{
-                label: 'Copy project path',
+                label: t('copyProjectPath'),
                 icon: <Folder className="size-3.5" />,
                 onSelect: () => {
-                  copy(projectPath, 'Project path copied');
+                  copy(projectPath, t('projectPathCopied'));
                 },
               }]),
           {
-            label: 'Copy project ID',
+            label: t('copyProjectId'),
             icon: <Clipboard className="size-3.5" />,
             onSelect: () => {
-              copy(target.project.id, 'Project ID copied');
+              copy(target.project.id, t('projectIdCopied'));
             },
           },
           ...(agentOption(target.project.agent).canDeleteProject
             ? [{
-                label: 'Delete project history',
+                label: t('deleteProjectHistory'),
                 icon: <FolderX className="size-3.5" />,
                 onSelect: () => {
                   onClose();
@@ -103,20 +106,20 @@ export const SidebarContextMenu: FC<SidebarContextMenuProps> = ({
         ] satisfies readonly MenuAction[],
       }
     : {
-        label: 'Session actions',
+        label: t('sessionActions'),
         title: target.session.title ?? target.session.summary ?? target.session.preview ?? target.session.id,
         actions: [
           {
-            label: 'Copy session ID',
+            label: t('copySessionId'),
             icon: <Clipboard className="size-3.5" />,
             onSelect: () => {
-              copy(target.session.actualSessionId, 'Session ID copied');
+              copy(target.session.actualSessionId, t('sessionIdCopied'));
             },
           },
           ...(resumeCommand == null
             ? []
             : [{
-                label: 'Copy resume command',
+                label: t('copyResumeCommand'),
                 icon: <Play className="size-3.5" />,
                 onSelect: () => {
                   const resume = `${resumeCommand} ${shellQuote(target.session.actualSessionId)}`;
@@ -125,14 +128,14 @@ export const SidebarContextMenu: FC<SidebarContextMenuProps> = ({
                     ? resume
                     : `cd ${shellQuote(target.session.cwd)} && ${resume}`;
 
-                  copy(commandWithCwd, 'Resume command copied');
+                  copy(commandWithCwd, t('resumeCommandCopied'));
                 },
               }]),
           {
-            label: 'Copy session file path',
+            label: t('copySessionPath'),
             icon: <FileText className="size-3.5" />,
             onSelect: () => {
-              copy(target.session.filePath, 'Session path copied');
+              copy(target.session.filePath, t('sessionPathCopied'));
             },
           },
           ...(sessionAgent?.canRename === true
@@ -147,7 +150,7 @@ export const SidebarContextMenu: FC<SidebarContextMenuProps> = ({
             : []),
           ...(sessionAgent?.canDelete === true
             ? [{
-                label: 'Delete session',
+                label: t('deleteSession'),
                 icon: <Trash2 className="size-3.5" />,
                 onSelect: () => {
                   onClose();

@@ -96,7 +96,9 @@ export const SessionViewer: FC<SessionViewerProps> = ({
   }
   else if (feed.phase === 'error') {
     // v8 ignore next -- unreachable by construction
-    body = <EmptyState icon={<CircleAlert className="size-10" />} title={feed.error ?? 'Failed to load'} />;
+    const failedTitle = feed.error ?? t('failedToLoad', { ns: 'common' });
+
+    body = <EmptyState icon={<CircleAlert className="size-10" />} title={failedTitle} />;
   }
   else {
     const remaining = feed.total - feed.entries.length;

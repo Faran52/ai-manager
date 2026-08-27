@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import { Trash2, TriangleAlert } from 'lucide-react';
 
 import { singleLine } from '@utils/formatUtils';
@@ -20,6 +22,7 @@ export const ConfirmDeleteDialog: FC<ConfirmDeleteDialogProps> = ({
   onClose,
   onConfirm,
 }) => {
+  const { t } = useTranslation('sidebar');
   const open = sessions.length > 0;
   const target = useLastPresent(open ? sessions : null);
   const first = target?.[0];
@@ -33,7 +36,7 @@ export const ConfirmDeleteDialog: FC<ConfirmDeleteDialogProps> = ({
       open={open}
       labelledBy="delete-session-title"
       icon={<Trash2 className="size-4 text-destructive" />}
-      heading={count === 1 ? 'Delete session permanently?' : `Delete ${String(count)} sessions permanently?`}
+      heading={count === 1 ? t('deleteSessionConfirm') : `Delete ${String(count)} sessions permanently?`}
       description={(
         <div className="mt-2 text-sm">
           <p className="text-muted-foreground">
@@ -50,7 +53,7 @@ export const ConfirmDeleteDialog: FC<ConfirmDeleteDialogProps> = ({
           </p>
         </div>
       )}
-      confirmLabel={count === 1 ? 'Delete permanently' : `Delete ${String(count)} permanently`}
+      confirmLabel={count === 1 ? t('deletePermanently', { ns: 'common' }) : `Delete ${String(count)} permanently`}
       busyLabel="Deleting…"
       busy={busy}
       onClose={onClose}

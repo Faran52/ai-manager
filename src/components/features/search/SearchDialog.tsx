@@ -159,7 +159,7 @@ export const SearchDialog: FC<SearchDialogProps> = ({
           );
         })}
         {hasQuery && search.phase === 'ready' && groups.length === 0 && (
-          <p className="px-3 py-6 text-center text-sm text-muted-foreground">No matches.</p>
+          <p className="px-3 py-6 text-center text-sm text-muted-foreground">{t('noMatches')}</p>
         )}
       </div>
     </Modal>

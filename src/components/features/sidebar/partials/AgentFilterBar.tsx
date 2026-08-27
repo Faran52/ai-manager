@@ -35,7 +35,7 @@ export const AgentFilterBar: FC<AgentFilterBarProps> = ({
   const [open, setOpen] = useState(false);
   const allSelected = active.length === 0;
   const summary = allSelected
-    ? 'All agents'
+    ? t('allAgents')
     : active.map((agent) => {
         return agentOptions.find((option) => {
           return option.id === agent;
@@ -54,13 +54,13 @@ export const AgentFilterBar: FC<AgentFilterBarProps> = ({
   const triggerLabel = `Filter agents: ${summary}, ${String(selectedCount)} ${projectLabel(selectedCount)}`;
   const groups = [
     {
-      label: 'Popular agents',
+      label: t('popularAgents'),
       options: agentOptions.filter((agent) => {
         return agent.popular === true;
       }),
     },
     {
-      label: 'More supported',
+      label: t('moreSupported'),
       options: agentOptions.filter((agent) => {
         return agent.popular !== true;
       }),
@@ -128,7 +128,7 @@ export const AgentFilterBar: FC<AgentFilterBarProps> = ({
             className="agent-filter-option"
           >
             <Check className="agent-filter-check" />
-            <span className="min-w-0 flex-1 truncate">All agents</span>
+            <span className="min-w-0 flex-1 truncate">{t('allAgents')}</span>
             <span className="sidebar-filter-count">{totalCount}</span>
           </button>
           {groups.map((group) => {

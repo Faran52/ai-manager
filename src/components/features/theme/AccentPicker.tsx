@@ -14,13 +14,14 @@ import { accentNames, useAccent } from './useAccent';
 import type { FC } from 'react';
 import type { AccentName } from './useAccent';
 
-const LABELS: Record<AccentName, string> = {
-  teal: 'Teal',
-  iris: 'Iris',
-  amber: 'Amber',
-  rose: 'Rose',
-  lime: 'Lime',
-  sky: 'Sky',
+// Keys, not text, the map lives outside the component where t is unavailable.
+const LABEL_KEYS: Record<AccentName, string> = {
+  teal: 'accentTeal',
+  iris: 'accentIris',
+  amber: 'accentAmber',
+  rose: 'accentRose',
+  lime: 'accentLime',
+  sky: 'accentSky',
 };
 
 export const AccentPicker: FC = () => {
@@ -64,7 +65,7 @@ export const AccentPicker: FC = () => {
               }}
             >
               <span className="flex w-full items-center justify-between gap-3">
-                {LABELS[name]}
+                {t(LABEL_KEYS[name])}
                 {name === accent && <Check className="size-3.5 text-primary" />}
               </span>
             </MenuItem>

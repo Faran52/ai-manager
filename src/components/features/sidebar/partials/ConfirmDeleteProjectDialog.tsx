@@ -22,7 +22,7 @@ export const ConfirmDeleteProjectDialog: FC<ConfirmDeleteProjectDialogProps> = (
   onClose,
   onConfirm,
 }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('sidebar');
   const open = project != null;
   const target = useLastPresent(project);
   const agentLabel = target == null ? 'the agent' : agentOption(target.agent).label;
@@ -44,8 +44,8 @@ export const ConfirmDeleteProjectDialog: FC<ConfirmDeleteProjectDialogProps> = (
           "
           >
             <li>{`${String(target?.sessionCount ?? 0)} stored sessions, with their transcripts`}</li>
-            <li>Any session titles you renamed</li>
-            <li>Saved memories and cached tool results for this project</li>
+            <li>{t('renamedTitles')}</li>
+            <li>{t('deleteProjectDetail')}</li>
           </ul>
           <p className="
             mt-2 flex items-center gap-1.5 font-medium text-destructive
@@ -59,7 +59,7 @@ export const ConfirmDeleteProjectDialog: FC<ConfirmDeleteProjectDialogProps> = (
           </p>
         </div>
       )}
-      confirmLabel={t('deletePermanently')}
+      confirmLabel={t('deletePermanently', { ns: 'common' })}
       busyLabel="Deleting…"
       busy={busy}
       onClose={onClose}

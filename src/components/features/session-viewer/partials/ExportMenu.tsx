@@ -83,7 +83,7 @@ export const ExportMenu: FC<ExportMenuProps> = ({
             })();
           }}
         >
-          {copied ? 'Copied markdown' : 'Copy markdown'}
+          {copied ? t('copiedMarkdown') : t('copyMarkdown')}
         </MenuItem>
         <MenuItem
           icon={<FileText className="size-3.5" />}
@@ -106,7 +106,7 @@ export const ExportMenu: FC<ExportMenuProps> = ({
           JSON file
         </MenuItem>
       </PopupMenu>
-      {copied && <span className="sr-only" role="status">Copied!</span>}
+      {copied && <span className="sr-only" role="status">{t('copied', { ns: 'common' })}</span>}
     </div>
   );
 };

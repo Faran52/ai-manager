@@ -126,7 +126,7 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
 
   const subject = flagged.length === 1 ? 'agent needs' : 'agents need';
   const verdict = flagged.length === 0
-    ? 'Configured agents look healthy'
+    ? t('healthy')
     : `${String(flagged.length)} ${subject} attention`;
 
   return (

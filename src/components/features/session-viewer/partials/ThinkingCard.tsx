@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import { Brain, ChevronDown } from 'lucide-react';
 
 import type { FC } from 'react';
@@ -7,6 +9,7 @@ export interface ThinkingCardProps {
 }
 
 export const ThinkingCard: FC<ThinkingCardProps> = ({ thinking }) => {
+  const { t } = useTranslation('session');
   return (
     <details
       className="group rounded-lg border border-primary/30 bg-primary/5"
@@ -18,7 +21,7 @@ export const ThinkingCard: FC<ThinkingCardProps> = ({ thinking }) => {
       "
       >
         <Brain className="size-3.5" />
-        <span>Thinking</span>
+        <span>{t('thinking')}</span>
         <ChevronDown className="
           size-3 transition-transform
           group-open:rotate-180

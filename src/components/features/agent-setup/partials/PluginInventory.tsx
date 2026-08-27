@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import { Blocks } from 'lucide-react';
 
 import { cn } from '@utils/cnUtils';
@@ -31,6 +33,7 @@ const ordered = (plugins: readonly InstalledPlugin[]): readonly InstalledPlugin[
 };
 
 export const PluginInventory: FC<PluginInventoryProps> = ({ plugins }) => {
+  const { t } = useTranslation('setup');
   const active = plugins.filter((plugin) => {
     return plugin.enabled;
   });
@@ -45,7 +48,7 @@ export const PluginInventory: FC<PluginInventoryProps> = ({ plugins }) => {
         {`Plugins ${String(active.length)}/${String(plugins.length)}`}
       </h5>
       {plugins.length === 0
-        ? <p className="text-xs text-muted-foreground">None</p>
+        ? <p className="text-xs text-muted-foreground">{t('none', { ns: 'common' })}</p>
         : (
             <div className="
               max-h-56 max-w-3xl overflow-y-auto rounded-sm border
@@ -58,11 +61,11 @@ export const PluginInventory: FC<PluginInventoryProps> = ({ plugins }) => {
               >
                 <thead>
                   <tr className="border-b border-border">
-                    <th scope="col" className={cn(HEAD, 'w-[30%] ps-2')}>Plugin</th>
-                    <th scope="col" className={cn(HEAD, 'w-[30%]')}>Marketplace</th>
-                    <th scope="col" className={cn(HEAD, 'w-[14%]')}>Scope</th>
-                    <th scope="col" className={cn(HEAD, 'w-[16%]')}>Version</th>
-                    <th scope="col" className={cn(HEAD, 'w-[10%]')}>State</th>
+                    <th scope="col" className={cn(HEAD, 'w-[30%] ps-2')}>{t('plugin')}</th>
+                    <th scope="col" className={cn(HEAD, 'w-[30%]')}>{t('marketplace')}</th>
+                    <th scope="col" className={cn(HEAD, 'w-[14%]')}>{t('scope')}</th>
+                    <th scope="col" className={cn(HEAD, 'w-[16%]')}>{t('version')}</th>
+                    <th scope="col" className={cn(HEAD, 'w-[10%]')}>{t('state')}</th>
                   </tr>
                 </thead>
                 <tbody>

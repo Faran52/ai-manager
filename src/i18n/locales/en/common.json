@@ -32,5 +32,6 @@
   "searchPlaceholder": "Search messages across all projects…",
   "refresh": "Refresh conversation history",
   "refreshing": "Refreshing conversation history",
-  "refreshingToast": "Refreshing conversation history…"
+  "refreshingToast": "Refreshing conversation history…",
+  "accentSky": "Sky"
 }

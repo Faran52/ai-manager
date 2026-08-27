@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import { formatTokens } from '@utils/formatUtils';
 
 import { BarRow } from '@ui/index';
@@ -13,6 +15,7 @@ export interface BarListProps {
 }
 
 export const BarList: FC<BarListProps> = ({ title, items }) => {
+  const { t } = useTranslation('common');
   const max = items.reduce((peak, item) => {
     return Math.max(peak, item.value);
   }, 0);
@@ -31,7 +34,7 @@ export const BarList: FC<BarListProps> = ({ title, items }) => {
             />
           );
         })}
-        {items.length === 0 && <li className="text-xs text-muted-foreground">Nothing recorded yet.</li>}
+        {items.length === 0 && <li className="text-xs text-muted-foreground">{t('nothingRecorded')}</li>}
       </ul>
     </AnalyticsPanel>
   );

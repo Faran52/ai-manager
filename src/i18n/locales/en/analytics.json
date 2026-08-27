@@ -13,5 +13,6 @@
   "time": "Time",
   "selectProjectWithSessions": "Select a project with recorded sessions.",
   "turn": "turn",
-  "turns": "turns"
+  "turns": "turns",
+  "tryRefreshing": "Try refreshing from the header."
 }

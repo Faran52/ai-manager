@@ -60,9 +60,9 @@ export const RenameSessionDialog: FC<RenameSessionDialogProps> = ({
                 <TextInput value={title} onInput={setTitle} label={t('sessionTitle')} placeholder={t('sessionTitle')} />
               </div>
               <div className="mt-5 flex justify-end gap-2">
-                <Button variant="ghost" disabled={busy} onClick={onClose}>Cancel</Button>
+                <Button variant="ghost" disabled={busy} onClick={onClose}>{t('cancel', { ns: 'common' })}</Button>
                 <Button type="submit" variant="primary" disabled={busy || title.trim().length === 0}>
-                  {busy ? 'Renaming…' : 'Rename'}
+                  {busy ? 'Renaming…' : t('rename', { ns: 'common' })}
                 </Button>
               </div>
             </form>

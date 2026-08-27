@@ -13,5 +13,6 @@
   "time": "時間",
   "selectProjectWithSessions": "記録されたセッションのあるプロジェクトを選んでください。",
   "turn": "ターン",
-  "turns": "ターン"
+  "turns": "ターン",
+  "tryRefreshing": "ヘッダーから更新してみてください。"
 }
