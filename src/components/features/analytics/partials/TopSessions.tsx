@@ -19,7 +19,7 @@ export const TopSessions: FC<TopSessionsProps> = ({
   return (
     <AnalyticsPanel title="Top sessions">
       <ul
-        className="mt-2 divide-y divide-border"
+        className="-mx-2 mt-2 divide-y divide-border"
         data-top-sessions
       >
         {sessions.map((session) => {
@@ -34,7 +34,7 @@ export const TopSessions: FC<TopSessionsProps> = ({
                   onOpenSession(session);
                 }}
                 className="
-                  flex w-full items-center gap-3 py-1.5 text-left
+                  flex w-full items-center gap-3 rounded-md p-2 text-left
                   hover:bg-accent
                 "
               >
