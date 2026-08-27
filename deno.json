@@ -16,7 +16,7 @@
     },
     "backend": "webview",
     "release": {
-      "baseUrl": "https://github.com/faran52/ai-chat-manager/releases/latest/download"
+      "baseUrl": "https://github.com/Faran52/ai-chat-manager/releases/latest/download"
     },
     "output": {
       "macos": "./dist/AIChatManager.app"
