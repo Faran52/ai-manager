@@ -66,7 +66,20 @@ base64 -i cert.pfx | gh secret set WINDOWS_CERTIFICATE
 gh secret set WINDOWS_CERTIFICATE_PASSWORD
 ```
 
-### 4. Point builds at the feed
+### 4. App icon
+
+`public/favicon.svg` is the mark, and the web app uses it directly. The desktop
+bundle needs a raster, which `deno desktop` takes as `.png` on macOS and `.ico`
+on Windows. Generate it at packaging time rather than committing a derived file:
+
+```bash
+npx --yes sharp-cli -i public/favicon.svg -o build/icon.png resize 1024 1024
+```
+
+Then point `desktop.app.icons` in `deno.json` at it. Editing the icon means
+editing the SVG; every raster comes from that one source.
+
+### 5. Point builds at the feed
 
 `deno.json` already carries `desktop.release.baseUrl`. Set `UPDATE_FEED_URL` to
 the same value for the running app, and `UPDATE_PUBLIC_KEY` to the public half
