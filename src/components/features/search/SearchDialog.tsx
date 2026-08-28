@@ -9,7 +9,7 @@ import { Search as SearchIcon } from 'lucide-react';
 
 import { Modal } from '@ui/index';
 
-import { groupBySession } from './hitGroups';
+import { groupBySession } from './utils/hitGroupUtils';
 
 import type { SearchController } from '@features/history-data';
 import type { SearchHit } from '@services/search/searchService';

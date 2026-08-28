@@ -7,7 +7,7 @@ import {
   entryIsVisible,
   hasActiveMessageFilters,
   toggleMessageFilter,
-} from './messageFilters';
+} from './messageFilterUtils';
 
 import type { HistoryEntry } from '@services/history/historyService';
 

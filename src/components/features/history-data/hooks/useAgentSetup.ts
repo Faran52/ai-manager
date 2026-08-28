@@ -6,10 +6,10 @@ import {
 
 import { fetchAgentSetup } from '@lib/apis/apiClient';
 
-import { runLoad } from './asyncResource';
+import { runLoad } from '../utils/asyncResourceUtils';
 
 import type { AgentSetupResponse } from '@lib/apis/contracts';
-import type { AsyncResource, AsyncSnapshot } from './asyncResource';
+import type { AsyncResource, AsyncSnapshot } from '../utils/asyncResourceUtils';
 
 const NONE: AgentSetupResponse = {
   setups: [],

@@ -27,17 +27,17 @@ import {
 } from '@ui/index';
 import { useMessages } from '@features/history-data';
 
-import {
-  countVisibleEntries,
-  decodeMessageFilters,
-  encodeMessageFilters,
-} from './messageFilters';
 import { MessageTimeline } from './MessageTimeline';
 import {
   ExportMenu,
   MessageFilterToolbar,
   MessageNavigator,
 } from './partials';
+import {
+  countVisibleEntries,
+  decodeMessageFilters,
+  encodeMessageFilters,
+} from './utils/messageFilterUtils';
 
 import type { AgentId } from '@config/agents';
 import type { FC, ReactNode } from 'react';

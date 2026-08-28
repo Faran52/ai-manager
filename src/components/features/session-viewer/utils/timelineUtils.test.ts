@@ -4,8 +4,8 @@ import {
   test,
 } from 'vitest';
 
-import { defaultMessageFilters } from './messageFilters';
-import { buildTimelineModel, rowIndexForTimestamp } from './timelineRows';
+import { defaultMessageFilters } from './messageFilterUtils';
+import { buildTimelineModel, rowIndexForTimestamp } from './timelineUtils';
 
 import type { HistoryEntry } from '@services/history/historyService';
 

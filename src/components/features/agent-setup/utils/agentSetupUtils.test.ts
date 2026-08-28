@@ -4,7 +4,7 @@ import {
   it,
 } from 'vitest';
 
-import { agentIsConfigured } from './agentConfigured';
+import { agentIsConfigured } from './agentSetupUtils';
 
 import type { AgentSetup, InstalledPlugin } from '@services/agents/agentsService';
 

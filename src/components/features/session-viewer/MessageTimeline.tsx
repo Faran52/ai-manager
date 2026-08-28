@@ -12,19 +12,19 @@ import { cn } from '@utils/cnUtils';
 
 import { fadeTransition } from '@ui/index';
 
-import { blockIsVisible, defaultMessageFilters } from './messageFilters';
 import {
   AssistantTurn,
   SummaryDivider,
   SystemNotice,
   UserTurn,
 } from './partials';
-import { buildTimelineModel, rowIndexForTimestamp } from './timelineRows';
+import { blockIsVisible, defaultMessageFilters } from './utils/messageFilterUtils';
+import { buildTimelineModel, rowIndexForTimestamp } from './utils/timelineUtils';
 
 import type { HistoryEntry, ToolOutcome } from '@services/history/historyService';
 import type { FC } from 'react';
-import type { MessageFilters } from './messageFilters';
-import type { TimelineRow } from './timelineRows';
+import type { MessageFilters } from './utils/messageFilterUtils';
+import type { TimelineRow } from './utils/timelineUtils';
 
 export interface MessageTimelineProps {
   readonly entries: readonly HistoryEntry[];

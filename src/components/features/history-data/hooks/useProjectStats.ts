@@ -6,11 +6,11 @@ import {
 
 import { fetchStats } from '@lib/apis/apiClient';
 
-import { runLoad } from './asyncResource';
+import { runLoad } from '../utils/asyncResourceUtils';
 
 import type { ProjectSummary } from '@services/history/historyService';
 import type { ProjectStats } from '@services/stats/statsService';
-import type { AsyncResource, AsyncSnapshot } from './asyncResource';
+import type { AsyncResource, AsyncSnapshot } from '../utils/asyncResourceUtils';
 
 const NO_STATS = null;
 

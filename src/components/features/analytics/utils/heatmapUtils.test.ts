@@ -8,7 +8,7 @@ import {
   IDLE_CLASS,
   levelClass,
   levelFor,
-} from './heatmapLevels';
+} from './heatmapUtils';
 
 describe('levelFor', () => {
   test('is idle without tokens or a peak', () => {

@@ -14,7 +14,8 @@ import { cn } from '@utils/cnUtils';
 
 import { collapseTransition } from '@ui/index';
 
-import { mcpToolIdentity } from './mcpToolIdentity';
+import { mcpToolIdentity } from '../utils/mcpToolUtils';
+
 import { OutcomeBody } from './OutcomeBody';
 import { PatchView } from './PatchView';
 import { ToolInputBody } from './ToolInputBody';

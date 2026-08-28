@@ -6,11 +6,11 @@ import { cn } from '@utils/cnUtils';
 
 import { CodeLine, TruncatedText } from '@ui/index';
 
-import { defaultMessageFilters } from '../messageFilters';
+import { defaultMessageFilters } from '../utils/messageFilterUtils';
 
 import type { ToolOutcome, UserTurnEntry } from '@services/history/historyService';
 import type { FC } from 'react';
-import type { MessageContentFilters } from '../messageFilters';
+import type { MessageContentFilters } from '../utils/messageFilterUtils';
 
 export interface UserTurnProps {
   readonly entry: UserTurnEntry;

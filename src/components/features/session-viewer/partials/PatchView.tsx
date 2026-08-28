@@ -1,4 +1,4 @@
-import { rowsOf } from './patchRows';
+import { rowsOf } from '../utils/patchUtils';
 
 import type { PatchHunk } from '@services/history/historyService';
 import type { FC } from 'react';

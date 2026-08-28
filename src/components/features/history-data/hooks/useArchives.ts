@@ -6,10 +6,10 @@ import {
 
 import { fetchArchives } from '@lib/apis/apiClient';
 
-import { runLoad } from './asyncResource';
+import { runLoad } from '../utils/asyncResourceUtils';
 
 import type { ArchiveSummary } from '@services/archive/archiveService';
-import type { AsyncResource, AsyncSnapshot } from './asyncResource';
+import type { AsyncResource, AsyncSnapshot } from '../utils/asyncResourceUtils';
 
 export const useArchives = (enabled: boolean): AsyncResource<readonly ArchiveSummary[]> => {
   const [snapshot, setSnapshot] = useState<AsyncSnapshot<readonly ArchiveSummary[]>>({ status: 'loading' });

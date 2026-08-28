@@ -4,7 +4,7 @@ import {
   test,
 } from 'vitest';
 
-import { groupBySession } from './hitGroups';
+import { groupBySession } from './hitGroupUtils';
 
 import type { SearchHit } from '@services/search/searchService';
 

@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 
 import { formatTokens } from '@utils/formatUtils';
 
+import { levelClass, levelFor } from '../utils/heatmapUtils';
+
 import { AnalyticsPanel } from './AnalyticsPanel';
-import { levelClass, levelFor } from './heatmapLevels';
 
 import type { DayActivity } from '@services/stats/statsService';
 import type { FC } from 'react';

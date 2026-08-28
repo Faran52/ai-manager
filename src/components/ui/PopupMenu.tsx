@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'motion/react';
 
 import { cn } from '@utils/cnUtils';
 
-import { popoverTransition } from './motionTokens';
+import { popoverTransition } from './constants';
 
 import type { MotionStyle } from 'motion/react';
 import type { FC, ReactNode } from 'react';

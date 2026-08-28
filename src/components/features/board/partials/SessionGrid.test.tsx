@@ -6,12 +6,12 @@ import {
   vi,
 } from 'vitest';
 
-import { buildBoardModel } from '../boardModel';
+import { buildBoardModel } from '../utils/boardUtils';
 
 import { SessionGrid } from './SessionGrid';
 
 import type { SessionSummary } from '@services/history/historyService';
-import type { BoardAttribute } from '../boardModel';
+import type { BoardAttribute } from '../utils/boardUtils';
 
 const NOW = Date.parse('2026-08-28T12:00:00Z');
 

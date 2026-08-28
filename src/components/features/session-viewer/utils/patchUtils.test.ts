@@ -4,7 +4,7 @@ import {
   test,
 } from 'vitest';
 
-import { rowsOf } from './patchRows';
+import { rowsOf } from './patchUtils';
 
 import type { PatchHunk } from '@services/history/historyService';
 

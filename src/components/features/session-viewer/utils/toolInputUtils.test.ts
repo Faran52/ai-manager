@@ -4,9 +4,9 @@ import {
   test,
 } from 'vitest';
 
-import { inputRows } from './toolInputRows';
+import { inputRows } from './toolInputUtils';
 
-import type { RowedInput } from './toolInputRows';
+import type { RowedInput } from './toolInputUtils';
 
 const rowsOf = (input: RowedInput): readonly string[] => {
   return inputRows(input).map((row) => {

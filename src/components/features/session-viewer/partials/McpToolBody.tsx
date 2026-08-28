@@ -1,11 +1,12 @@
 import { PlugZap } from 'lucide-react';
 
+import { inputRows } from '../utils/toolInputUtils';
+
 import { RowsList } from './RowsList';
-import { inputRows } from './toolInputRows';
 
 import type { ToolCall } from '@services/history/historyService';
 import type { FC } from 'react';
-import type { McpToolIdentity } from './mcpToolIdentity';
+import type { McpToolIdentity } from '../utils/mcpToolUtils';
 
 export interface McpToolBodyProps {
   readonly call: ToolCall;

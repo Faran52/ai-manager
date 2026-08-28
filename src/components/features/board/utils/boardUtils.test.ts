@@ -2,7 +2,7 @@ import {
   attributeValue,
   boardAttributes,
   buildBoardModel,
-} from './boardModel';
+} from './boardUtils';
 
 import type { SessionSummary } from '@services/history/historyService';
 

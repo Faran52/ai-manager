@@ -19,7 +19,7 @@ import {
 
 import { Badge } from '@ui/index';
 
-import { agentIsConfigured } from '../agentConfigured';
+import { agentIsConfigured } from '../utils/agentSetupUtils';
 
 import { AgentDetailRow } from './AgentDetailRow';
 import { PluginInventory } from './PluginInventory';

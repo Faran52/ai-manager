@@ -6,10 +6,10 @@ import {
 
 import { fetchSessions } from '@lib/apis/apiClient';
 
-import { runLoad } from './asyncResource';
+import { runLoad } from '../utils/asyncResourceUtils';
 
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
-import type { AsyncResource, AsyncSnapshot } from './asyncResource';
+import type { AsyncResource, AsyncSnapshot } from '../utils/asyncResourceUtils';
 
 const EMPTY: readonly SessionSummary[] = [];
 const LIVE_REFRESH_MS = 3_000;

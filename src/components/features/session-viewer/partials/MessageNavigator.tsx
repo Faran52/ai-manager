@@ -7,11 +7,11 @@ import {
   X,
 } from 'lucide-react';
 
-import { buildTimelineModel } from '../timelineRows';
+import { buildTimelineModel } from '../utils/timelineUtils';
 
 import type { HistoryEntry } from '@services/history/historyService';
 import type { FC } from 'react';
-import type { MessageFilters } from '../messageFilters';
+import type { MessageFilters } from '../utils/messageFilterUtils';
 
 export interface MessageNavigatorProps {
   readonly entries: readonly HistoryEntry[];

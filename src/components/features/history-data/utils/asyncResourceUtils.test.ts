@@ -4,10 +4,10 @@ import {
   test,
 } from 'vitest';
 
-import { runLoad } from './asyncResource';
+import { runLoad } from './asyncResourceUtils';
 
 import type { SetStateAction } from 'react';
-import type { AsyncSnapshot } from './asyncResource';
+import type { AsyncSnapshot } from './asyncResourceUtils';
 
 interface StateSpy {
   (action: SetStateAction<AsyncSnapshot<number>>): void;

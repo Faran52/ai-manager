@@ -9,18 +9,18 @@ import {
   Spinner,
 } from '@ui/index';
 
-import { boardAttributes, buildBoardModel } from './boardModel';
 import {
   ActivityTimeline,
   EditedFileList,
   SessionGrid,
 } from './partials';
+import { boardAttributes, buildBoardModel } from './utils/boardUtils';
 
 import type { AsyncResource } from '@features/history-data';
 import type { EditedFile, FileEdit } from '@services/edits/editsService';
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
 import type { FC } from 'react';
-import type { BoardAttribute } from './boardModel';
+import type { BoardAttribute } from './utils/boardUtils';
 
 export type BoardPanel = 'sessions' | 'edits';
 

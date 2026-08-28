@@ -6,11 +6,11 @@ import {
 
 import { fetchRecentEdits } from '@lib/apis/apiClient';
 
-import { runLoad } from './asyncResource';
+import { runLoad } from '../utils/asyncResourceUtils';
 
 import type { EditedFile } from '@services/edits/editsService';
 import type { ProjectSummary } from '@services/history/historyService';
-import type { AsyncResource, AsyncSnapshot } from './asyncResource';
+import type { AsyncResource, AsyncSnapshot } from '../utils/asyncResourceUtils';
 
 const EMPTY: readonly EditedFile[] = [];
 

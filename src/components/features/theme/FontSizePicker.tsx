@@ -9,10 +9,10 @@ import {
   PopupMenu,
 } from '@ui/index';
 
-import { fontSizes, useFontSize } from './useFontSize';
+import { fontSizes, useFontSize } from './hooks/useFontSize';
 
 import type { FC } from 'react';
-import type { FontSize } from './useFontSize';
+import type { FontSize } from './hooks/useFontSize';
 
 // Keys, not text, the map lives outside the component where t is unavailable.
 const LABEL_KEYS: Record<FontSize, string> = {

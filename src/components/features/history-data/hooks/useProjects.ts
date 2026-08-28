@@ -6,10 +6,10 @@ import {
 
 import { fetchProjects } from '@lib/apis/apiClient';
 
-import { runLoad } from './asyncResource';
+import { runLoad } from '../utils/asyncResourceUtils';
 
 import type { ProjectSummary } from '@services/history/historyService';
-import type { AsyncResource, AsyncSnapshot } from './asyncResource';
+import type { AsyncResource, AsyncSnapshot } from '../utils/asyncResourceUtils';
 
 export const useProjects = (): AsyncResource<readonly ProjectSummary[]> => {
   const [snapshot, setSnapshot] = useState<AsyncSnapshot<readonly ProjectSummary[]>>({ status: 'loading' });

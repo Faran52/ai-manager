@@ -6,10 +6,10 @@ import {
 
 import { fetchSettings } from '@lib/apis/apiClient';
 
-import { runLoad } from './asyncResource';
+import { runLoad } from '../utils/asyncResourceUtils';
 
 import type { ScopeSettings } from '@services/settings/settingsService';
-import type { AsyncResource, AsyncSnapshot } from './asyncResource';
+import type { AsyncResource, AsyncSnapshot } from '../utils/asyncResourceUtils';
 
 export const useSettings = (
   projectPath: string | null,

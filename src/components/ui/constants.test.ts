@@ -12,7 +12,7 @@ import {
   MOTION_DURATION_FAST,
   popoverTransition,
   riseTransition,
-} from './motionTokens';
+} from './constants';
 
 describe('motionTokens', () => {
   it('exposes the shared expo-out curve and duration scale', () => {

@@ -1,9 +1,10 @@
+import { mcpToolIdentity } from '../utils/mcpToolUtils';
+import { inputRows } from '../utils/toolInputUtils';
+
 import { BashToolBody } from './BashToolBody';
 import { McpToolBody } from './McpToolBody';
-import { mcpToolIdentity } from './mcpToolIdentity';
 import { RowsList } from './RowsList';
 import { TodoList } from './TodoList';
-import { inputRows } from './toolInputRows';
 import { WebToolBody } from './WebToolBody';
 
 import type { ToolCall } from '@services/history/historyService';

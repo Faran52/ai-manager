@@ -16,10 +16,10 @@ import {
   defaultMessageFilters,
   hasActiveMessageFilters,
   toggleMessageFilter,
-} from '../messageFilters';
+} from '../utils/messageFilterUtils';
 
 import type { FC } from 'react';
-import type { MessageFilterKey, MessageFilters } from '../messageFilters';
+import type { MessageFilterKey, MessageFilters } from '../utils/messageFilterUtils';
 
 export interface MessageFilterToolbarProps {
   readonly filters: MessageFilters;

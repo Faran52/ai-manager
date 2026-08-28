@@ -1,10 +1,10 @@
 import { pairToolOutcomes } from '@services/history/historyService';
 import { uniqueKeys } from '@utils/reactKeyUtils';
 
-import { entryIsVisible } from './messageFilters';
+import { entryIsVisible } from './messageFilterUtils';
 
 import type { HistoryEntry, ToolOutcome } from '@services/history/historyService';
-import type { MessageFilters } from './messageFilters';
+import type { MessageFilters } from './messageFilterUtils';
 
 export interface TimelineRow {
   readonly entry: HistoryEntry;

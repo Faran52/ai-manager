@@ -1,4 +1,4 @@
-import { mcpToolIdentity } from './mcpToolIdentity';
+import { mcpToolIdentity } from './mcpToolUtils';
 
 import type { ToolCall } from '@services/history/historyService';
 

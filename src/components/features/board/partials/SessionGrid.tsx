@@ -4,7 +4,7 @@ import { formatTimeAgo, sizeLabel } from '@utils/formatUtils';
 
 import type { SessionSummary } from '@services/history/historyService';
 import type { FC } from 'react';
-import type { BoardAttribute, BoardModel } from '../boardModel';
+import type { BoardAttribute, BoardModel } from '../utils/boardUtils';
 
 export interface SessionGridProps {
   readonly model: BoardModel;

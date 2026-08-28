@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
 import type { FC } from 'react';
-import type { BoardDay } from '../boardModel';
+import type { BoardDay } from '../utils/boardUtils';
 
 export interface ActivityTimelineProps {
   readonly days: readonly BoardDay[];
