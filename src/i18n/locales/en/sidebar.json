@@ -48,6 +48,7 @@
   "selectProjectHint": "Choose a project above to view its sessions.",
   "selectSessions": "Select sessions",
   "sessionActions": "Session actions",
+  "renameSessionIn": "Rename session in {{agent}}",
   "sessionCount_one": "{{count}} session",
   "sessionCount_other": "{{count}} sessions",
   "sessionIdCopied": "Session ID copied",

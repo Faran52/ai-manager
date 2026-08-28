@@ -13,7 +13,11 @@ import { cn } from '@utils/cnUtils';
 
 import { Button, Toast } from '@ui/index';
 import { LanguagePicker } from '@features/language';
-import { AccentPicker, ThemePicker } from '@features/theme';
+import {
+  AccentPicker,
+  FontSizePicker,
+  ThemePicker,
+} from '@features/theme';
 
 import type { ThemeMode } from '@features/theme';
 import type { FC } from 'react';
@@ -143,6 +147,7 @@ export const AppHeader: FC<AppHeaderProps> = ({
             <RefreshCw className={cn('size-3.5', refreshing && 'animate-spin')} />
           </Button>
           <AccentPicker />
+          <FontSizePicker />
           <LanguagePicker />
           <ThemePicker mode={themeMode} onChange={onThemeChange} />
         </div>

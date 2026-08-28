@@ -60,6 +60,7 @@
   "selectProjectHint": "اختر مشروعًا بالأعلى لعرض جلساته.",
   "selectSessions": "تحديد الجلسات",
   "sessionActions": "إجراءات الجلسة",
+  "renameSessionIn": "إعادة تسمية الجلسة في {{agent}}",
   "sessionCount_few": "{{count}} جلسات",
   "sessionCount_many": "{{count}} جلسة",
   "sessionCount_one": "جلسة واحدة",

@@ -48,6 +48,7 @@
   "selectProjectHint": "위에서 프로젝트를 선택하면 세션이 표시됩니다.",
   "selectSessions": "세션 선택",
   "sessionActions": "세션 작업",
+  "renameSessionIn": "{{agent}}에서 세션 이름 변경",
   "sessionCount_one": "세션 {{count}}개",
   "sessionCount_other": "세션 {{count}}개",
   "sessionIdCopied": "세션 ID를 복사했습니다",

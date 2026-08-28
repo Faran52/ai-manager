@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { initI18n } from '@i18n/index';
 import { motion, MotionConfig } from 'motion/react';
 
+import { appShortcuts } from '@config/shortcuts';
 import { sidebarWidthStorageKey } from '@config/storageKeys';
 
 import {
@@ -17,6 +18,7 @@ import {
   renameSession,
 } from '@lib/apis/apiClient';
 import { findAgentProject } from '@services/history/historyService';
+import { isTypingTarget, matchesShortcut } from '@utils/shortcutUtils';
 
 import { fadeTransition, PaneDivider } from '@ui/index';
 import { AgentSetupPanel } from '@features/agent-setup';
@@ -35,7 +37,10 @@ import { SidebarPane } from '@features/sidebar';
 import { useTheme } from '@features/theme';
 import { UpdateBanner } from '@features/updates';
 
+import { ShortcutsDialog } from './partials';
+
 import type { AgentId } from '@config/agents';
+import type { ShortcutSpec } from '@config/shortcuts';
 import type { AppView } from '@features/app-header';
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
 import type { SearchHit } from '@services/search/searchService';
@@ -64,6 +69,7 @@ export const HistoryApp: FC = () => {
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const [view, setView] = useState<AppView>('analytics');
   const [searchOpen, setSearchOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [highlightTimestamp, setHighlightTimestamp] = useState<string | undefined>(undefined);
   const [sidebarWidth, setSidebarWidth] = useState(initialSidebarWidth);
   const [nowMs] = useState(() => {
@@ -87,6 +93,7 @@ export const HistoryApp: FC = () => {
   const search = useSearch();
   const theme = useTheme();
   const visibleProjects = projects.data ?? EMPTY_PROJECTS;
+  const reloadProjects = projects.reload;
 
   const selectedSession = useMemo(
     () => {
@@ -109,21 +116,40 @@ export const HistoryApp: FC = () => {
     localStorage.setItem(sidebarWidthStorageKey, String(sidebarWidth));
   }, [sidebarWidth]);
 
+  // One listener for every global binding, so a shortcut is added by adding a
+  // row here and to `appShortcuts` rather than by growing another effect.
   useEffect(() => {
-    const onKey = (event: KeyboardEvent): void => {
-      if (event.metaKey || event.ctrlKey || event.altKey || event.key !== '/') {
-        return;
-      }
-
-      const target = event.target;
-
-      if (target instanceof Element && target.closest('input, textarea, select, [contenteditable]')) {
-        return;
-      }
-
-      if (!searchOpen) {
-        event.preventDefault();
+    const actions: readonly (readonly [ShortcutSpec, () => void])[] = [
+      [appShortcuts.openSearch, () => {
         setSearchOpen(true);
+      }],
+      [appShortcuts.showShortcuts, () => {
+        setShortcutsOpen(true);
+      }],
+      [appShortcuts.viewSessions, () => {
+        setView('sessions');
+      }],
+      [appShortcuts.viewAnalytics, () => {
+        setView('analytics');
+      }],
+      [appShortcuts.viewHealth, () => {
+        setView('health');
+      }],
+      [appShortcuts.reload, reloadProjects],
+    ];
+
+    const onKey = (event: KeyboardEvent): void => {
+      if (isTypingTarget(event.target)) {
+        return;
+      }
+
+      for (const [spec, run] of actions) {
+        if (matchesShortcut(event, spec)) {
+          event.preventDefault();
+          run();
+
+          return;
+        }
       }
     };
 
@@ -132,7 +158,7 @@ export const HistoryApp: FC = () => {
     return () => {
       window.removeEventListener('keydown', onKey);
     };
-  }, [searchOpen]);
+  }, [reloadProjects]);
 
   const selectProject = useCallback((project: ProjectSummary) => {
     setSelectedProject(project);
@@ -304,6 +330,13 @@ export const HistoryApp: FC = () => {
             </motion.div>
           </div>
         </div>
+
+        <ShortcutsDialog
+          open={shortcutsOpen}
+          onClose={() => {
+            setShortcutsOpen(false);
+          }}
+        />
 
         <SearchDialog
           open={searchOpen}

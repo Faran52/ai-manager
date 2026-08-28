@@ -48,6 +48,7 @@
   "selectProjectHint": "在上方选择项目以查看其会话。",
   "selectSessions": "选择会话",
   "sessionActions": "会话操作",
+  "renameSessionIn": "在 {{agent}} 中重命名会话",
   "sessionCount_one": "{{count}} 个会话",
   "sessionCount_other": "{{count}} 个会话",
   "sessionIdCopied": "已复制会话 ID",

@@ -48,6 +48,7 @@
   "selectProjectHint": "在上方選擇專案以檢視其工作階段。",
   "selectSessions": "選擇工作階段",
   "sessionActions": "工作階段操作",
+  "renameSessionIn": "在 {{agent}} 中重新命名工作階段",
   "sessionCount_one": "{{count}} 個工作階段",
   "sessionCount_other": "{{count}} 個工作階段",
   "sessionIdCopied": "已複製工作階段 ID",

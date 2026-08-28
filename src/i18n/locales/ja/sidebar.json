@@ -48,6 +48,7 @@
   "selectProjectHint": "上でプロジェクトを選ぶとセッションが表示されます。",
   "selectSessions": "セッションを選択",
   "sessionActions": "セッションの操作",
+  "renameSessionIn": "{{agent}} でセッション名を変更",
   "sessionCount_one": "{{count}} 件のセッション",
   "sessionCount_other": "{{count}} 件のセッション",
   "sessionIdCopied": "セッション ID をコピーしました",

@@ -140,7 +140,7 @@ export const SidebarContextMenu: FC<SidebarContextMenuProps> = ({
           },
           ...(sessionAgent?.canRename === true
             ? [{
-                label: `Rename session in ${sessionAgent.label}`,
+                label: t('renameSessionIn', { agent: sessionAgent.label }),
                 icon: <Pencil className="size-3.5" />,
                 onSelect: () => {
                   onClose();

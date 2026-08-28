@@ -620,3 +620,84 @@ describe('HistoryApp degraded data', () => {
     expect(await screen.findByText(/No analytics for/)).toBeDefined();
   });
 });
+
+describe('HistoryApp keyboard shortcuts', () => {
+  const stubShell = (): void => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: RequestInfo | URL) => {
+        const path = toPath(url);
+
+        if (path.endsWith('/projects')) {
+          return Response.json(projectPayload);
+        }
+        if (path.endsWith('/stats')) {
+          return Response.json({ stats: null });
+        }
+        if (path.endsWith('/agent-setup')) {
+          return Response.json({
+            setups: [],
+            findings: [],
+            usage: null,
+            plugins: [],
+            trust: {
+              known: false,
+              trusted: false,
+              onboarded: false,
+            },
+          });
+        }
+
+        return Response.json({
+          sessions: [],
+          hits: [],
+          truncated: false,
+        });
+      }),
+    );
+  };
+
+  test('switches views by number and reloads projects', async () => {
+    stubShell();
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+
+    await userEvent.keyboard('1');
+    expect(screen.getByText('No session selected')).toBeDefined();
+
+    await userEvent.keyboard('3');
+    expect(await screen.findByRole('button', { name: /Health/ })).toBeDefined();
+
+    await userEvent.keyboard('2');
+    expect(await screen.findByText(/No analytics for/)).toBeDefined();
+
+    const beforeReload = screen.getAllByText('alpha').length;
+
+    await userEvent.keyboard('r');
+    await waitFor(() => {
+      expect(screen.getAllByText('alpha')).toHaveLength(beforeReload);
+    });
+  });
+
+  test('lists the bindings behind the question mark and closes again', async () => {
+    stubShell();
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+
+    fireEvent.keyDown(window, {
+      key: '?',
+      shiftKey: true,
+    });
+
+    const dialog = within(screen.getByRole('dialog'));
+
+    expect(dialog.getByText('Keyboard shortcuts')).toBeDefined();
+    expect(dialog.getByText('Search all chats')).toBeDefined();
+    expect(dialog.getByText('Toggle message navigator')).toBeDefined();
+
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+  });
+});
