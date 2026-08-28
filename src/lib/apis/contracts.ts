@@ -9,6 +9,7 @@ import type {
 import type { ArchiveManifest, ArchiveSummary } from '@services/archive/archiveService';
 import type { EditedFile } from '@services/edits/editsService';
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
+import type { PromptHistory } from '@services/prompts/promptsService';
 import type { SearchOutcome } from '@services/search/searchService';
 import type { SessionPage } from '@services/session/sessionService';
 import type {
@@ -104,6 +105,8 @@ export interface RecentEditsBody {
 export interface RecentEditsResponse {
   readonly files: readonly EditedFile[];
 }
+
+export type PromptsResponse = PromptHistory;
 
 export interface SettingsBody {
   readonly projectPath: string;

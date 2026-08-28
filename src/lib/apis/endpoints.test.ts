@@ -28,6 +28,7 @@ import {
   handleListSessions,
   handleLoadSession,
   handleProjectStats,
+  handlePromptHistory,
   handleReadArchive,
   handleReadSettings,
   handleRecentEdits,
@@ -855,5 +856,27 @@ describe('recent edits endpoint', () => {
   test('rejects a request with no project', async () => {
     expect((await handleRecentEdits(post({}))).status).toBe(400);
     expect((await handleRecentEdits(post('nonsense'))).status).toBe(400);
+  });
+});
+
+describe('prompt history endpoint', () => {
+  test('reports the prompts the agent recorded', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'prompts-api-'));
+
+    await mkdir(join(home, '.claude'), { recursive: true });
+    await writeFile(join(home, '.claude', 'history.jsonl'), `${JSON.stringify({
+      display: 'find the needle',
+      project: '/repo/alpha',
+      sessionId: 's1',
+      timestamp: 1_000,
+    })}\n`, 'utf8');
+
+    const response = await handlePromptHistory({ home });
+
+    expect(response.status).toBe(200);
+    expect(await jsonOf(response)).toMatchObject({
+      total: 1,
+      prompts: [{ text: 'find the needle' }],
+    });
   });
 });

@@ -31,6 +31,7 @@ import {
   useArchives,
   useProjects,
   useProjectStats,
+  usePrompts,
   useRecentEdits,
   useSearch,
   useSessions,
@@ -87,6 +88,7 @@ export const HistoryApp: FC = () => {
   const stats = useProjectStats(view === 'analytics' ? selectedProject : null);
   const agentSetup = useAgentSetup(view === 'health' ? (selectedProject?.actualPath ?? null) : null);
   const archives = useArchives(view === 'archive');
+  const prompts = usePrompts(view === 'archive');
   const settings = useSettings(view === 'settings' ? (selectedProject?.actualPath ?? '') : null);
   const edits = useRecentEdits(view === 'board' ? selectedProject : null);
   const sessionCounts = useMemo(() => {
@@ -256,6 +258,15 @@ export const HistoryApp: FC = () => {
     setHighlightTimestamp(undefined);
   }, []);
 
+  // The panel only offers a prompt whose transcript survives, so the path resolves.
+  const openPromptSession = useCallback((filePath: string, timestampMs: number) => {
+    setView('sessions');
+    setSelectedProject(null);
+    setArchivedSession(null);
+    setSelectedFilePath(filePath);
+    setHighlightTimestamp(new Date(timestampMs).toISOString());
+  }, []);
+
   const openStatsSession = useCallback(
     (session: SessionTokenTotals) => {
       setView('sessions');
@@ -288,7 +299,13 @@ export const HistoryApp: FC = () => {
       />
     ),
     archive: (
-      <ArchiveView archives={archives} onOpenSession={openArchivedSession} />
+      <ArchiveView
+        archives={archives}
+        prompts={prompts}
+        nowMs={nowMs}
+        onOpenSession={openArchivedSession}
+        onOpenPrompt={openPromptSession}
+      />
     ),
     settings: (
       <SettingsView settings={settings} projectPath={selectedProject?.actualPath ?? null} />

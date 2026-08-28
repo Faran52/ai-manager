@@ -637,6 +637,13 @@ describe('HistoryApp keyboard shortcuts', () => {
         if (path.endsWith('/archives')) {
           return Response.json({ archives: [] });
         }
+        if (path.endsWith('/prompts')) {
+          return Response.json({
+            prompts: [],
+            projects: [],
+            total: 0,
+          });
+        }
         if (path.endsWith('/recent-edits')) {
           return Response.json({ files: [] });
         }
@@ -757,6 +764,20 @@ describe('HistoryApp archived transcripts', () => {
         if (path.endsWith('/archives')) {
           return Response.json({ archives: [archive] });
         }
+        if (path.endsWith('/prompts')) {
+          return Response.json({
+            prompts: [{
+              text: 'the first ask',
+              timestampMs: Date.parse('2026-05-05T10:00:00Z'),
+              projectPath: '/repo/alpha',
+              projectName: 'alpha',
+              sessionId: 's1',
+              filePath: '/sessions/alpha/s1.jsonl',
+            }],
+            projects: [],
+            total: 1,
+          });
+        }
         if (path.endsWith('/archive-read')) {
           return Response.json({
             archive: {
@@ -846,6 +867,52 @@ describe('HistoryApp board', () => {
     await userEvent.click(screen.getByRole('button', { name: /File edits/ }));
     await userEvent.click(await screen.findByText('src/a.ts'));
     await userEvent.click(await screen.findByText('Login fix'));
+
+    expect(await screen.findByText('the question')).toBeDefined();
+  });
+});
+
+describe('HistoryApp prompt history', () => {
+  test('opens the session a recorded prompt was typed into', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: RequestInfo | URL) => {
+        const path = toPath(url);
+
+        if (path.endsWith('/projects')) {
+          return Response.json(projectPayload);
+        }
+        if (path.endsWith('/archives')) {
+          return Response.json({ archives: [] });
+        }
+        if (path.endsWith('/prompts')) {
+          return Response.json({
+            prompts: [{
+              text: 'the first ask',
+              timestampMs: Date.parse('2026-05-05T10:00:00Z'),
+              projectPath: '/repo/alpha',
+              projectName: 'alpha',
+              sessionId: 's1',
+              filePath: '/sessions/alpha/s1.jsonl',
+            }],
+            projects: [],
+            total: 1,
+          });
+        }
+        if (path.endsWith('/messages')) {
+          return Response.json(messagesPayload);
+        }
+
+        return Response.json({ sessions: [] });
+      }),
+    );
+
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+
+    await userEvent.click(screen.getByRole('button', { name: /Archive/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Prompt history' }));
+    await userEvent.click(await screen.findByText('the first ask'));
 
     expect(await screen.findByText('the question')).toBeDefined();
   });

@@ -20,6 +20,7 @@ import {
   readArchive,
 } from '@services/archive/archiveService';
 import { listRecentEdits } from '@services/edits/editsService';
+import { readPromptHistory } from '@services/prompts/promptsService';
 import { searchAgentHistory } from '@services/search/searchService';
 import {
   deleteProject,
@@ -380,6 +381,12 @@ export const handleRecentEdits = async (request: Request, deps?: EndpointDeps): 
     return jsonOk({
       files: await listRecentEdits(resolveEndpointRoots(deps), target.agent, target.projectId),
     });
+  });
+};
+
+export const handlePromptHistory = (deps?: EndpointDeps): Promise<Response> => {
+  return withJsonErrors(async () => {
+    return jsonOk(await readPromptHistory(deps?.home));
   });
 };
 

@@ -15,10 +15,13 @@ import { ArchiveView } from './ArchiveView';
 
 import type { AsyncResource } from '@features/history-data';
 import type { ArchiveSummary } from '@services/archive/archiveService';
+import type { PromptHistory } from '@services/prompts/promptsService';
 
 afterEach(() => {
   vi.unstubAllGlobals();
 });
+
+const NOW = Date.parse('2026-08-28T12:00:00Z');
 
 const archive: ArchiveSummary = {
   id: '2026-07-01T00-00-00-000Z',
@@ -31,6 +34,16 @@ const archive: ArchiveSummary = {
 
 const noop = (): void => {
   return undefined;
+};
+
+const promptResource: AsyncResource<PromptHistory> = {
+  status: 'ready',
+  data: {
+    prompts: [],
+    projects: [],
+    total: 0,
+  },
+  reload: noop,
 };
 
 const resource = (
@@ -55,6 +68,9 @@ test('totals the archives it was given', () => {
         sizeBytes: 1024,
       }])}
       onOpenSession={noop}
+      prompts={promptResource}
+      nowMs={NOW}
+      onOpenPrompt={noop}
     />,
   );
 
@@ -64,13 +80,29 @@ test('totals the archives it was given', () => {
 });
 
 test('invites a first archive when there are none', () => {
-  render(<ArchiveView archives={resource('ready', [])} onOpenSession={noop} />);
+  render(
+    <ArchiveView
+      archives={resource('ready', [])}
+      onOpenSession={noop}
+      prompts={promptResource}
+      nowMs={NOW}
+      onOpenPrompt={noop}
+    />,
+  );
 
   expect(screen.getByText('No archives yet')).toBeDefined();
 });
 
 test('waits while the list is loading', () => {
-  render(<ArchiveView archives={resource('loading', undefined)} onOpenSession={noop} />);
+  render(
+    <ArchiveView
+      archives={resource('loading', undefined)}
+      onOpenSession={noop}
+      prompts={promptResource}
+      nowMs={NOW}
+      onOpenPrompt={noop}
+    />,
+  );
 
   expect(screen.queryByText('No archives yet')).toBeNull();
 });
@@ -82,10 +114,24 @@ test('creates an archive with a note and reloads the list', async () => {
   });
 
   vi.stubGlobal('fetch', fetchMock);
-  render(<ArchiveView archives={resource('ready', [])} onOpenSession={noop} />);
+  render(
+    <ArchiveView
+      archives={resource('ready', [])}
+      onOpenSession={noop}
+      prompts={promptResource}
+      nowMs={NOW}
+      onOpenPrompt={noop}
+    />,
+  );
 
   const { rerender } = render(
-    <ArchiveView archives={resource('ready', [], reload)} onOpenSession={noop} />,
+    <ArchiveView
+      archives={resource('ready', [], reload)}
+      onOpenSession={noop}
+      prompts={promptResource}
+      nowMs={NOW}
+      onOpenPrompt={noop}
+    />,
   );
 
   await userEvent.type(screen.getAllByLabelText('Archive note')[1] ?? document.body, 'before upgrade');
@@ -95,7 +141,15 @@ test('creates an archive with a note and reloads the list', async () => {
     expect(reload).toHaveBeenCalledTimes(1);
   });
 
-  rerender(<ArchiveView archives={resource('ready', [archive], reload)} onOpenSession={noop} />);
+  rerender(
+    <ArchiveView
+      archives={resource('ready', [archive], reload)}
+      onOpenSession={noop}
+      prompts={promptResource}
+      nowMs={NOW}
+      onOpenPrompt={noop}
+    />,
+  );
   expect(screen.getAllByText('before the upgrade').length).toBeGreaterThan(0);
 });
 
@@ -104,7 +158,15 @@ test('reports a failed creation', async () => {
     return new Response('{"error":"disk full"}', { status: 500 });
   }));
 
-  render(<ArchiveView archives={resource('ready', [])} onOpenSession={noop} />);
+  render(
+    <ArchiveView
+      archives={resource('ready', [])}
+      onOpenSession={noop}
+      prompts={promptResource}
+      nowMs={NOW}
+      onOpenPrompt={noop}
+    />,
+  );
   await userEvent.click(screen.getByText('Create archive'));
 
   expect(await screen.findByText('disk full')).toBeDefined();
@@ -116,7 +178,15 @@ test('confirms before deleting, then reloads', async () => {
   vi.stubGlobal('fetch', vi.fn(() => {
     return Response.json({ ok: true });
   }));
-  render(<ArchiveView archives={resource('ready', [archive], reload)} onOpenSession={noop} />);
+  render(
+    <ArchiveView
+      archives={resource('ready', [archive], reload)}
+      onOpenSession={noop}
+      prompts={promptResource}
+      nowMs={NOW}
+      onOpenPrompt={noop}
+    />,
+  );
 
   await userEvent.click(screen.getByTitle('Delete archive'));
   expect(screen.getByRole('dialog')).toBeDefined();
@@ -131,7 +201,15 @@ test('confirms before deleting, then reloads', async () => {
 test('leaves the archive alone when the confirmation is dismissed', async () => {
   const reload = vi.fn();
 
-  render(<ArchiveView archives={resource('ready', [archive], reload)} onOpenSession={noop} />);
+  render(
+    <ArchiveView
+      archives={resource('ready', [archive], reload)}
+      onOpenSession={noop}
+      prompts={promptResource}
+      nowMs={NOW}
+      onOpenPrompt={noop}
+    />,
+  );
 
   await userEvent.click(screen.getByTitle('Delete archive'));
   await userEvent.click(screen.getByText('Cancel'));
@@ -146,10 +224,43 @@ test('reports a failed deletion', async () => {
   vi.stubGlobal('fetch', vi.fn(() => {
     return new Response('{"error":"archive locked"}', { status: 500 });
   }));
-  render(<ArchiveView archives={resource('ready', [archive])} onOpenSession={noop} />);
+  render(
+    <ArchiveView
+      archives={resource('ready', [archive])}
+      onOpenSession={noop}
+      prompts={promptResource}
+      nowMs={NOW}
+      onOpenPrompt={noop}
+    />,
+  );
 
   await userEvent.click(screen.getByTitle('Delete archive'));
   await userEvent.click(screen.getAllByText('Delete archive').at(-1) ?? document.body);
 
   expect(await screen.findByText('archive locked')).toBeDefined();
+});
+
+test('switches to the prompt history panel', async () => {
+  render(
+    <ArchiveView
+      archives={resource('ready', [archive])}
+      prompts={{
+        status: 'ready',
+        data: {
+          prompts: [],
+          projects: [],
+          total: 12,
+        },
+        reload: noop,
+      }}
+      nowMs={NOW}
+      onOpenSession={noop}
+      onOpenPrompt={noop}
+    />,
+  );
+
+  await userEvent.click(screen.getByRole('button', { name: 'Prompt history' }));
+
+  expect(screen.getByText('12')).toBeDefined();
+  expect(screen.queryByText('before the upgrade')).toBeNull();
 });
