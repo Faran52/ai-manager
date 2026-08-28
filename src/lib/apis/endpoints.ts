@@ -222,15 +222,19 @@ export const handleProjectStats = async (request: Request, deps?: EndpointDeps):
   });
 };
 
-export const handleUpdateCheck = (deps?: UpdateEndpointDeps): Promise<Response> => {
+// Resolved in the default rather than the body, so passing `config: undefined`
+// means "no feed" instead of falling through to whatever the build baked in.
+export const handleUpdateCheck = (
+  deps: UpdateEndpointDeps = { config: updateConfigFromEnv() },
+): Promise<Response> => {
   return withJsonErrors(async () => {
-    const config = deps?.config ?? updateConfigFromEnv();
+    const { config } = deps;
 
     if (config == null) {
       return jsonOk({ update: { stage: 'unsupported' } });
     }
 
-    return jsonOk({ update: await checkForUpdate(config, deps?.updateDeps) });
+    return jsonOk({ update: await checkForUpdate(config, deps.updateDeps) });
   });
 };
 

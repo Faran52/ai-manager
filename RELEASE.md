@@ -68,9 +68,19 @@ gh secret set WINDOWS_CERTIFICATE_PASSWORD
 
 ### 4. Point builds at the feed
 
-`deno.json` already carries `desktop.release.baseUrl`. Set `UPDATE_FEED_URL` to
-the same value for the running app, and `UPDATE_PUBLIC_KEY` to the public half
-from step 1. Without a feed URL the app simply never offers updates.
+```bash
+gh variable set UPDATE_FEED_URL --body "$(node -p "require('./deno.json').desktop.release.baseUrl")"
+gh variable set UPDATE_PUBLIC_KEY --body '<public half printed by step 1>'
+```
+
+Repository *variables*, not secrets: both are public, and only the private key
+needs hiding. `astro.config.mjs` inlines them into the bundle at build time,
+because a packaged app runs with the user's environment rather than the one that
+built it. Read from `process.env` alone, every release would ship with update
+checking off.
+
+A local build picks the same names up from `.env`, which `.env.example` lists.
+Without them a build simply never offers updates.
 
 ## Why full artifacts rather than patches
 

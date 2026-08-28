@@ -4,6 +4,8 @@ import {
   test,
 } from 'vitest';
 
+import { UPDATE_FEED_URL, UPDATE_PUBLIC_KEY } from '@config/envVars';
+
 import { updateConfigFromEnv } from './updateConfig';
 
 describe('updateConfigFromEnv', () => {
@@ -22,7 +24,10 @@ describe('updateConfigFromEnv', () => {
     expect(updateConfigFromEnv({ UPDATE_FEED_URL: '' })).toBeUndefined();
   });
 
-  test('falls back to the ambient environment', () => {
-    expect(updateConfigFromEnv()).toBeUndefined();
+  test('falls back to what the build baked in', () => {
+    expect(updateConfigFromEnv()).toEqual(updateConfigFromEnv({
+      UPDATE_FEED_URL,
+      UPDATE_PUBLIC_KEY,
+    }));
   });
 });

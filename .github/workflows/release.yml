@@ -10,6 +10,10 @@
 # Nothing here is that expensive, and the three build jobs are gated behind it
 # anyway, so rerunning the cheap gate is less code than a cross-workflow poll.
 #
+# Variables. Both are public halves, baked into the bundle at build time:
+#   UPDATE_FEED_URL              where a shipped build looks for `latest.json`
+#   UPDATE_PUBLIC_KEY            base64 Ed25519 public key from `pnpm release:key`
+#
 # Secrets. A missing one degrades that platform to unsigned rather than failing:
 #   UPDATE_SIGNING_KEY           Ed25519 private key (PEM) from `pnpm release:key`
 #   MACOS_CERTIFICATE            base64 of the Developer ID Application .p12
@@ -34,6 +38,10 @@ env:
   # a built bundle fails `codesign --verify` before an update is ever applied.
   DENO_VERSION: v2.9.6
   NODE_VERSION: 24.19.0
+  # Inlined into the bundle by astro.config.mjs. Repository variables, not
+  # secrets: both halves are public, and only the private key needs hiding.
+  UPDATE_FEED_URL: ${{ vars.UPDATE_FEED_URL }}
+  UPDATE_PUBLIC_KEY: ${{ vars.UPDATE_PUBLIC_KEY }}
 
 jobs:
   guard:
