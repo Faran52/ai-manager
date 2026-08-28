@@ -39,17 +39,31 @@ export const PopupMenu: FC<PopupMenuProps> = ({
   }, [onClose]);
 
   /**
-   * Dismissal listens on `click`, not `pointerdown`: a trigger that toggles on click
-   * would otherwise be reopened by its own click after pointerdown had closed the menu.
+   * Dismissal listens on `click`, not `pointerdown`: a trigger that toggles on
+   * click would otherwise be reopened by its own click after pointerdown had
+   * already closed the menu.
+   *
+   * The catch is that the click which opened the menu is still travelling when
+   * this effect subscribes, so it reaches the window listener and would close
+   * the menu on the same gesture. An event created before the menu opened
+   * cannot be a dismissal, so the timestamp is the discriminator.
+   *
    * Depends on `open` alone because callers pass inline `onClose` closures, and
-   * re-subscribing five window listeners on every parent render churns event delivery.
+   * re-subscribing five window listeners on every parent render churns event
+   * delivery.
    */
   useEffect(() => {
     if (!open) {
       return undefined;
     }
 
+    const openedAt = performance.now();
+
     const closeOutside = (event: Event): void => {
+      if (event.timeStamp <= openedAt) {
+        return;
+      }
+
       if (event.target instanceof Node && !surfaceRef.current?.contains(event.target)) {
         closeRef.current();
       }
