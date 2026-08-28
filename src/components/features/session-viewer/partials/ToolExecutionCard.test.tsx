@@ -38,11 +38,12 @@ describe('ToolExecutionCard', () => {
     render(<ToolExecutionCard call={bashCall} outcome={okOutcome} />);
 
     expect(document.querySelector('[data-tool-card][data-status="ok"]')).not.toBeNull();
+    expect(document.querySelector('[data-tool-detail]')?.textContent).toBe('pnpm check');
     expect(screen.queryByText('all green')).toBeNull();
 
     await userEvent.click(screen.getByRole('button'));
 
-    expect(screen.getByText('pnpm check')).toBeDefined();
+    expect(screen.getAllByText('pnpm check').length).toBeGreaterThan(1);
     expect(screen.getByText('all green')).toBeDefined();
   });
 
@@ -267,10 +268,16 @@ describe('ToolExecutionCard input rows and image fallbacks', () => {
 
     expect(screen.getByText('/a.ts')).toBeDefined();
     expect(screen.getByText('todo')).toBeDefined();
-    expect(screen.getByText('weather')).toBeDefined();
+    expect(screen.getAllByText('weather').length).toBeGreaterThan(1);
     expect(screen.getByText('https://x.dev')).toBeDefined();
-    expect(screen.getByText('scout')).toBeDefined();
+    expect(screen.getAllByText('scout').length).toBeGreaterThan(1);
     expect(screen.getByText('explore')).toBeDefined();
+
+    const details = [...document.querySelectorAll('[data-tool-detail]')].map((node) => {
+      return node.textContent;
+    });
+
+    expect(details).toEqual(['a.ts', 'todo · src', 'weather', 'x.dev', 'scout']);
   });
 
   test('skips images that have neither data nor url', async () => {
@@ -392,7 +399,7 @@ describe('optional-field arms on row tools', () => {
       await userEvent.click(button);
     }
 
-    expect(screen.getByText('*.md')).toBeDefined();
+    expect(screen.getAllByText('*.md').length).toBeGreaterThan(1);
     expect(screen.queryByText('/src')).toBeNull();
   });
 

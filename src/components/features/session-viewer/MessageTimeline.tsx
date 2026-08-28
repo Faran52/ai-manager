@@ -4,22 +4,29 @@ import {
   useMemo,
   useRef,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { motion } from 'motion/react';
 
 import { cn } from '@utils/cnUtils';
+import { formatDayLabel } from '@utils/formatUtils';
 
 import { fadeTransition } from '@ui/index';
 
 import {
   AssistantTurn,
+  DateDivider,
   SummaryDivider,
   SystemNotice,
   UserTurn,
 } from './partials';
 import { blockIsVisible, defaultMessageFilters } from './utils/messageFilterUtils';
-import { buildTimelineModel, rowIndexForTimestamp } from './utils/timelineUtils';
+import {
+  buildTimelineModel,
+  dayAtRow,
+  rowIndexForTimestamp,
+} from './utils/timelineUtils';
 
 import type { HistoryEntry, ToolOutcome } from '@services/history/historyService';
 import type { FC } from 'react';
@@ -32,6 +39,7 @@ export interface MessageTimelineProps {
   readonly scrollElement?: HTMLDivElement | null;
   readonly highlightTimestamp?: string | undefined;
   readonly navigation?: TimelineNavigation | null;
+  readonly nowMs?: number;
 }
 
 export interface TimelineNavigation {
@@ -43,12 +51,17 @@ export interface TimelineNavigation {
 const ESTIMATED_ROW_PX = 220;
 const OVERSCAN = 6;
 
-const renderEntry = (
+const renderRow = (
   row: TimelineRow,
   pairs: ReadonlyMap<string, ToolOutcome>,
   orphans: ReadonlyMap<string, readonly ToolOutcome[]>,
   filters: MessageFilters,
+  nowMs: number,
 ) => {
+  if (row.kind === 'date') {
+    return <DateDivider timestampMs={row.timestampMs} nowMs={nowMs} />;
+  }
+
   const { entry } = row;
 
   switch (entry.kind) {
@@ -67,6 +80,9 @@ const renderEntry = (
           visibleBlocks={entry.blocks.filter((block) => {
             return blockIsVisible(block, filters);
           })}
+          hiddenCount={entry.blocks.length - entry.blocks.filter((block) => {
+            return blockIsVisible(block, filters);
+          }).length}
           outcomeFor={(toolUseId) => {
             return pairs.get(toolUseId);
           }}
@@ -85,7 +101,9 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
   scrollElement,
   highlightTimestamp,
   navigation,
+  nowMs = Date.now(),
 }) => {
+  const { i18n } = useTranslation('session');
   const listRef = useRef<HTMLDivElement>(null);
   const ownScrollRef = useRef<HTMLDivElement>(null);
   const scrollMarginRef = useRef(0);
@@ -151,15 +169,35 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
     }
   }, [navigation, virtualizer]);
 
+  const firstVisible = virtualizer.getVirtualItems()[0];
+  const floatingDay = firstVisible == null ? 0 : dayAtRow(model.rows, firstVisible.index);
+
   return (
     <motion.div
       ref={ownScrollRef}
-      className="space-y-4"
+      className="relative space-y-4"
       data-message-timeline
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={fadeTransition}
     >
+      {floatingDay > 0 && (
+        <div className="
+          pointer-events-none sticky top-0 z-10 flex justify-center
+        "
+        >
+          <span
+            className="
+              rounded-full border border-border bg-card/90 px-2.5 py-0.5
+              text-[10px] font-medium text-muted-foreground shadow-sm
+              backdrop-blur-sm
+            "
+            data-floating-date
+          >
+            {formatDayLabel(floatingDay, nowMs, i18n.language)}
+          </span>
+        </div>
+      )}
       <div
         ref={listRef}
         className="relative w-full"
@@ -180,11 +218,11 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
               data-index={item.index}
               className={cn(
                 'absolute top-0 left-0 w-full pb-4 transition-opacity',
-                row.dimmed && 'opacity-60',
+                row.kind === 'entry' && row.dimmed && 'opacity-60',
               )}
               style={{ transform: `translateY(${String(item.start - scrollMarginRef.current)}px)` }}
             >
-              {renderEntry(row, model.pairs, model.orphans, filters)}
+              {renderRow(row, model.pairs, model.orphans, filters, nowMs)}
             </div>
           );
         })}

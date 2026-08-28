@@ -26,6 +26,9 @@
   "copiedMarkdown": "Copied markdown",
   "user": "User",
   "assistant": "Assistant",
+  "branch": "branch",
+  "hiddenBlocks_one": "{{count}} block hidden by filters",
+  "hiddenBlocks_other": "{{count}} blocks hidden by filters",
   "system": "System",
   "summary": "Summary",
   "userMessages": "User messages",
@@ -55,9 +58,11 @@
   "loadMore": "Load more ({{count}} remaining)",
   "messageCount_one": "{{count}} message",
   "messageCount_other": "{{count}} messages",
+  "inTokens": "{{count}} in",
   "outTokens": "{{count}} out",
   "cachedTokens": "{{count}} cached",
   "statusOk": "OK",
+  "statusPending": "Pending",
   "statusError": "Error",
   "statusInterrupted": "Interrupted"
 }

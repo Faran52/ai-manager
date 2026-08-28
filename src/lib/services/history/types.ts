@@ -50,6 +50,8 @@ export type ToolCallInput
   | {
     readonly kind: 'file-read';
     path: string;
+    offset?: number | undefined;
+    limit?: number | undefined;
   }
   | {
     readonly kind: 'search-files';

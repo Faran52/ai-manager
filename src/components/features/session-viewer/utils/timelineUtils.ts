@@ -6,11 +6,20 @@ import { entryIsVisible } from './messageFilterUtils';
 import type { HistoryEntry, ToolOutcome } from '@services/history/historyService';
 import type { MessageFilters } from './messageFilterUtils';
 
-export interface TimelineRow {
+export interface TimelineEntryRow {
+  readonly kind: 'entry';
   readonly entry: HistoryEntry;
   readonly key: string;
   readonly dimmed: boolean;
 }
+
+export interface TimelineDateRow {
+  readonly kind: 'date';
+  readonly key: string;
+  readonly timestampMs: number;
+}
+
+export type TimelineRow = TimelineEntryRow | TimelineDateRow;
 
 export interface TimelineModel {
   readonly rows: readonly TimelineRow[];
@@ -18,8 +27,29 @@ export interface TimelineModel {
   readonly orphans: ReadonlyMap<string, readonly ToolOutcome[]>;
 }
 
+interface EntryDay {
+  readonly key: string;
+  readonly timestampMs: number;
+}
+
 const entryIdentity = (entry: HistoryEntry): string => {
   return entry.kind === 'summary' ? `summary-${entry.text}` : `${entry.kind}-${entry.uuid}`;
+};
+
+// A summary carries no timestamp, so it inherits the day already being drawn.
+const dayOf = (entry: HistoryEntry): EntryDay | undefined => {
+  if (entry.kind === 'summary') {
+    return undefined;
+  }
+
+  const timestampMs = Date.parse(entry.timestamp);
+
+  return Number.isNaN(timestampMs)
+    ? undefined
+    : {
+        key: new Date(timestampMs).toISOString().slice(0, 10),
+        timestampMs,
+      };
 };
 
 const orphansOf = (
@@ -42,11 +72,13 @@ const orphansOf = (
 };
 
 /**
- * Flattens a feed into exactly the rows the timeline will draw.
+ * Flattens a feed into exactly the rows the timeline will draw, day separators
+ * included.
  *
- * Filtered entries are dropped here rather than returning null mid-render,
- * because a virtualized list indexes by position: a hole in the middle would
- * make the virtualizer reserve space for a row nobody can see.
+ * Filtered entries are dropped here rather than returning null mid-render, and
+ * separators are rows rather than decoration, because a virtualized list
+ * indexes by position: anything the model does not count is a gap the
+ * virtualizer reserves no space for.
  */
 export const buildTimelineModel = (
   entries: readonly HistoryEntry[],
@@ -56,12 +88,26 @@ export const buildTimelineModel = (
   const keys = uniqueKeys(entries, entryIdentity);
   const rows: TimelineRow[] = [];
 
+  let drawnDay = '';
+
   for (const [index, entry] of entries.entries()) {
     if (!entryIsVisible(entry, filters, pairs)) {
       continue;
     }
 
+    const day = dayOf(entry);
+
+    if (day != null && day.key !== drawnDay) {
+      drawnDay = day.key;
+      rows.push({
+        kind: 'date',
+        key: `date-${day.key}`,
+        timestampMs: day.timestampMs,
+      });
+    }
+
     rows.push({
+      kind: 'entry',
       entry,
       /* v8 ignore next -- keys is built from the same array, so the index always hits */
       key: keys[index] ?? entryIdentity(entry),
@@ -87,6 +133,20 @@ export const rowIndexForTimestamp = (
   }
 
   return rows.findIndex((row) => {
-    return row.entry.kind !== 'summary' && row.entry.timestamp === timestamp;
+    return row.kind === 'entry' && row.entry.kind !== 'summary' && row.entry.timestamp === timestamp;
   });
+};
+
+// The floating date follows whatever row the viewport starts on, and a
+// separator names its own day while an entry has to be asked for one.
+export const dayAtRow = (rows: readonly TimelineRow[], index: number): number => {
+  for (let cursor = Math.min(index, rows.length - 1); cursor >= 0; cursor -= 1) {
+    const row = rows[cursor];
+
+    if (row?.kind === 'date') {
+      return row.timestampMs;
+    }
+  }
+
+  return 0;
 };

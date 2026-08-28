@@ -26,6 +26,9 @@
   "copiedMarkdown": "已复制 Markdown",
   "user": "用户",
   "assistant": "助手",
+  "branch": "分支",
+  "hiddenBlocks_one": "已按筛选隐藏 {{count}} 个块",
+  "hiddenBlocks_other": "已按筛选隐藏 {{count}} 个块",
   "system": "系统",
   "summary": "摘要",
   "userMessages": "用户消息",
@@ -55,9 +58,11 @@
   "loadMore": "加载更多（剩余 {{count}} 项）",
   "messageCount_one": "{{count}} 条消息",
   "messageCount_other": "{{count}} 条消息",
+  "inTokens": "输入 {{count}}",
   "outTokens": "输出 {{count}}",
   "cachedTokens": "缓存 {{count}}",
   "statusOk": "完成",
+  "statusPending": "待处理",
   "statusError": "错误",
   "statusInterrupted": "已中断"
 }

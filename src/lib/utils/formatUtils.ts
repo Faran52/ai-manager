@@ -49,6 +49,39 @@ export const formatDateTime = (timestampMs: number): string => {
   });
 };
 
+// Fixed to en-GB like formatDateTime, so a transcript reads the same clock
+// whatever locale the interface is in.
+export const formatClock = (timestampMs: number): string => {
+  return new Date(timestampMs).toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+// The label a day separator carries. Today and yesterday are named rather than
+// dated, because in a transcript those two are the ones being scanned for.
+export const formatDayLabel = (timestampMs: number, nowMs: number, locale = 'en'): string => {
+  const startOf = (value: number): number => {
+    const date = new Date(value);
+
+    date.setHours(0, 0, 0, 0);
+
+    return date.getTime();
+  };
+  const days = Math.round((startOf(nowMs) - startOf(timestampMs)) / DAY_MS);
+
+  if (days === 0 || days === 1) {
+    return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(-days, 'day');
+  }
+
+  return new Date(timestampMs).toLocaleDateString(locale, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+};
+
 // Intl carries each locale's wording, plurals and numerals, including the
 // Arabic dual, so none of this needs translating by hand.
 export const formatTimeAgo = (timestampMs: number, nowMs: number, locale = 'en'): string => {

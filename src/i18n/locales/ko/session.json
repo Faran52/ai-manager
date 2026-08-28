@@ -26,6 +26,9 @@
   "copiedMarkdown": "Markdown을 복사했습니다",
   "user": "사용자",
   "assistant": "어시스턴트",
+  "branch": "분기",
+  "hiddenBlocks_one": "필터로 블록 {{count}}개 숨김",
+  "hiddenBlocks_other": "필터로 블록 {{count}}개 숨김",
   "system": "시스템",
   "summary": "요약",
   "userMessages": "사용자 메시지",
@@ -55,9 +58,11 @@
   "loadMore": "더 불러오기 ({{count}}개 남음)",
   "messageCount_one": "메시지 {{count}}개",
   "messageCount_other": "메시지 {{count}}개",
+  "inTokens": "입력 {{count}}",
   "outTokens": "출력 {{count}}",
   "cachedTokens": "캐시 {{count}}",
   "statusOk": "완료",
+  "statusPending": "대기 중",
   "statusError": "오류",
   "statusInterrupted": "중단됨"
 }

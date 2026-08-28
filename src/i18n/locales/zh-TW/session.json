@@ -26,6 +26,9 @@
   "copiedMarkdown": "已複製 Markdown",
   "user": "使用者",
   "assistant": "助理",
+  "branch": "分支",
+  "hiddenBlocks_one": "已依篩選隱藏 {{count}} 個區塊",
+  "hiddenBlocks_other": "已依篩選隱藏 {{count}} 個區塊",
   "system": "系統",
   "summary": "摘要",
   "userMessages": "使用者訊息",
@@ -55,9 +58,11 @@
   "loadMore": "載入更多（剩餘 {{count}} 項）",
   "messageCount_one": "{{count}} 則訊息",
   "messageCount_other": "{{count}} 則訊息",
+  "inTokens": "輸入 {{count}}",
   "outTokens": "輸出 {{count}}",
   "cachedTokens": "快取 {{count}}",
   "statusOk": "完成",
+  "statusPending": "待處理",
   "statusError": "錯誤",
   "statusInterrupted": "已中斷"
 }

@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next';
 
-import { cn } from '@utils/cnUtils';
-import { formatCost } from '@utils/formatUtils';
+import { EyeOff } from 'lucide-react';
 
-import { Badge, MarkdownText } from '@ui/index';
+import { MarkdownText } from '@ui/index';
 
+import { MessageHeader } from './MessageHeader';
 import { ThinkingCard } from './ThinkingCard';
 import { ToolExecutionCard } from './ToolExecutionCard';
 
@@ -19,29 +19,29 @@ export interface AssistantTurnProps {
   readonly entry: AssistantTurnEntry;
   readonly visibleBlocks?: readonly AssistantBlock[];
   readonly outcomeFor: (toolUseId: string) => ToolOutcome | undefined;
+  readonly hiddenCount?: number;
 }
 
 export const AssistantTurn: FC<AssistantTurnProps> = ({
   entry,
   visibleBlocks = entry.blocks,
   outcomeFor,
+  hiddenCount = 0,
 }) => {
   const { t } = useTranslation('session');
-  const usage = entry.usage;
 
   return (
     <article className="space-y-2" data-assistant-turn data-timestamp={entry.timestamp}>
-      <div className={cn('flex flex-wrap items-center gap-1.5', entry.blocks.length === 0 && `
-        hidden
-      `)}
-      >
-        {entry.model != null && <Badge>{entry.model}</Badge>}
-        {usage != null && usage.outputTokens > 0 && <Badge>{t('outTokens', { count: usage.outputTokens })}</Badge>}
-        {usage != null && usage.cacheReadTokens > 0 && (
-          <Badge>{t('cachedTokens', { count: usage.cacheReadTokens })}</Badge>
-        )}
-        {entry.costUsd != null && entry.costUsd > 0 && <Badge>{formatCost(entry.costUsd)}</Badge>}
-      </div>
+      {entry.blocks.length > 0 && (
+        <MessageHeader
+          roleKey="assistant"
+          timestamp={entry.timestamp}
+          sidechain={entry.sidechain}
+          model={entry.model}
+          usage={entry.usage}
+          costUsd={entry.costUsd}
+        />
+      )}
       {visibleBlocks.map((block, index) => {
         if (block.blockType === 'text') {
           return <MarkdownText key={`${entry.uuid}-${String(index)}`} text={block.text} />;
@@ -63,6 +63,17 @@ export const AssistantTurn: FC<AssistantTurnProps> = ({
           />
         );
       })}
+      {hiddenCount > 0 && (
+        <p
+          className="
+            flex items-center gap-1.5 text-[11px] text-muted-foreground/80
+          "
+          data-hidden-blocks
+        >
+          <EyeOff className="size-3" />
+          {t('hiddenBlocks', { count: hiddenCount })}
+        </p>
+      )}
     </article>
   );
 };

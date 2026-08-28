@@ -26,6 +26,9 @@
   "copiedMarkdown": "Markdown をコピーしました",
   "user": "ユーザー",
   "assistant": "アシスタント",
+  "branch": "分岐",
+  "hiddenBlocks_one": "フィルターで {{count}} 件のブロックを非表示",
+  "hiddenBlocks_other": "フィルターで {{count}} 件のブロックを非表示",
   "system": "システム",
   "summary": "要約",
   "userMessages": "ユーザーのメッセージ",
@@ -55,9 +58,11 @@
   "loadMore": "さらに読み込む（残り {{count}} 件）",
   "messageCount_one": "{{count}} 件のメッセージ",
   "messageCount_other": "{{count}} 件のメッセージ",
+  "inTokens": "入力 {{count}}",
   "outTokens": "出力 {{count}}",
   "cachedTokens": "キャッシュ {{count}}",
   "statusOk": "完了",
+  "statusPending": "保留中",
   "statusError": "エラー",
   "statusInterrupted": "中断"
 }

@@ -8,6 +8,8 @@ import { CodeLine, TruncatedText } from '@ui/index';
 
 import { defaultMessageFilters } from '../utils/messageFilterUtils';
 
+import { MessageHeader } from './MessageHeader';
+
 import type { ToolOutcome, UserTurnEntry } from '@services/history/historyService';
 import type { FC } from 'react';
 import type { MessageContentFilters } from '../utils/messageFilterUtils';
@@ -33,6 +35,12 @@ export const UserTurn: FC<UserTurnProps> = ({
       data-meta={entry.meta ? 'true' : 'false'}
       data-timestamp={entry.timestamp}
     >
+      <MessageHeader
+        roleKey="user"
+        timestamp={entry.timestamp}
+        sidechain={entry.sidechain}
+        align="end"
+      />
       {filters.commands && entry.command != null && (
         <span className="
           inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1

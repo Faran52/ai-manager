@@ -133,13 +133,13 @@ test('labels an entry with no preview by its kind', () => {
   expect(screen.getByLabelText('User 8')).toBeDefined();
 });
 
-test('jumps to the row it was asked for', async () => {
+test('jumps to the row it was asked for, counting the day separator', async () => {
   const onNavigate = vi.fn();
 
   renderNavigator(onNavigate);
   await userEvent.click(screen.getByLabelText('Assistant 3'));
 
-  expect(onNavigate).toHaveBeenCalledWith(2);
+  expect(onNavigate).toHaveBeenCalledWith(3);
 });
 
 test('filters by preview text and by kind, and reports no match', async () => {

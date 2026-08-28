@@ -22,7 +22,10 @@ export interface MessageNavigatorProps {
 }
 
 interface NavigatorEntry {
+  // Row position, separators included, because that is what the timeline scrolls to.
   readonly index: number;
+  // Position among messages alone, because that is what the reader is counting.
+  readonly position: number;
   readonly kind: HistoryEntry['kind'];
   readonly key: string;
   readonly preview: string;
@@ -65,12 +68,24 @@ export const MessageNavigator: FC<MessageNavigatorProps> = ({
   const { t } = useTranslation('session');
   const [filter, setFilter] = useState('');
   const rows = useMemo(() => {
-    return buildTimelineModel(entries, filters).rows.map<NavigatorEntry>((row, index) => {
+    // Two numbers per message: where the timeline scrolls to, and what the
+    // reader counts. Separators land in the first and not the second.
+    const messages = buildTimelineModel(entries, filters).rows.flatMap((row, index) => {
+      return row.kind === 'date'
+        ? []
+        : [{
+            row,
+            index,
+          }];
+    });
+
+    return messages.map<NavigatorEntry>((message, position) => {
       return {
-        index,
-        kind: row.entry.kind,
-        key: row.key,
-        preview: previewOf(row.entry),
+        index: message.index,
+        position: position + 1,
+        kind: message.row.entry.kind,
+        key: message.row.key,
+        preview: previewOf(message.row.entry),
       };
     });
   }, [entries, filters]);
@@ -158,7 +173,7 @@ export const MessageNavigator: FC<MessageNavigatorProps> = ({
                           hover:bg-accent
                           focus-visible:outline-2 focus-visible:outline-ring
                         "
-                        aria-label={`${t(row.kind)} ${String(row.index + 1)}`}
+                        aria-label={`${t(row.kind)} ${String(row.position)}`}
                         onClick={() => {
                           onNavigate(row.index);
                         }}
@@ -174,7 +189,7 @@ export const MessageNavigator: FC<MessageNavigatorProps> = ({
                             tracking-wide text-muted-foreground uppercase
                           "
                           >
-                            <span>{String(row.index + 1).padStart(2, '0')}</span>
+                            <span>{String(row.position).padStart(2, '0')}</span>
                             <span>{t(row.kind)}</span>
                           </span>
                           <span className="

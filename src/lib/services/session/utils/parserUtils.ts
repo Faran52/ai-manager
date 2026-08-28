@@ -254,6 +254,8 @@ export const parseToolInput = (name: string, input: RawToolInput): ToolCallInput
       return {
         kind: 'file-read',
         path: input.file_path ?? '',
+        offset: input.offset,
+        limit: input.limit,
       };
     case 'Glob':
       return {

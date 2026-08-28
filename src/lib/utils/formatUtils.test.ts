@@ -5,8 +5,10 @@ import {
 } from 'vitest';
 
 import {
+  formatClock,
   formatCost,
   formatDateTime,
+  formatDayLabel,
   formatDurationMs,
   formatTimeAgo,
   formatTokens,
@@ -128,5 +130,28 @@ describe('truncate boundaries', () => {
     expect(truncate('abcde', 4)).toBe('abc…');
     expect(truncate('abcde', 1)).toBe('…');
     expect(truncate('abcde', 0)).toBe('');
+  });
+});
+
+describe('formatClock', () => {
+  test('reads a wall clock out of a timestamp', () => {
+    expect(formatClock(Date.parse('2026-06-01T14:32:00Z'))).toMatch(/^\d{2}:\d{2}$/u);
+  });
+});
+
+describe('formatDayLabel', () => {
+  const now = Date.parse('2026-08-28T12:00:00Z');
+
+  test('names today and yesterday instead of dating them', () => {
+    expect(formatDayLabel(now - 2 * 3_600_000, now)).toBe('today');
+    expect(formatDayLabel(now - 26 * 3_600_000, now)).toBe('yesterday');
+  });
+
+  test('writes an older day out in full', () => {
+    expect(formatDayLabel(Date.parse('2026-06-27T10:00:00Z'), now)).toContain('June 27, 2026');
+  });
+
+  test('treats a day in the future as today rather than counting backwards', () => {
+    expect(formatDayLabel(now + 2 * 3_600_000, now)).toBe('today');
   });
 });

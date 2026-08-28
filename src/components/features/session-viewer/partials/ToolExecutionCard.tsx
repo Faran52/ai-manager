@@ -4,9 +4,12 @@ import { useTranslation } from 'react-i18next';
 import {
   AlertTriangle,
   ChevronDown,
+  FileCode2,
   Globe2,
   PlugZap,
   Search,
+  SquareTerminal,
+  Wrench,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
@@ -15,9 +18,11 @@ import { cn } from '@utils/cnUtils';
 import { collapseTransition } from '@ui/index';
 
 import { mcpToolIdentity } from '../utils/mcpToolUtils';
+import { toolSummary } from '../utils/toolSummaryUtils';
 
 import { OutcomeBody } from './OutcomeBody';
 import { PatchView } from './PatchView';
+import { StatusBadge } from './StatusBadge';
 import { ToolInputBody } from './ToolInputBody';
 
 import type {
@@ -25,23 +30,21 @@ import type {
   ToolOutcome,
   ToolStatus,
 } from '@services/history/historyService';
-import type { FC } from 'react';
+import type { FC, ReactNode } from 'react';
+import type { ToolTone } from '../utils/toolSummaryUtils';
 
 export interface ToolExecutionCardProps {
   readonly call: ToolCall;
   readonly outcome?: ToolOutcome | undefined;
 }
 
-const STATUS_LABELS: Record<ToolStatus, string> = {
-  ok: 'statusOk',
-  error: 'statusError',
-  interrupted: 'statusInterrupted',
-};
-
-const STATUS_TONES: Record<ToolStatus, string> = {
-  ok: 'bg-ok/10 text-ok',
-  error: 'bg-destructive/10 text-destructive',
-  interrupted: 'bg-warn/15 text-warn',
+const TONE_ICONS: Record<ToolTone, ReactNode> = {
+  code: <FileCode2 className="size-3.5" />,
+  search: <Search className="size-3.5" />,
+  shell: <SquareTerminal className="size-3.5" />,
+  web: <Globe2 className="size-3.5" />,
+  plug: <PlugZap className="size-3.5" />,
+  plain: <Wrench className="size-3.5" />,
 };
 
 export const ToolExecutionCard: FC<ToolExecutionCardProps> = ({ call, outcome }) => {
@@ -51,6 +54,7 @@ export const ToolExecutionCard: FC<ToolExecutionCardProps> = ({ call, outcome })
   const isDiff = call.input.kind === 'file-edit' || call.input.kind === 'multi-edit';
   const showOutcome = outcome != null;
   const mcpIdentity = mcpToolIdentity(call);
+  const summary = toolSummary(call, outcome);
   let outcomeKind: 'default' | 'mcp' | 'web-fetch' | 'web-search' = 'default';
 
   if (mcpIdentity != null) {
@@ -81,31 +85,26 @@ export const ToolExecutionCard: FC<ToolExecutionCardProps> = ({ call, outcome })
           hover:bg-muted/70
         "
       >
-        {mcpIdentity != null && (
-          <PlugZap className="size-3.5 shrink-0 text-primary" />
-        )}
-        {call.input.kind === 'web-search' && (
-          <Search className="size-3.5 shrink-0 text-primary" />
-        )}
-        {call.input.kind === 'web-fetch' && (
-          <Globe2 className="size-3.5 shrink-0 text-primary" />
-        )}
-        <span className="truncate font-mono text-[11px] text-primary">
-          {mcpIdentity?.tool ?? call.name}
+        <span className="shrink-0 text-primary" data-tool-tone={summary.tone}>
+          {TONE_ICONS[summary.tone]}
         </span>
-        {mcpIdentity != null && (
-          <span className="
-            truncate text-[10px] font-normal text-muted-foreground
-          "
+        <span className="shrink-0 font-mono text-[11px] text-primary">
+          {summary.label}
+        </span>
+        {summary.detail.length > 0 && (
+          <span
+            className="
+              min-w-0 flex-1 truncate font-mono text-[11px] font-normal
+              text-muted-foreground
+            "
+            title={summary.detail}
+            data-tool-detail
           >
-            {mcpIdentity.server}
+            {summary.detail}
           </span>
         )}
-        <span className={cn(`
-          ms-auto rounded-sm px-1.5 py-0.5 text-[10px] tracking-wide uppercase
-        `, STATUS_TONES[status])}
-        >
-          {t(STATUS_LABELS[status])}
+        <span className={cn('shrink-0', summary.detail.length === 0 && 'ms-auto')}>
+          <StatusBadge status={status} pending={outcome == null} />
         </span>
         <ChevronDown className={cn(`
           size-3.5 shrink-0 text-muted-foreground transition-transform
