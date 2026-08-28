@@ -134,9 +134,11 @@ jobs:
           json.dump(config, open('deno.json', 'w'), indent=2)
           PY
 
+      # Deno appends `.app` itself on macOS, so the output path carries no
+      # extension: `--output ./dist/AIChatManager.app` lands on `.app.app`.
       - name: Build the app bundle
         run: |
-          deno desktop -E -R -S . --output ./dist/AIChatManager.app
+          deno desktop -E -R -S . --output ./dist/AIChatManager
           # ditto keeps the bundle's symlinks and extended attributes; zip does not.
           ditto -c -k --keepParent ./dist/AIChatManager.app ./AIChatManager-macos.zip
 

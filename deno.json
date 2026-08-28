@@ -7,7 +7,7 @@
     "preview": "astro preview",
     "desktop": "astro build && deno desktop .",
     "desktop:dev": "deno desktop . --hmr",
-    "desktop:build": "deno desktop . --output ./dist/AIChatManager.app"
+    "desktop:build": "deno desktop . --output ./dist/AIChatManager"
   },
   "desktop": {
     "app": {
@@ -24,7 +24,7 @@
       "baseUrl": "https://github.com/Faran52/ai-chat-manager/releases/latest/download"
     },
     "output": {
-      "macos": "./dist/AIChatManager.app",
+      "macos": "./dist/AIChatManager",
       "windows": "./dist/AIChatManager.msi",
       "linux": "./dist/AIChatManager.AppImage"
     }
