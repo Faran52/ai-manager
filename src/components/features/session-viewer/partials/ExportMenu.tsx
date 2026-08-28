@@ -54,9 +54,6 @@ export const ExportMenu: FC<ExportMenuProps> = ({
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
-        onPointerDown={(event) => {
-          event.stopPropagation();
-        }}
         onClick={() => {
           setCopied(false);
           setOpen((value) => {

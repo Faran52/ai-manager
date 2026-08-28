@@ -1,7 +1,9 @@
 import {
   blockIsVisible,
   countVisibleEntries,
+  decodeMessageFilters,
   defaultMessageFilters,
+  encodeMessageFilters,
   entryIsVisible,
   hasActiveMessageFilters,
   toggleMessageFilter,
@@ -119,4 +121,17 @@ describe('message filters', () => {
       return blockIsVisible(block, noThinking);
     })).toEqual([true, false, false, true]);
   });
+});
+
+test('round-trips filters through storage and rejects damaged values', () => {
+  const filters = toggleMessageFilter(toggleMessageFilter(defaultMessageFilters(), 'human'), 'thinking');
+  const encoded = encodeMessageFilters(filters);
+
+  expect(encoded).toBe('011011');
+  expect(decodeMessageFilters(encoded)).toEqual(filters);
+  expect(decodeMessageFilters('111111')).toEqual(defaultMessageFilters());
+
+  for (const damaged of [null, '', '11111', '1111111', '11111x']) {
+    expect(decodeMessageFilters(damaged)).toEqual(defaultMessageFilters());
+  }
 });

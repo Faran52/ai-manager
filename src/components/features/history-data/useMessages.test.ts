@@ -20,6 +20,11 @@ interface HookProps {
   readonly include: boolean;
 }
 
+interface WatchProps {
+  readonly filePath: string | null;
+  readonly modifiedMs: number;
+}
+
 const offsetFrom = (body: BodyInit | null | undefined): number => {
   if (typeof body !== 'string') {
     throw new Error('request offset missing');
@@ -230,5 +235,178 @@ describe('useMessages guards', () => {
     });
 
     expect(fetchMock.mock.calls).toHaveLength(1);
+  });
+});
+
+describe('useMessages live refresh', () => {
+  test('reloads every loaded page when the source file changes', async () => {
+    stubFetch();
+    page = (offset) => {
+      return offset === 0
+        ? {
+            entries: [entry('one')],
+            total: 1,
+            messageCount: 1,
+            hasMore: false,
+            nextOffset: 1,
+          }
+        : {
+            entries: [],
+            total: 0,
+            messageCount: 0,
+            hasMore: false,
+            nextOffset: 0,
+          };
+    };
+
+    const { result, rerender } = renderHook(
+      (props: WatchProps) => {
+        return useMessages(props.filePath, 'claude', false, props.modifiedMs);
+      },
+      {
+        initialProps: {
+          filePath: '/f.jsonl',
+          modifiedMs: 1,
+        },
+      },
+    );
+
+    await waitFor(() => {
+      expect(result.current.entries).toHaveLength(1);
+    });
+
+    page = () => {
+      return {
+        entries: [entry('one'), entry('two')],
+        total: 2,
+        messageCount: 2,
+        hasMore: false,
+        nextOffset: 2,
+      };
+    };
+
+    rerender({
+      filePath: '/f.jsonl',
+      modifiedMs: 2,
+    });
+
+    await waitFor(() => {
+      expect(result.current.entries).toHaveLength(2);
+    });
+    expect(result.current.syncing).toBe(false);
+    expect(result.current.phase).toBe('ready');
+  });
+
+  test('keeps the visible feed when a refresh fails', async () => {
+    stubFetch();
+    page = () => {
+      return {
+        entries: [entry('one')],
+        total: 1,
+        messageCount: 1,
+        hasMore: true,
+        nextOffset: 1,
+      };
+    };
+
+    const { result, rerender } = renderHook(
+      (props: WatchProps) => {
+        return useMessages(props.filePath, 'claude', false, props.modifiedMs);
+      },
+      {
+        initialProps: {
+          filePath: '/f.jsonl',
+          modifiedMs: 1,
+        },
+      },
+    );
+
+    await waitFor(() => {
+      expect(result.current.entries).toHaveLength(1);
+    });
+
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return new Response('{"error":"gone"}', { status: 500 });
+    }));
+    rerender({
+      filePath: '/f.jsonl',
+      modifiedMs: 2,
+    });
+
+    await waitFor(() => {
+      expect(result.current.syncing).toBe(false);
+    });
+    expect(result.current.entries).toHaveLength(1);
+    expect(result.current.error).toBeUndefined();
+  });
+
+  test('ignores a source change with no file to reload', async () => {
+    const fetchMock = vi.fn(() => {
+      return Response.json({
+        entries: [],
+        total: 0,
+        messageCount: 0,
+        hasMore: false,
+        nextOffset: 0,
+      });
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+    const { result, rerender } = renderHook(
+      (props: WatchProps) => {
+        return useMessages(props.filePath, 'claude', false, props.modifiedMs);
+      },
+      {
+        initialProps: {
+          filePath: null,
+          modifiedMs: 1,
+        },
+      },
+    );
+
+    rerender({
+      filePath: null,
+      modifiedMs: 2,
+    });
+
+    await waitFor(() => {
+      expect(result.current.phase).toBe('ready');
+    });
+    expect(fetchMock.mock.calls).toHaveLength(0);
+  });
+
+  test('lets the first load win over a source change that arrives with it', async () => {
+    stubFetch();
+    page = () => {
+      return {
+        entries: [entry('one')],
+        total: 1,
+        messageCount: 1,
+        hasMore: false,
+        nextOffset: 1,
+      };
+    };
+
+    const { result, rerender } = renderHook(
+      (props: WatchProps) => {
+        return useMessages(props.filePath, 'claude', false, props.modifiedMs);
+      },
+      {
+        initialProps: {
+          filePath: '/f.jsonl',
+          modifiedMs: 1,
+        },
+      },
+    );
+
+    rerender({
+      filePath: '/f.jsonl',
+      modifiedMs: 2,
+    });
+
+    await waitFor(() => {
+      expect(result.current.entries).toHaveLength(1);
+    });
+    expect(fetchCalls()).toBe(1);
   });
 });

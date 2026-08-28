@@ -1,4 +1,9 @@
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
 import { uniqueKeys } from '@utils/reactKeyUtils';
+
+import { ImageViewer } from './ImageViewer';
 
 import type { ToolOutcome } from '@services/history/historyService';
 import type { FC } from 'react';
@@ -12,6 +17,8 @@ const imageIdentity = (image: ToolOutcome['images'][number]): string => {
 };
 
 export const OutcomeImages: FC<OutcomeImagesProps> = ({ outcome }) => {
+  const { t } = useTranslation('common');
+  const [selectedSrc, setSelectedSrc] = useState<string>();
   const keys = uniqueKeys(outcome.images, imageIdentity);
   const keyed = outcome.images.map((image, index) => {
     return {
@@ -28,15 +35,41 @@ export const OutcomeImages: FC<OutcomeImagesProps> = ({ outcome }) => {
 
         return src != null
           ? (
-              <img
+              <button
                 key={key}
-                src={src}
-                alt="tool result"
-                className="max-h-48 rounded-lg border border-border"
-              />
+                type="button"
+                onClick={() => {
+                  setSelectedSrc(src);
+                }}
+                aria-label={t('openImageViewer')}
+                className="
+                  group relative overflow-hidden rounded-lg border border-border
+                  bg-muted/30 transition-colors outline-none
+                  hover:border-primary/50
+                  focus-visible:ring-2 focus-visible:ring-ring
+                "
+              >
+                <img
+                  src={src}
+                  alt="tool result"
+                  loading="lazy"
+                  className="
+                    max-h-48 transition-transform duration-300
+                    group-hover:scale-[1.02]
+                  "
+                />
+              </button>
             )
           : null;
       })}
+      {selectedSrc != null && (
+        <ImageViewer
+          src={selectedSrc}
+          onClose={() => {
+            setSelectedSrc(undefined);
+          }}
+        />
+      )}
     </div>
   );
 };

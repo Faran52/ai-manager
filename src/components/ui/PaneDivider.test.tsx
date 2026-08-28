@@ -15,7 +15,16 @@ import { PaneDivider } from './PaneDivider';
 const mount = (): ReturnType<typeof vi.fn> => {
   const onResize = vi.fn();
 
-  render(<PaneDivider label="Resize panes" value={200} min={100} max={600} onResize={onResize} />);
+  render(
+    <PaneDivider
+      label="Resize panes"
+      value={200}
+      min={100}
+      max={600}
+      orientation="vertical"
+      onResize={onResize}
+    />,
+  );
 
   return onResize;
 };
@@ -108,4 +117,38 @@ test('leaves other keys to the page', async () => {
   await userEvent.keyboard('{Enter}');
 
   expect(onResize).not.toHaveBeenCalled();
+});
+
+test('resizes width using horizontal pointer and keyboard movement', async () => {
+  const onResize = vi.fn();
+
+  render(
+    <PaneDivider
+      label="Resize sidebar"
+      value={320}
+      min={280}
+      max={520}
+      orientation="horizontal"
+      onResize={onResize}
+    />,
+  );
+
+  const divider = screen.getByRole('slider');
+
+  dragging(divider, true);
+  fireEvent.pointerDown(divider, {
+    pointerId: 1,
+    clientX: 100,
+  });
+  fireEvent.pointerMove(divider, {
+    pointerId: 1,
+    clientX: 130,
+  });
+  divider.focus();
+  await userEvent.keyboard('{ArrowRight}{ArrowLeft}');
+
+  expect(divider.getAttribute('aria-orientation')).toBe('horizontal');
+  expect(onResize).toHaveBeenNthCalledWith(1, 30);
+  expect(onResize).toHaveBeenNthCalledWith(2, 24);
+  expect(onResize).toHaveBeenNthCalledWith(3, -24);
 });

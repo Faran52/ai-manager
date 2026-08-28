@@ -27,12 +27,12 @@ test('renders only while open and dismisses for external events', () => {
     </PopupMenu>,
   );
 
-  fireEvent.pointerDown(screen.getByRole('menu'));
-  fireEvent.pointerDown(window);
+  fireEvent.click(screen.getByRole('menu'));
+  fireEvent.click(window);
   fireEvent.scroll(screen.getByRole('menu'));
   expect(onClose).not.toHaveBeenCalled();
 
-  fireEvent.pointerDown(document.body);
+  fireEvent.click(document.body);
   fireEvent.keyDown(window, { key: 'Enter' });
   fireEvent.keyDown(window, { key: 'Escape' });
   fireEvent.blur(window);

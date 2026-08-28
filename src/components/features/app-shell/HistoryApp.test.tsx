@@ -3,15 +3,19 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
   afterEach,
+  beforeEach,
   describe,
   expect,
   test,
   vi,
 } from 'vitest';
+
+import { messageNavigatorOpenStorageKey, sidebarWidthStorageKey } from '@config/storageKeys';
 
 import { findAgentProject } from '@services/history/historyService';
 
@@ -75,6 +79,18 @@ const sessionsPayload = (name: string) => {
   };
 };
 
+const openProject = async (name: string): Promise<void> => {
+  const label = screen.getByText(name);
+
+  await userEvent.click(label);
+
+  const item = label.closest('li');
+
+  if (item != null) {
+    await userEvent.click(within(item).getByText('Claude Code'));
+  }
+};
+
 const messagesPayload = {
   entries: [
     {
@@ -104,12 +120,37 @@ const messagesPayload = {
   nextOffset: 2,
 };
 
+beforeEach(() => {
+  localStorage.setItem(messageNavigatorOpenStorageKey, 'false');
+});
+
 afterEach(() => {
   vi.unstubAllGlobals();
   localStorage.clear();
 });
 
 describe('HistoryApp', () => {
+  test('restores and resizes the sidebar', async () => {
+    localStorage.setItem(sidebarWidthStorageKey, '999');
+    vi.stubGlobal('fetch', vi.fn((url: RequestInfo | URL) => {
+      return toPath(url).endsWith('/projects') ? Response.json(projectPayload) : Response.json({ stats: null });
+    }));
+
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+
+    const divider = screen.getByRole('slider', { name: 'Resize sidebar' });
+
+    expect(divider.getAttribute('aria-valuenow')).toBe('520');
+    divider.focus();
+    await userEvent.keyboard('{ArrowLeft}');
+
+    expect(divider.getAttribute('aria-valuenow')).toBe('496');
+    await waitFor(() => {
+      expect(localStorage.getItem(sidebarWidthStorageKey)).toBe('496');
+    });
+  });
+
   test('browses project → session → viewer end to end', async () => {
     const fetchMock = vi.fn((url: RequestInfo | URL) => {
       const path = toPath(url);
@@ -140,7 +181,7 @@ describe('HistoryApp', () => {
     });
     expect(screen.getAllByRole('button', { name: /beta/ }).length).toBeGreaterThan(0);
 
-    await userEvent.click(screen.getByText('alpha'));
+    await openProject('alpha');
     const target = screen.getAllByText('The chosen one').at(0);
 
     if (target != null) {
@@ -250,7 +291,8 @@ describe('HistoryApp', () => {
 
     vi.stubGlobal('fetch', fetchMock);
     render(<HistoryApp />);
-    await userEvent.click(await screen.findByText('alpha'));
+    await screen.findByText('alpha');
+    await openProject('alpha');
 
     await userEvent.click(screen.getByRole('button', { name: /Health/ }));
 
@@ -317,8 +359,7 @@ describe('HistoryApp cross-view flows', () => {
     render(<HistoryApp />);
 
     await screen.findByText('beta');
-    await userEvent.click(screen.getByText('beta'));
-    await userEvent.click(screen.getByRole('button', { name: /Analytics/ }));
+    await openProject('beta');
 
     const betaHit = await screen.findByText('Beta hit');
 
@@ -462,6 +503,36 @@ describe('HistoryApp project and session mutations', () => {
     expect(findAgentProject(projectPayload.projects, 'proj-a', 'claude')).toMatchObject({ name: 'alpha' });
   });
 
+  test('clears the selected folder after deleting its history', async () => {
+    const fetchMock = vi.fn((url: RequestInfo | URL) => {
+      const path = toPath(url);
+
+      if (path.endsWith('/projects')) {
+        return Response.json(projectPayload);
+      }
+      if (path.endsWith('/sessions')) {
+        return Response.json(sessionsPayload('a'));
+      }
+      if (path.endsWith('/project-delete')) {
+        return Response.json({ ok: true });
+      }
+
+      return Response.json({ stats: null });
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+    await openProject('alpha');
+
+    fireEvent.contextMenu(screen.getByRole('button', { name: 'Select a project: alpha' }));
+    await userEvent.click(screen.getByText('Delete project history'));
+    await userEvent.click(screen.getByRole('button', { name: 'Delete permanently' }));
+    await userEvent.click(screen.getByRole('button', { name: /Health/u }));
+
+    expect(await screen.findByText('No project selected')).toBeDefined();
+  });
+
   test('deletes project history and handles session rename and deletion', async () => {
     const fetchMock = vi.fn((url: RequestInfo | URL) => {
       const path = toPath(url);
@@ -482,8 +553,6 @@ describe('HistoryApp project and session mutations', () => {
     vi.stubGlobal('fetch', fetchMock);
     render(<HistoryApp />);
     await screen.findByText('alpha');
-    await userEvent.click(screen.getByText('beta'));
-    await screen.findByText('The chosen one');
     fireEvent.contextMenu(screen.getByText('beta'));
     await userEvent.click(screen.getByText('Delete project history'));
     await userEvent.click(screen.getByRole('button', { name: 'Delete permanently' }));
@@ -502,7 +571,7 @@ describe('HistoryApp project and session mutations', () => {
       expect(screen.queryByRole('dialog')).toBeNull();
     });
 
-    await userEvent.click(screen.getByText('alpha'));
+    await openProject('alpha');
     await screen.findByText('The chosen one');
     await userEvent.click(screen.getByText('The chosen one'));
     fireEvent.contextMenu(screen.getAllByText('The chosen one')[0] ?? document.body);
@@ -523,7 +592,6 @@ describe('HistoryApp project and session mutations', () => {
       })).toBe(true);
     });
 
-    await userEvent.click(screen.getByText('alpha'));
     await screen.findByText('The chosen one');
     fireEvent.contextMenu(screen.getAllByText('The chosen one')[0] ?? document.body);
     await userEvent.click(screen.getByText('Delete session'));

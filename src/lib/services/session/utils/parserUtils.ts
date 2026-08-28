@@ -124,6 +124,7 @@ export const parseToolCall = (block: RawToolUseBlock): ToolCall | undefined => {
   return {
     id,
     name: resolvedName,
+    ...(block.server_name == null ? {} : { serverName: block.server_name }),
     input: parseToolInput(resolvedName, input ?? {}),
   };
 };
@@ -141,6 +142,21 @@ const todoItems = (input: RawToolInput): readonly TodoItem[] => {
       : [];
   });
 };
+
+// Keys `parseToolInput` already renders through a typed shape, so a generic row would repeat them.
+const TYPED_INPUT_KEYS = new Set([
+  'file_path',
+  'path',
+  'pattern',
+  'query',
+  'url',
+  'command',
+  'description',
+  'prompt',
+  'skill',
+  'limit',
+  'offset',
+]);
 
 const genericRows = (input: RawToolInput): readonly ToolInputRow[] => {
   const candidates: readonly (readonly [string, unknown])[] = [
@@ -176,6 +192,21 @@ const genericRows = (input: RawToolInput): readonly ToolInputRow[] => {
       label: 'offset',
       value: String(input.offset),
     });
+  }
+
+  for (const [label, value] of Object.entries(input)) {
+    if (TYPED_INPUT_KEYS.has(label) || value == null) {
+      continue;
+    }
+
+    const formatted = typeof value === 'string' ? value : JSON.stringify(value);
+
+    if (formatted.length > 0) {
+      rows.push({
+        label,
+        value: formatted,
+      });
+    }
   }
 
   return rows;
@@ -239,11 +270,13 @@ export const parseToolInput = (name: string, input: RawToolInput): ToolCallInput
         searchPath: input.path,
       };
     case 'WebSearch':
+    case 'web_search':
       return {
         kind: 'web-search',
         query: input.query ?? '',
       };
     case 'WebFetch':
+    case 'web_fetch':
       return {
         kind: 'web-fetch',
         url: input.url ?? '',
@@ -271,11 +304,39 @@ export const parseToolInput = (name: string, input: RawToolInput): ToolCallInput
   }
 };
 
+const isResultPartList = (
+  value: string | readonly RawResultPart[] | RawResultPart | undefined,
+): value is readonly RawResultPart[] => {
+  return Array.isArray(value);
+};
+
+const resultPartText = (part: RawResultPart): string => {
+  if (part.text != null) {
+    return part.text;
+  }
+
+  if (part.url != null) {
+    return [part.title, part.url, part.page_age].filter(Boolean).join('\n');
+  }
+
+  if (typeof part.content === 'string') {
+    return part.content;
+  }
+
+  if (isResultPartList(part.content)) {
+    return partText(part.content);
+  }
+
+  if (part.content != null && typeof part.content === 'object') {
+    return resultPartText(part.content);
+  }
+
+  return '';
+};
+
 const partText = (parts: readonly RawResultPart[]): string => {
   return parts
-    .map((part) => {
-      return part.type === 'text' ? (part.text ?? '') : '';
-    })
+    .map(resultPartText)
     .filter((text) => {
       return text.length > 0;
     })
@@ -306,12 +367,26 @@ const outcomeStatus = (block: RawToolResultBlock, sideChannel: RawToolUseResult 
   return sideChannel?.interrupted === true ? 'interrupted' : 'ok';
 };
 
+const outcomeText = (content: RawToolResultBlock['content']): string => {
+  if (typeof content === 'string') {
+    return content;
+  }
+
+  if (isResultPartList(content)) {
+    return partText(content);
+  }
+
+  return resultPartText(content ?? {});
+};
+
 const outcomeFromBlock = (
   block: RawToolResultBlock,
   sideChannel: RawToolUseResult | undefined,
 ): ToolOutcome => {
-  const text = typeof block.content === 'string' ? block.content : partText(block.content ?? []);
-  const images = typeof block.content === 'string' ? [] : partImages(block.content ?? []);
+  const content = block.content;
+  const parts = isResultPartList(content) ? content : [];
+  const text = outcomeText(content);
+  const images = partImages(parts);
   const patch = (sideChannel?.structuredPatch ?? []).flatMap((hunk) => {
     const lines = hunk.lines ?? [];
 
@@ -377,7 +452,10 @@ const parseUserTurn = (raw: RawHistoryLine): UserTurnEntry | undefined => {
 
   const blocks = asBlocks(payload);
   const outcomeBlocks = blocks.filter((block): block is RawToolResultBlock => {
-    return block.type === 'tool_result';
+    return block.type === 'tool_result'
+      || block.type === 'mcp_tool_result'
+      || block.type === 'web_search_tool_result'
+      || block.type === 'web_fetch_tool_result';
   });
   const sideChannel = typeof raw.toolUseResult === 'string' ? undefined : raw.toolUseResult;
   const outcomes = outcomeBlocks.map((block) => {
@@ -439,7 +517,9 @@ const parseAssistantTurn = (raw: RawHistoryLine): AssistantTurnEntry | undefined
       case 'redacted_thinking':
         blocks.push({ blockType: 'redacted' });
         break;
-      case 'tool_use': {
+      case 'tool_use':
+      case 'mcp_tool_use':
+      case 'server_tool_use': {
         const call = parseToolCall(block);
 
         if (call != null) {

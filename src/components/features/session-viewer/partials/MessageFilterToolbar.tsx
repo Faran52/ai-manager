@@ -111,9 +111,6 @@ export const MessageFilterToolbar: FC<MessageFilterToolbarProps> = ({
           aria-haspopup="menu"
           aria-expanded={open}
           aria-label={t('filterMessages')}
-          onPointerDown={(event) => {
-            event.stopPropagation();
-          }}
           onClick={() => {
             setOpen((current) => {
               return !current;

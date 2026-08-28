@@ -31,6 +31,11 @@ export interface MessageTimelineProps {
   readonly filters?: MessageFilters;
   readonly scrollElement?: HTMLDivElement | null;
   readonly highlightTimestamp?: string | undefined;
+  readonly navigation?: TimelineNavigation | null;
+}
+
+export interface TimelineNavigation {
+  readonly index: number;
 }
 
 // A turn is roughly this tall before it is measured. Only the first paint leans
@@ -79,6 +84,7 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
   filters = defaultMessageFilters(),
   scrollElement,
   highlightTimestamp,
+  navigation,
 }) => {
   const listRef = useRef<HTMLDivElement>(null);
   const ownScrollRef = useRef<HTMLDivElement>(null);
@@ -138,6 +144,12 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
     virtualizer.scrollToIndex(index, { align: 'center' });
     scrolledForRef.current = highlightTimestamp;
   }, [highlightTimestamp, model.rows, virtualizer]);
+
+  useEffect(() => {
+    if (navigation != null) {
+      virtualizer.scrollToIndex(navigation.index, { align: 'center' });
+    }
+  }, [navigation, virtualizer]);
 
   return (
     <motion.div

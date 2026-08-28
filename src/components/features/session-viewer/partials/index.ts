@@ -2,6 +2,7 @@ export * from './AssistantTurn';
 export * from './BashToolBody';
 export * from './ExportMenu';
 export * from './MessageFilterToolbar';
+export * from './MessageNavigator';
 export * from './OutcomeBody';
 export * from './OutcomeImages';
 export * from './PatchView';

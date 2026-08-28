@@ -9,6 +9,8 @@ import { useTranslation } from 'react-i18next';
 import { initI18n } from '@i18n/index';
 import { motion, MotionConfig } from 'motion/react';
 
+import { sidebarWidthStorageKey } from '@config/storageKeys';
+
 import {
   deleteProject,
   deleteSession,
@@ -16,7 +18,7 @@ import {
 } from '@lib/apis/apiClient';
 import { findAgentProject } from '@services/history/historyService';
 
-import { fadeTransition } from '@ui/index';
+import { fadeTransition, PaneDivider } from '@ui/index';
 import { AgentSetupPanel } from '@features/agent-setup';
 import { AnalyticsView } from '@features/analytics';
 import { AppHeader } from '@features/app-header';
@@ -41,6 +43,17 @@ import type { SessionTokenTotals } from '@services/stats/statsService';
 import type { FC, ReactNode } from 'react';
 
 const EMPTY_PROJECTS: readonly ProjectSummary[] = [];
+const MIN_SIDEBAR_WIDTH = 280;
+const MAX_SIDEBAR_WIDTH = 520;
+const DEFAULT_SIDEBAR_WIDTH = 340;
+
+const initialSidebarWidth = (): number => {
+  const stored = Number(localStorage.getItem(sidebarWidthStorageKey));
+
+  return Number.isFinite(stored) && stored >= MIN_SIDEBAR_WIDTH
+    ? Math.min(stored, MAX_SIDEBAR_WIDTH)
+    : DEFAULT_SIDEBAR_WIDTH;
+};
 
 initI18n();
 
@@ -49,13 +62,14 @@ export const HistoryApp: FC = () => {
   const projects = useProjects();
   const [selectedProject, setSelectedProject] = useState<ProjectSummary | null>(null);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
-  const [view, setView] = useState<AppView>('sessions');
+  const [view, setView] = useState<AppView>('analytics');
   const [searchOpen, setSearchOpen] = useState(false);
   const [highlightTimestamp, setHighlightTimestamp] = useState<string | undefined>(undefined);
+  const [sidebarWidth, setSidebarWidth] = useState(initialSidebarWidth);
   const [nowMs] = useState(() => {
     return Date.now();
   });
-  const sessions = useSessions(selectedProject);
+  const sessions = useSessions(selectedProject, view === 'sessions' && selectedFilePath != null);
   const stats = useProjectStats(view === 'analytics' ? selectedProject : null);
   const agentSetup = useAgentSetup(view === 'health' ? (selectedProject?.actualPath ?? null) : null);
   const sessionCounts = useMemo(() => {
@@ -92,6 +106,10 @@ export const HistoryApp: FC = () => {
   );
 
   useEffect(() => {
+    localStorage.setItem(sidebarWidthStorageKey, String(sidebarWidth));
+  }, [sidebarWidth]);
+
+  useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
       if (event.metaKey || event.ctrlKey || event.altKey || event.key !== '/') {
         return;
@@ -116,10 +134,18 @@ export const HistoryApp: FC = () => {
     };
   }, [searchOpen]);
 
-  const selectSession = useCallback((filePath: string) => {
-    setSelectedFilePath(filePath);
+  const selectProject = useCallback((project: ProjectSummary) => {
+    setSelectedProject(project);
+    setSelectedFilePath(null);
     setHighlightTimestamp(undefined);
   }, []);
+
+  const selectSession = useCallback((session: SessionSummary) => {
+    setSelectedProject(findAgentProject(projects.data, session.projectId, session.agent));
+    setSelectedFilePath(session.filePath);
+    setHighlightTimestamp(undefined);
+    setView('sessions');
+  }, [projects.data]);
 
   const deleteSelectedProject = useCallback(async (project: ProjectSummary) => {
     const wasSelected = selectedProject?.id === project.id && selectedProject.agent === project.agent;
@@ -162,14 +188,6 @@ export const HistoryApp: FC = () => {
     projects.reload();
   }, [projects, selectedFilePath, sessions]);
 
-  const onRequestSessions = useCallback((): void => {
-    /**
-     * Sessions for expanded projects are loaded on demand.
-     * Currently, the sessions for the selected project are already loaded.
-     * In the future, this could trigger loading sessions for the expanded project.
-     */
-  }, []);
-
   const jumpToHit = useCallback(
     (hit: SearchHit) => {
       setView('sessions');
@@ -189,8 +207,6 @@ export const HistoryApp: FC = () => {
     [],
   );
 
-  const showingSessions = view === 'sessions';
-
   const VIEWS: Record<AppView, ReactNode> = {
     sessions: (
       <SessionViewer
@@ -199,6 +215,7 @@ export const HistoryApp: FC = () => {
         projectLabel={selectedProject?.name ?? ''}
         sessionTitle={selectedSession?.title ?? selectedSession?.summary ?? selectedSession?.preview}
         highlightTimestamp={highlightTimestamp}
+        sourceModifiedMs={selectedSession?.modifiedMs ?? 0}
       />
     ),
     analytics: (
@@ -246,22 +263,35 @@ export const HistoryApp: FC = () => {
             onThemeChange={theme.setMode}
           />
 
-          <div className="
-            grid min-h-0 flex-1
-            grid-cols-[clamp(240px,24vw,300px)_minmax(0,1fr)] overflow-hidden
-          "
+          <div
+            className="grid min-h-0 flex-1 overflow-hidden"
+            style={{ gridTemplateColumns: `${String(sidebarWidth)}px 8px minmax(0, 1fr)` }}
           >
             <SidebarPane
               projects={visibleProjects}
               projectsStatus={projects.status}
-              sessions={showingSessions ? sessions.data ?? [] : []}
-              sessionsStatus={showingSessions ? sessions.status : 'ready'}
-              selectedFilePath={showingSessions ? selectedFilePath : null}
+              selectedProject={selectedProject}
+              sessions={sessions.data ?? []}
+              sessionsStatus={sessions.status}
+              selectedFilePath={selectedFilePath}
+              nowMs={nowMs}
+              onSelectProject={selectProject}
               onSelectSession={selectSession}
               onDeleteProject={deleteSelectedProject}
               onRenameSession={renameSelectedSession}
               onDeleteSession={deleteSelectedSession}
-              onRequestSessions={onRequestSessions}
+            />
+            <PaneDivider
+              label={t('resizeSidebar')}
+              value={sidebarWidth}
+              min={MIN_SIDEBAR_WIDTH}
+              max={MAX_SIDEBAR_WIDTH}
+              orientation="horizontal"
+              onResize={(delta) => {
+                setSidebarWidth((width) => {
+                  return Math.min(Math.max(width + delta, MIN_SIDEBAR_WIDTH), MAX_SIDEBAR_WIDTH);
+                });
+              }}
             />
             <motion.div
               key={view}

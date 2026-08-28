@@ -1,5 +1,6 @@
 import {
   cleanup,
+  fireEvent,
   render,
   screen,
   waitFor,
@@ -7,19 +8,27 @@ import {
 import userEvent from '@testing-library/user-event';
 import {
   afterEach,
+  beforeEach,
   describe,
   expect,
   test,
   vi,
 } from 'vitest';
 
+import { messageNavigatorOpenStorageKey, messageNavigatorWidthStorageKey } from '@config/storageKeys';
+
 import { SessionViewer } from './SessionViewer';
+
+beforeEach(() => {
+  localStorage.setItem(messageNavigatorOpenStorageKey, 'false');
+});
 
 afterEach(() => {
   // Unmount first, a viewer left mounted would refetch against the real fetch.
   cleanup();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
+  localStorage.clear();
 });
 
 const stubPage = (): void => {
@@ -505,5 +514,193 @@ describe('SessionViewer title fallbacks', () => {
 
     expect(screen.getByText('Session')).toBeDefined();
     await screen.findByText('the question');
+  });
+});
+
+describe('SessionViewer message navigator', () => {
+  const openViewer = (): void => {
+    render(
+      <SessionViewer
+        filePath="/sessions/s.jsonl"
+        projectLabel="webapp"
+        sessionTitle="Login fix"
+        highlightTimestamp={undefined}
+      />,
+    );
+  };
+
+  test('opens by default, closes from its header and reopens from the toolbar', async () => {
+    localStorage.setItem(messageNavigatorOpenStorageKey, 'true');
+    stubPage();
+    openViewer();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Message navigator')).toBeDefined();
+    });
+
+    await userEvent.click(screen.getByLabelText('Close message navigator'));
+    expect(screen.queryByLabelText('Message navigator')).toBeNull();
+    expect(localStorage.getItem(messageNavigatorOpenStorageKey)).toBe('false');
+
+    await userEvent.click(screen.getByText('Navigator'));
+    expect(screen.getByLabelText('Message navigator')).toBeDefined();
+  });
+
+  test('toggles with the keyboard shortcut and ignores other keys', async () => {
+    stubPage();
+    openViewer();
+
+    await waitFor(() => {
+      expect(screen.getByText('Navigator')).toBeDefined();
+    });
+
+    fireEvent.keyDown(window, {
+      key: 'M',
+      ctrlKey: true,
+      shiftKey: true,
+    });
+    expect(screen.getByLabelText('Message navigator')).toBeDefined();
+
+    fireEvent.keyDown(window, {
+      key: 'm',
+      metaKey: true,
+      shiftKey: true,
+    });
+    expect(screen.queryByLabelText('Message navigator')).toBeNull();
+
+    fireEvent.keyDown(window, {
+      key: 'm',
+      shiftKey: true,
+    });
+    expect(screen.queryByLabelText('Message navigator')).toBeNull();
+  });
+
+  test('scrolls the timeline to the entry the navigator picked', async () => {
+    localStorage.setItem(messageNavigatorOpenStorageKey, 'true');
+    stubPage();
+    openViewer();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('User 1')).toBeDefined();
+    });
+    await userEvent.click(screen.getByLabelText('User 1'));
+
+    expect(screen.getAllByText('the question').length).toBeGreaterThan(1);
+  });
+
+  test('restores, clamps and remembers the navigator width', async () => {
+    localStorage.setItem(messageNavigatorOpenStorageKey, 'true');
+    localStorage.setItem(messageNavigatorWidthStorageKey, '9999');
+    stubPage();
+    openViewer();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Message navigator').style.width).toBe('420px');
+    });
+
+    const divider = screen.getByLabelText('Resize message navigator');
+
+    divider.setPointerCapture = (): void => {
+      return undefined;
+    };
+    divider.hasPointerCapture = (): boolean => {
+      return true;
+    };
+
+    fireEvent.pointerDown(divider, {
+      pointerId: 1,
+      clientX: 100,
+    });
+    fireEvent.pointerMove(divider, {
+      pointerId: 1,
+      clientX: 140,
+    });
+
+    expect(screen.getByLabelText('Message navigator').style.width).toBe('380px');
+    expect(localStorage.getItem(messageNavigatorWidthStorageKey)).toBe('380');
+  });
+
+  test('falls back to the default width when nothing usable is stored', async () => {
+    localStorage.setItem(messageNavigatorOpenStorageKey, 'true');
+    localStorage.setItem(messageNavigatorWidthStorageKey, 'wide');
+    stubPage();
+    openViewer();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Message navigator').style.width).toBe('280px');
+    });
+  });
+});
+
+describe('SessionViewer live watching', () => {
+  test('marks the live badge while a refresh is in flight', async () => {
+    let releaseRefresh = (): void => {
+      return undefined;
+    };
+    let calls = 0;
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => {
+        calls += 1;
+        const payload = JSON.stringify({
+          entries: [{
+            kind: 'user',
+            uuid: 'u1',
+            timestamp: '2026-05-05T10:00:00Z',
+            sidechain: false,
+            meta: false,
+            text: 'the question',
+            outcomes: [],
+          }],
+          total: 1,
+          messageCount: 1,
+          hasMore: false,
+          nextOffset: 1,
+        });
+
+        if (calls === 1) {
+          return Promise.resolve(new Response(payload));
+        }
+
+        return new Promise<Response>((resolve) => {
+          releaseRefresh = () => {
+            resolve(new Response(payload));
+          };
+        });
+      }),
+    );
+
+    const { rerender } = render(
+      <SessionViewer
+        filePath="/sessions/s.jsonl"
+        projectLabel="webapp"
+        sessionTitle="Login fix"
+        highlightTimestamp={undefined}
+        sourceModifiedMs={1}
+      />,
+    );
+
+    await screen.findByText('the question');
+    expect(screen.getByTitle('Watching for transcript updates')).toBeDefined();
+
+    rerender(
+      <SessionViewer
+        filePath="/sessions/s.jsonl"
+        projectLabel="webapp"
+        sessionTitle="Login fix"
+        highlightTimestamp={undefined}
+        sourceModifiedMs={2}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTitle('Checking for transcript updates')).toBeDefined();
+    });
+
+    releaseRefresh();
+    await waitFor(() => {
+      expect(screen.getByTitle('Watching for transcript updates')).toBeDefined();
+    });
   });
 });

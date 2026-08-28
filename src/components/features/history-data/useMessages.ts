@@ -14,7 +14,7 @@ import type { HistoryEntry } from '@services/history/historyService';
 import type { SessionPage } from '@services/session/sessionService';
 import type { Dispatch, SetStateAction } from 'react';
 
-type FeedPhase = 'loading' | 'ready' | 'error';
+type FeedPhase = 'loading' | 'refreshing' | 'ready' | 'error';
 
 interface Feed {
   phase: FeedPhase;
@@ -36,6 +36,7 @@ export interface MessageFeed {
   readonly total: number;
   readonly hasMore: boolean;
   readonly error: string | undefined;
+  readonly syncing: boolean;
   readonly loadMore: () => void;
 }
 
@@ -80,6 +81,43 @@ const failFeed = (current: Feed, message: string): Feed => {
   };
 };
 
+const refreshFeed = async (feed: Feed, setState: Dispatch<SetStateAction<Feed>>): Promise<void> => {
+  try {
+    const page = await fetchMessages({
+      filePath:
+        // v8 ignore next -- unreachable by construction
+        feed.filePath ?? '',
+      agent: feed.agent,
+      offset: 0,
+      limit: Math.max(
+        feed.offset + (feed.hasMore ? 0 : appConfig.pageSize),
+        appConfig.pageSize,
+      ),
+      includeSidechain: feed.includeSidechain,
+    });
+
+    setState((current) => {
+      return {
+        ...current,
+        phase: 'ready',
+        entries: page.entries,
+        total: page.total,
+        messageCount: page.messageCount,
+        hasMore: page.hasMore,
+        offset: page.nextOffset,
+      };
+    });
+  }
+  catch {
+    setState((current) => {
+      return {
+        ...current,
+        phase: 'ready',
+      };
+    });
+  }
+};
+
 const runLoad = async (feed: Feed, setState: Dispatch<SetStateAction<Feed>>): Promise<void> => {
   try {
     const page = await fetchMessages({
@@ -107,6 +145,7 @@ export const useMessages = (
   filePath: string | null,
   agentOrIncludeSidechain: AgentId | boolean,
   requestedIncludeSidechain?: boolean,
+  sourceModifiedMs = 0,
 ): MessageFeed => {
   const agent = typeof agentOrIncludeSidechain === 'boolean' ? 'claude' : agentOrIncludeSidechain;
   const includeSidechain = typeof agentOrIncludeSidechain === 'boolean'
@@ -116,6 +155,7 @@ export const useMessages = (
     return freshFeed(filePath, agent, includeSidechain);
   });
   const [prevKey, setPrevKey] = useState(`${agent}::${String(filePath)}::${String(includeSidechain)}`);
+  const [prevSourceModifiedMs, setPrevSourceModifiedMs] = useState(sourceModifiedMs);
   const key = `${agent}::${String(filePath)}::${String(includeSidechain)}`;
 
   if (key !== prevKey) {
@@ -123,14 +163,28 @@ export const useMessages = (
     setFeed(freshFeed(filePath, agent, includeSidechain));
   }
 
+  if (sourceModifiedMs !== prevSourceModifiedMs) {
+    setPrevSourceModifiedMs(sourceModifiedMs);
+    setFeed((current) => {
+      return current.filePath == null || current.phase === 'loading'
+        ? current
+        : {
+            ...current,
+            phase: 'refreshing',
+          };
+    });
+  }
+
   useEffect(() => {
-    if (feed.phase !== 'loading') {
+    if (feed.phase !== 'loading' && feed.phase !== 'refreshing') {
       return undefined;
     }
 
     let active = true;
 
-    void runLoad(feed, (next) => {
+    const load = feed.phase === 'refreshing' ? refreshFeed : runLoad;
+
+    void load(feed, (next) => {
       if (active) {
         setFeed(next);
       }
@@ -153,12 +207,15 @@ export const useMessages = (
   }, []);
 
   return {
-    phase: feed.phase === 'loading' && feed.entries.length > 0 ? 'ready' : feed.phase,
+    phase: (feed.phase === 'loading' && feed.entries.length > 0) || feed.phase === 'refreshing'
+      ? 'ready'
+      : feed.phase,
     entries: feed.entries,
     messageCount: feed.messageCount,
     total: feed.total,
     hasMore: feed.hasMore,
     error: feed.error,
+    syncing: feed.phase === 'refreshing',
     loadMore,
   };
 };

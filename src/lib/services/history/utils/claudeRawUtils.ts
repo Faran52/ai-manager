@@ -56,9 +56,10 @@ export interface RawToolInput {
 }
 
 export interface RawToolUseBlock {
-  readonly type: 'tool_use';
+  readonly type: 'tool_use' | 'mcp_tool_use' | 'server_tool_use';
   readonly id?: string | undefined;
   readonly name?: string | undefined;
+  readonly server_name?: string | undefined;
   readonly input?: RawToolInput | undefined;
 }
 
@@ -77,13 +78,17 @@ export interface RawImageBlock {
 export interface RawResultPart {
   readonly type?: string | undefined;
   readonly text?: string | undefined;
+  readonly title?: string | undefined;
+  readonly url?: string | undefined;
+  readonly page_age?: string | undefined;
+  readonly content?: string | readonly RawResultPart[] | RawResultPart | undefined;
   readonly source?: RawImageSource | undefined;
 }
 
 export interface RawToolResultBlock {
-  readonly type: 'tool_result';
+  readonly type: 'tool_result' | 'mcp_tool_result' | 'web_search_tool_result' | 'web_fetch_tool_result';
   readonly tool_use_id?: string;
-  readonly content?: string | readonly RawResultPart[] | undefined;
+  readonly content?: string | readonly RawResultPart[] | RawResultPart | undefined;
   readonly is_error?: boolean;
 }
 

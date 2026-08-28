@@ -25,6 +25,8 @@ export interface MessageFilters {
 
 export type MessageFilterKey = keyof MessageRoleFilters | keyof MessageContentFilters;
 
+const FILTER_COUNT = 6;
+
 export const defaultMessageFilters = (): MessageFilters => {
   return {
     roles: {
@@ -36,6 +38,38 @@ export const defaultMessageFilters = (): MessageFilters => {
       thinking: true,
       tools: true,
       commands: true,
+    },
+  };
+};
+
+export const encodeMessageFilters = (filters: MessageFilters): string => {
+  return [
+    filters.roles.human,
+    filters.roles.ai,
+    filters.content.text,
+    filters.content.thinking,
+    filters.content.tools,
+    filters.content.commands,
+  ].map((enabled) => {
+    return enabled ? '1' : '0';
+  }).join('');
+};
+
+export const decodeMessageFilters = (value: string | null): MessageFilters => {
+  if (value?.length !== FILTER_COUNT || /[^01]/u.test(value)) {
+    return defaultMessageFilters();
+  }
+
+  return {
+    roles: {
+      human: value.startsWith('1'),
+      ai: value[1] === '1',
+    },
+    content: {
+      text: value[2] === '1',
+      thinking: value[3] === '1',
+      tools: value[4] === '1',
+      commands: value[5] === '1',
     },
   };
 };

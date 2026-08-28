@@ -3,6 +3,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
@@ -13,6 +14,8 @@ import {
   vi,
 } from 'vitest';
 
+import { projectsPaneStorageKey } from '@config/storageKeys';
+
 import { SidebarPane } from './SidebarPane';
 
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
@@ -20,6 +23,7 @@ import type { SidebarPaneProps } from './SidebarPane';
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  localStorage.clear();
 });
 
 const project = (id: string, name: string): ProjectSummary => {
@@ -33,13 +37,13 @@ const project = (id: string, name: string): ProjectSummary => {
   };
 };
 
-const session = (id: string, title: string): SessionSummary => {
+const session = (id: string, title: string, projectId = 'p'): SessionSummary => {
   return {
     agent: 'claude',
     actualSessionId: id,
     id,
     filePath: `/r/${id}.jsonl`,
-    projectId: 'p',
+    projectId,
     title,
     messageCount: 4,
     firstTimestampMs: 0,
@@ -52,8 +56,13 @@ const session = (id: string, title: string): SessionSummary => {
 const base = {
   projectsStatus: 'ready',
   sessionsStatus: 'ready',
+  selectedProject: project('p', 'selected'),
   selectedFilePath: null,
+  nowMs: Date.UTC(2026, 0, 3),
   onSelectSession: () => {
+    return undefined;
+  },
+  onSelectProject: () => {
     return undefined;
   },
   onDeleteProject: () => {
@@ -65,19 +74,45 @@ const base = {
   onDeleteSession: () => {
     return Promise.resolve();
   },
-  onRequestSessions: () => {
-    return undefined;
-  },
 } satisfies Omit<SidebarPaneProps, 'projects' | 'sessions'>;
 
+const openProject = async (name: string, agent = 'Claude Code'): Promise<void> => {
+  const label = screen.getByText(name);
+
+  await userEvent.click(label);
+
+  const item = label.closest('li');
+
+  if (item != null) {
+    await userEvent.click(within(item).getByText(agent));
+  }
+};
+
 describe('SidebarPane', () => {
+  test('restores and resizes the project pane', async () => {
+    localStorage.setItem(projectsPaneStorageKey, '999');
+
+    render(<SidebarPane {...base} projects={[]} sessions={[]} />);
+
+    const divider = screen.getByRole('slider', { name: 'Resize projects and sessions' });
+
+    expect(divider.getAttribute('aria-valuenow')).toBe('640');
+    divider.focus();
+    await userEvent.keyboard('{ArrowUp}');
+
+    expect(divider.getAttribute('aria-valuenow')).toBe('616');
+    await waitFor(() => {
+      expect(localStorage.getItem(projectsPaneStorageKey)).toBe('616');
+    });
+  });
+
   test('lists projects and sessions with selection callbacks', async () => {
     const onSelectSession = vi.fn();
 
     render(
       <SidebarPane
         {...base}
-        projects={[project('p1', 'webapp')]}
+        projects={[project('p', 'webapp')]}
         sessions={[{
           ...session('a', 'Login fix'),
           messageCount: 1,
@@ -86,34 +121,41 @@ describe('SidebarPane', () => {
       />,
     );
 
-    await userEvent.click(screen.getByText('webapp'));
+    await openProject('webapp');
     await userEvent.click(screen.getByText('Login fix'));
 
     expect(screen.getByText('1 message')).toBeDefined();
-    expect(onSelectSession).toHaveBeenCalledWith('/r/a.jsonl');
+    expect(onSelectSession).toHaveBeenCalledWith(expect.objectContaining({ filePath: '/r/a.jsonl' }));
   });
 
-  test('filters both lists case-insensitively', async () => {
+  test('filters projects and sessions independently', async () => {
     const selected = project('p1', 'webapp');
 
     render(
       <SidebarPane
         {...base}
         projects={[selected, project('p2', 'cli-tool')]}
-        sessions={[session('a', 'Login fix'), session('b', 'Deploy pipeline')]}
+        sessions={[session('a', 'Login fix', 'p1'), session('b', 'Deploy pipeline', 'p2')]}
       />,
     );
 
     await userEvent.type(screen.getByLabelText('Filter projects'), 'cli');
-    await userEvent.type(screen.getByLabelText('Filter sessions'), 'deploy');
 
     expect(screen.queryByText('webapp')).toBeNull();
     expect(screen.getByText('cli-tool')).toBeDefined();
+    expect(screen.getByText('Login fix')).toBeDefined();
+
+    await userEvent.type(screen.getByLabelText('Filter sessions'), 'deploy');
+
     expect(screen.getByText('Deploy pipeline')).toBeDefined();
     expect(screen.queryByText('Login fix')).toBeNull();
+
+    await userEvent.clear(screen.getByLabelText('Filter sessions'));
+    await userEvent.type(screen.getByLabelText('Filter sessions'), 'missing');
+    expect(screen.getByText('No sessions match')).toBeDefined();
   });
 
-  test('shows spinners while loading and an empty state when nothing matches', () => {
+  test('shows a spinner while projects load', () => {
     render(
       <SidebarPane
         {...base}
@@ -124,12 +166,11 @@ describe('SidebarPane', () => {
     );
 
     expect(screen.getAllByRole('status')).toHaveLength(1);
-    expect(screen.getByText('No projects')).toBeDefined();
   });
 
   test('uses singular session counts and distinguishes empty session states', async () => {
     const selected = {
-      ...project('p1', 'webapp'),
+      ...project('p', 'webapp'),
       sessionCount: 1,
     };
     const { rerender } = render(
@@ -140,34 +181,26 @@ describe('SidebarPane', () => {
       />,
     );
 
-    expect(screen.getByText('1 session')).toBeDefined();
+    await openProject('webapp');
+    expect(screen.getAllByText('1 session').length).toBeGreaterThan(0);
     expect(screen.getByText('No sessions yet')).toBeDefined();
-
-    rerender(
-      <SidebarPane
-        {...base}
-        projects={[selected]}
-        sessions={[session('a', 'Login fix')]}
-      />,
-    );
-    await userEvent.type(screen.getByLabelText('Filter sessions'), 'deploy');
-
-    expect(screen.getByText('No sessions match')).toBeDefined();
+    rerender(<SidebarPane {...base} projects={[selected]} sessions={[]} />);
   });
 });
 
 describe('SidebarPane selection highlighting', () => {
-  test('marks the active session', () => {
+  test('marks the active session', async () => {
     render(
       <SidebarPane
         {...base}
-        projects={[project('p1', 'webapp')]}
+        projects={[project('p', 'webapp')]}
         sessions={[session('a', 'Login fix')]}
         selectedFilePath="/r/a.jsonl"
       />,
     );
 
-    const active = document.querySelectorAll('[aria-current="true"]');
+    await openProject('webapp');
+    const active = document.querySelectorAll('[data-session-item][aria-current="true"]');
 
     expect(active).toHaveLength(1);
   });
@@ -175,7 +208,7 @@ describe('SidebarPane selection highlighting', () => {
 
 describe('SidebarPane haystack sources', () => {
   test('matches against summary and preview when the title is absent', async () => {
-    const selected = project('p1', 'webapp');
+    const selected = project('p', 'webapp');
     const summaryOnly = {
       ...session('c', ''),
       title: undefined,
@@ -205,11 +238,11 @@ describe('SidebarPane haystack sources', () => {
 });
 
 describe('SidebarPane id fallback', () => {
-  test('shows the raw id when a session carries no text fields', () => {
+  test('shows the raw id when a session carries no text fields', async () => {
     render(
       <SidebarPane
         {...base}
-        projects={[project('p1', 'webapp')]}
+        projects={[project('p', 'webapp')]}
         sessions={[{
           ...session('bare', ''),
           title: undefined,
@@ -219,6 +252,7 @@ describe('SidebarPane id fallback', () => {
       />,
     );
 
+    await openProject('webapp');
     expect(screen.getByText('bare')).toBeDefined();
   });
 });
@@ -232,7 +266,7 @@ describe('SidebarPane context actions', () => {
       actualPath: "/repo/team's-app",
     };
     const sessionWithPath = {
-      ...session('a', 'Login fix'),
+      ...session('a', 'Login fix', 'p1'),
       cwd: "/repo/team's-app",
     };
 
@@ -240,7 +274,7 @@ describe('SidebarPane context actions', () => {
       <SidebarPane
         {...base}
         projects={[projectWithPath, project('p2', 'pathless')]}
-        sessions={[sessionWithPath, session('b', 'No cwd')]}
+        sessions={[sessionWithPath, session('b', 'No cwd', 'p2')]}
       />,
     );
 
@@ -252,12 +286,14 @@ describe('SidebarPane context actions', () => {
     expect(screen.queryByText('Copy project path')).toBeNull();
     await userEvent.click(screen.getByText('Copy project ID'));
 
+    await openProject('webapp');
     fireEvent.contextMenu(screen.getByText('Login fix'));
     await userEvent.click(screen.getByText('Copy session ID'));
     fireEvent.contextMenu(screen.getByText('Login fix'));
     await userEvent.click(screen.getByText('Copy resume command'));
     fireEvent.contextMenu(screen.getByText('Login fix'));
     await userEvent.click(screen.getByText('Copy session file path'));
+    await openProject('pathless');
     fireEvent.contextMenu(screen.getByText('No cwd'));
     await userEvent.click(screen.getByText('Copy resume command'));
 
@@ -287,7 +323,7 @@ describe('SidebarPane context actions', () => {
     expect(screen.queryByRole('status')).toBeNull();
   });
 
-  test('labels session menus from every title fallback', () => {
+  test('labels session menus from every title fallback', async () => {
     const summaryOnly = {
       ...session('summary', ''),
       title: undefined,
@@ -306,10 +342,12 @@ describe('SidebarPane context actions', () => {
     render(
       <SidebarPane
         {...base}
-        projects={[project('p1', 'webapp')]}
+        projects={[project('p', 'webapp')]}
         sessions={[summaryOnly, previewOnly, idOnly]}
       />,
     );
+
+    await openProject('webapp');
 
     for (const label of ['Summary only', 'Preview only', 'raw-id']) {
       fireEvent.contextMenu(screen.getByRole('button', { name: new RegExp(label, 'u') }));
@@ -370,6 +408,7 @@ describe('SidebarPane agent and mutation actions', () => {
       />,
     );
 
+    await openProject('app');
     fireEvent.contextMenu(screen.getByText('Old title'));
     await userEvent.click(screen.getByText('Rename session in Claude Code'));
     await userEvent.clear(screen.getByLabelText('Session title'));
@@ -403,6 +442,7 @@ describe('SidebarPane agent and mutation actions', () => {
       />,
     );
 
+    await openProject('app');
     await userEvent.click(screen.getByRole('button', { name: 'Select sessions' }));
     fireEvent.keyDown(window, { key: 'Enter' });
     fireEvent.keyDown(window, { key: 'Escape' });
@@ -462,6 +502,7 @@ describe('SidebarPane agent and mutation actions', () => {
       expect(screen.queryByRole('dialog')).toBeNull();
     });
 
+    await openProject('app');
     fireEvent.contextMenu(screen.getByText('Old title'));
     await userEvent.click(screen.getByText('Rename session in Claude Code'));
     await userEvent.click(screen.getByRole('button', { name: 'Rename' }));

@@ -1,13 +1,20 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { AlertTriangle, ChevronDown } from 'lucide-react';
+import {
+  AlertTriangle,
+  ChevronDown,
+  Globe2,
+  PlugZap,
+  Search,
+} from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
 import { cn } from '@utils/cnUtils';
 
 import { collapseTransition } from '@ui/index';
 
+import { mcpToolIdentity } from './mcpToolIdentity';
 import { OutcomeBody } from './OutcomeBody';
 import { PatchView } from './PatchView';
 import { ToolInputBody } from './ToolInputBody';
@@ -42,12 +49,21 @@ export const ToolExecutionCard: FC<ToolExecutionCardProps> = ({ call, outcome })
   const [open, setOpen] = useState(status === 'error');
   const isDiff = call.input.kind === 'file-edit' || call.input.kind === 'multi-edit';
   const showOutcome = outcome != null;
+  const mcpIdentity = mcpToolIdentity(call);
+  let outcomeKind: 'default' | 'mcp' | 'web-fetch' | 'web-search' = 'default';
+
+  if (mcpIdentity != null) {
+    outcomeKind = 'mcp';
+  }
+  else if (call.input.kind === 'web-search' || call.input.kind === 'web-fetch') {
+    outcomeKind = call.input.kind;
+  }
 
   return (
     <div
       className="overflow-hidden rounded-lg border border-border bg-card/60"
       data-tool-card
-      data-tool-kind={call.input.kind}
+      data-tool-kind={outcomeKind}
       data-status={status}
     >
       <button
@@ -64,9 +80,26 @@ export const ToolExecutionCard: FC<ToolExecutionCardProps> = ({ call, outcome })
           hover:bg-muted/70
         "
       >
-        <span className="font-mono text-[11px] text-primary">
-          {call.name}
+        {mcpIdentity != null && (
+          <PlugZap className="size-3.5 shrink-0 text-primary" />
+        )}
+        {call.input.kind === 'web-search' && (
+          <Search className="size-3.5 shrink-0 text-primary" />
+        )}
+        {call.input.kind === 'web-fetch' && (
+          <Globe2 className="size-3.5 shrink-0 text-primary" />
+        )}
+        <span className="truncate font-mono text-[11px] text-primary">
+          {mcpIdentity?.tool ?? call.name}
         </span>
+        {mcpIdentity != null && (
+          <span className="
+            truncate text-[10px] font-normal text-muted-foreground
+          "
+          >
+            {mcpIdentity.server}
+          </span>
+        )}
         <span className={cn(`
           ms-auto rounded-sm px-1.5 py-0.5 text-[10px] tracking-wide uppercase
         `, STATUS_TONES[status])}
@@ -100,7 +133,7 @@ export const ToolExecutionCard: FC<ToolExecutionCardProps> = ({ call, outcome })
             <div className="space-y-2 border-t border-border px-3 py-2">
               <ToolInputBody call={call} />
               {showOutcome && isDiff && outcome.patch != null && <PatchView hunks={outcome.patch} />}
-              {showOutcome && !isDiff && <OutcomeBody outcome={outcome} />}
+              {showOutcome && !isDiff && <OutcomeBody outcome={outcome} kind={outcomeKind} />}
               {showOutcome && isDiff && outcome.patch == null && <OutcomeBody outcome={outcome} />}
               {status === 'error' && showOutcome && outcome.text == null && (
                 <p className="flex items-center gap-1 text-xs text-destructive">

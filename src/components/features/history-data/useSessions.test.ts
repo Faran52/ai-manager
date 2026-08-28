@@ -131,3 +131,65 @@ describe('useSessions unmount safety', () => {
     expect(result.current.data).toBeUndefined();
   });
 });
+
+describe('useSessions live polling', () => {
+  test('reloads on an interval and on becoming visible, only while visible', async () => {
+    const fetchMock = vi.fn(() => {
+      return new Response(JSON.stringify({ sessions: [session()] }));
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+
+    const { result, unmount } = renderHook(() => {
+      return useSessions(PROJECT, true);
+    });
+
+    await waitFor(() => {
+      expect(result.current.status).toBe('ready');
+    });
+
+    const afterFirstLoad = fetchMock.mock.calls.length;
+
+    await vi.advanceTimersByTimeAsync(3_000);
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.length).toBeGreaterThan(afterFirstLoad);
+    });
+
+    const afterTick = fetchMock.mock.calls.length;
+
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    await vi.advanceTimersByTimeAsync(3_000);
+    document.dispatchEvent(new Event('visibilitychange'));
+
+    expect(fetchMock.mock.calls).toHaveLength(afterTick);
+
+    unmount();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  test('does not poll when live watching is off', async () => {
+    const fetchMock = vi.fn(() => {
+      return new Response(JSON.stringify({ sessions: [session()] }));
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+
+    const { result } = renderHook(() => {
+      return useSessions(PROJECT);
+    });
+
+    await waitFor(() => {
+      expect(result.current.status).toBe('ready');
+    });
+
+    const afterFirstLoad = fetchMock.mock.calls.length;
+
+    await vi.advanceTimersByTimeAsync(9_000);
+
+    expect(fetchMock.mock.calls).toHaveLength(afterFirstLoad);
+    vi.useRealTimers();
+  });
+});

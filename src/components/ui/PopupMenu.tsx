@@ -38,8 +38,12 @@ export const PopupMenu: FC<PopupMenuProps> = ({
     closeRef.current = onClose;
   }, [onClose]);
 
-  // Depends on `open` alone: callers pass inline `onClose` closures, and re-subscribing
-  // five window listeners on every parent render churns event delivery.
+  /**
+   * Dismissal listens on `click`, not `pointerdown`: a trigger that toggles on click
+   * would otherwise be reopened by its own click after pointerdown had closed the menu.
+   * Depends on `open` alone because callers pass inline `onClose` closures, and
+   * re-subscribing five window listeners on every parent render churns event delivery.
+   */
   useEffect(() => {
     if (!open) {
       return undefined;
@@ -56,14 +60,14 @@ export const PopupMenu: FC<PopupMenuProps> = ({
       }
     };
 
-    window.addEventListener('pointerdown', closeOutside);
+    window.addEventListener('click', closeOutside);
     window.addEventListener('keydown', closeOnEscape);
     window.addEventListener('blur', closeRef.current);
     window.addEventListener('resize', closeRef.current);
     document.addEventListener('scroll', closeOutside, true);
 
     return () => {
-      window.removeEventListener('pointerdown', closeOutside);
+      window.removeEventListener('click', closeOutside);
       window.removeEventListener('keydown', closeOnEscape);
       window.removeEventListener('blur', closeRef.current);
       window.removeEventListener('resize', closeRef.current);
@@ -86,9 +90,18 @@ export const PopupMenu: FC<PopupMenuProps> = ({
           role="menu"
           aria-label={label}
           style={style}
-          initial={{ scale: 0.98 }}
-          animate={{ scale: 1 }}
-          exit={{ scale: 0.98 }}
+          initial={{
+            opacity: 0,
+            y: '-0.25rem',
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          exit={{
+            opacity: 0,
+            y: '-0.125rem',
+          }}
           transition={popoverTransition}
           className={cn(
             `

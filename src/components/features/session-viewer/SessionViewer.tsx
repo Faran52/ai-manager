@@ -1,29 +1,47 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
   CircleAlert,
   FileText,
   ListFilter,
+  ListTree,
   MessageSquare,
 } from 'lucide-react';
 
 import { agentOption } from '@config/agents';
+import {
+  messageFiltersStorageKey,
+  messageNavigatorOpenStorageKey,
+  messageNavigatorWidthStorageKey,
+} from '@config/storageKeys';
+
+import { cn } from '@utils/cnUtils';
 
 import {
   Badge,
   Button,
   EmptyState,
+  PaneDivider,
   Spinner,
 } from '@ui/index';
 import { useMessages } from '@features/history-data';
 
-import { countVisibleEntries, defaultMessageFilters } from './messageFilters';
+import {
+  countVisibleEntries,
+  decodeMessageFilters,
+  encodeMessageFilters,
+} from './messageFilters';
 import { MessageTimeline } from './MessageTimeline';
-import { ExportMenu, MessageFilterToolbar } from './partials';
+import {
+  ExportMenu,
+  MessageFilterToolbar,
+  MessageNavigator,
+} from './partials';
 
 import type { AgentId } from '@config/agents';
 import type { FC, ReactNode } from 'react';
+import type { TimelineNavigation } from './MessageTimeline';
 
 export interface SessionViewerProps {
   readonly filePath: string | null;
@@ -31,7 +49,20 @@ export interface SessionViewerProps {
   readonly projectLabel: string;
   readonly sessionTitle: string | undefined;
   readonly highlightTimestamp: string | undefined;
+  readonly sourceModifiedMs?: number | undefined;
 }
+
+const MIN_NAVIGATOR_WIDTH = 220;
+const MAX_NAVIGATOR_WIDTH = 420;
+const DEFAULT_NAVIGATOR_WIDTH = 280;
+
+const initialNavigatorWidth = (): number => {
+  const stored = Number(localStorage.getItem(messageNavigatorWidthStorageKey));
+
+  return Number.isFinite(stored) && stored >= MIN_NAVIGATOR_WIDTH
+    ? Math.min(stored, MAX_NAVIGATOR_WIDTH)
+    : DEFAULT_NAVIGATOR_WIDTH;
+};
 
 export const SessionViewer: FC<SessionViewerProps> = ({
   filePath,
@@ -39,12 +70,25 @@ export const SessionViewer: FC<SessionViewerProps> = ({
   projectLabel,
   sessionTitle,
   highlightTimestamp,
+  sourceModifiedMs = 0,
 }) => {
   const { t } = useTranslation('session');
   const [includeSidechain, setIncludeSidechain] = useState(false);
-  const [filters, setFilters] = useState(defaultMessageFilters);
+  const [filters, setFilters] = useState(() => {
+    return decodeMessageFilters(localStorage.getItem(messageFiltersStorageKey));
+  });
+  const [navigatorOpen, setNavigatorOpen] = useState(() => {
+    return localStorage.getItem(messageNavigatorOpenStorageKey) !== 'false';
+  });
+  const [navigatorWidth, setNavigatorWidth] = useState(initialNavigatorWidth);
+  const [navigation, setNavigation] = useState<TimelineNavigation | null>(null);
   const supportsSidechains = agentOption(agent).supportsSidechains === true;
-  const feed = useMessages(filePath, agent, supportsSidechains && includeSidechain);
+  const feed = useMessages(
+    filePath,
+    agent,
+    supportsSidechains && includeSidechain,
+    sourceModifiedMs,
+  );
   /**
    * A callback ref, not useRef: the timeline's virtualizer has to attach its
    * scroll listener to this element, and a ref object is still null when the
@@ -52,6 +96,35 @@ export const SessionViewer: FC<SessionViewerProps> = ({
    */
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
   const visibleEntries = countVisibleEntries(feed.entries, filters);
+
+  useEffect(() => {
+    localStorage.setItem(messageFiltersStorageKey, encodeMessageFilters(filters));
+  }, [filters]);
+
+  useEffect(() => {
+    localStorage.setItem(messageNavigatorOpenStorageKey, String(navigatorOpen));
+  }, [navigatorOpen]);
+
+  useEffect(() => {
+    localStorage.setItem(messageNavigatorWidthStorageKey, String(navigatorWidth));
+  }, [navigatorWidth]);
+
+  useEffect(() => {
+    const toggleNavigator = (event: KeyboardEvent): void => {
+      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'm') {
+        event.preventDefault();
+        setNavigatorOpen((current) => {
+          return !current;
+        });
+      }
+    };
+
+    window.addEventListener('keydown', toggleNavigator);
+
+    return () => {
+      window.removeEventListener('keydown', toggleNavigator);
+    };
+  }, []);
 
   if (filePath == null) {
     return (
@@ -93,6 +166,7 @@ export const SessionViewer: FC<SessionViewerProps> = ({
           filters={filters}
           scrollElement={scrollElement}
           highlightTimestamp={highlightTimestamp}
+          navigation={navigation}
         />
         {feed.hasMore && (
           <div className="flex justify-center pt-4 pb-2">
@@ -129,6 +203,13 @@ export const SessionViewer: FC<SessionViewerProps> = ({
           </p>
         </div>
         <div className="ms-auto flex shrink-0 items-center gap-1.5">
+          <Badge tone="success" title={feed.syncing ? t('checkingUpdates') : t('liveUpdates')}>
+            <span className={cn('size-1.5 rounded-full bg-current', feed.syncing && `
+              animate-pulse
+            `)}
+            />
+            {t('live')}
+          </Badge>
           <Badge tone="accent" title={t('userAndAssistant')}>
             <MessageSquare className="size-3" />
             {t('messageCount', { count: feed.messageCount })}
@@ -150,6 +231,20 @@ export const SessionViewer: FC<SessionViewerProps> = ({
               {t('includeSubagentActivity')}
             </Button>
           )}
+          <Button
+            size="sm"
+            variant={navigatorOpen ? 'primary' : 'ghost'}
+            pressed={navigatorOpen}
+            onClick={() => {
+              setNavigatorOpen((current) => {
+                return !current;
+              });
+            }}
+            title={t('openMessageNavigator')}
+          >
+            <ListTree className="size-3.5" />
+            {t('navigator')}
+          </Button>
           <ExportMenu entries={feed.entries} project={projectLabel} title={title} />
         </div>
       </header>
@@ -161,13 +256,47 @@ export const SessionViewer: FC<SessionViewerProps> = ({
         onChange={setFilters}
       />
 
-      <div
-        ref={setScrollElement}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4"
-      >
-        <div className="mx-auto max-w-5xl">
-          {body}
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        <div
+          ref={setScrollElement}
+          className="
+            min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain p-4
+          "
+        >
+          <div className="mx-auto max-w-5xl">
+            {body}
+          </div>
         </div>
+        {navigatorOpen && (
+          <>
+            <PaneDivider
+              label={t('resizeMessageNavigator')}
+              value={navigatorWidth}
+              min={MIN_NAVIGATOR_WIDTH}
+              max={MAX_NAVIGATOR_WIDTH}
+              orientation="horizontal"
+              onResize={(delta) => {
+                setNavigatorWidth((width) => {
+                  return Math.min(
+                    Math.max(width - delta, MIN_NAVIGATOR_WIDTH),
+                    MAX_NAVIGATOR_WIDTH,
+                  );
+                });
+              }}
+            />
+            <MessageNavigator
+              entries={feed.entries}
+              filters={filters}
+              width={navigatorWidth}
+              onNavigate={(index) => {
+                setNavigation({ index });
+              }}
+              onClose={() => {
+                setNavigatorOpen(false);
+              }}
+            />
+          </>
+        )}
       </div>
     </section>
   );

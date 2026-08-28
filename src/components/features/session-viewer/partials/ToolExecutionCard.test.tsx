@@ -497,3 +497,40 @@ describe('bash descriptions and pending todos', () => {
     expect(screen.getByText('later step')).toBeDefined();
   });
 });
+
+describe('mcp calls', () => {
+  test('titles the card by server and tool and labels the result', async () => {
+    render(
+      <ToolExecutionCard
+        call={{
+          id: 'm1',
+          name: 'search',
+          serverName: 'linear',
+          input: {
+            kind: 'generic',
+            title: 'search',
+            rows: [{
+              label: 'query',
+              value: 'open bugs',
+            }],
+          },
+        }}
+        outcome={{
+          toolUseId: 'm1',
+          status: 'ok',
+          images: [],
+          text: 'two issues',
+        }}
+      />,
+    );
+    const button = screen.getAllByRole<HTMLButtonElement>('button').at(-1);
+
+    if (button != null) {
+      await userEvent.click(button);
+    }
+
+    expect(document.querySelector('[data-tool-card][data-tool-kind="mcp"]')).not.toBeNull();
+    expect(screen.getAllByText('linear').length).toBeGreaterThan(0);
+    expect(screen.getByText('two issues')).toBeDefined();
+  });
+});

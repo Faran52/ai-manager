@@ -85,6 +85,7 @@ export type ToolCallInput
 export interface ToolCall {
   readonly id: string;
   readonly name: string;
+  readonly serverName?: string | undefined;
   readonly input: ToolCallInput;
 }
 

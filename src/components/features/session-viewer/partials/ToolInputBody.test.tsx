@@ -79,3 +79,25 @@ test('renders each supported tool input family', () => {
   );
   expect(screen.queryByText('/a')).toBeNull();
 });
+
+test('renders an mcp call through its server identity', () => {
+  render(
+    <ToolInputBody
+      call={{
+        id: 'm1',
+        name: 'mcp__linear__search',
+        input: {
+          kind: 'generic',
+          title: 'search',
+          rows: [{
+            label: 'query',
+            value: 'open bugs',
+          }],
+        },
+      }}
+    />,
+  );
+
+  expect(screen.getByText('linear')).toBeDefined();
+  expect(screen.getByText('search')).toBeDefined();
+});
