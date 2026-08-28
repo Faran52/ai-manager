@@ -20,6 +20,7 @@ export interface AssistantTurnProps {
   readonly visibleBlocks?: readonly AssistantBlock[];
   readonly outcomeFor: (toolUseId: string) => ToolOutcome | undefined;
   readonly hiddenCount?: number;
+  readonly showHeader?: boolean;
 }
 
 export const AssistantTurn: FC<AssistantTurnProps> = ({
@@ -27,12 +28,13 @@ export const AssistantTurn: FC<AssistantTurnProps> = ({
   visibleBlocks = entry.blocks,
   outcomeFor,
   hiddenCount = 0,
+  showHeader = true,
 }) => {
   const { t } = useTranslation('session');
 
   return (
     <article className="space-y-2" data-assistant-turn data-timestamp={entry.timestamp}>
-      {entry.blocks.length > 0 && (
+      {entry.blocks.length > 0 && showHeader && (
         <MessageHeader
           roleKey="assistant"
           timestamp={entry.timestamp}

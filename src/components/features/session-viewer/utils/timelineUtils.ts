@@ -11,6 +11,8 @@ export interface TimelineEntryRow {
   readonly entry: HistoryEntry;
   readonly key: string;
   readonly dimmed: boolean;
+  // True when the row before it was the same speaker, so it needs no header of its own.
+  readonly continues: boolean;
 }
 
 export interface TimelineDateRow {
@@ -52,6 +54,23 @@ const dayOf = (entry: HistoryEntry): EntryDay | undefined => {
       };
 };
 
+/**
+ * A run of tool calls arrives as one assistant entry each, and repeating the
+ * speaker, clock and model above every one of them buries the conversation.
+ * Only the first of a run introduces itself.
+ */
+const speaksAgain = (previous: HistoryEntry | undefined, entry: HistoryEntry): boolean => {
+  if (previous?.kind !== entry.kind) {
+    return false;
+  }
+
+  if (entry.kind === 'assistant' && previous.kind === 'assistant') {
+    return previous.model === entry.model && previous.sidechain === entry.sidechain;
+  }
+
+  return entry.kind === 'user' && previous.kind === 'user' && previous.sidechain === entry.sidechain;
+};
+
 const orphansOf = (
   entries: readonly HistoryEntry[],
   pairs: ReadonlyMap<string, ToolOutcome>,
@@ -89,6 +108,7 @@ export const buildTimelineModel = (
   const rows: TimelineRow[] = [];
 
   let drawnDay = '';
+  let previous: HistoryEntry | undefined;
 
   for (const [index, entry] of entries.entries()) {
     if (!entryIsVisible(entry, filters, pairs)) {
@@ -96,8 +116,9 @@ export const buildTimelineModel = (
     }
 
     const day = dayOf(entry);
+    const openedDay = day != null && day.key !== drawnDay;
 
-    if (day != null && day.key !== drawnDay) {
+    if (openedDay) {
       drawnDay = day.key;
       rows.push({
         kind: 'date',
@@ -112,7 +133,9 @@ export const buildTimelineModel = (
       /* v8 ignore next -- keys is built from the same array, so the index always hits */
       key: keys[index] ?? entryIdentity(entry),
       dimmed: entry.kind !== 'summary' && entry.sidechain,
+      continues: !openedDay && speaksAgain(previous, entry),
     });
+    previous = entry;
   }
 
   return {

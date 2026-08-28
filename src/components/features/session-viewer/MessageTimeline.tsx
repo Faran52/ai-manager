@@ -4,19 +4,18 @@ import {
   useMemo,
   useRef,
 } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { motion } from 'motion/react';
 
 import { cn } from '@utils/cnUtils';
-import { formatDayLabel } from '@utils/formatUtils';
 
 import { fadeTransition } from '@ui/index';
 
 import {
   AssistantTurn,
   DateDivider,
+  FloatingDate,
   SummaryDivider,
   SystemNotice,
   UserTurn,
@@ -101,6 +100,7 @@ const renderRow = (
           entry={entry}
           orphans={orphans.get(entry.uuid) ?? []}
           filters={filters.content}
+          showHeader={!row.continues}
         />
       );
     case 'assistant':
@@ -116,6 +116,7 @@ const renderRow = (
           outcomeFor={(toolUseId) => {
             return pairs.get(toolUseId);
           }}
+          showHeader={!row.continues}
         />
       );
     case 'system':
@@ -133,7 +134,6 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
   navigation,
   nowMs = Date.now(),
 }) => {
-  const { i18n } = useTranslation('session');
   const listRef = useRef<HTMLDivElement>(null);
   const ownScrollRef = useRef<HTMLDivElement>(null);
   const scrollMarginRef = useRef(0);
@@ -200,7 +200,10 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
   }, [navigation, virtualizer]);
 
   const firstVisible = virtualizer.getVirtualItems()[0];
-  const floatingDay = firstVisible == null ? 0 : dayAtRow(model.rows, firstVisible.index);
+  // A separator on screen already names the day; the pill is for when it is not.
+  const floatingDay = firstVisible == null || model.rows[firstVisible.index]?.kind === 'date'
+    ? 0
+    : dayAtRow(model.rows, firstVisible.index);
 
   return (
     <motion.div
@@ -211,23 +214,7 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
       animate={{ opacity: 1 }}
       transition={fadeTransition}
     >
-      {floatingDay > 0 && (
-        <div className="
-          pointer-events-none sticky top-0 z-10 flex justify-center
-        "
-        >
-          <span
-            className="
-              rounded-full border border-border bg-card/90 px-2.5 py-0.5
-              text-[10px] font-medium text-muted-foreground shadow-sm
-              backdrop-blur-sm
-            "
-            data-floating-date
-          >
-            {formatDayLabel(floatingDay, nowMs, i18n.language)}
-          </span>
-        </div>
-      )}
+      <FloatingDate timestampMs={floatingDay} nowMs={nowMs} />
       <div
         ref={listRef}
         className="relative w-full"

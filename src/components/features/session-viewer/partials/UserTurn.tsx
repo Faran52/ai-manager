@@ -19,12 +19,14 @@ export interface UserTurnProps {
   readonly entry: UserTurnEntry;
   readonly orphans: readonly ToolOutcome[];
   readonly filters?: MessageContentFilters;
+  readonly showHeader?: boolean;
 }
 
 export const UserTurn: FC<UserTurnProps> = ({
   entry,
   orphans,
   filters = defaultMessageFilters().content,
+  showHeader = true,
 }) => {
   const { t } = useTranslation('session');
   const injectedText = filters.text ? entry.injectedText : undefined;
@@ -37,12 +39,14 @@ export const UserTurn: FC<UserTurnProps> = ({
       data-meta={entry.meta ? 'true' : 'false'}
       data-timestamp={entry.timestamp}
     >
-      <MessageHeader
-        roleKey="user"
-        timestamp={entry.timestamp}
-        sidechain={entry.sidechain}
-        align="end"
-      />
+      {showHeader && (
+        <MessageHeader
+          roleKey="user"
+          timestamp={entry.timestamp}
+          sidechain={entry.sidechain}
+          align="end"
+        />
+      )}
       {filters.commands && entry.command != null && (
         <span className="
           inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1

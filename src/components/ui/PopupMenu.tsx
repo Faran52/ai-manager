@@ -115,6 +115,9 @@ export const PopupMenu: FC<PopupMenuProps> = ({
           exit={{
             opacity: 0,
             y: '-0.125rem',
+            // A menu on its way out still covers what is underneath it, and a
+            // click landing there hits the menu rather than the thing aimed at.
+            pointerEvents: 'none',
           }}
           transition={popoverTransition}
           className={cn(

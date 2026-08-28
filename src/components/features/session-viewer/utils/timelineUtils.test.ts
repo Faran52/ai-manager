@@ -235,3 +235,80 @@ describe('rowIndexForTimestamp', () => {
     expect(rowIndexForTimestamp(model.rows, '2026-06-02T09:00:00Z')).toBe(3);
   });
 });
+
+describe('speaker runs', () => {
+  const assistantTurn = (uuid: string, timestamp: string, model = 'opus'): HistoryEntry => {
+    return {
+      kind: 'assistant',
+      uuid,
+      timestamp,
+      sidechain: false,
+      model,
+      blocks: [{
+        blockType: 'text',
+        text: uuid,
+      }],
+    };
+  };
+
+  const continuations = (rows: readonly TimelineRow[]): readonly boolean[] => {
+    return rows.flatMap((row) => {
+      return row.kind === 'entry' ? [row.continues] : [];
+    });
+  };
+
+  test('introduces only the first of a run of turns from one speaker', () => {
+    const model = buildTimelineModel(
+      [
+        userTurn('u1', '2026-06-01T10:00:00Z'),
+        assistantTurn('a1', '2026-06-01T10:00:10Z'),
+        assistantTurn('a2', '2026-06-01T10:00:20Z'),
+        assistantTurn('a3', '2026-06-01T10:00:30Z'),
+        userTurn('u2', '2026-06-01T10:01:00Z'),
+      ],
+      defaultMessageFilters(),
+    );
+
+    expect(continuations(model.rows)).toEqual([false, false, true, true, false]);
+  });
+
+  test('reintroduces the speaker when the model changes', () => {
+    const model = buildTimelineModel(
+      [
+        assistantTurn('a1', '2026-06-01T10:00:00Z', 'opus'),
+        assistantTurn('a2', '2026-06-01T10:00:10Z', 'haiku'),
+      ],
+      defaultMessageFilters(),
+    );
+
+    expect(continuations(model.rows)).toEqual([false, false]);
+  });
+
+  test('reintroduces the speaker after a day separator', () => {
+    const model = buildTimelineModel(
+      [
+        assistantTurn('a1', '2026-06-01T23:59:00Z'),
+        assistantTurn('a2', '2026-06-02T00:01:00Z'),
+      ],
+      defaultMessageFilters(),
+    );
+
+    expect(continuations(model.rows)).toEqual([false, false]);
+  });
+
+  test('treats a summary between turns as a break in the run', () => {
+    const model = buildTimelineModel(
+      [
+        assistantTurn('a1', '2026-06-01T10:00:00Z'),
+        {
+          kind: 'summary',
+          text: 'recap',
+        },
+        assistantTurn('a2', '2026-06-01T10:00:10Z'),
+      ],
+      defaultMessageFilters(),
+    );
+
+    expect(continuations(model.rows)).toEqual([false, false, false]);
+  });
+});
