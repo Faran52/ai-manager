@@ -30,6 +30,7 @@ import {
   handleProjectStats,
   handleReadArchive,
   handleReadSettings,
+  handleRecentEdits,
   handleRenameSession,
   handleSearch,
   handleUpdateCheck,
@@ -809,5 +810,50 @@ describe('settings endpoints', () => {
       scope: 'project',
       patch: emptyPatch,
     }), { home })).status).toBe(500);
+  });
+});
+
+describe('recent edits endpoint', () => {
+  test('lists the files a project changed', { timeout: 30_000 }, async () => {
+    const home = await mkdtemp(join(tmpdir(), 'edits-api-'));
+    const projectDir = join(home, '.claude', 'projects', 'proj');
+
+    await mkdir(projectDir, { recursive: true });
+    await writeFile(join(projectDir, 's.jsonl'), JSON.stringify({
+      type: 'assistant',
+      uuid: 'a1',
+      timestamp: '2026-06-01T10:00:00Z',
+      message: {
+        role: 'assistant',
+        content: [{
+          type: 'tool_use',
+          id: 't1',
+          name: 'Edit',
+          input: {
+            file_path: '/repo/a.ts',
+            old_string: 'x',
+            new_string: 'y',
+          },
+        }],
+      },
+    }), 'utf8');
+
+    const response = await handleRecentEdits(post({
+      agent: 'claude',
+      projectId: 'proj',
+    }), { home });
+
+    expect(response.status).toBe(200);
+    expect(await jsonOf(response)).toMatchObject({
+      files: [{
+        path: '/repo/a.ts',
+        edits: 1,
+      }],
+    });
+  });
+
+  test('rejects a request with no project', async () => {
+    expect((await handleRecentEdits(post({}))).status).toBe(400);
+    expect((await handleRecentEdits(post('nonsense'))).status).toBe(400);
   });
 });

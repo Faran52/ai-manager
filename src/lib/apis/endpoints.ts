@@ -19,6 +19,7 @@ import {
   listArchives,
   readArchive,
 } from '@services/archive/archiveService';
+import { listRecentEdits } from '@services/edits/editsService';
 import { searchAgentHistory } from '@services/search/searchService';
 import {
   deleteProject,
@@ -54,6 +55,7 @@ import type {
   ListSessionsBody,
   LoadSessionBody,
   ProjectMutationBody,
+  RecentEditsBody,
   SearchBody,
   SessionMutationBody,
   SettingsBody,
@@ -362,6 +364,22 @@ export const handleDeleteArchive = async (request: Request, deps?: EndpointDeps)
     await deleteArchive(body.id, deps?.home);
 
     return jsonOk({ ok: true });
+  });
+};
+
+export const handleRecentEdits = async (request: Request, deps?: EndpointDeps): Promise<Response> => {
+  return withJsonErrors(async () => {
+    const body = await readJsonObject(request);
+
+    if (body == null || !isSessionsBody(body)) {
+      return jsonError(BAD_REQUEST, 'A non-empty projectId is required.');
+    }
+
+    const target: RecentEditsBody = body;
+
+    return jsonOk({
+      files: await listRecentEdits(resolveEndpointRoots(deps), target.agent, target.projectId),
+    });
   });
 };
 

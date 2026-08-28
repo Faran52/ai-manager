@@ -15,6 +15,7 @@ import {
   fetchArchives,
   fetchMessages,
   fetchProjects,
+  fetchRecentEdits,
   fetchSearch,
   fetchSessions,
   fetchSettings,
@@ -351,6 +352,30 @@ describe('settings endpoints', () => {
         permissions: scope.permissions,
         env: [],
       },
+    })).rejects.toThrow('unexpected shape');
+  });
+});
+
+describe('recent edits endpoint', () => {
+  test('returns the files it was told about', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return jsonResponse({ files: [{ path: '/repo/a.ts' }] });
+    }));
+
+    await expect(fetchRecentEdits({
+      agent: 'claude',
+      projectId: 'p',
+    })).resolves.toEqual({ files: [{ path: '/repo/a.ts' }] });
+  });
+
+  test('rejects a response of the wrong shape', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return jsonResponse({ files: 'many' });
+    }));
+
+    await expect(fetchRecentEdits({
+      agent: 'claude',
+      projectId: 'p',
     })).rejects.toThrow('unexpected shape');
   });
 });

@@ -7,6 +7,7 @@ import type {
   SetupFinding,
 } from '@services/agents/agentsService';
 import type { ArchiveManifest, ArchiveSummary } from '@services/archive/archiveService';
+import type { EditedFile } from '@services/edits/editsService';
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
 import type { SearchOutcome } from '@services/search/searchService';
 import type { SessionPage } from '@services/session/sessionService';
@@ -93,6 +94,15 @@ export interface CreateArchiveBody {
 
 export interface CreateArchiveResponse {
   readonly archive: ArchiveSummary;
+}
+
+export interface RecentEditsBody {
+  readonly agent: AgentId;
+  readonly projectId: string;
+}
+
+export interface RecentEditsResponse {
+  readonly files: readonly EditedFile[];
 }
 
 export interface SettingsBody {

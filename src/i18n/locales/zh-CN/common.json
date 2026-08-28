@@ -40,6 +40,7 @@
   "shortcutViewHealth": "前往健康检查",
   "shortcutViewArchive": "前往归档",
   "shortcutViewSettings": "前往设置",
+  "shortcutViewBoard": "前往看板",
   "shortcutReload": "重新加载项目",
   "shortcutToggleNavigator": "切换消息导航器",
   "shortcutShowShortcuts": "显示此列表",
@@ -62,6 +63,7 @@
   "navHealth": "健康度",
   "navArchive": "归档",
   "navSettings": "设置",
+  "navBoard": "看板",
   "searchAllChatsLabel": "搜索所有对话",
   "typeTwoCharacters": "请至少输入两个字符。"
 }

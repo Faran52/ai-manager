@@ -25,11 +25,13 @@ import { AgentSetupPanel } from '@features/agent-setup';
 import { AnalyticsView } from '@features/analytics';
 import { AppHeader } from '@features/app-header';
 import { ArchiveView } from '@features/archive';
+import { BoardView } from '@features/board';
 import {
   useAgentSetup,
   useArchives,
   useProjects,
   useProjectStats,
+  useRecentEdits,
   useSearch,
   useSessions,
   useSettings,
@@ -86,6 +88,7 @@ export const HistoryApp: FC = () => {
   const agentSetup = useAgentSetup(view === 'health' ? (selectedProject?.actualPath ?? null) : null);
   const archives = useArchives(view === 'archive');
   const settings = useSettings(view === 'settings' ? (selectedProject?.actualPath ?? '') : null);
+  const edits = useRecentEdits(view === 'board' ? selectedProject : null);
   const sessionCounts = useMemo(() => {
     const path = selectedProject?.actualPath;
 
@@ -148,6 +151,9 @@ export const HistoryApp: FC = () => {
       }],
       [appShortcuts.viewSettings, () => {
         setView('settings');
+      }],
+      [appShortcuts.viewBoard, () => {
+        setView('board');
       }],
       [appShortcuts.reload, reloadProjects],
     ];
@@ -286,6 +292,22 @@ export const HistoryApp: FC = () => {
     ),
     settings: (
       <SettingsView settings={settings} projectPath={selectedProject?.actualPath ?? null} />
+    ),
+    board: (
+      <BoardView
+        project={selectedProject}
+        sessions={sessions.data ?? []}
+        sessionsStatus={sessions.status}
+        edits={edits}
+        nowMs={nowMs}
+        onOpenSession={selectSession}
+        onOpenEdit={(edit) => {
+          setSelectedFilePath(edit.sessionFilePath);
+          setArchivedSession(null);
+          setHighlightTimestamp(new Date(edit.timestampMs).toISOString());
+          setView('sessions');
+        }}
+      />
     ),
     health: (
       <div className="h-full overflow-y-auto p-4">

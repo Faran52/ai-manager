@@ -637,6 +637,9 @@ describe('HistoryApp keyboard shortcuts', () => {
         if (path.endsWith('/archives')) {
           return Response.json({ archives: [] });
         }
+        if (path.endsWith('/recent-edits')) {
+          return Response.json({ files: [] });
+        }
         if (path.endsWith('/settings')) {
           return Response.json({
             scopes: [{
@@ -694,6 +697,9 @@ describe('HistoryApp keyboard shortcuts', () => {
 
     await userEvent.keyboard('5');
     expect(await screen.findByText('Settings manager')).toBeDefined();
+
+    await userEvent.keyboard('6');
+    expect(await screen.findByText('No project selected')).toBeDefined();
 
     await userEvent.keyboard('2');
     expect(await screen.findByText(/No analytics for/)).toBeDefined();
@@ -787,5 +793,60 @@ describe('HistoryApp archived transcripts', () => {
 
     expect(await screen.findByText('the question')).toBeDefined();
     expect(screen.getAllByText('alpha').length).toBeGreaterThan(0);
+  });
+});
+
+describe('HistoryApp board', () => {
+  test('opens a session from the board and jumps from a file edit to its turn', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: RequestInfo | URL) => {
+        const path = toPath(url);
+
+        if (path.endsWith('/projects')) {
+          return Response.json(projectPayload);
+        }
+        if (path.endsWith('/sessions')) {
+          return Response.json(sessionsPayload('alpha'));
+        }
+        if (path.endsWith('/recent-edits')) {
+          return Response.json({
+            files: [{
+              path: '/repo/alpha/src/a.ts',
+              edits: 1,
+              writes: 0,
+              sessionCount: 1,
+              lastEditedMs: 1,
+              recent: [{
+                kind: 'edit',
+                sessionId: 's1',
+                sessionTitle: 'Login fix',
+                sessionFilePath: '/sessions/alpha/s1.jsonl',
+                timestampMs: Date.parse('2026-05-05T10:00:00Z'),
+                changes: 1,
+              }],
+            }],
+          });
+        }
+        if (path.endsWith('/messages')) {
+          return Response.json(messagesPayload);
+        }
+
+        return Response.json({ stats: null });
+      }),
+    );
+
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+    await openProject('alpha');
+
+    await userEvent.click(screen.getByRole('button', { name: /Board/ }));
+    expect(await screen.findByText('Board for alpha')).toBeDefined();
+
+    await userEvent.click(screen.getByRole('button', { name: /File edits/ }));
+    await userEvent.click(await screen.findByText('src/a.ts'));
+    await userEvent.click(await screen.findByText('Login fix'));
+
+    expect(await screen.findByText('the question')).toBeDefined();
   });
 });

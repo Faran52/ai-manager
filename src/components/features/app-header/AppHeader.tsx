@@ -6,6 +6,7 @@ import {
   BarChart3,
   HeartPulse,
   History,
+  LayoutGrid,
   RefreshCw,
   Search,
   SlidersHorizontal,
@@ -24,7 +25,7 @@ import {
 import type { ThemeMode } from '@features/theme';
 import type { FC } from 'react';
 
-export type AppView = 'sessions' | 'analytics' | 'health' | 'archive' | 'settings';
+export type AppView = 'sessions' | 'analytics' | 'health' | 'archive' | 'settings' | 'board';
 
 export interface AppHeaderProps {
   readonly view: AppView;
@@ -143,6 +144,17 @@ export const AppHeader: FC<AppHeaderProps> = ({
           >
             <SlidersHorizontal className="size-3.5" />
             {t('navSettings')}
+          </Button>
+          <Button
+            size="sm"
+            variant={view === 'board' ? 'primary' : 'ghost'}
+            onClick={() => {
+              onViewChange('board');
+            }}
+            pressed={view === 'board'}
+          >
+            <LayoutGrid className="size-3.5" />
+            {t('navBoard')}
           </Button>
         </nav>
 

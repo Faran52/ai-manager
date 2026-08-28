@@ -13,6 +13,8 @@ import type {
   ProjectMutationBody,
   ProjectsResponse,
   ProjectStatsBody,
+  RecentEditsBody,
+  RecentEditsResponse,
   RenameSessionBody,
   SearchBody,
   SearchResponse,
@@ -74,6 +76,10 @@ const hasArchives = (value: object): value is ArchivesResponse => {
 
 const isArchiveDetail = (value: object): value is ArchiveDetailResponse => {
   return 'archive' in value;
+};
+
+const hasFiles = (value: object): value is RecentEditsResponse => {
+  return 'files' in value && Array.isArray(value.files);
 };
 
 const hasScopes = (value: object): value is SettingsResponse => {
@@ -152,6 +158,11 @@ const ARCHIVE_DELETE: EndpointDefinition<MutationResponse> = {
   path: '/api/archive-delete',
   accepts: isMutationResponse,
   label: 'archive deletion',
+};
+const RECENT_EDITS: EndpointDefinition<RecentEditsResponse> = {
+  path: '/api/recent-edits',
+  accepts: hasFiles,
+  label: 'recent edits',
 };
 const SETTINGS: EndpointDefinition<SettingsResponse> = {
   path: '/api/settings',
@@ -250,6 +261,10 @@ export const fetchStats = (body: ProjectStatsBody): Promise<StatsResponse> => {
 
 export const deleteSession = (body: SessionMutationBody): Promise<MutationResponse> => {
   return requestEndpoint(DELETE_SESSION, body);
+};
+
+export const fetchRecentEdits = (body: RecentEditsBody): Promise<RecentEditsResponse> => {
+  return requestEndpoint(RECENT_EDITS, body);
 };
 
 export const fetchSettings = (body: SettingsBody): Promise<SettingsResponse> => {

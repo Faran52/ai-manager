@@ -4,6 +4,7 @@ export * from './useArchives';
 export * from './useMessages';
 export * from './useProjects';
 export * from './useProjectStats';
+export * from './useRecentEdits';
 export * from './useSearch';
 export * from './useSessions';
 export * from './useSettings';
