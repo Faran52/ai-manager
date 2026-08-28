@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
-  describe,
+  afterEach,
+  beforeEach,
   expect,
   test,
   vi,
@@ -9,7 +10,7 @@ import {
 
 import { AnalyticsView } from './AnalyticsView';
 
-import type { ProjectStats } from '@services/stats/statsService';
+import type { GlobalStats, ProjectStats } from '@services/stats/statsService';
 
 const stats: ProjectStats = {
   projectId: 'p',
@@ -21,6 +22,12 @@ const stats: ProjectStats = {
     outputTokens: 2_000,
     cacheCreationTokens: 0,
     cacheReadTokens: 500,
+    conversationTokens: 3_000,
+    nonConversationTokens: 500,
+    billingTokens: 3_500,
+    splitUnavailable: false,
+    pricingCoveragePercent: 100,
+    unpricedModelCount: 0,
     costUsd: 0.4,
     durationMs: 7_200_000,
   },
@@ -28,14 +35,17 @@ const stats: ProjectStats = {
     {
       model: 'claude-sonnet-5',
       requests: 8,
-      inputTokens: 0,
-      outputTokens: 0,
+      inputTokens: 2_000,
+      outputTokens: 1_000,
+      costUsd: 0.4,
+      basis: 'exact',
     },
     {
       model: 'gpt-5.5',
       requests: 2,
-      inputTokens: 0,
-      outputTokens: 0,
+      inputTokens: 300,
+      outputTokens: 200,
+      basis: 'unpriced',
     },
   ],
   tools: [{
@@ -43,157 +53,228 @@ const stats: ProjectStats = {
     count: 9,
   }],
   activity: [],
-  topSessions: [
-    {
-      filePath: '/a.jsonl',
-      sessionId: 'a',
-      title: 'Big one',
-      tokens: 900,
-      messages: 5,
-      lastTimestampMs:
-  Date.UTC(2026, 0, 1),
-    },
-  ],
+  topSessions: [{
+    filePath: '/a.jsonl',
+    sessionId: 'a',
+    title: 'Big one',
+    tokens: 900,
+    messages: 5,
+    lastTimestampMs: Date.UTC(2026, 0, 1),
+  }],
 };
 
-describe('AnalyticsView', () => {
-  test('shows loading and empty states', () => {
-    const { rerender } = render(
-      <AnalyticsView
-        stats={null}
-        status="loading"
-        projectName="webapp"
-        onOpenSession={() => {
-          return undefined;
-        }}
-      />,
-    );
+const globalStats: GlobalStats = {
+  ...stats,
+  projectId: 'global',
+  totals: {
+    ...stats.totals,
+    conversationTokens: 3_000,
+    nonConversationTokens: 500,
+    billingTokens: 3_500,
+    splitUnavailable: false,
+    pricingCoveragePercent: 100,
+    unpricedModelCount: 0,
+  },
+  agents: [{
+    agent: 'claude',
+    tokens: 3_500,
+    sessions: 3,
+    projects: 2,
+  }],
+};
 
-    expect(screen.getByRole('status')).toBeDefined();
+const globalResponse = (): Response => {
+  return new Response(JSON.stringify({ stats: globalStats }), { status: 200 });
+};
 
-    rerender(
-      <AnalyticsView
-        stats={null}
-        status="ready"
-        projectName="webapp"
-        onOpenSession={() => {
-          return undefined;
-        }}
-      />,
-    );
-
-    expect(screen.getByText(/No analytics for webapp/)).toBeDefined();
-  });
-
-  test('renders metrics, charts and opens a top session', async () => {
-    const onOpenSession = vi.fn();
-
-    render(
-      <AnalyticsView stats={stats} status="ready" projectName="webapp" onOpenSession={onOpenSession} />,
-    );
-
-    expect(screen.getByText('3')).toBeDefined();
-    expect(screen.getByText('12k')).toBeDefined();
-    expect(screen.getByText('3.0k')).toBeDefined();
-    expect(screen.getByText(/\$0\.40 recorded cost/)).toBeDefined();
-    expect(screen.getByText('claude-sonnet-5')).toBeDefined();
-    expect(screen.getByText('Bash')).toBeDefined();
-    expect(screen.getByText('Big one')).toBeDefined();
-    expect(document.querySelector('[data-activity-heatmap]')).not.toBeNull();
-
-    await userEvent.click(screen.getByText('Big one'));
-
-    expect(onOpenSession).toHaveBeenCalledWith(stats.topSessions[0]);
-  });
+beforeEach(() => {
+  vi.stubGlobal('fetch', vi.fn(() => {
+    return Promise.resolve(globalResponse());
+  }));
 });
 
-describe('AnalyticsView without ranked sessions', () => {
-  test('renders the section even when nothing is ranked', () => {
-    render(
-      <AnalyticsView
-        stats={{
-          ...stats,
-          topSessions: [],
-        }}
-        status="ready"
-        projectName="webapp"
-        onOpenSession={() => {
-          return undefined;
-        }}
-      />,
-    );
-
-    expect(document.querySelector('[data-top-sessions]')).not.toBeNull();
-  });
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
-describe('AnalyticsView without recorded usage', () => {
-  test('labels unavailable metrics and replaces the empty token heatmap', () => {
-    render(
-      <AnalyticsView
-        stats={{
-          ...stats,
-          totals: {
-            ...stats.totals,
-            usageRecorded: false,
-            inputTokens: 0,
-            outputTokens: 0,
-            cacheReadTokens: 0,
-            costUsd: 0,
-            durationMs: 0,
-          },
-        }}
-        status="ready"
-        projectName="webapp"
-        onOpenSession={() => {
-          return undefined;
-        }}
-      />,
-    );
+const renderView = (
+  projectStats: ProjectStats | null = stats,
+  status: 'loading' | 'ready' | 'error' = 'ready',
+  onOpenSession = vi.fn(),
+) => {
+  return render(
+    <AnalyticsView
+      stats={projectStats}
+      status={status}
+      projectName="webapp"
+      onOpenSession={onOpenSession}
+    />,
+  );
+};
 
-    expect(screen.getAllByText('Not recorded')).toHaveLength(2);
-    expect(screen.getByText("Token activity isn't recorded for this agent.")).toBeDefined();
-    expect(screen.getByText('5 turns')).toBeDefined();
-    expect(document.querySelector('[data-activity-heatmap]')).toBeNull();
-  });
+const selectProject = async (): Promise<void> => {
+  await userEvent.click(screen.getByRole('button', { name: 'Project: webapp' }));
+};
+
+test('defaults to global analytics and shows provider distribution', async () => {
+  renderView();
+
+  expect(await screen.findByText('Provider distribution')).toBeDefined();
+  expect(screen.getByText('Claude Code · 3 sessions · 2 projects')).toBeDefined();
+  expect(screen.queryByText('Big one')).toBeNull();
+
+  await selectProject();
+  await userEvent.click(screen.getByRole('button', { name: 'Global' }));
+
+  expect(screen.getByText('Provider distribution')).toBeDefined();
 });
 
-describe('TopSessions fallback title', () => {
-  test('shows the session id when no title exists', () => {
-    const onOpenSession = vi.fn();
+test('shows project loading and empty states after changing scope', async () => {
+  const view = renderView(null, 'loading');
 
-    render(
-      <AnalyticsView
-        stats={{
-          ...stats,
-          topSessions: [
-            {
-              filePath: '/z.jsonl',
-              sessionId: 'zzz',
-              title: undefined,
-              tokens: 1,
-              messages: 1,
-              lastTimestampMs: 0,
-            },
-          ],
-        }}
-        status="ready"
-        projectName="webapp"
-        onOpenSession={onOpenSession}
-      />,
-    );
+  await selectProject();
+  expect(screen.getByRole('status')).toBeDefined();
 
-    expect(screen.getByText('zzz')).toBeDefined();
-  });
+  view.rerender(
+    <AnalyticsView stats={null} status="ready" projectName="webapp" onOpenSession={vi.fn()} />,
+  );
+
+  expect(screen.getByText(/No analytics for webapp/)).toBeDefined();
 });
 
-describe('AnalyticsView error state', () => {
-  test('shows an error empty state instead of the no-data message', () => {
-    render(
-      <AnalyticsView stats={null} status="error" projectName="webapp" onOpenSession={vi.fn()} />,
-    );
+test('renders project metrics, panels and opens a top session', async () => {
+  const onOpenSession = vi.fn();
 
-    expect(screen.getByText("Couldn't load analytics for webapp")).toBeDefined();
-    expect(screen.getByText('Try refreshing from the header.')).toBeDefined();
+  renderView(stats, 'ready', onOpenSession);
+  await selectProject();
+
+  expect(screen.getByText('12k')).toBeDefined();
+  expect(screen.getAllByText('3.5k').length).toBeGreaterThan(0);
+  expect(screen.getByText(/\$0\.40 derived cost/)).toBeDefined();
+  expect(screen.getByText('claude-sonnet-5')).toBeDefined();
+  expect(screen.getByText('Bash')).toBeDefined();
+  expect(screen.getByText('Big one')).toBeDefined();
+  expect(document.querySelector('[data-activity-heatmap]')).not.toBeNull();
+
+  await userEvent.click(screen.getByText('Big one'));
+
+  expect(onOpenSession).toHaveBeenCalledWith(stats.topSessions[0]);
+});
+
+test('renders project analytics without ranked sessions', async () => {
+  renderView({
+    ...stats,
+    topSessions: [],
   });
+  await selectProject();
+
+  expect(document.querySelector('[data-top-sessions]')).not.toBeNull();
+});
+
+test('labels project metrics without recorded usage', async () => {
+  renderView({
+    ...stats,
+    totals: {
+      ...stats.totals,
+      usageRecorded: false,
+      inputTokens: 0,
+      outputTokens: 0,
+      cacheReadTokens: 0,
+      conversationTokens: 0,
+      nonConversationTokens: 0,
+      billingTokens: 0,
+      costUsd: 0,
+      durationMs: 0,
+    },
+  });
+  await selectProject();
+
+  expect(screen.getAllByText('Not recorded')).toHaveLength(2);
+  expect(screen.getByText("Token activity isn't recorded for this agent.")).toBeDefined();
+  expect(document.querySelector('[data-activity-heatmap]')).toBeNull();
+});
+
+test('derives a project billing total from a legacy payload', async () => {
+  renderView({
+    ...stats,
+    totals: {
+      ...stats.totals,
+      billingTokens: undefined,
+    },
+  });
+  await selectProject();
+
+  expect(screen.getAllByText('3.5k').length).toBeGreaterThan(0);
+});
+
+test('shows the session id when a ranked session has no title', async () => {
+  renderView({
+    ...stats,
+    topSessions: [{
+      filePath: '/z.jsonl',
+      sessionId: 'zzz',
+      title: undefined,
+      tokens: 1,
+      messages: 1,
+      lastTimestampMs: 0,
+    }],
+  });
+  await selectProject();
+
+  expect(screen.getByText('zzz')).toBeDefined();
+});
+
+test('shows a project error state', async () => {
+  renderView(null, 'error');
+  await selectProject();
+
+  expect(screen.getByText("Couldn't load analytics for webapp")).toBeDefined();
+  expect(screen.getByText('Try refreshing from the header.')).toBeDefined();
+});
+
+test('shows a global error for failed and malformed responses', async () => {
+  vi.stubGlobal('fetch', vi.fn(() => {
+    return Promise.resolve(new Response('{}', { status: 500 }));
+  }));
+  const view = renderView(null, 'error');
+
+  expect(await screen.findByText("Couldn't load analytics for webapp")).toBeDefined();
+  view.unmount();
+
+  vi.stubGlobal('fetch', vi.fn(() => {
+    return Promise.resolve(new Response('{}', { status: 200 }));
+  }));
+  renderView(null, 'error');
+
+  expect(await screen.findByText("Couldn't load analytics for webapp")).toBeDefined();
+});
+
+test('does not update global state after unmounting', async () => {
+  const pending = Promise.withResolvers<Response>();
+
+  vi.stubGlobal('fetch', vi.fn(() => {
+    return pending.promise;
+  }));
+  const view = renderView();
+
+  view.unmount();
+  pending.resolve(globalResponse());
+  await pending.promise;
+
+  expect(document.querySelector('[data-analytics-view]')).toBeNull();
+});
+
+test('does not report a request error after unmounting', async () => {
+  const pending = Promise.withResolvers<Response>();
+
+  vi.stubGlobal('fetch', vi.fn(() => {
+    return pending.promise;
+  }));
+  const view = renderView();
+
+  view.unmount();
+  pending.reject(new Error('offline'));
+
+  await expect(pending.promise).rejects.toThrow('offline');
+  expect(document.querySelector('[data-analytics-view]')).toBeNull();
 });

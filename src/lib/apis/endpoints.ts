@@ -19,7 +19,7 @@ import {
   loadSessionPage,
   renameSession,
 } from '@services/session/sessionService';
-import { computeProjectStats } from '@services/stats/statsService';
+import { computeGlobalStats, computeProjectStats } from '@services/stats/statsService';
 import { checkForUpdate, updateConfigFromEnv } from '@services/updates';
 
 import {
@@ -309,5 +309,11 @@ export const handleAgentSetup = async (request: Request, deps?: EndpointDeps): P
       plugins,
       trust,
     });
+  });
+};
+
+export const handleGlobalStats = (deps?: EndpointDeps): Promise<Response> => {
+  return withJsonErrors(async () => {
+    return jsonOk({ stats: await computeGlobalStats(resolveEndpointRoots(deps)) });
   });
 };
