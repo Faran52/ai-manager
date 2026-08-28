@@ -2,6 +2,7 @@ import {
   chmod,
   mkdir,
   mkdtemp,
+  utimes,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -190,6 +191,24 @@ describe('antigravity discovery', () => {
       cwd: '/repo/alpha',
     });
     expect(await listAntigravitySessions('antigravity', [root], '/repo/alpha')).toHaveLength(1);
+  });
+
+  test('counts the transcript mtime as activity when it outlives the newest step', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'antigravity-touched-'));
+    const touched = new Date(Date.parse('2030-01-01T00:00:00.000Z'));
+
+    await writeStore(root, CONVERSATION, transcript, [historyLine({})]);
+    await utimes(
+      join(root, 'brain', CONVERSATION, '.system_generated', 'logs', 'transcript_full.jsonl'),
+      touched,
+      touched,
+    );
+
+    const [session] = await listAntigravitySessions('antigravity', [root]);
+    const [project] = await listAntigravityProjects('antigravity', [root]);
+
+    expect(session?.lastTimestampMs).toBe(touched.getTime());
+    expect(project?.lastActivityMs).toBe(touched.getTime());
   });
 
   test('groups conversations the index cannot place', async () => {

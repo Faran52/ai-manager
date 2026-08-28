@@ -443,6 +443,9 @@ const fileSessionOf = async (
       ...parsed,
       cwd: await projectRootOf(dir),
       filePath,
+      // Appended as the session runs, so mtime is activity the newest entry can
+      // predate. Every file-per-session agent folds it in, or ordering diverges.
+      lastTimestampMs: Math.max(parsed.lastTimestampMs, facts.mtimeMs),
       modifiedMs: facts.mtimeMs,
       sizeBytes: facts.size,
     };

@@ -457,6 +457,8 @@ const sessionsFromDatabase = async (
         preview: previewFor(built, directory),
         messageCount: built.messageCount,
         firstTimestampMs: built.firstMs,
+        // No mtime fold: one database holds every session, so its mtime moves
+        // whenever any of them does. `time_updated` is the per-session equivalent.
         lastTimestampMs: Math.max(built.lastMs, row.time_updated ?? 0),
         modifiedMs: info.mtimeMs,
         sizeBytes: info.size,

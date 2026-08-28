@@ -2,6 +2,7 @@ import {
   chmod,
   mkdir,
   mkdtemp,
+  utimes,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -258,6 +259,20 @@ describe('gemini discovery', () => {
 
     expect(await loadGeminiEntries(session?.filePath ?? '')).toHaveLength(4);
     expect(await loadGeminiEntries(join(root, 'nope.jsonl'))).toBeUndefined();
+  });
+
+  test('counts the file mtime as activity when it outlives the newest entry', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'gemini-touched-'));
+    const touched = new Date(STAMP + 86_400_000);
+
+    await writeSession(root, 'hash-t', 'session-t.jsonl', jsonlSession, '/repo/touched');
+    await utimes(join(root, 'hash-t', 'chats', 'session-t.jsonl'), touched, touched);
+
+    const [session] = await listGeminiSessions('gemini', [root]);
+    const [project] = await listGeminiProjects('gemini', [root]);
+
+    expect(session?.lastTimestampMs).toBe(touched.getTime());
+    expect(project?.lastActivityMs).toBe(touched.getTime());
   });
 
   test('skips a project whose chats folder is empty of readable logs', async () => {

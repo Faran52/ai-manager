@@ -251,7 +251,9 @@ const sessionOf = async (
       entries,
       filePath,
       firstTimestampMs: Math.min(...stamps),
-      lastTimestampMs: Math.max(...stamps),
+      // Appended as the conversation runs, so mtime is activity the newest entry
+      // can predate. Every file-per-session agent folds it in, or ordering diverges.
+      lastTimestampMs: Math.max(...stamps, facts.mtimeMs),
       modifiedMs: facts.mtimeMs,
       preview: firstUserMessageText(entries),
       sizeBytes: facts.size,
