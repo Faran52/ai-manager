@@ -12,14 +12,21 @@
   "desktop": {
     "app": {
       "name": "AI Chat Manager",
-      "identifier": "com.linteljs.ai-chat-manager"
+      "identifier": "com.linteljs.ai-chat-manager",
+      "icons": {
+        "macos": "./public/icon-1024.png",
+        "windows": "./public/icon.ico",
+        "linux": "./public/icon-512.png"
+      }
     },
     "backend": "webview",
     "release": {
       "baseUrl": "https://github.com/Faran52/ai-chat-manager/releases/latest/download"
     },
     "output": {
-      "macos": "./dist/AIChatManager.app"
+      "macos": "./dist/AIChatManager.app",
+      "windows": "./dist/AIChatManager.msi",
+      "linux": "./dist/AIChatManager.AppImage"
     }
   },
   "exports": "./dist/server/entry.mjs",

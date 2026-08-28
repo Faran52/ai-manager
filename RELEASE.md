@@ -66,20 +66,7 @@ base64 -i cert.pfx | gh secret set WINDOWS_CERTIFICATE
 gh secret set WINDOWS_CERTIFICATE_PASSWORD
 ```
 
-### 4. App icon
-
-`public/favicon.svg` is the mark, and the web app uses it directly. The desktop
-bundle needs a raster, which `deno desktop` takes as `.png` on macOS and `.ico`
-on Windows. Generate it at packaging time rather than committing a derived file:
-
-```bash
-npx --yes sharp-cli -i public/favicon.svg -o build/icon.png resize 1024 1024
-```
-
-Then point `desktop.app.icons` in `deno.json` at it. Editing the icon means
-editing the SVG; every raster comes from that one source.
-
-### 5. Point builds at the feed
+### 4. Point builds at the feed
 
 `deno.json` already carries `desktop.release.baseUrl`. Set `UPDATE_FEED_URL` to
 the same value for the running app, and `UPDATE_PUBLIC_KEY` to the public half
@@ -109,6 +96,34 @@ was copied into `Contents/Resources` after signing, and the runtime wrote
 invalidated itself on first run. Fixed 2026-08-26 and released in 2.9.6.
 
 Homebrew may lag; the workflow pins the version itself.
+
+Confirmed on this repo with Deno 2.9.5 and an icon configured:
+
+```
+$ codesign --verify --deep --strict dist/AIChatManager.app
+dist/AIChatManager.app: a sealed resource is missing or invalid
+file added: .../Contents/Resources/AppIcon.icns
+```
+
+The icon lands after signing, so it is outside the sealed resource list. The
+symptom only appears once `desktop.app.icons` is set, which is why a bundle
+without an icon can look fine on an old toolchain.
+
+## Icons
+
+`public/favicon.svg` is the only hand-authored artwork. Every raster beside it
+is derived from it and committed, so no build step regenerates them:
+
+| File | Used by |
+|---|---|
+| `icon-1024.png` | macOS bundle, converted to `AppIcon.icns` by the packager |
+| `icon.ico` | Windows bundle, 16 through 256 in one container |
+| `icon-512.png` | Linux AppImage |
+| `icon-180.png` | apple-touch-icon |
+| `icon-32.png` | classic favicon slot |
+
+Changing the mark means editing the SVG and re-cutting those five. They change
+about never, which is why they are committed rather than generated.
 
 ## Verifying a release by hand
 
