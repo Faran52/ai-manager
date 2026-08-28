@@ -11,6 +11,7 @@ import {
 
 import { agentOption } from '@config/agents';
 import {
+  messageFilterBarStorageKey,
   messageFiltersStorageKey,
   messageNavigatorOpenStorageKey,
   messageNavigatorWidthStorageKey,
@@ -38,6 +39,7 @@ import {
   countVisibleEntries,
   decodeMessageFilters,
   encodeMessageFilters,
+  hasActiveMessageFilters,
 } from './utils/messageFilterUtils';
 
 import type { AgentId } from '@config/agents';
@@ -78,6 +80,9 @@ export const SessionViewer: FC<SessionViewerProps> = ({
   const [filters, setFilters] = useState(() => {
     return decodeMessageFilters(localStorage.getItem(messageFiltersStorageKey));
   });
+  const [filterBarOpen, setFilterBarOpen] = useState(() => {
+    return localStorage.getItem(messageFilterBarStorageKey) !== 'false';
+  });
   const [navigatorOpen, setNavigatorOpen] = useState(() => {
     return localStorage.getItem(messageNavigatorOpenStorageKey) !== 'false';
   });
@@ -97,12 +102,19 @@ export const SessionViewer: FC<SessionViewerProps> = ({
    */
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
   const visibleEntries = countVisibleEntries(feed.entries, filters);
+  // The bar can be dismissed while filters are on, so the header button stays
+  // lit to explain why the transcript is shorter than the message count.
+  const filtersActive = hasActiveMessageFilters(filters);
 
   useSmoothScroll(scrollElement);
 
   useEffect(() => {
     localStorage.setItem(messageFiltersStorageKey, encodeMessageFilters(filters));
   }, [filters]);
+
+  useEffect(() => {
+    localStorage.setItem(messageFilterBarStorageKey, String(filterBarOpen));
+  }, [filterBarOpen]);
 
   useEffect(() => {
     localStorage.setItem(messageNavigatorOpenStorageKey, String(navigatorOpen));
@@ -236,6 +248,20 @@ export const SessionViewer: FC<SessionViewerProps> = ({
           )}
           <Button
             size="sm"
+            variant={filterBarOpen || filtersActive ? 'primary' : 'ghost'}
+            pressed={filterBarOpen}
+            onClick={() => {
+              setFilterBarOpen((current) => {
+                return !current;
+              });
+            }}
+            title={filterBarOpen ? t('hideFilterBar') : t('showFilterBar')}
+          >
+            <ListFilter className="size-3.5" />
+            {t('filters')}
+          </Button>
+          <Button
+            size="sm"
             variant={navigatorOpen ? 'primary' : 'ghost'}
             pressed={navigatorOpen}
             onClick={() => {
@@ -252,12 +278,17 @@ export const SessionViewer: FC<SessionViewerProps> = ({
         </div>
       </header>
 
-      <MessageFilterToolbar
-        filters={filters}
-        total={feed.entries.length}
-        visible={visibleEntries}
-        onChange={setFilters}
-      />
+      {filterBarOpen && (
+        <MessageFilterToolbar
+          filters={filters}
+          total={feed.entries.length}
+          visible={visibleEntries}
+          onChange={setFilters}
+          onDismiss={() => {
+            setFilterBarOpen(false);
+          }}
+        />
+      )}
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <div

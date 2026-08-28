@@ -15,7 +15,11 @@ import {
   vi,
 } from 'vitest';
 
-import { messageNavigatorOpenStorageKey, messageNavigatorWidthStorageKey } from '@config/storageKeys';
+import {
+  messageFilterBarStorageKey,
+  messageNavigatorOpenStorageKey,
+  messageNavigatorWidthStorageKey,
+} from '@config/storageKeys';
 
 import { SessionViewer } from './SessionViewer';
 
@@ -702,5 +706,49 @@ describe('SessionViewer live watching', () => {
     await waitFor(() => {
       expect(screen.getByTitle('Watching for transcript updates')).toBeDefined();
     });
+  });
+});
+
+describe('SessionViewer filter bar', () => {
+  test('dismisses the bar, remembers it, and brings it back from the header', async () => {
+    stubPage();
+    render(
+      <SessionViewer
+        filePath="/sessions/s.jsonl"
+        projectLabel="webapp"
+        sessionTitle="Login fix"
+        highlightTimestamp={undefined}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Filter messages' })).toBeDefined();
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Hide the filter bar' }));
+
+    expect(screen.queryByRole('button', { name: 'Filter messages' })).toBeNull();
+    expect(localStorage.getItem(messageFilterBarStorageKey)).toBe('false');
+
+    await userEvent.click(screen.getByText('Filters'));
+    expect(screen.getByRole('button', { name: 'Filter messages' })).toBeDefined();
+  });
+
+  test('starts hidden when it was dismissed last time', async () => {
+    localStorage.setItem(messageFilterBarStorageKey, 'false');
+    stubPage();
+    render(
+      <SessionViewer
+        filePath="/sessions/s.jsonl"
+        projectLabel="webapp"
+        sessionTitle="Login fix"
+        highlightTimestamp={undefined}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Filters')).toBeDefined();
+    });
+    expect(screen.queryByRole('button', { name: 'Filter messages' })).toBeNull();
   });
 });
