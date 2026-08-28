@@ -5,22 +5,22 @@ import { uniqueKeys } from '@utils/reactKeyUtils';
 
 import { ImageViewer } from './ImageViewer';
 
-import type { ToolOutcome } from '@services/history/historyService';
+import type { ResultImage } from '@services/history/historyService';
 import type { FC } from 'react';
 
 export interface OutcomeImagesProps {
-  readonly outcome: ToolOutcome;
+  readonly images: readonly ResultImage[];
 }
 
-const imageIdentity = (image: ToolOutcome['images'][number]): string => {
+const imageIdentity = (image: ResultImage): string => {
   return image.url ?? `${String(image.mediaType)}:${String(image.data?.length ?? 0)}`;
 };
 
-export const OutcomeImages: FC<OutcomeImagesProps> = ({ outcome }) => {
+export const OutcomeImages: FC<OutcomeImagesProps> = ({ images }) => {
   const { t } = useTranslation('common');
   const [selectedSrc, setSelectedSrc] = useState<string>();
-  const keys = uniqueKeys(outcome.images, imageIdentity);
-  const keyed = outcome.images.map((image, index) => {
+  const keys = uniqueKeys(images, imageIdentity);
+  const keyed = images.map((image, index) => {
     return {
       image,
       key: keys[index],

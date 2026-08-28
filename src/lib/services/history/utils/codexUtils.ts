@@ -22,10 +22,25 @@ import type {
   ToolCall,
   ToolOutcome,
 } from '../types';
+import type { RawToolInput } from './claudeRawUtils';
 
 interface CodexContentPart {
   readonly text?: string | undefined;
   readonly type?: string | undefined;
+}
+
+interface CodexMcpInvocation {
+  readonly server?: string | undefined;
+  readonly tool?: string | undefined;
+  readonly arguments?: RawToolInput | undefined;
+}
+
+interface CodexMcpResult {
+  readonly Ok?: {
+    readonly content?: readonly CodexContentPart[] | undefined;
+  }
+  | undefined;
+  readonly Err?: string | undefined;
 }
 
 interface CodexPayload {
@@ -36,7 +51,9 @@ interface CodexPayload {
   readonly id?: string | undefined;
   readonly info?: CodexTokenInfo | undefined;
   readonly input?: string | undefined;
+  readonly invocation?: CodexMcpInvocation | undefined;
   readonly model?: string | undefined;
+  readonly result?: CodexMcpResult | undefined;
   readonly name?: string | undefined;
   readonly output?: string | readonly CodexContentPart[] | undefined;
   readonly role?: string | undefined;
@@ -163,6 +180,61 @@ const outcomeFrom = (payload: CodexPayload): ToolOutcome => {
   };
 };
 
+/**
+ * Codex reports an MCP call only once it has finished, as a single event
+ * carrying the invocation and its result together, so the call and its outcome
+ * are built from the same payload rather than paired up later.
+ */
+const absorbMcpCall = (scan: CodexScan, payload: CodexPayload, timestamp: string): void => {
+  const invocation = payload.invocation;
+
+  if (invocation == null) {
+    return;
+  }
+
+  scan.counter += 1;
+
+  const uuid = `${scan.actualSessionId}-mcp-${String(scan.counter)}`;
+  const tool = invocation.tool ?? 'tool';
+  const callId = payload.call_id ?? uuid;
+  const result = payload.result;
+  const text = (result?.Ok?.content ?? []).flatMap((part) => {
+    return part.text == null ? [] : [part.text];
+  }).join('\n\n');
+
+  scan.entries.push({
+    kind: 'assistant',
+    uuid,
+    timestamp,
+    sidechain: false,
+    model: scan.model,
+    blocks: [{
+      blockType: 'tool-use',
+      call: {
+        id: callId,
+        name: tool,
+        serverName: invocation.server ?? 'mcp',
+        input: parseToolInput(tool, invocation.arguments ?? {}),
+      },
+    }],
+  });
+
+  scan.entries.push({
+    kind: 'user',
+    uuid: `${uuid}-out`,
+    timestamp,
+    sidechain: false,
+    meta: true,
+    text: '',
+    outcomes: [{
+      toolUseId: callId,
+      status: result?.Err == null ? 'ok' : 'error',
+      text: result?.Err ?? (text.length > 0 ? text : undefined),
+      images: [],
+    }],
+  });
+};
+
 const usageFrom = (payload: CodexPayload): AssistantTurnEntry['usage'] => {
   const usage = payload.info?.last_token_usage;
 
@@ -250,6 +322,15 @@ const absorbResponseItem = (scan: CodexScan, payload: CodexPayload, timestamp: s
     return;
   }
 
+  if (payload.type === 'compaction') {
+    scan.entries.push({
+      kind: 'summary',
+      text: 'Conversation compacted',
+    });
+
+    return;
+  }
+
   if (payload.type === 'function_call' || payload.type === 'custom_tool_call') {
     const block: AssistantBlock = {
       blockType: 'tool-use',
@@ -322,6 +403,9 @@ const absorbCodexLine = (scan: CodexScan, line: CodexLine): void => {
   }
   else if (line.type === 'event_msg' && payload?.type === 'token_count') {
     absorbUsage(scan, payload);
+  }
+  else if (line.type === 'event_msg' && payload?.type === 'mcp_tool_call_end') {
+    absorbMcpCall(scan, payload, timestamp);
   }
 };
 

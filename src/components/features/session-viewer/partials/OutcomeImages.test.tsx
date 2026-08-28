@@ -5,18 +5,14 @@ import { OutcomeImages } from './OutcomeImages';
 
 test('renders embedded and remote outcome images', () => {
   render(
-    <OutcomeImages outcome={{
-      toolUseId: 't',
-      status: 'ok',
-      images: [
-        {
-          mediaType: 'image/png',
-          data: 'aaa',
-        },
-        { url: 'https://example.com/image.png' },
-        {},
-      ],
-    }}
+    <OutcomeImages images={[
+      {
+        mediaType: 'image/png',
+        data: 'aaa',
+      },
+      { url: 'https://example.com/image.png' },
+      {},
+    ]}
     />,
   );
 
@@ -25,12 +21,7 @@ test('renders embedded and remote outcome images', () => {
 
 test('opens and closes the full image viewer', async () => {
   render(
-    <OutcomeImages outcome={{
-      toolUseId: 't',
-      status: 'ok',
-      images: [{ url: 'https://example.com/image.png' }],
-    }}
-    />,
+    <OutcomeImages images={[{ url: 'https://example.com/image.png' }]} />,
   );
 
   await userEvent.click(screen.getByLabelText('Open image viewer'));

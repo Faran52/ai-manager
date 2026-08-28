@@ -149,6 +149,8 @@ export interface UserTurnEntry extends TurnBase {
   readonly kind: 'user';
   readonly meta: boolean;
   readonly text: string;
+  // Screenshots and files pasted into the turn, not produced by a tool.
+  readonly images?: readonly ResultImage[] | undefined;
   readonly injectedText?: string | undefined;
   readonly command?: string | undefined;
   readonly outcomes: readonly ToolOutcome[];

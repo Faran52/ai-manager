@@ -143,3 +143,28 @@ describe('UserTurn dim bubbles', () => {
     expect(bubble.className).toContain('bg-muted');
   });
 });
+
+test('shows a screenshot pasted into the turn', () => {
+  render(
+    <UserTurn
+      entry={{
+        kind: 'user',
+        uuid: 'u9',
+        timestamp: '2026-06-01T10:00:00Z',
+        sidechain: false,
+        meta: false,
+        text: 'look at this',
+        images: [{
+          mediaType: 'image/png',
+          data: 'QUJD',
+        }],
+        outcomes: [],
+      }}
+      orphans={[]}
+    />,
+  );
+
+  expect(screen.getByText('look at this')).toBeDefined();
+  expect(document.querySelector('[data-user-images] img')?.getAttribute('src'))
+    .toBe('data:image/png;base64,QUJD');
+});

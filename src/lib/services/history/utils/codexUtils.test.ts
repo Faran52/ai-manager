@@ -326,3 +326,144 @@ describe('Codex history discovery', () => {
     expect(await listCodexProjects(root)).toEqual([]);
   });
 });
+
+describe('codex events that carry a whole call', () => {
+  test('reads an mcp call and its result from the one event that reports them', () => {
+    const session = parseCodexHistory([
+      line('session_meta', {
+        id: 's1',
+        cwd: '/repo',
+      }),
+      line('event_msg', {
+        type: 'mcp_tool_call_end',
+        call_id: 'mcp-1',
+        invocation: {
+          server: 'node_repl',
+          tool: 'js',
+          arguments: { command: 'ls' },
+        },
+        result: {
+          Ok: {
+            content: [{
+              type: 'text',
+              text: 'ran it',
+            }],
+          },
+        },
+      }),
+    ].join('\n'));
+
+    const call = session.entries.find((entry) => {
+      return entry.kind === 'assistant';
+    });
+
+    if (call?.kind !== 'assistant' || call.blocks[0]?.blockType !== 'tool-use') {
+      throw new Error('expected an mcp tool call');
+    }
+
+    expect(call.blocks[0].call.serverName).toBe('node_repl');
+    expect(call.blocks[0].call.name).toBe('js');
+
+    const outcome = session.entries.find((entry) => {
+      return entry.kind === 'user' && entry.outcomes.length > 0;
+    });
+
+    if (outcome?.kind !== 'user') {
+      throw new Error('expected an mcp outcome');
+    }
+
+    expect(outcome.outcomes[0]).toMatchObject({
+      toolUseId: 'mcp-1',
+      status: 'ok',
+      text: 'ran it',
+    });
+  });
+
+  test('reports an mcp call that failed', () => {
+    const session = parseCodexHistory([
+      line('session_meta', {
+        id: 's2',
+        cwd: '/repo',
+      }),
+      line('event_msg', {
+        type: 'mcp_tool_call_end',
+        call_id: 'mcp-2',
+        invocation: {
+          tool: 'js',
+        },
+        result: { Err: 'server unreachable' },
+      }),
+    ].join('\n'));
+    const outcome = session.entries.find((entry) => {
+      return entry.kind === 'user' && entry.outcomes.length > 0;
+    });
+
+    if (outcome?.kind !== 'user') {
+      throw new Error('expected an mcp outcome');
+    }
+
+    expect(outcome.outcomes[0]).toMatchObject({
+      status: 'error',
+      text: 'server unreachable',
+    });
+  });
+
+  test('falls back when the event names neither the tool nor the call, and returns nothing', () => {
+    const session = parseCodexHistory([
+      line('session_meta', {
+        id: 's5',
+        cwd: '/repo',
+      }),
+      line('event_msg', {
+        type: 'mcp_tool_call_end',
+        invocation: { server: 'node_repl' },
+        result: { Ok: { content: [{ type: 'image' }] } },
+      }),
+    ].join('\n'));
+    const call = session.entries.find((entry) => {
+      return entry.kind === 'assistant';
+    });
+    const outcome = session.entries.find((entry) => {
+      return entry.kind === 'user' && entry.outcomes.length > 0;
+    });
+
+    if (call?.kind !== 'assistant' || call.blocks[0]?.blockType !== 'tool-use' || outcome?.kind !== 'user') {
+      throw new Error('expected an mcp call and its outcome');
+    }
+
+    expect(call.blocks[0].call.name).toBe('tool');
+    expect(call.blocks[0].call.id).toBe(outcome.outcomes[0]?.toolUseId);
+    expect(outcome.outcomes[0]?.text).toBeUndefined();
+  });
+
+  test('ignores an mcp event with no invocation to describe', () => {
+    const session = parseCodexHistory([
+      line('session_meta', {
+        id: 's3',
+        cwd: '/repo',
+      }),
+      line('event_msg', { type: 'mcp_tool_call_end' }),
+    ].join('\n'));
+
+    expect(session.entries).toEqual([]);
+  });
+
+  test('marks a compaction that arrives as a response item', () => {
+    const session = parseCodexHistory([
+      line('session_meta', {
+        id: 's4',
+        cwd: '/repo',
+      }),
+      line('response_item', {
+        type: 'compaction',
+        id: 'cmp_1',
+        encrypted_content: 'opaque',
+      }),
+    ].join('\n'));
+
+    expect(session.entries).toEqual([{
+      kind: 'summary',
+      text: 'Conversation compacted',
+    }]);
+  });
+});

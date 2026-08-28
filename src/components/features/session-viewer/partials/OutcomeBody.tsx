@@ -18,7 +18,7 @@ export const OutcomeBody: FC<OutcomeBodyProps> = ({ outcome, kind = 'default' })
   const hasText = outcome.text != null && outcome.text.length > 0;
 
   if (!hasText && (outcome.stderr == null || outcome.stderr.length === 0)) {
-    return outcome.images.length > 0 ? <OutcomeImages outcome={outcome} /> : null;
+    return outcome.images.length > 0 ? <OutcomeImages images={outcome.images} /> : null;
   }
 
   return (
@@ -29,7 +29,7 @@ export const OutcomeBody: FC<OutcomeBodyProps> = ({ outcome, kind = 'default' })
       {outcome.stderr != null && outcome.stderr.length > 0 && (
         <TruncatedText label={t('stderr')} text={outcome.stderr} />
       )}
-      {outcome.images.length > 0 && <OutcomeImages outcome={outcome} />}
+      {outcome.images.length > 0 && <OutcomeImages images={outcome.images} />}
     </div>
   );
 };

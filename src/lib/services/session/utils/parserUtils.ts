@@ -345,6 +345,24 @@ const partText = (parts: readonly RawResultPart[]): string => {
     .join('\n\n');
 };
 
+const attachedImages = (blocks: readonly RawContentBlock[]): readonly ResultImage[] => {
+  return blocks.flatMap((block) => {
+    if (block.type !== 'image') {
+      return [];
+    }
+
+    const source = block.source;
+
+    return source?.media_type == null
+      ? []
+      : [{
+          mediaType: source.media_type,
+          data: source.data,
+          url: source.url,
+        }];
+  });
+};
+
 const partImages = (parts: readonly RawResultPart[]): readonly ResultImage[] => {
   return parts.flatMap((part) => {
     const source = part.source;
@@ -469,6 +487,7 @@ const parseUserTurn = (raw: RawHistoryLine): UserTurnEntry | undefined => {
   const text = userText(typeof payload.content === 'string' ? payload.content : undefined, blocks);
   const splitText = splitUserText(text);
   const command = typeof payload.content === 'string' ? commandLabel(payload.content) : undefined;
+  const images = attachedImages(blocks);
 
   return {
     kind: 'user',
@@ -479,6 +498,7 @@ const parseUserTurn = (raw: RawHistoryLine): UserTurnEntry | undefined => {
     text: command != null ? '' : splitText.text,
     ...(splitText.injectedText == null ? {} : { injectedText: splitText.injectedText }),
     command,
+    ...(images.length === 0 ? {} : { images }),
     outcomes,
   };
 };

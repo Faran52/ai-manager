@@ -9,6 +9,7 @@ import { CodeLine, TruncatedText } from '@ui/index';
 import { defaultMessageFilters } from '../utils/messageFilterUtils';
 
 import { MessageHeader } from './MessageHeader';
+import { OutcomeImages } from './OutcomeImages';
 
 import type { ToolOutcome, UserTurnEntry } from '@services/history/historyService';
 import type { FC } from 'react';
@@ -27,6 +28,7 @@ export const UserTurn: FC<UserTurnProps> = ({
 }) => {
   const { t } = useTranslation('session');
   const injectedText = filters.text ? entry.injectedText : undefined;
+  const images = filters.text ? (entry.images ?? []) : [];
 
   return (
     <article
@@ -65,6 +67,11 @@ export const UserTurn: FC<UserTurnProps> = ({
         >
           {entry.text}
         </p>
+      )}
+      {images.length > 0 && (
+        <div className="max-w-[85%]" data-user-images>
+          <OutcomeImages images={images} />
+        </div>
       )}
       {injectedText != null && (
         <details className="max-w-[85%] text-start" data-injected-context>

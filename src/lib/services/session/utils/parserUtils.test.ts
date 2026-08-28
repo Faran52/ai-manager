@@ -1426,3 +1426,65 @@ describe('mcp and web tool results', () => {
     expect(outcomeOf({ type: 'mcp_result' }, 'mcp_tool_result')).toBeUndefined();
   });
 });
+
+describe('pasted images on a user turn', () => {
+  test('keeps a screenshot pasted beside the text', () => {
+    const entry = parseFields({
+      type: 'user',
+      uuid: 'u1',
+      timestamp: 't1',
+      message: {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: 'look at this',
+          },
+          {
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: 'image/png',
+              data: 'QUJD',
+            },
+          },
+        ],
+      },
+    });
+
+    if (entry?.kind !== 'user') {
+      throw new Error('expected a user entry');
+    }
+
+    expect(entry.text).toBe('look at this');
+    expect(entry.images).toEqual([{
+      mediaType: 'image/png',
+      data: 'QUJD',
+      url: undefined,
+    }]);
+  });
+
+  test('leaves images off a turn that has none, and skips a sourceless block', () => {
+    const entry = parseFields({
+      type: 'user',
+      uuid: 'u2',
+      timestamp: 't2',
+      message: {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: 'no pictures',
+          },
+          { type: 'image' },
+        ],
+      },
+    });
+
+    if (entry?.kind !== 'user') {
+      throw new Error('expected a user entry');
+    }
+
+    expect(entry.images).toBeUndefined();
+  });
+});
