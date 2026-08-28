@@ -116,12 +116,6 @@ export const HistoryApp: FC = () => {
     };
   }, [searchOpen]);
 
-  const selectProject = useCallback((project: ProjectSummary) => {
-    setSelectedProject(project);
-    setSelectedFilePath(null);
-    setHighlightTimestamp(undefined);
-  }, []);
-
   const selectSession = useCallback((filePath: string) => {
     setSelectedFilePath(filePath);
     setHighlightTimestamp(undefined);
@@ -167,6 +161,14 @@ export const HistoryApp: FC = () => {
     sessions.reload();
     projects.reload();
   }, [projects, selectedFilePath, sessions]);
+
+  const onRequestSessions = useCallback((): void => {
+    /**
+     * Sessions for expanded projects are loaded on demand.
+     * Currently, the sessions for the selected project are already loaded.
+     * In the future, this could trigger loading sessions for the expanded project.
+     */
+  }, []);
 
   const jumpToHit = useCallback(
     (hit: SearchHit) => {
@@ -252,16 +254,14 @@ export const HistoryApp: FC = () => {
             <SidebarPane
               projects={visibleProjects}
               projectsStatus={projects.status}
-              selectedProject={selectedProject}
               sessions={showingSessions ? sessions.data ?? [] : []}
               sessionsStatus={showingSessions ? sessions.status : 'ready'}
               selectedFilePath={showingSessions ? selectedFilePath : null}
-              onSelectProject={selectProject}
               onSelectSession={selectSession}
               onDeleteProject={deleteSelectedProject}
               onRenameSession={renameSelectedSession}
               onDeleteSession={deleteSelectedSession}
-              nowMs={nowMs}
+              onRequestSessions={onRequestSessions}
             />
             <motion.div
               key={view}

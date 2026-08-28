@@ -51,12 +51,8 @@ const session = (id: string, title: string): SessionSummary => {
 
 const base = {
   projectsStatus: 'ready',
-  selectedProject: null,
   sessionsStatus: 'ready',
   selectedFilePath: null,
-  onSelectProject: () => {
-    return undefined;
-  },
   onSelectSession: () => {
     return undefined;
   },
@@ -69,12 +65,13 @@ const base = {
   onDeleteSession: () => {
     return Promise.resolve();
   },
-  nowMs: Date.UTC(2026, 0, 3),
+  onRequestSessions: () => {
+    return undefined;
+  },
 } satisfies Omit<SidebarPaneProps, 'projects' | 'sessions'>;
 
 describe('SidebarPane', () => {
   test('lists projects and sessions with selection callbacks', async () => {
-    const onSelectProject = vi.fn();
     const onSelectSession = vi.fn();
 
     render(
@@ -85,7 +82,6 @@ describe('SidebarPane', () => {
           ...session('a', 'Login fix'),
           messageCount: 1,
         }]}
-        onSelectProject={onSelectProject}
         onSelectSession={onSelectSession}
       />,
     );
@@ -94,7 +90,6 @@ describe('SidebarPane', () => {
     await userEvent.click(screen.getByText('Login fix'));
 
     expect(screen.getByText('1 message')).toBeDefined();
-    expect(onSelectProject).toHaveBeenCalledWith(project('p1', 'webapp'));
     expect(onSelectSession).toHaveBeenCalledWith('/r/a.jsonl');
   });
 
@@ -105,7 +100,6 @@ describe('SidebarPane', () => {
       <SidebarPane
         {...base}
         projects={[selected, project('p2', 'cli-tool')]}
-        selectedProject={selected}
         sessions={[session('a', 'Login fix'), session('b', 'Deploy pipeline')]}
       />,
     );
@@ -130,8 +124,7 @@ describe('SidebarPane', () => {
     );
 
     expect(screen.getAllByRole('status')).toHaveLength(1);
-    expect(screen.getByText('Select a project')).toBeDefined();
-    expect(screen.getByLabelText('Filter sessions').hasAttribute('disabled')).toBe(true);
+    expect(screen.getByText('No projects')).toBeDefined();
   });
 
   test('uses singular session counts and distinguishes empty session states', async () => {
@@ -143,7 +136,6 @@ describe('SidebarPane', () => {
       <SidebarPane
         {...base}
         projects={[selected]}
-        selectedProject={selected}
         sessions={[]}
       />,
     );
@@ -155,7 +147,6 @@ describe('SidebarPane', () => {
       <SidebarPane
         {...base}
         projects={[selected]}
-        selectedProject={selected}
         sessions={[session('a', 'Login fix')]}
       />,
     );
@@ -166,20 +157,19 @@ describe('SidebarPane', () => {
 });
 
 describe('SidebarPane selection highlighting', () => {
-  test('marks the active project and session', () => {
+  test('marks the active session', () => {
     render(
       <SidebarPane
         {...base}
         projects={[project('p1', 'webapp')]}
         sessions={[session('a', 'Login fix')]}
-        selectedProject={project('p1', 'webapp')}
         selectedFilePath="/r/a.jsonl"
       />,
     );
 
     const active = document.querySelectorAll('[aria-current="true"]');
 
-    expect(active).toHaveLength(2);
+    expect(active).toHaveLength(1);
   });
 });
 
@@ -203,7 +193,6 @@ describe('SidebarPane haystack sources', () => {
       <SidebarPane
         {...base}
         projects={[selected]}
-        selectedProject={selected}
         sessions={[summaryOnly, previewOnly]}
       />,
     );
@@ -491,27 +480,4 @@ describe('SidebarPane agent and mutation actions', () => {
       expect(screen.queryByRole('dialog')).toBeNull();
     });
   });
-});
-
-test('resizes the projects pane with the divider and clamps it to the allowed range', async () => {
-  localStorage.setItem('acm-projects-pane', '260');
-  render(<SidebarPane {...base} projects={[project('p1', 'webapp')]} sessions={[]} />);
-
-  const divider = screen.getByRole('slider', { name: 'Resize projects and sessions' });
-
-  await userEvent.type(divider, '{arrowdown}');
-  expect(divider.getAttribute('aria-valuenow')).toBe('284');
-
-  for (let press = 0; press < 20; press += 1) {
-    fireEvent.keyDown(divider, { key: 'ArrowUp' });
-  }
-  expect(divider.getAttribute('aria-valuenow')).toBe('120');
-
-  for (let press = 0; press < 30; press += 1) {
-    fireEvent.keyDown(divider, { key: 'ArrowDown' });
-  }
-  expect(divider.getAttribute('aria-valuenow')).toBe('640');
-
-  fireEvent.keyDown(divider, { key: 'Enter' });
-  expect(divider.getAttribute('aria-valuenow')).toBe('640');
 });
