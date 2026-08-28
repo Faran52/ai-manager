@@ -248,7 +248,7 @@ describe('SessionViewer states', () => {
 
   test('scrolls to a highlighted timestamp once entries exist', async () => {
     stubPage();
-    const scrollSpy = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => {
+    const scrollSpy = vi.spyOn(Element.prototype, 'scrollTo').mockImplementation(() => {
       return undefined;
     });
 
@@ -265,14 +265,13 @@ describe('SessionViewer states', () => {
     // The entries arriving and the scroll effect running are separate commits,
     // so sampling the spy the moment the text appears is a race.
     await waitFor(() => {
-      expect(scrollSpy).toHaveBeenCalledTimes(1);
+      expect(scrollSpy).toHaveBeenCalled();
     });
-    expect(scrollSpy).toHaveBeenCalledWith({ block: 'center' });
   });
 
   test('does not re-scroll for an already-scrolled highlight', async () => {
     stubPage();
-    const scrollSpy = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => {
+    const scrollSpy = vi.spyOn(Element.prototype, 'scrollTo').mockImplementation(() => {
       return undefined;
     });
 
@@ -303,7 +302,18 @@ describe('SessionViewer states', () => {
       />,
     );
 
-    expect(scrollSpy).toHaveBeenCalledTimes(1);
+    const afterRepeat = scrollSpy.mock.calls.length;
+
+    view.rerender(
+      <SessionViewer
+        filePath="/f.jsonl"
+        projectLabel="p"
+        sessionTitle="T"
+        highlightTimestamp="2026-05-05T10:00:00Z"
+      />,
+    );
+
+    expect(scrollSpy.mock.calls).toHaveLength(afterRepeat);
   });
 });
 

@@ -68,7 +68,7 @@ describe('MessageTimeline', () => {
     expect(screen.getByText('answer')).toBeDefined();
     expect(screen.getByText('recap line')).toBeDefined();
 
-    const wrappers = document.querySelectorAll('[data-message-timeline] > div');
+    const wrappers = document.querySelectorAll('[data-message-timeline] [data-index]');
 
     expect(wrappers[2]?.className).toContain('opacity-60');
   });

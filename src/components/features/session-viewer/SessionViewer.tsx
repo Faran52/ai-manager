@@ -1,8 +1,4 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -49,26 +45,13 @@ export const SessionViewer: FC<SessionViewerProps> = ({
   const [filters, setFilters] = useState(defaultMessageFilters);
   const supportsSidechains = agentOption(agent).supportsSidechains === true;
   const feed = useMessages(filePath, agent, supportsSidechains && includeSidechain);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const scrolledForRef = useRef<string | null>(null);
+  /**
+   * A callback ref, not useRef: the timeline's virtualizer has to attach its
+   * scroll listener to this element, and a ref object is still null when the
+   * child mounts, so nothing would ever re-render to hand it over.
+   */
+  const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
   const visibleEntries = countVisibleEntries(feed.entries, filters);
-
-  useEffect(() => {
-    if (highlightTimestamp == null || feed.entries.length === 0) {
-      return;
-    }
-
-    if (scrolledForRef.current === highlightTimestamp) {
-      return;
-    }
-
-    const target = scrollRef.current?.querySelector(`[data-timestamp="${highlightTimestamp}"]`);
-
-    if (target != null) {
-      target.scrollIntoView({ block: 'center' });
-      scrolledForRef.current = highlightTimestamp;
-    }
-  }, [feed.entries, highlightTimestamp]);
 
   if (filePath == null) {
     return (
@@ -105,7 +88,12 @@ export const SessionViewer: FC<SessionViewerProps> = ({
 
     body = (
       <>
-        <MessageTimeline entries={feed.entries} filters={filters} />
+        <MessageTimeline
+          entries={feed.entries}
+          filters={filters}
+          scrollElement={scrollElement}
+          highlightTimestamp={highlightTimestamp}
+        />
         {feed.hasMore && (
           <div className="flex justify-center pt-4 pb-2">
             <Button variant="subtle" onClick={feed.loadMore} data-load-more>
@@ -174,7 +162,7 @@ export const SessionViewer: FC<SessionViewerProps> = ({
       />
 
       <div
-        ref={scrollRef}
+        ref={setScrollElement}
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4"
       >
         <div className="mx-auto max-w-5xl">
