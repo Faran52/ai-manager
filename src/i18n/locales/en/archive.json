@@ -1,0 +1,18 @@
+{
+  "heading": "Archive manager",
+  "intro": "Agents prune their own history on their own schedule. An archive is a full copy of every transcript they still hold, kept outside their reach.",
+  "archiveCount": "Archives",
+  "sessionsSaved": "Sessions saved",
+  "spaceUsed": "Space used",
+  "createArchive": "Create archive",
+  "creating": "Archiving…",
+  "noteLabel": "Archive note",
+  "notePlaceholder": "Optional note, for example \"before the 2.0 upgrade\"",
+  "noArchives": "No archives yet",
+  "noArchivesHint": "Create one now and today's transcripts survive whatever the agents delete next.",
+  "archiveMeta_one": "{{count}} session · {{size}}",
+  "archiveMeta_other": "{{count}} sessions · {{size}}",
+  "archiveEmpty": "This archive holds no sessions.",
+  "deleteArchive": "Delete archive",
+  "deleteArchiveWarning": "The archived copies are removed for good. Whatever the agents have since deleted cannot be recovered afterwards."
+}

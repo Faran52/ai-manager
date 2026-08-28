@@ -16,16 +16,17 @@ import {
   defaultMessageFilters,
   hasActiveMessageFilters,
   toggleMessageFilter,
-} from '../messageFilters';
+} from '../utils/messageFilterUtils';
 
 import type { FC } from 'react';
-import type { MessageFilterKey, MessageFilters } from '../messageFilters';
+import type { MessageFilterKey, MessageFilters } from '../utils/messageFilterUtils';
 
 export interface MessageFilterToolbarProps {
   readonly filters: MessageFilters;
   readonly total: number;
   readonly visible: number;
   readonly onChange: (filters: MessageFilters) => void;
+  readonly onDismiss: () => void;
 }
 
 interface FilterOption {
@@ -40,6 +41,7 @@ export const MessageFilterToolbar: FC<MessageFilterToolbarProps> = ({
   total,
   visible,
   onChange,
+  onDismiss,
 }) => {
   const { t } = useTranslation('session');
   const [open, setOpen] = useState(false);
@@ -111,9 +113,6 @@ export const MessageFilterToolbar: FC<MessageFilterToolbarProps> = ({
           aria-haspopup="menu"
           aria-expanded={open}
           aria-label={t('filterMessages')}
-          onPointerDown={(event) => {
-            event.stopPropagation();
-          }}
           onClick={() => {
             setOpen((current) => {
               return !current;
@@ -218,6 +217,18 @@ export const MessageFilterToolbar: FC<MessageFilterToolbarProps> = ({
           <RotateCcw className="size-3.5" />
         </button>
       )}
+      <button
+        type="button"
+        aria-label={t('hideFilterBar')}
+        title={t('hideFilterBar')}
+        onClick={onDismiss}
+        className="
+          ms-auto shrink-0 rounded-md p-1 text-muted-foreground
+          hover:bg-accent hover:text-foreground
+        "
+      >
+        <X className="size-3.5" />
+      </button>
     </div>
   );
 };

@@ -6,9 +6,16 @@ import type {
   ProjectUsage,
   SetupFinding,
 } from '@services/agents/agentsService';
+import type { ArchiveManifest, ArchiveSummary } from '@services/archive/archiveService';
+import type { EditedFile } from '@services/edits/editsService';
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
 import type { SearchOutcome } from '@services/search/searchService';
 import type { SessionPage } from '@services/session/sessionService';
+import type {
+  ScopeSettings,
+  SettingsPatch,
+  SettingsScope,
+} from '@services/settings/settingsService';
 import type { ProjectStats } from '@services/stats/statsService';
 
 export interface ProjectsResponse {
@@ -67,6 +74,52 @@ export interface RenameSessionBody extends SessionMutationBody {
 
 export interface MutationResponse {
   readonly ok: true;
+}
+
+export interface ArchivesResponse {
+  readonly archives: readonly ArchiveSummary[];
+}
+
+export interface ArchiveBody {
+  readonly id: string;
+}
+
+export interface ArchiveDetailResponse {
+  readonly archive: ArchiveManifest | null;
+}
+
+export interface CreateArchiveBody {
+  readonly note?: string | undefined;
+}
+
+export interface CreateArchiveResponse {
+  readonly archive: ArchiveSummary;
+}
+
+export interface RecentEditsBody {
+  readonly agent: AgentId;
+  readonly projectId: string;
+}
+
+export interface RecentEditsResponse {
+  readonly files: readonly EditedFile[];
+}
+
+export interface SettingsBody {
+  readonly projectPath: string;
+}
+
+export interface SettingsResponse {
+  readonly scopes: readonly ScopeSettings[];
+}
+
+export interface WriteSettingsBody extends SettingsBody {
+  readonly scope: SettingsScope;
+  readonly patch: SettingsPatch;
+}
+
+export interface WriteSettingsResponse {
+  readonly scope: ScopeSettings;
 }
 
 export interface AgentSetupBody {

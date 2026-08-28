@@ -2,23 +2,30 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
+  Archive,
   BarChart3,
   HeartPulse,
   History,
+  LayoutGrid,
   RefreshCw,
   Search,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 import { cn } from '@utils/cnUtils';
 
 import { Button, Toast } from '@ui/index';
 import { LanguagePicker } from '@features/language';
-import { AccentPicker, ThemePicker } from '@features/theme';
+import {
+  AccentPicker,
+  FontSizePicker,
+  ThemePicker,
+} from '@features/theme';
 
 import type { ThemeMode } from '@features/theme';
 import type { FC } from 'react';
 
-export type AppView = 'sessions' | 'analytics' | 'health';
+export type AppView = 'sessions' | 'analytics' | 'health' | 'archive' | 'settings' | 'board';
 
 export interface AppHeaderProps {
   readonly view: AppView;
@@ -116,6 +123,39 @@ export const AppHeader: FC<AppHeaderProps> = ({
             <HeartPulse className="size-3.5" />
             {t('navHealth')}
           </Button>
+          <Button
+            size="sm"
+            variant={view === 'archive' ? 'primary' : 'ghost'}
+            onClick={() => {
+              onViewChange('archive');
+            }}
+            pressed={view === 'archive'}
+          >
+            <Archive className="size-3.5" />
+            {t('navArchive')}
+          </Button>
+          <Button
+            size="sm"
+            variant={view === 'settings' ? 'primary' : 'ghost'}
+            onClick={() => {
+              onViewChange('settings');
+            }}
+            pressed={view === 'settings'}
+          >
+            <SlidersHorizontal className="size-3.5" />
+            {t('navSettings')}
+          </Button>
+          <Button
+            size="sm"
+            variant={view === 'board' ? 'primary' : 'ghost'}
+            onClick={() => {
+              onViewChange('board');
+            }}
+            pressed={view === 'board'}
+          >
+            <LayoutGrid className="size-3.5" />
+            {t('navBoard')}
+          </Button>
         </nav>
 
         <div className="ms-auto flex items-center gap-0.5">
@@ -143,6 +183,7 @@ export const AppHeader: FC<AppHeaderProps> = ({
             <RefreshCw className={cn('size-3.5', refreshing && 'animate-spin')} />
           </Button>
           <AccentPicker />
+          <FontSizePicker />
           <LanguagePicker />
           <ThemePicker mode={themeMode} onChange={onThemeChange} />
         </div>

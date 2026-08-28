@@ -1,6 +1,6 @@
 ---
 import '../styles/global.css';
-import { accentStorageKey, themeStorageKey } from '@config/storageKeys';
+import { accentStorageKey, fontSizeStorageKey, themeStorageKey } from '@config/storageKeys';
 import { HistoryApp } from '@features/app-shell';
 ---
 
@@ -14,13 +14,14 @@ import { HistoryApp } from '@features/app-shell';
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
 		<title>AI Chat Manager</title>
-		<script is:inline define:vars={{ themeStorageKey, accentStorageKey }}>
+		<script is:inline define:vars={{ themeStorageKey, accentStorageKey, fontSizeStorageKey }}>
 			const stored = localStorage.getItem(themeStorageKey);
 			const dark = stored === 'dark' || (stored !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
 			if (dark) {
 			  document.documentElement.classList.add('dark');
 			}
 			document.documentElement.dataset.accent = localStorage.getItem(accentStorageKey) || 'teal';
+			document.documentElement.dataset.fontSize = localStorage.getItem(fontSizeStorageKey) || 'normal';
 		</script>
 	</head>
 	<body>

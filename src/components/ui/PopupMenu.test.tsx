@@ -27,12 +27,12 @@ test('renders only while open and dismisses for external events', () => {
     </PopupMenu>,
   );
 
-  fireEvent.pointerDown(screen.getByRole('menu'));
-  fireEvent.pointerDown(window);
+  fireEvent.click(screen.getByRole('menu'));
+  fireEvent.click(window);
   fireEvent.scroll(screen.getByRole('menu'));
   expect(onClose).not.toHaveBeenCalled();
 
-  fireEvent.pointerDown(document.body);
+  fireEvent.click(document.body);
   fireEvent.keyDown(window, { key: 'Enter' });
   fireEvent.keyDown(window, { key: 'Escape' });
   fireEvent.blur(window);
@@ -41,6 +41,30 @@ test('renders only while open and dismisses for external events', () => {
 
   expect(onClose).toHaveBeenCalledTimes(5);
   unmount();
+});
+
+test('survives the click that opened it', () => {
+  const onClose = vi.fn();
+  // Created before the menu opens, dispatched after, which is what a real
+  // browser does with the click still bubbling when the effect subscribes.
+  const opening = new MouseEvent('click', { bubbles: true });
+  const { rerender } = render(
+    <PopupMenu open={false} onClose={onClose} label="Actions">
+      <button type="button">Action</button>
+    </PopupMenu>,
+  );
+
+  rerender(
+    <PopupMenu open onClose={onClose} label="Actions">
+      <button type="button">Action</button>
+    </PopupMenu>,
+  );
+
+  document.body.dispatchEvent(opening);
+  expect(onClose).not.toHaveBeenCalled();
+
+  fireEvent.click(document.body);
+  expect(onClose).toHaveBeenCalledTimes(1);
 });
 
 test('positions a context menu inside the viewport', () => {

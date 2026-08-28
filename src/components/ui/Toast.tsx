@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react';
 
-import { riseTransition } from './motionTokens';
+import { riseTransition } from './constants';
 
 import type { FC } from 'react';
 

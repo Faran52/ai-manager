@@ -1,6 +1,11 @@
 import type {
   AgentSetupBody,
   AgentSetupResponse,
+  ArchiveBody,
+  ArchiveDetailResponse,
+  ArchivesResponse,
+  CreateArchiveBody,
+  CreateArchiveResponse,
   ListSessionsBody,
   LoadSessionBody,
   MessagesResponse,
@@ -8,13 +13,19 @@ import type {
   ProjectMutationBody,
   ProjectsResponse,
   ProjectStatsBody,
+  RecentEditsBody,
+  RecentEditsResponse,
   RenameSessionBody,
   SearchBody,
   SearchResponse,
   SessionMutationBody,
   SessionsResponse,
+  SettingsBody,
+  SettingsResponse,
   StatsResponse,
   UpdateCheckResponse,
+  WriteSettingsBody,
+  WriteSettingsResponse,
 } from './contracts';
 
 interface EndpointDefinition<T extends object> {
@@ -57,6 +68,30 @@ const isUpdateCheck = (value: object): value is UpdateCheckResponse => {
 
 const isMutationResponse = (value: object): value is MutationResponse => {
   return 'ok' in value && value.ok === true;
+};
+
+const hasArchives = (value: object): value is ArchivesResponse => {
+  return 'archives' in value && Array.isArray(value.archives);
+};
+
+const isArchiveDetail = (value: object): value is ArchiveDetailResponse => {
+  return 'archive' in value;
+};
+
+const hasFiles = (value: object): value is RecentEditsResponse => {
+  return 'files' in value && Array.isArray(value.files);
+};
+
+const hasScopes = (value: object): value is SettingsResponse => {
+  return 'scopes' in value && Array.isArray(value.scopes);
+};
+
+const isWrittenScope = (value: object): value is WriteSettingsResponse => {
+  return 'scope' in value && typeof value.scope === 'object' && value.scope !== null;
+};
+
+const isCreatedArchive = (value: object): value is CreateArchiveResponse => {
+  return 'archive' in value && typeof value.archive === 'object' && value.archive !== null;
 };
 
 const PROJECTS: EndpointDefinition<ProjectsResponse> = {
@@ -103,6 +138,41 @@ const AGENT_SETUP: EndpointDefinition<AgentSetupResponse> = {
   path: '/api/agent-setup',
   accepts: isAgentSetupResponse,
   label: 'agent setup',
+};
+const ARCHIVES: EndpointDefinition<ArchivesResponse> = {
+  path: '/api/archives',
+  accepts: hasArchives,
+  label: 'archive list',
+};
+const ARCHIVE_READ: EndpointDefinition<ArchiveDetailResponse> = {
+  path: '/api/archive-read',
+  accepts: isArchiveDetail,
+  label: 'archive contents',
+};
+const ARCHIVE_CREATE: EndpointDefinition<CreateArchiveResponse> = {
+  path: '/api/archive-create',
+  accepts: isCreatedArchive,
+  label: 'archive creation',
+};
+const ARCHIVE_DELETE: EndpointDefinition<MutationResponse> = {
+  path: '/api/archive-delete',
+  accepts: isMutationResponse,
+  label: 'archive deletion',
+};
+const RECENT_EDITS: EndpointDefinition<RecentEditsResponse> = {
+  path: '/api/recent-edits',
+  accepts: hasFiles,
+  label: 'recent edits',
+};
+const SETTINGS: EndpointDefinition<SettingsResponse> = {
+  path: '/api/settings',
+  accepts: hasScopes,
+  label: 'settings',
+};
+const SETTINGS_WRITE: EndpointDefinition<WriteSettingsResponse> = {
+  path: '/api/settings-write',
+  accepts: isWrittenScope,
+  label: 'settings save',
 };
 const RENAME_SESSION: EndpointDefinition<MutationResponse> = {
   path: '/api/session-rename',
@@ -191,6 +261,34 @@ export const fetchStats = (body: ProjectStatsBody): Promise<StatsResponse> => {
 
 export const deleteSession = (body: SessionMutationBody): Promise<MutationResponse> => {
   return requestEndpoint(DELETE_SESSION, body);
+};
+
+export const fetchRecentEdits = (body: RecentEditsBody): Promise<RecentEditsResponse> => {
+  return requestEndpoint(RECENT_EDITS, body);
+};
+
+export const fetchSettings = (body: SettingsBody): Promise<SettingsResponse> => {
+  return requestEndpoint(SETTINGS, body);
+};
+
+export const writeSettings = (body: WriteSettingsBody): Promise<WriteSettingsResponse> => {
+  return requestEndpoint(SETTINGS_WRITE, body);
+};
+
+export const fetchArchives = (): Promise<ArchivesResponse> => {
+  return requestEndpoint(ARCHIVES, {});
+};
+
+export const fetchArchive = (body: ArchiveBody): Promise<ArchiveDetailResponse> => {
+  return requestEndpoint(ARCHIVE_READ, body);
+};
+
+export const createArchive = (body: CreateArchiveBody): Promise<CreateArchiveResponse> => {
+  return requestEndpoint(ARCHIVE_CREATE, body);
+};
+
+export const deleteArchive = (body: ArchiveBody): Promise<MutationResponse> => {
+  return requestEndpoint(ARCHIVE_DELETE, body);
 };
 
 export const deleteProject = (body: ProjectMutationBody): Promise<MutationResponse> => {

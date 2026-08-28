@@ -31,4 +31,36 @@ const config = await defineConfig({
   },
 });
 
-export default config;
+/*
+ * Placement, which the naming rules above cannot see. A component folder holds
+ * components; every other module is a named bucket, so the convention stops
+ * being prose that rots: constants.ts, utils/*Utils.ts, hooks/use*.ts, or a
+ * *Service.ts entry point.
+ */
+const placement = {
+  name: 'ai-chat-manager/component-module-placement',
+  files: ['src/components/**/*.ts'],
+  ignores: ['src/components/**/*.test.ts'],
+  rules: {
+    'check-file/filename-naming-convention': [
+      'error',
+      { 'src/components/**/*.ts': '@(index|constants|*Utils|use*|*Service)' },
+      {
+        errorMessage:
+          'A .ts file under components must be index.ts, constants.ts, *Utils.ts, use*.ts or *Service.ts.',
+      },
+    ],
+    'check-file/folder-match-with-fex': [
+      'error',
+      {
+        'use*.ts': '**/hooks/',
+        '*Utils.ts': '**/utils/',
+      },
+      { errorMessage: 'This file belongs in {{ folderPattern }}, not "{{ targetPath }}".' },
+    ],
+  },
+};
+
+const rules = [...config, placement];
+
+export default rules;

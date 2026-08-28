@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'motion/react';
 
 import { cn } from '@utils/cnUtils';
 
-import { popoverTransition } from './motionTokens';
+import { popoverTransition } from './constants';
 
 import type { MotionStyle } from 'motion/react';
 import type { FC, ReactNode } from 'react';
@@ -38,14 +38,32 @@ export const PopupMenu: FC<PopupMenuProps> = ({
     closeRef.current = onClose;
   }, [onClose]);
 
-  // Depends on `open` alone: callers pass inline `onClose` closures, and re-subscribing
-  // five window listeners on every parent render churns event delivery.
+  /**
+   * Dismissal listens on `click`, not `pointerdown`: a trigger that toggles on
+   * click would otherwise be reopened by its own click after pointerdown had
+   * already closed the menu.
+   *
+   * The catch is that the click which opened the menu is still travelling when
+   * this effect subscribes, so it reaches the window listener and would close
+   * the menu on the same gesture. An event created before the menu opened
+   * cannot be a dismissal, so the timestamp is the discriminator.
+   *
+   * Depends on `open` alone because callers pass inline `onClose` closures, and
+   * re-subscribing five window listeners on every parent render churns event
+   * delivery.
+   */
   useEffect(() => {
     if (!open) {
       return undefined;
     }
 
+    const openedAt = performance.now();
+
     const closeOutside = (event: Event): void => {
+      if (event.timeStamp <= openedAt) {
+        return;
+      }
+
       if (event.target instanceof Node && !surfaceRef.current?.contains(event.target)) {
         closeRef.current();
       }
@@ -56,14 +74,14 @@ export const PopupMenu: FC<PopupMenuProps> = ({
       }
     };
 
-    window.addEventListener('pointerdown', closeOutside);
+    window.addEventListener('click', closeOutside);
     window.addEventListener('keydown', closeOnEscape);
     window.addEventListener('blur', closeRef.current);
     window.addEventListener('resize', closeRef.current);
     document.addEventListener('scroll', closeOutside, true);
 
     return () => {
-      window.removeEventListener('pointerdown', closeOutside);
+      window.removeEventListener('click', closeOutside);
       window.removeEventListener('keydown', closeOnEscape);
       window.removeEventListener('blur', closeRef.current);
       window.removeEventListener('resize', closeRef.current);
@@ -86,9 +104,21 @@ export const PopupMenu: FC<PopupMenuProps> = ({
           role="menu"
           aria-label={label}
           style={style}
-          initial={{ scale: 0.98 }}
-          animate={{ scale: 1 }}
-          exit={{ scale: 0.98 }}
+          initial={{
+            opacity: 0,
+            y: '-0.25rem',
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          exit={{
+            opacity: 0,
+            y: '-0.125rem',
+            // A menu on its way out still covers what is underneath it, and a
+            // click landing there hits the menu rather than the thing aimed at.
+            pointerEvents: 'none',
+          }}
           transition={popoverTransition}
           className={cn(
             `

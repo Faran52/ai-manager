@@ -29,7 +29,7 @@ const turn = (blocks: AssistantTurnEntry['blocks'], over?: Partial<AssistantTurn
 };
 
 describe('AssistantTurn', () => {
-  test('renders meta chips for model, output tokens, cached tokens and cost', () => {
+  test('names the model and hides its usage behind a title', () => {
     render(
       <AssistantTurn
         entry={turn([{
@@ -42,10 +42,12 @@ describe('AssistantTurn', () => {
       />,
     );
 
-    expect(screen.getByText('claude-sonnet-5')).toBeDefined();
-    expect(screen.getByText(/22 out/)).toBeDefined();
-    expect(screen.getByText(/33 cached/)).toBeDefined();
-    expect(screen.getByText('$0.25')).toBeDefined();
+    const model = screen.getByText('claude-sonnet-5');
+
+    expect(model.getAttribute('title')).toContain('22 out');
+    expect(model.getAttribute('title')).toContain('33 cached');
+    expect(model.getAttribute('title')).toContain('$0.25');
+    expect(screen.getByText('Assistant')).toBeDefined();
     expect(screen.getByText('hello')).toBeDefined();
   });
 

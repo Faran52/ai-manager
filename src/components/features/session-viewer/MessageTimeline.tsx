@@ -12,38 +12,85 @@ import { cn } from '@utils/cnUtils';
 
 import { fadeTransition } from '@ui/index';
 
-import { blockIsVisible, defaultMessageFilters } from './messageFilters';
 import {
   AssistantTurn,
+  DateDivider,
+  FloatingDate,
   SummaryDivider,
   SystemNotice,
   UserTurn,
 } from './partials';
-import { buildTimelineModel, rowIndexForTimestamp } from './timelineRows';
+import { blockIsVisible, defaultMessageFilters } from './utils/messageFilterUtils';
+import {
+  buildTimelineModel,
+  dayAtRow,
+  rowIndexForTimestamp,
+} from './utils/timelineUtils';
 
 import type { HistoryEntry, ToolOutcome } from '@services/history/historyService';
 import type { FC } from 'react';
-import type { MessageFilters } from './messageFilters';
-import type { TimelineRow } from './timelineRows';
+import type { MessageFilters } from './utils/messageFilterUtils';
+import type { TimelineRow } from './utils/timelineUtils';
 
 export interface MessageTimelineProps {
   readonly entries: readonly HistoryEntry[];
   readonly filters?: MessageFilters;
   readonly scrollElement?: HTMLDivElement | null;
   readonly highlightTimestamp?: string | undefined;
+  readonly navigation?: TimelineNavigation | null;
+  readonly nowMs?: number;
 }
 
-// A turn is roughly this tall before it is measured. Only the first paint leans
-// on it, so being wrong costs a frame of scrollbar drift, not a layout bug.
-const ESTIMATED_ROW_PX = 220;
+export interface TimelineNavigation {
+  readonly index: number;
+}
+
+/**
+ * How tall each row is before it is measured. One number for every row made the
+ * total height wrong by a wide margin on a mixed transcript, and the scrollbar
+ * jumped as rows mounted and corrected it, so each kind estimates its own.
+ */
+const DATE_ROW_PX = 32;
+const SUMMARY_ROW_PX = 56;
+const SYSTEM_ROW_PX = 72;
+const USER_ROW_PX = 104;
+const ASSISTANT_BASE_PX = 64;
+const ASSISTANT_BLOCK_PX = 120;
 const OVERSCAN = 6;
 
-const renderEntry = (
+const estimateRow = (row: TimelineRow | undefined): number => {
+  /* v8 ignore next 3 -- the virtualizer only asks about indexes within its own count */
+  if (row == null) {
+    return USER_ROW_PX;
+  }
+
+  if (row.kind === 'date') {
+    return DATE_ROW_PX;
+  }
+
+  switch (row.entry.kind) {
+    case 'user':
+      return USER_ROW_PX;
+    case 'assistant':
+      return ASSISTANT_BASE_PX + row.entry.blocks.length * ASSISTANT_BLOCK_PX;
+    case 'system':
+      return SYSTEM_ROW_PX;
+    case 'summary':
+      return SUMMARY_ROW_PX;
+  }
+};
+
+const renderRow = (
   row: TimelineRow,
   pairs: ReadonlyMap<string, ToolOutcome>,
   orphans: ReadonlyMap<string, readonly ToolOutcome[]>,
   filters: MessageFilters,
+  nowMs: number,
 ) => {
+  if (row.kind === 'date') {
+    return <DateDivider timestampMs={row.timestampMs} nowMs={nowMs} />;
+  }
+
   const { entry } = row;
 
   switch (entry.kind) {
@@ -53,6 +100,7 @@ const renderEntry = (
           entry={entry}
           orphans={orphans.get(entry.uuid) ?? []}
           filters={filters.content}
+          showHeader={!row.continues}
         />
       );
     case 'assistant':
@@ -62,9 +110,13 @@ const renderEntry = (
           visibleBlocks={entry.blocks.filter((block) => {
             return blockIsVisible(block, filters);
           })}
+          hiddenCount={entry.blocks.length - entry.blocks.filter((block) => {
+            return blockIsVisible(block, filters);
+          }).length}
           outcomeFor={(toolUseId) => {
             return pairs.get(toolUseId);
           }}
+          showHeader={!row.continues}
         />
       );
     case 'system':
@@ -79,6 +131,8 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
   filters = defaultMessageFilters(),
   scrollElement,
   highlightTimestamp,
+  navigation,
+  nowMs = Date.now(),
 }) => {
   const listRef = useRef<HTMLDivElement>(null);
   const ownScrollRef = useRef<HTMLDivElement>(null);
@@ -111,8 +165,8 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
     getScrollElement: () => {
       return scrollElement ?? ownScrollRef.current;
     },
-    estimateSize: () => {
-      return ESTIMATED_ROW_PX;
+    estimateSize: (index) => {
+      return estimateRow(model.rows[index]);
     },
     getItemKey: (index) => {
       /* v8 ignore next -- the virtualizer only asks about indexes within its own count */
@@ -139,15 +193,28 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
     scrolledForRef.current = highlightTimestamp;
   }, [highlightTimestamp, model.rows, virtualizer]);
 
+  useEffect(() => {
+    if (navigation != null) {
+      virtualizer.scrollToIndex(navigation.index, { align: 'center' });
+    }
+  }, [navigation, virtualizer]);
+
+  const firstVisible = virtualizer.getVirtualItems()[0];
+  // A separator on screen already names the day; the pill is for when it is not.
+  const floatingDay = firstVisible == null || model.rows[firstVisible.index]?.kind === 'date'
+    ? 0
+    : dayAtRow(model.rows, firstVisible.index);
+
   return (
     <motion.div
       ref={ownScrollRef}
-      className="space-y-4"
+      className="relative space-y-4"
       data-message-timeline
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={fadeTransition}
     >
+      <FloatingDate timestampMs={floatingDay} nowMs={nowMs} />
       <div
         ref={listRef}
         className="relative w-full"
@@ -168,11 +235,11 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
               data-index={item.index}
               className={cn(
                 'absolute top-0 left-0 w-full pb-4 transition-opacity',
-                row.dimmed && 'opacity-60',
+                row.kind === 'entry' && row.dimmed && 'opacity-60',
               )}
               style={{ transform: `translateY(${String(item.start - scrollMarginRef.current)}px)` }}
             >
-              {renderEntry(row, model.pairs, model.orphans, filters)}
+              {renderRow(row, model.pairs, model.orphans, filters, nowMs)}
             </div>
           );
         })}

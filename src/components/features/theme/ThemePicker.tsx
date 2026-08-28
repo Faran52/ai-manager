@@ -15,7 +15,7 @@ import {
 } from '@ui/index';
 
 import type { FC, ReactNode } from 'react';
-import type { ThemeMode } from './useTheme';
+import type { ThemeMode } from './hooks/useTheme';
 
 export interface ThemePickerProps {
   readonly mode: ThemeMode;

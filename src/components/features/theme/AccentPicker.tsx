@@ -9,10 +9,10 @@ import {
   PopupMenu,
 } from '@ui/index';
 
-import { accentNames, useAccent } from './useAccent';
+import { accentNames, useAccent } from './hooks/useAccent';
 
 import type { FC } from 'react';
-import type { AccentName } from './useAccent';
+import type { AccentName } from './hooks/useAccent';
 
 // Keys, not text, the map lives outside the component where t is unavailable.
 const LABEL_KEYS: Record<AccentName, string> = {

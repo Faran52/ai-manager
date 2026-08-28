@@ -50,6 +50,8 @@ export type ToolCallInput
   | {
     readonly kind: 'file-read';
     path: string;
+    offset?: number | undefined;
+    limit?: number | undefined;
   }
   | {
     readonly kind: 'search-files';
@@ -85,6 +87,7 @@ export type ToolCallInput
 export interface ToolCall {
   readonly id: string;
   readonly name: string;
+  readonly serverName?: string | undefined;
   readonly input: ToolCallInput;
 }
 
@@ -146,6 +149,8 @@ export interface UserTurnEntry extends TurnBase {
   readonly kind: 'user';
   readonly meta: boolean;
   readonly text: string;
+  // Screenshots and files pasted into the turn, not produced by a tool.
+  readonly images?: readonly ResultImage[] | undefined;
   readonly injectedText?: string | undefined;
   readonly command?: string | undefined;
   readonly outcomes: readonly ToolOutcome[];

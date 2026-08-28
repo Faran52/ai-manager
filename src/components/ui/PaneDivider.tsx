@@ -1,5 +1,7 @@
 import { useRef } from 'react';
 
+import { cn } from '@utils/cnUtils';
+
 import type {
   FC,
   KeyboardEvent,
@@ -11,7 +13,8 @@ export interface PaneDividerProps {
   readonly value: number;
   readonly min: number;
   readonly max: number;
-  readonly onResize: (deltaY: number) => void;
+  readonly orientation: 'horizontal' | 'vertical';
+  readonly onResize: (delta: number) => void;
 }
 
 const KEY_STEP = 24;
@@ -22,26 +25,36 @@ export const PaneDivider: FC<PaneDividerProps> = ({
   value,
   min,
   max,
+  orientation,
   onResize,
 }) => {
-  const lastClientYRef = useRef(0);
+  const lastPositionRef = useRef(0);
+
+  const positionOf = (event: PointerEvent<HTMLDivElement>): number => {
+    return orientation === 'horizontal' ? event.clientX : event.clientY;
+  };
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>): void => {
-    lastClientYRef.current = event.clientY;
+    lastPositionRef.current = positionOf(event);
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const onPointerMove = (event: PointerEvent<HTMLDivElement>): void => {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      onResize(event.clientY - lastClientYRef.current);
-      lastClientYRef.current = event.clientY;
+      const position = positionOf(event);
+
+      onResize(position - lastPositionRef.current);
+      lastPositionRef.current = position;
     }
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
-    if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+    const decreaseKey = orientation === 'horizontal' ? 'ArrowLeft' : 'ArrowUp';
+    const increaseKey = orientation === 'horizontal' ? 'ArrowRight' : 'ArrowDown';
+
+    if (event.key === decreaseKey || event.key === increaseKey) {
       event.preventDefault();
-      onResize(event.key === 'ArrowUp' ? -KEY_STEP : KEY_STEP);
+      onResize(event.key === decreaseKey ? -KEY_STEP : KEY_STEP);
     }
   };
 
@@ -49,7 +62,7 @@ export const PaneDivider: FC<PaneDividerProps> = ({
     <div
       role="slider"
       aria-label={label}
-      aria-orientation="vertical"
+      aria-orientation={orientation}
       aria-valuenow={Math.round(value)}
       aria-valuemin={min}
       aria-valuemax={max}
@@ -57,16 +70,24 @@ export const PaneDivider: FC<PaneDividerProps> = ({
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onKeyDown={onKeyDown}
-      className="
-        group flex h-2 shrink-0 cursor-row-resize touch-none items-center
-        justify-center border-t border-border outline-none
-        focus-visible:bg-primary/20
-      "
+      className={cn(
+        `
+          group z-10 flex shrink-0 touch-none items-center justify-center
+          outline-none
+          focus-visible:bg-primary/20
+        `,
+        orientation === 'horizontal'
+          ? 'h-full w-2 cursor-col-resize border-s border-border'
+          : 'h-2 w-full cursor-row-resize border-t border-border',
+      )}
     >
-      <span className="
-        h-0.5 w-8 rounded-full bg-transparent transition-colors
-        group-hover:bg-muted-foreground/40
-      "
+      <span className={cn(
+        `
+          rounded-full bg-transparent transition-colors
+          group-hover:bg-muted-foreground/45
+        `,
+        orientation === 'horizontal' ? 'h-10 w-0.5' : 'h-0.5 w-10',
+      )}
       />
     </div>
   );

@@ -5,13 +5,13 @@ import { motion } from 'motion/react';
 
 import { EmptyState, fadeTransition } from '@ui/index';
 
-import { agentIsConfigured } from './agentConfigured';
 import {
   AgentCard,
   ProjectTrustCard,
   ProjectUsageCard,
   SetupFindings,
 } from './partials';
+import { agentIsConfigured } from './utils/agentSetupUtils';
 
 import type { AgentId } from '@config/agents';
 import type {

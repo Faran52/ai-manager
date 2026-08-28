@@ -1,0 +1,22 @@
+{
+  "heading": "مدير الأرشيف",
+  "intro": "تحذف الوكلاء سجلّاتها وفق جدولها الخاص. الأرشيف نسخة كاملة من كل المحادثات التي ما زالت لديها، محفوظة بعيدًا عن متناولها.",
+  "archiveCount": "الأرشيفات",
+  "sessionsSaved": "الجلسات المحفوظة",
+  "spaceUsed": "المساحة المستخدمة",
+  "createArchive": "إنشاء أرشيف",
+  "creating": "جارٍ الأرشفة…",
+  "noteLabel": "ملاحظة الأرشيف",
+  "notePlaceholder": "ملاحظة اختيارية، مثل «قبل الترقية إلى 2.0»",
+  "noArchives": "لا توجد أرشيفات بعد",
+  "noArchivesHint": "أنشئ واحدًا الآن لتبقى محادثات اليوم مهما حذفت الوكلاء لاحقًا.",
+  "archiveMeta_zero": "لا جلسات · {{size}}",
+  "archiveMeta_one": "جلسة واحدة · {{size}}",
+  "archiveMeta_two": "جلستان · {{size}}",
+  "archiveMeta_few": "{{count}} جلسات · {{size}}",
+  "archiveMeta_many": "{{count}} جلسة · {{size}}",
+  "archiveMeta_other": "{{count}} جلسة · {{size}}",
+  "archiveEmpty": "لا تحتوي هذه النسخة على أي جلسة.",
+  "deleteArchive": "حذف الأرشيف",
+  "deleteArchiveWarning": "تُحذف النسخ المؤرشفة نهائيًا، ولن يمكن بعدها استرجاع ما حذفته الوكلاء بالفعل."
+}

@@ -6,25 +6,31 @@ import { cn } from '@utils/cnUtils';
 
 import { CodeLine, TruncatedText } from '@ui/index';
 
-import { defaultMessageFilters } from '../messageFilters';
+import { defaultMessageFilters } from '../utils/messageFilterUtils';
+
+import { MessageHeader } from './MessageHeader';
+import { OutcomeImages } from './OutcomeImages';
 
 import type { ToolOutcome, UserTurnEntry } from '@services/history/historyService';
 import type { FC } from 'react';
-import type { MessageContentFilters } from '../messageFilters';
+import type { MessageContentFilters } from '../utils/messageFilterUtils';
 
 export interface UserTurnProps {
   readonly entry: UserTurnEntry;
   readonly orphans: readonly ToolOutcome[];
   readonly filters?: MessageContentFilters;
+  readonly showHeader?: boolean;
 }
 
 export const UserTurn: FC<UserTurnProps> = ({
   entry,
   orphans,
   filters = defaultMessageFilters().content,
+  showHeader = true,
 }) => {
   const { t } = useTranslation('session');
   const injectedText = filters.text ? entry.injectedText : undefined;
+  const images = filters.text ? (entry.images ?? []) : [];
 
   return (
     <article
@@ -33,6 +39,14 @@ export const UserTurn: FC<UserTurnProps> = ({
       data-meta={entry.meta ? 'true' : 'false'}
       data-timestamp={entry.timestamp}
     >
+      {showHeader && (
+        <MessageHeader
+          roleKey="user"
+          timestamp={entry.timestamp}
+          sidechain={entry.sidechain}
+          align="end"
+        />
+      )}
       {filters.commands && entry.command != null && (
         <span className="
           inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1
@@ -57,6 +71,11 @@ export const UserTurn: FC<UserTurnProps> = ({
         >
           {entry.text}
         </p>
+      )}
+      {images.length > 0 && (
+        <div className="max-w-[85%]" data-user-images>
+          <OutcomeImages images={images} />
+        </div>
       )}
       {injectedText != null && (
         <details className="max-w-[85%] text-start" data-injected-context>

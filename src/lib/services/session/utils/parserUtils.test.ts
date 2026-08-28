@@ -7,7 +7,11 @@ import {
 import { parseHistoryLine } from './parserUtils';
 
 import type { ToolCallInput } from '../../history/types';
-import type { RawHistoryLine, RawToolInput } from '../../history/utils/claudeRawUtils';
+import type {
+  RawHistoryLine,
+  RawToolInput,
+  RawToolResultBlock,
+} from '../../history/utils/claudeRawUtils';
 
 const line = (fields: RawHistoryLine): string => {
   return JSON.stringify(fields);
@@ -1250,5 +1254,237 @@ describe('final parser arms', () => {
     });
 
     expect(leveledSystem?.kind === 'system' && leveledSystem.text).toBe('hook (warn)');
+  });
+});
+
+describe('mcp and server tool blocks', () => {
+  test('keeps the declared server name on an mcp tool use', () => {
+    const entry = parseFields({
+      type: 'assistant',
+      uuid: 'a1',
+      timestamp: 't1',
+      message: {
+        role: 'assistant',
+        content: [{
+          type: 'mcp_tool_use',
+          id: 'm1',
+          name: 'search',
+          server_name: 'linear',
+          input: { query: 'open bugs' },
+        }],
+      },
+    });
+
+    if (entry?.kind !== 'assistant') {
+      throw new Error('expected an assistant entry');
+    }
+
+    const block = entry.blocks[0];
+
+    if (block?.blockType !== 'tool-use') {
+      throw new Error('expected a tool-use block');
+    }
+
+    expect(block.call.serverName).toBe('linear');
+    expect(block.call.input).toEqual({
+      kind: 'generic',
+      title: 'search',
+      rows: [{
+        label: 'query',
+        value: 'open bugs',
+      }],
+    });
+  });
+
+  test('parses the built-in web tools by their server-side names', () => {
+    const entry = parseFields({
+      type: 'assistant',
+      uuid: 'a2',
+      timestamp: 't2',
+      message: {
+        role: 'assistant',
+        content: [
+          {
+            type: 'server_tool_use',
+            id: 's1',
+            name: 'web_search',
+            input: { query: 'astro islands' },
+          },
+          {
+            type: 'server_tool_use',
+            id: 's2',
+            name: 'web_fetch',
+            input: {
+              url: 'https://example.com',
+              prompt: 'summarise',
+            },
+          },
+        ],
+      },
+    });
+
+    if (entry?.kind !== 'assistant') {
+      throw new Error('expected an assistant entry');
+    }
+
+    const kinds = entry.blocks.map((block) => {
+      return block.blockType === 'tool-use' ? block.call.input.kind : block.blockType;
+    });
+
+    expect(kinds).toEqual(['web-search', 'web-fetch']);
+  });
+
+  test('lists untyped generic input keys once and skips the empty ones', () => {
+    const entry = parseFields({
+      type: 'assistant',
+      uuid: 'a3',
+      timestamp: 't3',
+      message: {
+        role: 'assistant',
+        content: [{
+          type: 'tool_use',
+          id: 'g1',
+          name: 'Unknown',
+          input: {
+            query: 'typed away',
+            todos: [{
+              content: 'ship',
+              status: 'pending',
+            }],
+            content: '',
+          },
+        }],
+      },
+    });
+
+    if (entry?.kind !== 'assistant') {
+      throw new Error('expected an assistant entry');
+    }
+
+    const block = entry.blocks[0];
+
+    if (block?.blockType !== 'tool-use' || block.call.input.kind !== 'generic') {
+      throw new Error('expected a generic tool-use block');
+    }
+
+    expect(block.call.input.rows.map((row) => {
+      return row.label;
+    })).toEqual(['query', 'todos']);
+  });
+});
+
+describe('mcp and web tool results', () => {
+  const outcomeOf = (content: RawToolResultBlock['content'], type: RawToolResultBlock['type']) => {
+    const entry = parseFields({
+      type: 'user',
+      uuid: 'u1',
+      timestamp: 't1',
+      message: {
+        role: 'user',
+        content: [{
+          type,
+          tool_use_id: 'r1',
+          content,
+        }],
+      },
+    });
+
+    return entry?.kind === 'user' ? entry.outcomes[0]?.text : undefined;
+  };
+
+  test('flattens a web search result into titles, urls and ages', () => {
+    expect(outcomeOf(
+      [{
+        type: 'web_search_result',
+        title: 'Astro',
+        url: 'https://astro.build',
+        page_age: '2 days',
+      }],
+      'web_search_tool_result',
+    )).toBe('Astro\nhttps://astro.build\n2 days');
+  });
+
+  test('reads a single result object, its string content and its nested parts', () => {
+    expect(outcomeOf({
+      type: 'web_fetch_result',
+      content: 'plain body',
+    }, 'web_fetch_tool_result')).toBe('plain body');
+
+    expect(outcomeOf({
+      type: 'mcp_result',
+      content: { text: 'nested text' },
+    }, 'mcp_tool_result')).toBe('nested text');
+
+    expect(outcomeOf({
+      type: 'mcp_result',
+      content: [{
+        type: 'text',
+        text: 'listed text',
+      }],
+    }, 'mcp_tool_result')).toBe('listed text');
+
+    expect(outcomeOf({ type: 'mcp_result' }, 'mcp_tool_result')).toBeUndefined();
+  });
+});
+
+describe('pasted images on a user turn', () => {
+  test('keeps a screenshot pasted beside the text', () => {
+    const entry = parseFields({
+      type: 'user',
+      uuid: 'u1',
+      timestamp: 't1',
+      message: {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: 'look at this',
+          },
+          {
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: 'image/png',
+              data: 'QUJD',
+            },
+          },
+        ],
+      },
+    });
+
+    if (entry?.kind !== 'user') {
+      throw new Error('expected a user entry');
+    }
+
+    expect(entry.text).toBe('look at this');
+    expect(entry.images).toEqual([{
+      mediaType: 'image/png',
+      data: 'QUJD',
+      url: undefined,
+    }]);
+  });
+
+  test('leaves images off a turn that has none, and skips a sourceless block', () => {
+    const entry = parseFields({
+      type: 'user',
+      uuid: 'u2',
+      timestamp: 't2',
+      message: {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: 'no pictures',
+          },
+          { type: 'image' },
+        ],
+      },
+    });
+
+    if (entry?.kind !== 'user') {
+      throw new Error('expected a user entry');
+    }
+
+    expect(entry.images).toBeUndefined();
   });
 });

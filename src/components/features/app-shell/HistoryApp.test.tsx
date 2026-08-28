@@ -3,15 +3,19 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
   afterEach,
+  beforeEach,
   describe,
   expect,
   test,
   vi,
 } from 'vitest';
+
+import { messageNavigatorOpenStorageKey, sidebarWidthStorageKey } from '@config/storageKeys';
 
 import { findAgentProject } from '@services/history/historyService';
 
@@ -75,6 +79,18 @@ const sessionsPayload = (name: string) => {
   };
 };
 
+const openProject = async (name: string): Promise<void> => {
+  const label = screen.getByText(name);
+
+  await userEvent.click(label);
+
+  const item = label.closest('li');
+
+  if (item != null) {
+    await userEvent.click(within(item).getByText('Claude Code'));
+  }
+};
+
 const messagesPayload = {
   entries: [
     {
@@ -104,12 +120,37 @@ const messagesPayload = {
   nextOffset: 2,
 };
 
+beforeEach(() => {
+  localStorage.setItem(messageNavigatorOpenStorageKey, 'false');
+});
+
 afterEach(() => {
   vi.unstubAllGlobals();
   localStorage.clear();
 });
 
 describe('HistoryApp', () => {
+  test('restores and resizes the sidebar', async () => {
+    localStorage.setItem(sidebarWidthStorageKey, '999');
+    vi.stubGlobal('fetch', vi.fn((url: RequestInfo | URL) => {
+      return toPath(url).endsWith('/projects') ? Response.json(projectPayload) : Response.json({ stats: null });
+    }));
+
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+
+    const divider = screen.getByRole('slider', { name: 'Resize sidebar' });
+
+    expect(divider.getAttribute('aria-valuenow')).toBe('520');
+    divider.focus();
+    await userEvent.keyboard('{ArrowLeft}');
+
+    expect(divider.getAttribute('aria-valuenow')).toBe('496');
+    await waitFor(() => {
+      expect(localStorage.getItem(sidebarWidthStorageKey)).toBe('496');
+    });
+  });
+
   test('browses project → session → viewer end to end', async () => {
     const fetchMock = vi.fn((url: RequestInfo | URL) => {
       const path = toPath(url);
@@ -140,7 +181,7 @@ describe('HistoryApp', () => {
     });
     expect(screen.getAllByRole('button', { name: /beta/ }).length).toBeGreaterThan(0);
 
-    await userEvent.click(screen.getByText('alpha'));
+    await openProject('alpha');
     const target = screen.getAllByText('The chosen one').at(0);
 
     if (target != null) {
@@ -250,7 +291,8 @@ describe('HistoryApp', () => {
 
     vi.stubGlobal('fetch', fetchMock);
     render(<HistoryApp />);
-    await userEvent.click(await screen.findByText('alpha'));
+    await screen.findByText('alpha');
+    await openProject('alpha');
 
     await userEvent.click(screen.getByRole('button', { name: /Health/ }));
 
@@ -317,8 +359,7 @@ describe('HistoryApp cross-view flows', () => {
     render(<HistoryApp />);
 
     await screen.findByText('beta');
-    await userEvent.click(screen.getByText('beta'));
-    await userEvent.click(screen.getByRole('button', { name: /Analytics/ }));
+    await openProject('beta');
 
     const betaHit = await screen.findByText('Beta hit');
 
@@ -462,6 +503,36 @@ describe('HistoryApp project and session mutations', () => {
     expect(findAgentProject(projectPayload.projects, 'proj-a', 'claude')).toMatchObject({ name: 'alpha' });
   });
 
+  test('clears the selected folder after deleting its history', async () => {
+    const fetchMock = vi.fn((url: RequestInfo | URL) => {
+      const path = toPath(url);
+
+      if (path.endsWith('/projects')) {
+        return Response.json(projectPayload);
+      }
+      if (path.endsWith('/sessions')) {
+        return Response.json(sessionsPayload('a'));
+      }
+      if (path.endsWith('/project-delete')) {
+        return Response.json({ ok: true });
+      }
+
+      return Response.json({ stats: null });
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+    await openProject('alpha');
+
+    fireEvent.contextMenu(screen.getByRole('button', { name: 'Select a project: alpha' }));
+    await userEvent.click(screen.getByText('Delete project history'));
+    await userEvent.click(screen.getByRole('button', { name: 'Delete permanently' }));
+    await userEvent.click(screen.getByRole('button', { name: /Health/u }));
+
+    expect(await screen.findByText('No project selected')).toBeDefined();
+  });
+
   test('deletes project history and handles session rename and deletion', async () => {
     const fetchMock = vi.fn((url: RequestInfo | URL) => {
       const path = toPath(url);
@@ -482,8 +553,6 @@ describe('HistoryApp project and session mutations', () => {
     vi.stubGlobal('fetch', fetchMock);
     render(<HistoryApp />);
     await screen.findByText('alpha');
-    await userEvent.click(screen.getByText('beta'));
-    await screen.findByText('The chosen one');
     fireEvent.contextMenu(screen.getByText('beta'));
     await userEvent.click(screen.getByText('Delete project history'));
     await userEvent.click(screen.getByRole('button', { name: 'Delete permanently' }));
@@ -502,7 +571,7 @@ describe('HistoryApp project and session mutations', () => {
       expect(screen.queryByRole('dialog')).toBeNull();
     });
 
-    await userEvent.click(screen.getByText('alpha'));
+    await openProject('alpha');
     await screen.findByText('The chosen one');
     await userEvent.click(screen.getByText('The chosen one'));
     fireEvent.contextMenu(screen.getAllByText('The chosen one')[0] ?? document.body);
@@ -523,7 +592,6 @@ describe('HistoryApp project and session mutations', () => {
       })).toBe(true);
     });
 
-    await userEvent.click(screen.getByText('alpha'));
     await screen.findByText('The chosen one');
     fireEvent.contextMenu(screen.getAllByText('The chosen one')[0] ?? document.body);
     await userEvent.click(screen.getByText('Delete session'));
@@ -550,5 +618,235 @@ describe('HistoryApp degraded data', () => {
     await userEvent.click(screen.getByRole('button', { name: /Analytics/ }));
 
     expect(await screen.findByText(/No analytics for/)).toBeDefined();
+  });
+});
+
+describe('HistoryApp keyboard shortcuts', () => {
+  const stubShell = (): void => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: RequestInfo | URL) => {
+        const path = toPath(url);
+
+        if (path.endsWith('/projects')) {
+          return Response.json(projectPayload);
+        }
+        if (path.endsWith('/stats')) {
+          return Response.json({ stats: null });
+        }
+        if (path.endsWith('/archives')) {
+          return Response.json({ archives: [] });
+        }
+        if (path.endsWith('/recent-edits')) {
+          return Response.json({ files: [] });
+        }
+        if (path.endsWith('/settings')) {
+          return Response.json({
+            scopes: [{
+              scope: 'user',
+              path: '/home/.claude/settings.json',
+              exists: false,
+              readable: true,
+              permissions: {
+                allow: [],
+                deny: [],
+                ask: [],
+                additionalDirectories: [],
+              },
+              env: [],
+              preservedKeys: [],
+            }],
+          });
+        }
+        if (path.endsWith('/agent-setup')) {
+          return Response.json({
+            setups: [],
+            findings: [],
+            usage: null,
+            plugins: [],
+            trust: {
+              known: false,
+              trusted: false,
+              onboarded: false,
+            },
+          });
+        }
+
+        return Response.json({
+          sessions: [],
+          hits: [],
+          truncated: false,
+        });
+      }),
+    );
+  };
+
+  test('switches views by number and reloads projects', async () => {
+    stubShell();
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+
+    await userEvent.keyboard('1');
+    expect(screen.getByText('No session selected')).toBeDefined();
+
+    await userEvent.keyboard('3');
+    expect(await screen.findByRole('button', { name: /Health/ })).toBeDefined();
+
+    await userEvent.keyboard('4');
+    expect(await screen.findByText('Archive manager')).toBeDefined();
+
+    await userEvent.keyboard('5');
+    expect(await screen.findByText('Settings manager')).toBeDefined();
+
+    await userEvent.keyboard('6');
+    expect(await screen.findByText('No project selected')).toBeDefined();
+
+    await userEvent.keyboard('2');
+    expect(await screen.findByText(/No analytics for/)).toBeDefined();
+
+    const beforeReload = screen.getAllByText('alpha').length;
+
+    await userEvent.keyboard('r');
+    await waitFor(() => {
+      expect(screen.getAllByText('alpha')).toHaveLength(beforeReload);
+    });
+  });
+
+  test('lists the bindings behind the question mark and closes again', async () => {
+    stubShell();
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+
+    fireEvent.keyDown(window, {
+      key: '?',
+      shiftKey: true,
+    });
+
+    const dialog = within(screen.getByRole('dialog'));
+
+    expect(dialog.getByText('Keyboard shortcuts')).toBeDefined();
+    expect(dialog.getByText('Search all chats')).toBeDefined();
+    expect(dialog.getByText('Toggle message navigator')).toBeDefined();
+
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+  });
+});
+
+describe('HistoryApp archived transcripts', () => {
+  test('opens an archived session in the viewer without a live project', async () => {
+    const archive = {
+      id: '2026-07-01T00-00-00-000Z',
+      createdMs: Date.parse('2026-07-01T00:00:00Z'),
+      note: 'nightly',
+      sessionCount: 1,
+      sizeBytes: 64,
+      agents: ['claude'],
+    };
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: RequestInfo | URL) => {
+        const path = toPath(url);
+
+        if (path.endsWith('/projects')) {
+          return Response.json(projectPayload);
+        }
+        if (path.endsWith('/archives')) {
+          return Response.json({ archives: [archive] });
+        }
+        if (path.endsWith('/archive-read')) {
+          return Response.json({
+            archive: {
+              ...archive,
+              sessions: [{
+                agent: 'claude',
+                projectId: 'proj-a',
+                projectName: 'alpha',
+                actualSessionId: 's1',
+                title: 'Deleted session',
+                messageCount: 1,
+                lastTimestampMs: 1,
+                sizeBytes: 64,
+                sourcePath: '/home/.claude/projects/proj-a/s1.jsonl',
+                archivePath: '/archives/a/files/claude/proj-a/s1.jsonl',
+              }],
+            },
+          });
+        }
+        if (path.endsWith('/messages')) {
+          return Response.json(messagesPayload);
+        }
+
+        return Response.json({ sessions: [] });
+      }),
+    );
+
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+
+    await userEvent.click(screen.getByRole('button', { name: /Archive/ }));
+    await userEvent.click(await screen.findByText('nightly'));
+    await userEvent.click(await screen.findByText('Deleted session'));
+
+    expect(await screen.findByText('the question')).toBeDefined();
+    expect(screen.getAllByText('alpha').length).toBeGreaterThan(0);
+  });
+});
+
+describe('HistoryApp board', () => {
+  test('opens a session from the board and jumps from a file edit to its turn', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: RequestInfo | URL) => {
+        const path = toPath(url);
+
+        if (path.endsWith('/projects')) {
+          return Response.json(projectPayload);
+        }
+        if (path.endsWith('/sessions')) {
+          return Response.json(sessionsPayload('alpha'));
+        }
+        if (path.endsWith('/recent-edits')) {
+          return Response.json({
+            files: [{
+              path: '/repo/alpha/src/a.ts',
+              edits: 1,
+              writes: 0,
+              sessionCount: 1,
+              lastEditedMs: 1,
+              recent: [{
+                kind: 'edit',
+                sessionId: 's1',
+                sessionTitle: 'Login fix',
+                sessionFilePath: '/sessions/alpha/s1.jsonl',
+                timestampMs: Date.parse('2026-05-05T10:00:00Z'),
+                changes: 1,
+              }],
+            }],
+          });
+        }
+        if (path.endsWith('/messages')) {
+          return Response.json(messagesPayload);
+        }
+
+        return Response.json({ stats: null });
+      }),
+    );
+
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+    await openProject('alpha');
+
+    await userEvent.click(screen.getByRole('button', { name: /Board/ }));
+    expect(await screen.findByText('Board for alpha')).toBeDefined();
+
+    await userEvent.click(screen.getByRole('button', { name: /File edits/ }));
+    await userEvent.click(await screen.findByText('src/a.ts'));
+    await userEvent.click(await screen.findByText('Login fix'));
+
+    expect(await screen.findByText('the question')).toBeDefined();
   });
 });

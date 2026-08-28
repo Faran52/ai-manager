@@ -1,0 +1,18 @@
+{
+  "heading": "アーカイブマネージャー",
+  "intro": "エージェントは独自のタイミングで履歴を削除します。アーカイブは、まだ残っているすべての記録を、エージェントの手が届かない場所に丸ごと複製したものです。",
+  "archiveCount": "アーカイブ数",
+  "sessionsSaved": "保存されたセッション",
+  "spaceUsed": "使用容量",
+  "createArchive": "アーカイブを作成",
+  "creating": "アーカイブ中…",
+  "noteLabel": "アーカイブのメモ",
+  "notePlaceholder": "任意のメモ（例：2.0 アップグレード前）",
+  "noArchives": "アーカイブはまだありません",
+  "noArchivesHint": "今すぐ作成すれば、エージェントが次に削除しても今日の記録は残ります。",
+  "archiveMeta_one": "{{count}} 件のセッション · {{size}}",
+  "archiveMeta_other": "{{count}} 件のセッション · {{size}}",
+  "archiveEmpty": "このアーカイブにセッションはありません。",
+  "deleteArchive": "アーカイブを削除",
+  "deleteArchiveWarning": "アーカイブされた複製は完全に削除されます。エージェント側で削除済みのものは復元できなくなります。"
+}

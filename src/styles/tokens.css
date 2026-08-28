@@ -75,3 +75,7 @@
 
 .dark[data-accent="sky"],
 .dark [data-accent="sky"] { --primary: #4fb3de; }
+
+/* Percentages, not pixels: a root in px would override the browser font size a reader chose. */
+[data-font-size="compact"] { font-size: 87.5%; }
+[data-font-size="large"] { font-size: 112.5%; }

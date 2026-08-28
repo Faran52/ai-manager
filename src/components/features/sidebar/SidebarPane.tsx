@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 
 import { agentOption } from '@config/agents';
+import { appConfig } from '@config/appConfig';
 import { projectsPaneStorageKey } from '@config/storageKeys';
 
 import { cn } from '@utils/cnUtils';
@@ -27,12 +28,12 @@ import {
   Spinner,
   TextInput,
 } from '@ui/index';
-import { AgentTag } from '@features/agent-tag';
 
 import {
   AgentFilterBar,
   ConfirmDeleteDialog,
   ConfirmDeleteProjectDialog,
+  ProjectTree,
   RenameSessionDialog,
   SessionSelectionBar,
   SidebarContextMenu,
@@ -55,16 +56,25 @@ export interface SidebarPaneProps {
   readonly sessions: readonly SessionSummary[];
   readonly sessionsStatus: 'loading' | 'ready' | 'error';
   readonly selectedFilePath: string | null;
+  readonly nowMs: number;
   readonly onSelectProject: (project: ProjectSummary) => void;
-  readonly onSelectSession: (filePath: string) => void;
+  readonly onSelectSession: (session: SessionSummary) => void;
   readonly onDeleteProject: (project: ProjectSummary) => Promise<void>;
   readonly onRenameSession: (session: SessionSummary, title: string) => Promise<void>;
   readonly onDeleteSession: (session: SessionSummary) => Promise<void>;
-  readonly nowMs: number;
 }
 
-const MIN_PANE = 120;
-const MAX_PANE = 640;
+const MIN_PROJECTS_HEIGHT = 160;
+const MAX_PROJECTS_HEIGHT = 640;
+const DEFAULT_PROJECTS_HEIGHT = 300;
+
+const initialProjectsHeight = (): number => {
+  const stored = Number(localStorage.getItem(projectsPaneStorageKey));
+
+  return Number.isFinite(stored) && stored >= MIN_PROJECTS_HEIGHT
+    ? Math.min(stored, MAX_PROJECTS_HEIGHT)
+    : DEFAULT_PROJECTS_HEIGHT;
+};
 
 export const SidebarPane: FC<SidebarPaneProps> = ({
   projects,
@@ -73,25 +83,17 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
   sessions,
   sessionsStatus,
   selectedFilePath,
+  nowMs,
   onSelectProject,
   onSelectSession,
   onDeleteProject,
   onRenameSession,
   onDeleteSession,
-  nowMs,
 }) => {
   const { t, i18n } = useTranslation('sidebar');
   const [projectFilter, setProjectFilter] = useState('');
-  const [projectsHeight, setProjectsHeight] = useState(() => {
-    const stored = Number(localStorage.getItem(projectsPaneStorageKey));
-
-    return Number.isFinite(stored) && stored >= MIN_PANE ? stored : 260;
-  });
-
-  useEffect(() => {
-    localStorage.setItem(projectsPaneStorageKey, String(projectsHeight));
-  }, [projectsHeight]);
   const [sessionFilter, setSessionFilter] = useState('');
+  const [projectsHeight, setProjectsHeight] = useState(initialProjectsHeight);
   const [menuTarget, setMenuTarget] = useState<SidebarMenuTarget | null>(null);
   const [menuPosition, setMenuPosition] = useState<PopupPosition>({
     x: 0,
@@ -112,6 +114,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
       return project.agent;
     }))];
   }, [projects]);
+
   const agentCounts = useMemo(() => {
     const counts = new Map<AgentId, number>();
 
@@ -122,27 +125,16 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
     return counts;
   }, [projects]);
 
-  const visibleProjects = useMemo(() => {
-    const needle = projectFilter.trim().toLowerCase();
-
-    return projects.filter((project) => {
-      return (activeAgents.length === 0 || activeAgents.includes(project.agent))
-        && (needle.length === 0 || project.name.toLowerCase().includes(needle));
-    });
-  }, [activeAgents, projectFilter, projects]);
-
   const visibleSessions = useMemo(() => {
     const needle = sessionFilter.trim().toLowerCase();
 
-    if (needle.length === 0) {
-      return sessions;
-    }
+    return needle.length === 0
+      ? sessions
+      : sessions.filter((session) => {
+          const haystack = `${session.title ?? ''} ${session.summary ?? ''} ${session.preview ?? ''}`.toLowerCase();
 
-    return sessions.filter((session) => {
-      const haystack = `${session.title ?? ''} ${session.summary ?? ''} ${session.preview ?? ''}`.toLowerCase();
-
-      return haystack.includes(needle);
-    });
+          return haystack.includes(needle);
+        });
   }, [sessionFilter, sessions]);
 
   const selectableSessions = useMemo(() => {
@@ -157,10 +149,26 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
     });
   }, [selectedSessionPaths, sessions]);
 
+  const projectCount = useMemo(() => {
+    return new Set(projects.map((project) => {
+      return project.actualPath ?? `name:${project.name}`;
+    })).size;
+  }, [projects]);
+
+  const sessionCount = useMemo(() => {
+    return projects.reduce((total, project) => {
+      return total + project.sessionCount;
+    }, 0);
+  }, [projects]);
+
   const allSelectableSelected = selectableSessions.length > 0
     && selectableSessions.every((session) => {
       return selectedSessionPaths.includes(session.filePath);
     });
+
+  useEffect(() => {
+    localStorage.setItem(projectsPaneStorageKey, String(projectsHeight));
+  }, [projectsHeight]);
 
   useEffect(() => {
     if (!selectionMode || deleteTargets.length > 0) {
@@ -250,13 +258,11 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
 
   const toggleSessionSelection = (session: SessionSummary): void => {
     setSelectedSessionPaths((current) => {
-      if (current.includes(session.filePath)) {
-        return current.filter((filePath) => {
-          return filePath !== session.filePath;
-        });
-      }
-
-      return [...current, session.filePath];
+      return current.includes(session.filePath)
+        ? current.filter((filePath) => {
+            return filePath !== session.filePath;
+          })
+        : [...current, session.filePath];
     });
   };
 
@@ -299,93 +305,58 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
   }
 
   return (
-    <aside
-      className="
-        flex min-h-0 w-full flex-col overflow-hidden border-r border-border
-        bg-card/80
-      "
-      data-sidebar
-    >
-      <section className="flex min-h-32 shrink-0 flex-col" style={{ height: projectsHeight }}>
-        <SectionHeader icon={<FolderClosed className="size-3.5" />} label={t('projects')} />
-        <AgentFilterBar
-          active={activeAgents}
-          available={availableAgents}
-          counts={agentCounts}
-          onChange={setActiveAgents}
+    <aside className="flex min-h-0 w-full flex-col overflow-hidden bg-card/80" data-sidebar>
+      <section className="flex min-h-40 shrink-0 flex-col" style={{ height: projectsHeight }}>
+        <SectionHeader
+          icon={<FolderClosed className="size-3.5" />}
+          label={t('projects')}
+          action={(
+            <AgentFilterBar
+              active={activeAgents}
+              available={availableAgents}
+              counts={agentCounts}
+              onChange={setActiveAgents}
+            />
+          )}
         />
-        <div className="shrink-0 px-2 pb-1.5">
+        <div className="shrink-0 px-3 pb-2">
           <TextInput
             value={projectFilter}
             onInput={setProjectFilter}
             label={t('filterProjects')}
             placeholder={t('filterProjects')}
+            className="h-9 px-3"
           />
         </div>
-        <ul className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
-          {visibleProjects.map((project) => {
-            const active = project.id === selectedProject?.id && project.agent === selectedProject.agent;
-
-            return (
-              <li key={`${project.agent}:${project.id}`}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    exitSelectionMode();
-                    onSelectProject(project);
-                  }}
-                  onContextMenu={(event) => {
-                    openMenu(event, {
-                      kind: 'project',
-                      project,
-                    });
-                  }}
-                  aria-current={active}
-                  data-project-item={project.id}
-                  className={cn(
-                    'sidebar-row',
-                    active
-                      ? 'bg-primary/15 ring-1 ring-primary/40 ring-inset'
-                      : 'hover:bg-accent',
-                  )}
-                >
-                  <span className="
-                    block truncate text-sm font-medium text-foreground
-                  "
-                  >
-                    {project.name}
-                  </span>
-                  <span className="
-                    mt-0.5 flex min-w-0 items-center gap-2 overflow-hidden
-                    text-[11px] text-muted-foreground
-                  "
-                  >
-                    <span className="shrink-0">
-                      {t('sessionCount', { count: project.sessionCount })}
-                    </span>
-                    <AgentTag agent={project.agent} />
-                    <span className="shrink-0">{formatTimeAgo(project.lastActivityMs, nowMs, i18n.language)}</span>
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-          {projectsStatus === 'loading' && (
-            <li className="flex justify-center py-3">
-              <Spinner />
-            </li>
-          )}
-        </ul>
+        <ProjectTree
+          projects={projects}
+          projectsStatus={projectsStatus}
+          agentFilter={activeAgents}
+          textFilter={projectFilter}
+          selectedProject={selectedProject}
+          nowMs={nowMs}
+          onSelectProject={(project) => {
+            exitSelectionMode();
+            onSelectProject(project);
+          }}
+          onOpenMenu={(event, project) => {
+            openMenu(event, {
+              kind: 'project',
+              project,
+            });
+          }}
+        />
       </section>
 
       <PaneDivider
         label={t('resize')}
         value={projectsHeight}
-        min={MIN_PANE}
-        max={MAX_PANE}
-        onResize={(deltaY: number) => {
+        min={MIN_PROJECTS_HEIGHT}
+        max={MAX_PROJECTS_HEIGHT}
+        orientation="vertical"
+        onResize={(delta) => {
           setProjectsHeight((height) => {
-            return Math.min(Math.max(height + deltaY, MIN_PANE), MAX_PANE);
+            return Math.min(Math.max(height + delta, MIN_PROJECTS_HEIGHT), MAX_PROJECTS_HEIGHT);
           });
         }}
       />
@@ -393,7 +364,9 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
       <section className="flex min-h-0 flex-1 flex-col">
         <SectionHeader
           icon={<MessagesSquare className="size-3.5" />}
-          label={t('sessions')}
+          label={selectedProject == null
+            ? t('sessions')
+            : `${agentOption(selectedProject.agent).label} · ${selectedProject.name}`}
           action={sessionHeaderAction}
         />
         {selectionMode && (
@@ -406,34 +379,25 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
             }}
           />
         )}
-        <div className="shrink-0 px-2 pb-1.5">
+        <div className="shrink-0 px-3 pb-2">
           <TextInput
             value={sessionFilter}
             onInput={setSessionFilter}
             label={t('filterSessions')}
             placeholder={t('filterSessions')}
             disabled={selectedProject == null}
+            className="h-9 px-3"
           />
         </div>
-        <ul className="min-h-0 flex-1 overflow-y-auto px-2 pb-4">
+        <ul className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
           {visibleSessions.map((session) => {
             const active = session.filePath === selectedFilePath;
             const canDelete = agentOption(session.agent).canDelete;
             const selectedForDelete = selectedSessionPaths.includes(session.filePath);
             const title = session.title ?? session.summary ?? session.preview ?? session.id;
-            let rowStateClass = 'hover:bg-accent';
-
-            if (selectionMode && selectedForDelete) {
-              rowStateClass = 'bg-primary/15 ring-1 ring-primary/40 ring-inset';
-            }
-            else if (!selectionMode && active) {
-              rowStateClass = `
-                bg-primary/15 ring-1 ring-primary/40 ring-inset
-              `;
-            }
 
             return (
-              <li key={session.id}>
+              <li key={session.filePath}>
                 <button
                   type="button"
                   onClick={() => {
@@ -441,7 +405,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                       toggleSessionSelection(session);
                     }
                     else {
-                      onSelectSession(session.filePath);
+                      onSelectSession(session);
                     }
                   }}
                   disabled={selectionMode && !canDelete}
@@ -459,46 +423,39 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                   aria-current={selectionMode ? undefined : active}
                   aria-pressed={selectionMode ? selectedForDelete : undefined}
                   data-session-item={session.filePath}
-                  data-selected={selectionMode ? selectedForDelete : undefined}
-                  className={cn('sidebar-row', rowStateClass)}
+                  className={cn('sidebar-row', (selectedForDelete || (!selectionMode && active)) && `
+                    is-active
+                  `)}
                 >
-                  <span className="flex min-w-0 items-center gap-2">
+                  <span className="flex min-w-0 items-center gap-2.5">
                     {selectionMode && (selectedForDelete
-                      ? (
-                          <CheckSquare2 className="
-                            size-3.5 shrink-0 text-primary
-                          "
-                          />
-                        )
+                      ? <CheckSquare2 className="size-4 shrink-0 text-primary" />
                       : (
                           <Square className="
-                            size-3.5 shrink-0 text-muted-foreground
+                            size-4 shrink-0 text-muted-foreground
                           "
                           />
                         ))}
                     <span className="
-                      block min-w-0 truncate text-sm text-foreground
+                      block min-w-0 truncate text-sm font-medium text-foreground
                     "
                     >
                       {title}
                     </span>
                   </span>
                   <span className="
-                    mt-0.5 flex items-center gap-2 text-[11px]
-                    text-muted-foreground
+                    mt-1 flex items-center gap-2 text-xs text-muted-foreground
                   "
                   >
                     <span>{formatTimeAgo(session.lastTimestampMs, nowMs, i18n.language)}</span>
-                    <span>
-                      {t('messageCount', { count: session.messageCount })}
-                    </span>
+                    <span>{t('messageCount', { count: session.messageCount })}</span>
                   </span>
                 </button>
               </li>
             );
           })}
           {sessionsStatus === 'loading' && (
-            <li className="flex justify-center py-3">
+            <li className="flex justify-center py-4">
               <Spinner />
             </li>
           )}
@@ -509,9 +466,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
               hint={t('selectProjectHint')}
             />
           )}
-          {sessionsStatus === 'ready'
-            && selectedProject != null
-            && sessions.length === 0
+          {sessionsStatus === 'ready' && selectedProject != null && sessions.length === 0
             && sessionFilter.trim().length === 0 && (
             <EmptyState
               icon={<MessagesSquare className="size-8" />}
@@ -519,9 +474,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
               hint={t('noStoredSessions')}
             />
           )}
-          {sessionsStatus === 'ready'
-            && selectedProject != null
-            && visibleSessions.length === 0
+          {sessionsStatus === 'ready' && selectedProject != null && visibleSessions.length === 0
             && (sessions.length > 0 || sessionFilter.trim().length > 0) && (
             <EmptyState
               icon={<Search className="size-8" />}
@@ -531,6 +484,14 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
           )}
         </ul>
       </section>
+
+      {!selectionMode && (
+        <footer className="sidebar-status">
+          <span>{`v${appConfig.version}`}</span>
+          <span>{t('projectCount', { count: projectCount })}</span>
+          <span>{t('sessionCount', { count: sessionCount })}</span>
+        </footer>
+      )}
       {menuTarget != null && !selectionMode && (
         <SidebarContextMenu
           target={menuTarget}

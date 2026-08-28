@@ -88,15 +88,12 @@ export const AgentFilterBar: FC<AgentFilterBarProps> = ({
   };
 
   return (
-    <div className="relative shrink-0 px-2 pb-1.5" data-agent-filter>
+    <div className="relative shrink-0" data-agent-filter>
       <button
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={triggerLabel}
-        onPointerDown={(event) => {
-          event.stopPropagation();
-        }}
         onClick={() => {
           setOpen((current) => {
             return !current;
