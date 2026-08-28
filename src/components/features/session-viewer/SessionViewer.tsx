@@ -24,6 +24,7 @@ import {
   EmptyState,
   PaneDivider,
   Spinner,
+  useSmoothScroll,
 } from '@ui/index';
 import { useMessages } from '@features/history-data';
 
@@ -96,6 +97,8 @@ export const SessionViewer: FC<SessionViewerProps> = ({
    */
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
   const visibleEntries = countVisibleEntries(feed.entries, filters);
+
+  useSmoothScroll(scrollElement);
 
   useEffect(() => {
     localStorage.setItem(messageFiltersStorageKey, encodeMessageFilters(filters));

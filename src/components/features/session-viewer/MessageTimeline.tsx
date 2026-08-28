@@ -46,10 +46,40 @@ export interface TimelineNavigation {
   readonly index: number;
 }
 
-// A turn is roughly this tall before it is measured. Only the first paint leans
-// on it, so being wrong costs a frame of scrollbar drift, not a layout bug.
-const ESTIMATED_ROW_PX = 220;
+/**
+ * How tall each row is before it is measured. One number for every row made the
+ * total height wrong by a wide margin on a mixed transcript, and the scrollbar
+ * jumped as rows mounted and corrected it, so each kind estimates its own.
+ */
+const DATE_ROW_PX = 32;
+const SUMMARY_ROW_PX = 56;
+const SYSTEM_ROW_PX = 72;
+const USER_ROW_PX = 104;
+const ASSISTANT_BASE_PX = 64;
+const ASSISTANT_BLOCK_PX = 120;
 const OVERSCAN = 6;
+
+const estimateRow = (row: TimelineRow | undefined): number => {
+  /* v8 ignore next 3 -- the virtualizer only asks about indexes within its own count */
+  if (row == null) {
+    return USER_ROW_PX;
+  }
+
+  if (row.kind === 'date') {
+    return DATE_ROW_PX;
+  }
+
+  switch (row.entry.kind) {
+    case 'user':
+      return USER_ROW_PX;
+    case 'assistant':
+      return ASSISTANT_BASE_PX + row.entry.blocks.length * ASSISTANT_BLOCK_PX;
+    case 'system':
+      return SYSTEM_ROW_PX;
+    case 'summary':
+      return SUMMARY_ROW_PX;
+  }
+};
 
 const renderRow = (
   row: TimelineRow,
@@ -135,8 +165,8 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
     getScrollElement: () => {
       return scrollElement ?? ownScrollRef.current;
     },
-    estimateSize: () => {
-      return ESTIMATED_ROW_PX;
+    estimateSize: (index) => {
+      return estimateRow(model.rows[index]);
     },
     getItemKey: (index) => {
       /* v8 ignore next -- the virtualizer only asks about indexes within its own count */

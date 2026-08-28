@@ -7,6 +7,7 @@ export * from './ConfirmDialog';
 export * from './constants';
 export * from './EmptyState';
 export * from './hooks/useLastPresent';
+export * from './hooks/useSmoothScroll';
 export * from './MarkdownText';
 export * from './MenuCheckboxItem';
 export * from './MenuItem';
