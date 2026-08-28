@@ -29,9 +29,11 @@ import {
   handleLoadSession,
   handleProjectStats,
   handleReadArchive,
+  handleReadSettings,
   handleRenameSession,
   handleSearch,
   handleUpdateCheck,
+  handleWriteSettings,
   parseLoadSessionBody,
   resolveEndpointRoots,
 } from './endpoints';
@@ -708,5 +710,104 @@ describe('archive endpoints', () => {
     const home = await mkdtemp(join(tmpdir(), 'archive-api-missing-'));
 
     expect((await handleDeleteArchive(post({ id: 'absent' }), { home })).status).toBe(500);
+  });
+});
+
+describe('settings endpoints', () => {
+  const emptyPatch = {
+    permissions: {
+      allow: [],
+      deny: [],
+      ask: [],
+      additionalDirectories: [],
+    },
+    env: [],
+  };
+
+  test('reads every scope and writes one back', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'settings-api-home-'));
+    const project = await mkdtemp(join(tmpdir(), 'settings-api-project-'));
+
+    expect(await jsonOf(await handleReadSettings(post({ projectPath: project }), { home })))
+      .toMatchObject({ scopes: [{ scope: 'user' }, { scope: 'project' }, { scope: 'local' }] });
+
+    const written = await handleWriteSettings(post({
+      projectPath: project,
+      scope: 'project',
+      patch: {
+        ...emptyPatch,
+        permissions: {
+          ...emptyPatch.permissions,
+          allow: ['Bash(ls:*)'],
+        },
+        env: [{
+          name: 'A',
+          value: 'b',
+        }],
+      },
+    }), { home });
+
+    expect(written.status).toBe(200);
+    expect(await jsonOf(written)).toMatchObject({
+      scope: {
+        scope: 'project',
+        exists: true,
+        permissions: { allow: ['Bash(ls:*)'] },
+      },
+    });
+  });
+
+  test('rejects malformed settings requests', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'settings-api-bad-'));
+
+    expect((await handleReadSettings(post({}), { home })).status).toBe(400);
+    expect((await handleReadSettings(post('nonsense'), { home })).status).toBe(400);
+    expect((await handleWriteSettings(post('nonsense'), { home })).status).toBe(400);
+    expect((await handleWriteSettings(post({
+      projectPath: '/repo',
+      scope: 'global',
+      patch: emptyPatch,
+    }), { home })).status).toBe(400);
+    expect((await handleWriteSettings(post({
+      projectPath: '/repo',
+      scope: 'user',
+      patch: { env: [] },
+    }), { home })).status).toBe(400);
+    expect((await handleWriteSettings(post({
+      projectPath: '/repo',
+      scope: 'user',
+      patch: {
+        permissions: {
+          allow: [7],
+          deny: [],
+          ask: [],
+          additionalDirectories: [],
+        },
+        env: [],
+      },
+    }), { home })).status).toBe(400);
+    expect((await handleWriteSettings(post({
+      projectPath: '/repo',
+      scope: 'user',
+      patch: {
+        ...emptyPatch,
+        env: [{ name: 'A' }],
+      },
+    }), { home })).status).toBe(400);
+    expect((await handleWriteSettings(post({
+      projectPath: '/repo',
+      scope: 'user',
+      patch: 'nope',
+    }), { home })).status).toBe(400);
+  });
+
+  test('reports a write it cannot perform', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'settings-api-noproject-'));
+
+    expect((await handleWriteSettings(post({
+      projectPath: '',
+      scope: 'project',
+      patch: emptyPatch,
+    }), { home })).status).toBe(500);
   });
 });

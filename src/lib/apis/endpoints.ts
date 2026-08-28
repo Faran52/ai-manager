@@ -26,6 +26,11 @@ import {
   loadSessionPage,
   renameSession,
 } from '@services/session/sessionService';
+import {
+  isSettingsScope,
+  readSettings,
+  writeScopeSettings,
+} from '@services/settings/settingsService';
 import { computeGlobalStats, computeProjectStats } from '@services/stats/statsService';
 import { checkForUpdate, updateConfigFromEnv } from '@services/updates';
 
@@ -40,6 +45,7 @@ import {
 
 import type { AgentId } from '@config/agents';
 import type { AgentRoots } from '@services/agents/agentsService';
+import type { EnvEntry } from '@services/settings/settingsService';
 import type { UpdateConfig } from '@services/updates';
 import type {
   AgentSetupBody,
@@ -50,6 +56,8 @@ import type {
   ProjectMutationBody,
   SearchBody,
   SessionMutationBody,
+  SettingsBody,
+  WriteSettingsBody,
 } from './contracts';
 
 export interface EndpointDeps {
@@ -113,6 +121,44 @@ const isArchiveBody = (body: object): body is ArchiveBody => {
 
 const isCreateArchiveBody = (body: object): body is CreateArchiveBody => {
   return !('note' in body) || typeof body.note === 'string';
+};
+
+const isSettingsBody = (body: object): body is SettingsBody => {
+  return 'projectPath' in body && typeof body.projectPath === 'string';
+};
+
+const isRuleList = (value: unknown): value is readonly string[] => {
+  return Array.isArray(value) && value.every((entry) => {
+    return typeof entry === 'string';
+  });
+};
+
+const isEnvEntry = (value: unknown): value is EnvEntry => {
+  return typeof value === 'object' && value !== null
+    && 'name' in value && typeof value.name === 'string'
+    && 'value' in value && typeof value.value === 'string';
+};
+
+const isWriteSettingsBody = (body: object): body is WriteSettingsBody => {
+  if (!isSettingsBody(body)
+    || !('scope' in body) || typeof body.scope !== 'string' || !isSettingsScope(body.scope)
+    || !('patch' in body) || typeof body.patch !== 'object' || body.patch === null) {
+    return false;
+  }
+
+  const { patch } = body;
+
+  if (!('permissions' in patch) || typeof patch.permissions !== 'object' || patch.permissions === null
+    || !('env' in patch) || !Array.isArray(patch.env)) {
+    return false;
+  }
+
+  const { permissions } = patch;
+  const lists = ['allow', 'deny', 'ask', 'additionalDirectories'];
+
+  return lists.every((key) => {
+    return key in permissions && isRuleList(Reflect.get(permissions, key));
+  }) && patch.env.every(isEnvEntry);
 };
 
 const isSearchBody = (body: object): body is SearchBody => {
@@ -316,6 +362,32 @@ export const handleDeleteArchive = async (request: Request, deps?: EndpointDeps)
     await deleteArchive(body.id, deps?.home);
 
     return jsonOk({ ok: true });
+  });
+};
+
+export const handleReadSettings = async (request: Request, deps?: EndpointDeps): Promise<Response> => {
+  return withJsonErrors(async () => {
+    const body = await readJsonObject(request);
+
+    if (body == null || !isSettingsBody(body)) {
+      return jsonError(BAD_REQUEST, 'A project path is required.');
+    }
+
+    return jsonOk({ scopes: await readSettings(body.projectPath, deps?.home) });
+  });
+};
+
+export const handleWriteSettings = async (request: Request, deps?: EndpointDeps): Promise<Response> => {
+  return withJsonErrors(async () => {
+    const body = await readJsonObject(request);
+
+    if (body == null || !isWriteSettingsBody(body)) {
+      return jsonError(BAD_REQUEST, 'A scope and a complete settings patch are required.');
+    }
+
+    return jsonOk({
+      scope: await writeScopeSettings(body.scope, body.projectPath, body.patch, deps?.home),
+    });
   });
 };
 

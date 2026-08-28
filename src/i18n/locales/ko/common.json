@@ -39,6 +39,7 @@
   "shortcutViewAnalytics": "분석으로 이동",
   "shortcutViewHealth": "상태로 이동",
   "shortcutViewArchive": "아카이브로 이동",
+  "shortcutViewSettings": "설정으로 이동",
   "shortcutReload": "프로젝트 다시 불러오기",
   "shortcutToggleNavigator": "메시지 내비게이터 전환",
   "shortcutShowShortcuts": "이 목록 보기",
@@ -60,6 +61,7 @@
   "navAnalytics": "분석",
   "navHealth": "상태",
   "navArchive": "아카이브",
+  "navSettings": "설정",
   "searchAllChatsLabel": "모든 대화 검색",
   "typeTwoCharacters": "두 글자 이상 입력하세요."
 }

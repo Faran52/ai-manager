@@ -6,3 +6,4 @@ export * from './useProjects';
 export * from './useProjectStats';
 export * from './useSearch';
 export * from './useSessions';
+export * from './useSettings';

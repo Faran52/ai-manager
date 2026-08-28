@@ -32,9 +32,11 @@ import {
   useProjectStats,
   useSearch,
   useSessions,
+  useSettings,
 } from '@features/history-data';
 import { SearchDialog } from '@features/search';
 import { SessionViewer } from '@features/session-viewer';
+import { SettingsView } from '@features/settings';
 import { SidebarPane } from '@features/sidebar';
 import { useTheme } from '@features/theme';
 import { UpdateBanner } from '@features/updates';
@@ -83,6 +85,7 @@ export const HistoryApp: FC = () => {
   const stats = useProjectStats(view === 'analytics' ? selectedProject : null);
   const agentSetup = useAgentSetup(view === 'health' ? (selectedProject?.actualPath ?? null) : null);
   const archives = useArchives(view === 'archive');
+  const settings = useSettings(view === 'settings' ? (selectedProject?.actualPath ?? '') : null);
   const sessionCounts = useMemo(() => {
     const path = selectedProject?.actualPath;
 
@@ -142,6 +145,9 @@ export const HistoryApp: FC = () => {
       }],
       [appShortcuts.viewArchive, () => {
         setView('archive');
+      }],
+      [appShortcuts.viewSettings, () => {
+        setView('settings');
       }],
       [appShortcuts.reload, reloadProjects],
     ];
@@ -277,6 +283,9 @@ export const HistoryApp: FC = () => {
     ),
     archive: (
       <ArchiveView archives={archives} onOpenSession={openArchivedSession} />
+    ),
+    settings: (
+      <SettingsView settings={settings} projectPath={selectedProject?.actualPath ?? null} />
     ),
     health: (
       <div className="h-full overflow-y-auto p-4">

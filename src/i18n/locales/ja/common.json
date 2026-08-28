@@ -39,6 +39,7 @@
   "shortcutViewAnalytics": "分析へ移動",
   "shortcutViewHealth": "ヘルスへ移動",
   "shortcutViewArchive": "アーカイブへ移動",
+  "shortcutViewSettings": "設定へ移動",
   "shortcutReload": "プロジェクトを再読み込み",
   "shortcutToggleNavigator": "メッセージナビゲーターを切り替え",
   "shortcutShowShortcuts": "この一覧を表示",
@@ -60,6 +61,7 @@
   "navAnalytics": "分析",
   "navHealth": "状態",
   "navArchive": "アーカイブ",
+  "navSettings": "設定",
   "searchAllChatsLabel": "すべてのチャットを検索",
   "typeTwoCharacters": "2 文字以上入力してください。"
 }

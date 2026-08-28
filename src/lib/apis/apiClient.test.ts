@@ -17,8 +17,10 @@ import {
   fetchProjects,
   fetchSearch,
   fetchSessions,
+  fetchSettings,
   fetchStats,
   renameSession,
+  writeSettings,
 } from './apiClient';
 
 import type { SessionMutationBody } from './contracts';
@@ -294,5 +296,61 @@ describe('archive endpoints', () => {
     }));
 
     await expect(createArchive({})).rejects.toThrow('unexpected shape');
+  });
+});
+
+describe('settings endpoints', () => {
+  const scope = {
+    scope: 'user',
+    path: '/home/.claude/settings.json',
+    exists: true,
+    readable: true,
+    permissions: {
+      allow: [],
+      deny: [],
+      ask: [],
+      additionalDirectories: [],
+    },
+    env: [],
+    preservedKeys: [],
+  };
+
+  test('reads scopes and returns the scope a save reports', async () => {
+    vi.stubGlobal('fetch', vi.fn((path: string) => {
+      return path.endsWith('/settings')
+        ? jsonResponse({ scopes: [scope] })
+        : jsonResponse({ scope });
+    }));
+
+    await expect(fetchSettings({ projectPath: '/repo' })).resolves.toEqual({ scopes: [scope] });
+    await expect(writeSettings({
+      projectPath: '/repo',
+      scope: 'user',
+      patch: {
+        permissions: scope.permissions,
+        env: [],
+      },
+    })).resolves.toEqual({ scope });
+  });
+
+  test('rejects settings responses of the wrong shape', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return jsonResponse({ scopes: 'three' });
+    }));
+
+    await expect(fetchSettings({ projectPath: '/repo' })).rejects.toThrow('unexpected shape');
+
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return jsonResponse({ scope: null });
+    }));
+
+    await expect(writeSettings({
+      projectPath: '/repo',
+      scope: 'user',
+      patch: {
+        permissions: scope.permissions,
+        env: [],
+      },
+    })).rejects.toThrow('unexpected shape');
   });
 });

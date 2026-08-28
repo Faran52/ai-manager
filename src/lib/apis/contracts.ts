@@ -10,6 +10,11 @@ import type { ArchiveManifest, ArchiveSummary } from '@services/archive/archiveS
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
 import type { SearchOutcome } from '@services/search/searchService';
 import type { SessionPage } from '@services/session/sessionService';
+import type {
+  ScopeSettings,
+  SettingsPatch,
+  SettingsScope,
+} from '@services/settings/settingsService';
 import type { ProjectStats } from '@services/stats/statsService';
 
 export interface ProjectsResponse {
@@ -88,6 +93,23 @@ export interface CreateArchiveBody {
 
 export interface CreateArchiveResponse {
   readonly archive: ArchiveSummary;
+}
+
+export interface SettingsBody {
+  readonly projectPath: string;
+}
+
+export interface SettingsResponse {
+  readonly scopes: readonly ScopeSettings[];
+}
+
+export interface WriteSettingsBody extends SettingsBody {
+  readonly scope: SettingsScope;
+  readonly patch: SettingsPatch;
+}
+
+export interface WriteSettingsResponse {
+  readonly scope: ScopeSettings;
 }
 
 export interface AgentSetupBody {

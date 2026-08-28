@@ -39,6 +39,7 @@
   "shortcutViewAnalytics": "前往分析",
   "shortcutViewHealth": "前往健康檢查",
   "shortcutViewArchive": "前往封存",
+  "shortcutViewSettings": "前往設定",
   "shortcutReload": "重新載入專案",
   "shortcutToggleNavigator": "切換訊息導覽器",
   "shortcutShowShortcuts": "顯示此清單",
@@ -60,6 +61,7 @@
   "navAnalytics": "分析",
   "navHealth": "健康度",
   "navArchive": "封存",
+  "navSettings": "設定",
   "searchAllChatsLabel": "搜尋所有對話",
   "typeTwoCharacters": "請至少輸入兩個字元。"
 }

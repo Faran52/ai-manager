@@ -8,6 +8,7 @@ import {
   History,
   RefreshCw,
   Search,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 import { cn } from '@utils/cnUtils';
@@ -23,7 +24,7 @@ import {
 import type { ThemeMode } from '@features/theme';
 import type { FC } from 'react';
 
-export type AppView = 'sessions' | 'analytics' | 'health' | 'archive';
+export type AppView = 'sessions' | 'analytics' | 'health' | 'archive' | 'settings';
 
 export interface AppHeaderProps {
   readonly view: AppView;
@@ -131,6 +132,17 @@ export const AppHeader: FC<AppHeaderProps> = ({
           >
             <Archive className="size-3.5" />
             {t('navArchive')}
+          </Button>
+          <Button
+            size="sm"
+            variant={view === 'settings' ? 'primary' : 'ghost'}
+            onClick={() => {
+              onViewChange('settings');
+            }}
+            pressed={view === 'settings'}
+          >
+            <SlidersHorizontal className="size-3.5" />
+            {t('navSettings')}
           </Button>
         </nav>
 

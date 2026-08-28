@@ -18,8 +18,12 @@ import type {
   SearchResponse,
   SessionMutationBody,
   SessionsResponse,
+  SettingsBody,
+  SettingsResponse,
   StatsResponse,
   UpdateCheckResponse,
+  WriteSettingsBody,
+  WriteSettingsResponse,
 } from './contracts';
 
 interface EndpointDefinition<T extends object> {
@@ -70,6 +74,14 @@ const hasArchives = (value: object): value is ArchivesResponse => {
 
 const isArchiveDetail = (value: object): value is ArchiveDetailResponse => {
   return 'archive' in value;
+};
+
+const hasScopes = (value: object): value is SettingsResponse => {
+  return 'scopes' in value && Array.isArray(value.scopes);
+};
+
+const isWrittenScope = (value: object): value is WriteSettingsResponse => {
+  return 'scope' in value && typeof value.scope === 'object' && value.scope !== null;
 };
 
 const isCreatedArchive = (value: object): value is CreateArchiveResponse => {
@@ -140,6 +152,16 @@ const ARCHIVE_DELETE: EndpointDefinition<MutationResponse> = {
   path: '/api/archive-delete',
   accepts: isMutationResponse,
   label: 'archive deletion',
+};
+const SETTINGS: EndpointDefinition<SettingsResponse> = {
+  path: '/api/settings',
+  accepts: hasScopes,
+  label: 'settings',
+};
+const SETTINGS_WRITE: EndpointDefinition<WriteSettingsResponse> = {
+  path: '/api/settings-write',
+  accepts: isWrittenScope,
+  label: 'settings save',
 };
 const RENAME_SESSION: EndpointDefinition<MutationResponse> = {
   path: '/api/session-rename',
@@ -228,6 +250,14 @@ export const fetchStats = (body: ProjectStatsBody): Promise<StatsResponse> => {
 
 export const deleteSession = (body: SessionMutationBody): Promise<MutationResponse> => {
   return requestEndpoint(DELETE_SESSION, body);
+};
+
+export const fetchSettings = (body: SettingsBody): Promise<SettingsResponse> => {
+  return requestEndpoint(SETTINGS, body);
+};
+
+export const writeSettings = (body: WriteSettingsBody): Promise<WriteSettingsResponse> => {
+  return requestEndpoint(SETTINGS_WRITE, body);
 };
 
 export const fetchArchives = (): Promise<ArchivesResponse> => {

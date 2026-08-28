@@ -39,6 +39,7 @@
   "shortcutViewAnalytics": "الانتقال إلى التحليلات",
   "shortcutViewHealth": "الانتقال إلى الحالة",
   "shortcutViewArchive": "الانتقال إلى الأرشيف",
+  "shortcutViewSettings": "الانتقال إلى الإعدادات",
   "shortcutReload": "إعادة تحميل المشاريع",
   "shortcutToggleNavigator": "تبديل مستعرض الرسائل",
   "shortcutShowShortcuts": "عرض هذه القائمة",
@@ -60,6 +61,7 @@
   "navAnalytics": "التحليلات",
   "navHealth": "الحالة",
   "navArchive": "الأرشيف",
+  "navSettings": "الإعدادات",
   "searchAllChatsLabel": "البحث في كل المحادثات",
   "typeTwoCharacters": "اكتب حرفين على الأقل."
 }

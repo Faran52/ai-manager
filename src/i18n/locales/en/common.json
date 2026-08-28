@@ -39,6 +39,7 @@
   "shortcutViewAnalytics": "Go to analytics",
   "shortcutViewHealth": "Go to health",
   "shortcutViewArchive": "Go to archive",
+  "shortcutViewSettings": "Go to settings",
   "shortcutReload": "Reload projects",
   "shortcutToggleNavigator": "Toggle message navigator",
   "shortcutShowShortcuts": "Show this list",
@@ -60,6 +61,7 @@
   "navAnalytics": "Analytics",
   "navHealth": "Health",
   "navArchive": "Archive",
+  "navSettings": "Settings",
   "searchAllChatsLabel": "Search all chats",
   "typeTwoCharacters": "Type at least two characters."
 }

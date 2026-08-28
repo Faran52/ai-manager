@@ -637,6 +637,24 @@ describe('HistoryApp keyboard shortcuts', () => {
         if (path.endsWith('/archives')) {
           return Response.json({ archives: [] });
         }
+        if (path.endsWith('/settings')) {
+          return Response.json({
+            scopes: [{
+              scope: 'user',
+              path: '/home/.claude/settings.json',
+              exists: false,
+              readable: true,
+              permissions: {
+                allow: [],
+                deny: [],
+                ask: [],
+                additionalDirectories: [],
+              },
+              env: [],
+              preservedKeys: [],
+            }],
+          });
+        }
         if (path.endsWith('/agent-setup')) {
           return Response.json({
             setups: [],
@@ -673,6 +691,9 @@ describe('HistoryApp keyboard shortcuts', () => {
 
     await userEvent.keyboard('4');
     expect(await screen.findByText('Archive manager')).toBeDefined();
+
+    await userEvent.keyboard('5');
+    expect(await screen.findByText('Settings manager')).toBeDefined();
 
     await userEvent.keyboard('2');
     expect(await screen.findByText(/No analytics for/)).toBeDefined();

@@ -49,6 +49,12 @@ describe('AppHeader', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /Health/ }));
     expect(props.onViewChange).toHaveBeenCalledWith('health');
+
+    await userEvent.click(screen.getByRole('button', { name: /Archive/ }));
+    expect(props.onViewChange).toHaveBeenCalledWith('archive');
+
+    await userEvent.click(screen.getByRole('button', { name: /Settings/ }));
+    expect(props.onViewChange).toHaveBeenCalledWith('settings');
   });
 
   test('marks the active view as pressed', () => {
