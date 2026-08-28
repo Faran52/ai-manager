@@ -12,6 +12,7 @@ First public release.
 
 - Dedicated parsers for Claude Code, Codex CLI, GitHub Copilot and OpenCode,
   each recovering tool calls, thinking, model and token usage
+- Gemini CLI and Antigravity CLI read from their own on-disk stores
 - Cursor, Goose and Zed read from their SQLite stores; around twenty more agents
   render as text through the generic file parser
 - Every agent normalises into one timeline model, so the viewer looks the same
@@ -43,5 +44,5 @@ First public release.
 - Checks a signed release feed and offers whole-artifact updates: macOS and
   Linux hand off to a helper that waits for exit, Windows hands the msi to
   `msiexec`
-- The manifest is verified against an Ed25519 public key when one is configured,
-  and an unsigned feed is rejected once a key is present
+- The manifest is verified against an Ed25519 public key baked into the build, so
+  an unsigned feed is rejected outright rather than trusted
