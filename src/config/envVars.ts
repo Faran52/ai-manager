@@ -19,9 +19,14 @@ export const envVar = (baked: string, live: string | undefined): string | undefi
   return value != null && value.length > 0 ? value : undefined;
 };
 
-export const UPDATE_FEED_URL = envVar(import.meta.env.UPDATE_FEED_URL, process.env.UPDATE_FEED_URL);
+// The client bundle has no `process`. A production build compiles the reference
+// away, but the dev server leaves it standing, where it throws on hydration.
+/* v8 ignore next -- tests always run somewhere `process` exists */
+const live = typeof process === 'undefined' ? {} : process.env;
+
+export const UPDATE_FEED_URL = envVar(import.meta.env.UPDATE_FEED_URL, live.UPDATE_FEED_URL);
 
 export const UPDATE_PUBLIC_KEY = envVar(
   import.meta.env.UPDATE_PUBLIC_KEY,
-  process.env.UPDATE_PUBLIC_KEY,
+  live.UPDATE_PUBLIC_KEY,
 );
