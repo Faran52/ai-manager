@@ -12,6 +12,13 @@ import {
   resolveAgentPaths,
   validateAgentSetup,
 } from '@services/agents/agentsService';
+import {
+  archiveRoot,
+  createArchive,
+  deleteArchive,
+  listArchives,
+  readArchive,
+} from '@services/archive/archiveService';
 import { searchAgentHistory } from '@services/search/searchService';
 import {
   deleteProject,
@@ -36,6 +43,8 @@ import type { AgentRoots } from '@services/agents/agentsService';
 import type { UpdateConfig } from '@services/updates';
 import type {
   AgentSetupBody,
+  ArchiveBody,
+  CreateArchiveBody,
   ListSessionsBody,
   LoadSessionBody,
   ProjectMutationBody,
@@ -96,6 +105,14 @@ const isSessionsBody = (body: object): body is ListSessionsBody => {
     && body.projectId.length > 0
     && 'agent' in body
     && isAgent(body.agent);
+};
+
+const isArchiveBody = (body: object): body is ArchiveBody => {
+  return 'id' in body && typeof body.id === 'string' && body.id.length > 0;
+};
+
+const isCreateArchiveBody = (body: object): body is CreateArchiveBody => {
+  return !('note' in body) || typeof body.note === 'string';
 };
 
 const isSearchBody = (body: object): body is SearchBody => {
@@ -181,11 +198,16 @@ export const handleLoadSession = async (request: Request, deps?: EndpointDeps): 
       return jsonError(BAD_REQUEST, 'A non-empty filePath is required.');
     }
 
+    // The archive root joins the agent's own roots so a transcript the agent has
+    // since deleted still opens in the viewer from its backup.
     const page = await loadSessionPage(parsed.filePath, {
       offset: clampOffset(parsed.offset),
       limit: clampLimit(parsed.limit),
       includeSidechain: parsed.includeSidechain === true,
-    }, parsed.agent, pathsFor(resolveEndpointRoots(deps), parsed.agent));
+    }, parsed.agent, [
+      ...pathsFor(resolveEndpointRoots(deps), parsed.agent),
+      archiveRoot(deps?.home),
+    ]);
 
     if (page == null) {
       return jsonError(NOT_FOUND, 'Session file not found.');
@@ -235,6 +257,65 @@ export const handleUpdateCheck = (
     }
 
     return jsonOk({ update: await checkForUpdate(config, deps.updateDeps) });
+  });
+};
+
+export const handleListArchives = (deps?: EndpointDeps): Promise<Response> => {
+  return withJsonErrors(async () => {
+    return jsonOk({ archives: await listArchives(deps?.home) });
+  });
+};
+
+export const handleReadArchive = async (request: Request, deps?: EndpointDeps): Promise<Response> => {
+  return withJsonErrors(async () => {
+    const body = await readJsonObject(request);
+
+    if (body == null || !isArchiveBody(body)) {
+      return jsonError(BAD_REQUEST, 'An archive id is required.');
+    }
+
+    return jsonOk({ archive: await readArchive(body.id, deps?.home) ?? null });
+  });
+};
+
+export const handleCreateArchive = async (request: Request, deps?: EndpointDeps): Promise<Response> => {
+  return withJsonErrors(async () => {
+    const body = await readJsonObject(request);
+
+    if (body == null || !isCreateArchiveBody(body)) {
+      return jsonError(BAD_REQUEST, 'A note must be text.');
+    }
+
+    const manifest = await createArchive(resolveEndpointRoots(deps), body.note ?? '', deps?.home);
+
+    return jsonOk({
+      archive: {
+        id: manifest.id,
+        createdMs: manifest.createdMs,
+        note: manifest.note,
+        sessionCount: manifest.sessions.length,
+        sizeBytes: manifest.sessions.reduce((total, session) => {
+          return total + session.sizeBytes;
+        }, 0),
+        agents: [...new Set(manifest.sessions.map((session) => {
+          return session.agent;
+        }))],
+      },
+    });
+  });
+};
+
+export const handleDeleteArchive = async (request: Request, deps?: EndpointDeps): Promise<Response> => {
+  return withJsonErrors(async () => {
+    const body = await readJsonObject(request);
+
+    if (body == null || !isArchiveBody(body)) {
+      return jsonError(BAD_REQUEST, 'An archive id is required.');
+    }
+
+    await deleteArchive(body.id, deps?.home);
+
+    return jsonOk({ ok: true });
   });
 };
 

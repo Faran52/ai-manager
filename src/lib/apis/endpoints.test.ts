@@ -1,6 +1,7 @@
 import {
   mkdir,
   mkdtemp,
+  rm,
   stat,
   writeFile,
 } from 'node:fs/promises';
@@ -18,12 +19,16 @@ import {
 
 import {
   handleAgentSetup,
+  handleCreateArchive,
+  handleDeleteArchive,
   handleDeleteProject,
   handleDeleteSession,
+  handleListArchives,
   handleListProjects,
   handleListSessions,
   handleLoadSession,
   handleProjectStats,
+  handleReadArchive,
   handleRenameSession,
   handleSearch,
   handleUpdateCheck,
@@ -32,7 +37,11 @@ import {
 } from './endpoints';
 
 import type { RawHistoryLine } from '@services/history/historyService';
-import type { MessagesResponse } from './contracts';
+import type {
+  ArchiveDetailResponse,
+  CreateArchiveResponse,
+  MessagesResponse,
+} from './contracts';
 
 beforeEach(() => {
   vi.stubEnv('XDG_DATA_HOME', tmpdir());
@@ -574,5 +583,130 @@ describe('handleUpdateCheck', () => {
         version: '2.0.0',
       },
     });
+  });
+});
+
+describe('archive endpoints', () => {
+  const isArchiveDetail = (value: object): value is ArchiveDetailResponse => {
+    return 'archive' in value;
+  };
+
+  const isCreatedArchive = (value: object): value is CreateArchiveResponse => {
+    return 'archive' in value;
+  };
+
+  const archivedPathOf = (body: object | undefined): string => {
+    const path = body != null && isArchiveDetail(body)
+      ? body.archive?.sessions[0]?.archivePath
+      : undefined;
+
+    if (path == null) {
+      throw new Error('archived path missing');
+    }
+
+    return path;
+  };
+
+  const archiveIdOf = (body: object | undefined): string => {
+    if (body == null || !isCreatedArchive(body)) {
+      throw new Error('archive id missing');
+    }
+
+    return body.archive.id;
+  };
+
+  test('creates, lists, reads and deletes an archive', { timeout: 30_000 }, async () => {
+    const home = await mkdtemp(join(tmpdir(), 'archive-api-'));
+    const projectDir = join(home, '.claude', 'projects', 'proj');
+
+    await mkdir(projectDir, { recursive: true });
+    await writeFile(join(projectDir, 's.jsonl'), JSON.stringify({
+      type: 'user',
+      uuid: 'u1',
+      timestamp: '2026-06-01T10:00:00Z',
+      message: {
+        role: 'user',
+        content: 'the question',
+      },
+    }), 'utf8');
+
+    const created = await handleCreateArchive(post({ note: 'first' }), { home });
+
+    expect(created.status).toBe(200);
+
+    const id = archiveIdOf(await jsonOf(created));
+    const listed = await jsonOf(await handleListArchives({ home }));
+
+    expect(listed).toMatchObject({
+      archives: [{
+        id,
+        note: 'first',
+        sessionCount: 1,
+      }],
+    });
+
+    const read = await jsonOf(await handleReadArchive(post({ id }), { home }));
+
+    expect(read).toMatchObject({ archive: { id } });
+
+    const removed = await handleDeleteArchive(post({ id }), { home });
+
+    expect(removed.status).toBe(200);
+    expect(await jsonOf(await handleListArchives({ home }))).toEqual({ archives: [] });
+  });
+
+  test('creates without a note and reports an unknown archive as null', { timeout: 30_000 }, async () => {
+    const home = await mkdtemp(join(tmpdir(), 'archive-api-empty-'));
+    const created = await handleCreateArchive(post({}), { home });
+
+    expect(created.status).toBe(200);
+    expect(await jsonOf(await handleReadArchive(post({ id: 'nope' }), { home }))).toEqual({ archive: null });
+  });
+
+  test('rejects malformed archive requests', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'archive-api-bad-'));
+
+    expect((await handleReadArchive(post({}), { home })).status).toBe(400);
+    expect((await handleDeleteArchive(post({ id: '' }), { home })).status).toBe(400);
+    expect((await handleCreateArchive(post({ note: 7 }), { home })).status).toBe(400);
+    expect((await handleReadArchive(post('nonsense'), { home })).status).toBe(400);
+    expect((await handleCreateArchive(post('nonsense'), { home })).status).toBe(400);
+    expect((await handleDeleteArchive(post('nonsense'), { home })).status).toBe(400);
+  });
+
+  test('opens an archived transcript the agent no longer holds', { timeout: 30_000 }, async () => {
+    const home = await mkdtemp(join(tmpdir(), 'archive-api-read-'));
+    const projectDir = join(home, '.claude', 'projects', 'proj');
+
+    await mkdir(projectDir, { recursive: true });
+    await writeFile(join(projectDir, 's.jsonl'), JSON.stringify({
+      type: 'user',
+      uuid: 'u1',
+      timestamp: '2026-06-01T10:00:00Z',
+      message: {
+        role: 'user',
+        content: 'archived question',
+      },
+    }), 'utf8');
+
+    const created = await jsonOf(await handleCreateArchive(post({}), { home }));
+    const id = archiveIdOf(created);
+    const detail = await jsonOf(await handleReadArchive(post({ id }), { home }));
+    const archivePath = archivedPathOf(detail);
+
+    await rm(projectDir, { recursive: true });
+
+    const page = await jsonOf(await handleLoadSession(post({
+      filePath: archivePath,
+      agent: 'claude',
+    }), { home }));
+
+    expect(page != null && isMessagesPageShape(page) ? page.entries : []).toHaveLength(1);
+  });
+
+  test('reports a failed deletion as an error', { timeout: 20_000 }, async () => {
+    const home = await mkdtemp(join(tmpdir(), 'archive-api-missing-'));
+
+    expect((await handleDeleteArchive(post({ id: 'absent' }), { home })).status).toBe(500);
   });
 });

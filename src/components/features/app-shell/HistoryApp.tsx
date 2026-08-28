@@ -24,8 +24,10 @@ import { fadeTransition, PaneDivider } from '@ui/index';
 import { AgentSetupPanel } from '@features/agent-setup';
 import { AnalyticsView } from '@features/analytics';
 import { AppHeader } from '@features/app-header';
+import { ArchiveView } from '@features/archive';
 import {
   useAgentSetup,
+  useArchives,
   useProjects,
   useProjectStats,
   useSearch,
@@ -42,6 +44,7 @@ import { ShortcutsDialog } from './partials';
 import type { AgentId } from '@config/agents';
 import type { ShortcutSpec } from '@config/shortcuts';
 import type { AppView } from '@features/app-header';
+import type { ArchivedSession } from '@services/archive/archiveService';
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
 import type { SearchHit } from '@services/search/searchService';
 import type { SessionTokenTotals } from '@services/stats/statsService';
@@ -71,6 +74,7 @@ export const HistoryApp: FC = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [highlightTimestamp, setHighlightTimestamp] = useState<string | undefined>(undefined);
+  const [archivedSession, setArchivedSession] = useState<ArchivedSession | null>(null);
   const [sidebarWidth, setSidebarWidth] = useState(initialSidebarWidth);
   const [nowMs] = useState(() => {
     return Date.now();
@@ -78,6 +82,7 @@ export const HistoryApp: FC = () => {
   const sessions = useSessions(selectedProject, view === 'sessions' && selectedFilePath != null);
   const stats = useProjectStats(view === 'analytics' ? selectedProject : null);
   const agentSetup = useAgentSetup(view === 'health' ? (selectedProject?.actualPath ?? null) : null);
+  const archives = useArchives(view === 'archive');
   const sessionCounts = useMemo(() => {
     const path = selectedProject?.actualPath;
 
@@ -135,6 +140,9 @@ export const HistoryApp: FC = () => {
       [appShortcuts.viewHealth, () => {
         setView('health');
       }],
+      [appShortcuts.viewArchive, () => {
+        setView('archive');
+      }],
       [appShortcuts.reload, reloadProjects],
     ];
 
@@ -164,12 +172,14 @@ export const HistoryApp: FC = () => {
     setSelectedProject(project);
     setSelectedFilePath(null);
     setHighlightTimestamp(undefined);
+    setArchivedSession(null);
   }, []);
 
   const selectSession = useCallback((session: SessionSummary) => {
     setSelectedProject(findAgentProject(projects.data, session.projectId, session.agent));
     setSelectedFilePath(session.filePath);
     setHighlightTimestamp(undefined);
+    setArchivedSession(null);
     setView('sessions');
   }, [projects.data]);
 
@@ -224,6 +234,16 @@ export const HistoryApp: FC = () => {
     [projects.data],
   );
 
+  // An archived transcript has no live project behind it, so the viewer is
+  // pointed straight at the backup copy and the sidebar selection is cleared.
+  const openArchivedSession = useCallback((session: ArchivedSession) => {
+    setView('sessions');
+    setSelectedProject(null);
+    setArchivedSession(session);
+    setSelectedFilePath(session.archivePath);
+    setHighlightTimestamp(undefined);
+  }, []);
+
   const openStatsSession = useCallback(
     (session: SessionTokenTotals) => {
       setView('sessions');
@@ -237,9 +257,12 @@ export const HistoryApp: FC = () => {
     sessions: (
       <SessionViewer
         filePath={selectedFilePath}
-        agent={selectedSession?.agent ?? selectedProject?.agent ?? 'claude'}
-        projectLabel={selectedProject?.name ?? ''}
-        sessionTitle={selectedSession?.title ?? selectedSession?.summary ?? selectedSession?.preview}
+        agent={archivedSession?.agent ?? selectedSession?.agent ?? selectedProject?.agent ?? 'claude'}
+        projectLabel={archivedSession?.projectName ?? selectedProject?.name ?? ''}
+        sessionTitle={archivedSession?.title
+          ?? selectedSession?.title
+          ?? selectedSession?.summary
+          ?? selectedSession?.preview}
         highlightTimestamp={highlightTimestamp}
         sourceModifiedMs={selectedSession?.modifiedMs ?? 0}
       />
@@ -251,6 +274,9 @@ export const HistoryApp: FC = () => {
         projectName={selectedProject?.name ?? t('noProject')}
         onOpenSession={openStatsSession}
       />
+    ),
+    archive: (
+      <ArchiveView archives={archives} onOpenSession={openArchivedSession} />
     ),
     health: (
       <div className="h-full overflow-y-auto p-4">

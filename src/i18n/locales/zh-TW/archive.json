@@ -1,0 +1,18 @@
+{
+  "heading": "封存管理器",
+  "intro": "各個代理會按自己的節奏清理歷史紀錄。封存是把它們目前仍保留的全部紀錄完整複製一份，放到它們碰不到的地方。",
+  "archiveCount": "封存數",
+  "sessionsSaved": "已儲存工作階段",
+  "spaceUsed": "占用空間",
+  "createArchive": "建立封存",
+  "creating": "封存中…",
+  "noteLabel": "封存備註",
+  "notePlaceholder": "選填備註，例如「升級到 2.0 之前」",
+  "noArchives": "尚無封存",
+  "noArchivesHint": "現在建立一份，無論代理下次刪掉什麼，今天的紀錄都還在。",
+  "archiveMeta_one": "{{count}} 個工作階段 · {{size}}",
+  "archiveMeta_other": "{{count}} 個工作階段 · {{size}}",
+  "archiveEmpty": "此封存中沒有工作階段。",
+  "deleteArchive": "刪除封存",
+  "deleteArchiveWarning": "封存副本將被永久刪除。代理那邊已經刪掉的內容之後將無法復原。"
+}

@@ -38,6 +38,7 @@
   "shortcutViewSessions": "前往会话",
   "shortcutViewAnalytics": "前往分析",
   "shortcutViewHealth": "前往健康检查",
+  "shortcutViewArchive": "前往归档",
   "shortcutReload": "重新加载项目",
   "shortcutToggleNavigator": "切换消息导航器",
   "shortcutShowShortcuts": "显示此列表",
@@ -58,6 +59,7 @@
   "navSessions": "会话",
   "navAnalytics": "分析",
   "navHealth": "健康度",
+  "navArchive": "归档",
   "searchAllChatsLabel": "搜索所有对话",
   "typeTwoCharacters": "请至少输入两个字符。"
 }

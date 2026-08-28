@@ -6,6 +6,7 @@ import type {
   ProjectUsage,
   SetupFinding,
 } from '@services/agents/agentsService';
+import type { ArchiveManifest, ArchiveSummary } from '@services/archive/archiveService';
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
 import type { SearchOutcome } from '@services/search/searchService';
 import type { SessionPage } from '@services/session/sessionService';
@@ -67,6 +68,26 @@ export interface RenameSessionBody extends SessionMutationBody {
 
 export interface MutationResponse {
   readonly ok: true;
+}
+
+export interface ArchivesResponse {
+  readonly archives: readonly ArchiveSummary[];
+}
+
+export interface ArchiveBody {
+  readonly id: string;
+}
+
+export interface ArchiveDetailResponse {
+  readonly archive: ArchiveManifest | null;
+}
+
+export interface CreateArchiveBody {
+  readonly note?: string | undefined;
+}
+
+export interface CreateArchiveResponse {
+  readonly archive: ArchiveSummary;
 }
 
 export interface AgentSetupBody {

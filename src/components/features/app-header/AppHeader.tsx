@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
+  Archive,
   BarChart3,
   HeartPulse,
   History,
@@ -22,7 +23,7 @@ import {
 import type { ThemeMode } from '@features/theme';
 import type { FC } from 'react';
 
-export type AppView = 'sessions' | 'analytics' | 'health';
+export type AppView = 'sessions' | 'analytics' | 'health' | 'archive';
 
 export interface AppHeaderProps {
   readonly view: AppView;
@@ -119,6 +120,17 @@ export const AppHeader: FC<AppHeaderProps> = ({
           >
             <HeartPulse className="size-3.5" />
             {t('navHealth')}
+          </Button>
+          <Button
+            size="sm"
+            variant={view === 'archive' ? 'primary' : 'ghost'}
+            onClick={() => {
+              onViewChange('archive');
+            }}
+            pressed={view === 'archive'}
+          >
+            <Archive className="size-3.5" />
+            {t('navArchive')}
           </Button>
         </nav>
 

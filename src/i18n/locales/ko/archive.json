@@ -1,0 +1,18 @@
+{
+  "heading": "아카이브 관리자",
+  "intro": "에이전트는 자체 일정에 따라 기록을 삭제합니다. 아카이브는 아직 남아 있는 모든 기록을 에이전트가 닿지 않는 곳에 통째로 복사해 둔 것입니다.",
+  "archiveCount": "아카이브",
+  "sessionsSaved": "저장된 세션",
+  "spaceUsed": "사용 용량",
+  "createArchive": "아카이브 만들기",
+  "creating": "보관하는 중…",
+  "noteLabel": "아카이브 메모",
+  "notePlaceholder": "선택 메모, 예: \"2.0 업그레이드 전\"",
+  "noArchives": "아직 아카이브가 없습니다",
+  "noArchivesHint": "지금 만들어 두면 에이전트가 다음에 무엇을 지우든 오늘의 기록은 남습니다.",
+  "archiveMeta_one": "세션 {{count}}개 · {{size}}",
+  "archiveMeta_other": "세션 {{count}}개 · {{size}}",
+  "archiveEmpty": "이 아카이브에는 세션이 없습니다.",
+  "deleteArchive": "아카이브 삭제",
+  "deleteArchiveWarning": "보관된 사본이 완전히 삭제됩니다. 에이전트가 이미 지운 기록은 이후 복구할 수 없습니다."
+}

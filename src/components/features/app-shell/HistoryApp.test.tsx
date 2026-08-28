@@ -634,6 +634,9 @@ describe('HistoryApp keyboard shortcuts', () => {
         if (path.endsWith('/stats')) {
           return Response.json({ stats: null });
         }
+        if (path.endsWith('/archives')) {
+          return Response.json({ archives: [] });
+        }
         if (path.endsWith('/agent-setup')) {
           return Response.json({
             setups: [],
@@ -668,6 +671,9 @@ describe('HistoryApp keyboard shortcuts', () => {
     await userEvent.keyboard('3');
     expect(await screen.findByRole('button', { name: /Health/ })).toBeDefined();
 
+    await userEvent.keyboard('4');
+    expect(await screen.findByText('Archive manager')).toBeDefined();
+
     await userEvent.keyboard('2');
     expect(await screen.findByText(/No analytics for/)).toBeDefined();
 
@@ -699,5 +705,66 @@ describe('HistoryApp keyboard shortcuts', () => {
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).toBeNull();
     });
+  });
+});
+
+describe('HistoryApp archived transcripts', () => {
+  test('opens an archived session in the viewer without a live project', async () => {
+    const archive = {
+      id: '2026-07-01T00-00-00-000Z',
+      createdMs: Date.parse('2026-07-01T00:00:00Z'),
+      note: 'nightly',
+      sessionCount: 1,
+      sizeBytes: 64,
+      agents: ['claude'],
+    };
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: RequestInfo | URL) => {
+        const path = toPath(url);
+
+        if (path.endsWith('/projects')) {
+          return Response.json(projectPayload);
+        }
+        if (path.endsWith('/archives')) {
+          return Response.json({ archives: [archive] });
+        }
+        if (path.endsWith('/archive-read')) {
+          return Response.json({
+            archive: {
+              ...archive,
+              sessions: [{
+                agent: 'claude',
+                projectId: 'proj-a',
+                projectName: 'alpha',
+                actualSessionId: 's1',
+                title: 'Deleted session',
+                messageCount: 1,
+                lastTimestampMs: 1,
+                sizeBytes: 64,
+                sourcePath: '/home/.claude/projects/proj-a/s1.jsonl',
+                archivePath: '/archives/a/files/claude/proj-a/s1.jsonl',
+              }],
+            },
+          });
+        }
+        if (path.endsWith('/messages')) {
+          return Response.json(messagesPayload);
+        }
+
+        return Response.json({ sessions: [] });
+      }),
+    );
+
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+
+    await userEvent.click(screen.getByRole('button', { name: /Archive/ }));
+    await userEvent.click(await screen.findByText('nightly'));
+    await userEvent.click(await screen.findByText('Deleted session'));
+
+    expect(await screen.findByText('the question')).toBeDefined();
+    expect(screen.getAllByText('alpha').length).toBeGreaterThan(0);
   });
 });

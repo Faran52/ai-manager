@@ -7,8 +7,12 @@ import {
 } from 'vitest';
 
 import {
+  createArchive,
+  deleteArchive,
   deleteProject,
   deleteSession,
+  fetchArchive,
+  fetchArchives,
   fetchMessages,
   fetchProjects,
   fetchSearch,
@@ -235,5 +239,60 @@ describe('malformed success bodies', () => {
     }));
 
     await expect(fetchProjects()).rejects.toThrow('project list returned malformed JSON');
+  });
+});
+
+describe('archive endpoints', () => {
+  const summary = {
+    id: '2026-07-01T00-00-00-000Z',
+    createdMs: 1,
+    note: '',
+    sessionCount: 2,
+    sizeBytes: 40,
+    agents: ['claude'],
+  };
+
+  test('reads the list, one archive and an acknowledged delete', async () => {
+    vi.stubGlobal('fetch', vi.fn((path: string) => {
+      if (path.endsWith('/archives')) {
+        return jsonResponse({ archives: [summary] });
+      }
+      if (path.endsWith('/archive-read')) {
+        return jsonResponse({
+          archive: {
+            ...summary,
+            sessions: [],
+          },
+        });
+      }
+
+      return jsonResponse({ ok: true });
+    }));
+
+    await expect(fetchArchives()).resolves.toEqual({ archives: [summary] });
+    await expect(fetchArchive({ id: summary.id })).resolves.toMatchObject({ archive: { id: summary.id } });
+    await expect(deleteArchive({ id: summary.id })).resolves.toEqual({ ok: true });
+  });
+
+  test('returns the archive a create call reports', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return jsonResponse({ archive: summary });
+    }));
+
+    await expect(createArchive({ note: 'before upgrade' })).resolves.toEqual({ archive: summary });
+  });
+
+  test('rejects archive responses of the wrong shape', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return jsonResponse({ archives: 'many' });
+    }));
+
+    await expect(fetchArchives()).rejects.toThrow('unexpected shape');
+
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return jsonResponse({ archive: null });
+    }));
+
+    await expect(createArchive({})).rejects.toThrow('unexpected shape');
   });
 });

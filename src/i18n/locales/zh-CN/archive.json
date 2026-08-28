@@ -1,0 +1,18 @@
+{
+  "heading": "归档管理器",
+  "intro": "各个智能体会按自己的节奏清理历史记录。归档是把它们目前还保留的全部记录完整复制一份，放到它们够不着的地方。",
+  "archiveCount": "归档数",
+  "sessionsSaved": "已保存会话",
+  "spaceUsed": "占用空间",
+  "createArchive": "创建归档",
+  "creating": "正在归档…",
+  "noteLabel": "归档备注",
+  "notePlaceholder": "可选备注，例如“升级到 2.0 之前”",
+  "noArchives": "还没有归档",
+  "noArchivesHint": "现在创建一个，无论智能体下次删掉什么，今天的记录都还在。",
+  "archiveMeta_one": "{{count}} 个会话 · {{size}}",
+  "archiveMeta_other": "{{count}} 个会话 · {{size}}",
+  "archiveEmpty": "此归档中没有会话。",
+  "deleteArchive": "删除归档",
+  "deleteArchiveWarning": "归档副本将被永久删除。智能体那边已经删掉的内容之后将无法恢复。"
+}

@@ -22,6 +22,7 @@ const LABEL_KEYS: Record<ShortcutId, string> = {
   viewSessions: 'shortcutViewSessions',
   viewAnalytics: 'shortcutViewAnalytics',
   viewHealth: 'shortcutViewHealth',
+  viewArchive: 'shortcutViewArchive',
   reload: 'shortcutReload',
   toggleNavigator: 'shortcutToggleNavigator',
   showShortcuts: 'shortcutShowShortcuts',

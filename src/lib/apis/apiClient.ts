@@ -1,6 +1,11 @@
 import type {
   AgentSetupBody,
   AgentSetupResponse,
+  ArchiveBody,
+  ArchiveDetailResponse,
+  ArchivesResponse,
+  CreateArchiveBody,
+  CreateArchiveResponse,
   ListSessionsBody,
   LoadSessionBody,
   MessagesResponse,
@@ -59,6 +64,18 @@ const isMutationResponse = (value: object): value is MutationResponse => {
   return 'ok' in value && value.ok === true;
 };
 
+const hasArchives = (value: object): value is ArchivesResponse => {
+  return 'archives' in value && Array.isArray(value.archives);
+};
+
+const isArchiveDetail = (value: object): value is ArchiveDetailResponse => {
+  return 'archive' in value;
+};
+
+const isCreatedArchive = (value: object): value is CreateArchiveResponse => {
+  return 'archive' in value && typeof value.archive === 'object' && value.archive !== null;
+};
+
 const PROJECTS: EndpointDefinition<ProjectsResponse> = {
   path: '/api/projects',
   accepts: hasProjects,
@@ -103,6 +120,26 @@ const AGENT_SETUP: EndpointDefinition<AgentSetupResponse> = {
   path: '/api/agent-setup',
   accepts: isAgentSetupResponse,
   label: 'agent setup',
+};
+const ARCHIVES: EndpointDefinition<ArchivesResponse> = {
+  path: '/api/archives',
+  accepts: hasArchives,
+  label: 'archive list',
+};
+const ARCHIVE_READ: EndpointDefinition<ArchiveDetailResponse> = {
+  path: '/api/archive-read',
+  accepts: isArchiveDetail,
+  label: 'archive contents',
+};
+const ARCHIVE_CREATE: EndpointDefinition<CreateArchiveResponse> = {
+  path: '/api/archive-create',
+  accepts: isCreatedArchive,
+  label: 'archive creation',
+};
+const ARCHIVE_DELETE: EndpointDefinition<MutationResponse> = {
+  path: '/api/archive-delete',
+  accepts: isMutationResponse,
+  label: 'archive deletion',
 };
 const RENAME_SESSION: EndpointDefinition<MutationResponse> = {
   path: '/api/session-rename',
@@ -191,6 +228,22 @@ export const fetchStats = (body: ProjectStatsBody): Promise<StatsResponse> => {
 
 export const deleteSession = (body: SessionMutationBody): Promise<MutationResponse> => {
   return requestEndpoint(DELETE_SESSION, body);
+};
+
+export const fetchArchives = (): Promise<ArchivesResponse> => {
+  return requestEndpoint(ARCHIVES, {});
+};
+
+export const fetchArchive = (body: ArchiveBody): Promise<ArchiveDetailResponse> => {
+  return requestEndpoint(ARCHIVE_READ, body);
+};
+
+export const createArchive = (body: CreateArchiveBody): Promise<CreateArchiveResponse> => {
+  return requestEndpoint(ARCHIVE_CREATE, body);
+};
+
+export const deleteArchive = (body: ArchiveBody): Promise<MutationResponse> => {
+  return requestEndpoint(ARCHIVE_DELETE, body);
 };
 
 export const deleteProject = (body: ProjectMutationBody): Promise<MutationResponse> => {
