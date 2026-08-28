@@ -13,8 +13,13 @@ import {
   test,
 } from 'vitest';
 
-import { computeProjectStats } from './statsService';
+import { handleGlobalStats } from '@lib/apis/endpoints';
 
+import { resolveAgentPaths } from '../agents/agentsService';
+
+import { computeGlobalStats, computeProjectStats } from './statsService';
+
+import type { AgentRoots } from '../agents/agentsService';
 import type { RawHistoryLine } from '../history/utils/claudeRawUtils';
 
 const newDir = async (): Promise<string> => {
@@ -39,12 +44,12 @@ const writeSession = async (
   );
 };
 
-const assistantTurn = (model: string, tokens: number, cost = 0): RawHistoryLine => {
+const assistantTurn = (model: string, tokens: number, cost?: number): RawHistoryLine => {
   return {
     type: 'assistant',
-    uuid: `a-${String(tokens)}-${String(cost)}`,
+    uuid: `a-${String(tokens)}-${String(cost ?? 'missing')}`,
     timestamp: '2026-07-01T09:00:00Z',
-    costUSD: cost,
+    ...(cost == null ? {} : { costUSD: cost }),
     durationMs: 100,
     message: {
       role: 'assistant',
@@ -117,21 +122,28 @@ describe('computeProjectStats', () => {
       outputTokens: 70,
       cacheCreationTokens: 105,
       cacheReadTokens: 140,
-      costUsd: 0.5,
+      conversationTokens: 105,
+      nonConversationTokens: 245,
+      billingTokens: 350,
+      splitUnavailable: false,
+      costUsd: 1.5,
       durationMs: 300,
     });
     expect(stats?.models).toEqual([
       {
         model: 'claude-sonnet-5',
         requests: 2,
-        inputTokens: 30,
+        inputTokens: 240,
         outputTokens: 60,
+        costUsd: 1.5,
+        basis: 'estimated',
       },
       {
         model: 'gpt-5.5',
         requests: 1,
-        inputTokens: 5,
+        inputTokens: 40,
         outputTokens: 10,
+        basis: 'unpriced',
       },
     ]);
     expect(stats?.tools).toEqual([{
@@ -180,6 +192,9 @@ describe('computeProjectStats', () => {
       sessions: 1,
       messages: 0,
       inputTokens: 0,
+      conversationTokens: 0,
+      nonConversationTokens: 0,
+      billingTokens: 0,
     });
     expect(stats?.activity).toEqual([{
       date: '2026-07-03',
@@ -432,7 +447,15 @@ describe('structured and SQLite statistics', () => {
       },
     }), 'utf8');
 
-    expect((await computeProjectStats(copilotRoot, 'unknown', 'copilot'))?.totals.sessions).toBe(1);
+    const copilotStats = await computeProjectStats(copilotRoot, 'unknown', 'copilot');
+
+    expect(copilotStats?.totals).toMatchObject({
+      sessions: 1,
+      conversationTokens: 30,
+      nonConversationTokens: 0,
+      billingTokens: 30,
+      splitUnavailable: true,
+    });
 
     const openCodeRoot = await newDir();
     const databasePath = join(openCodeRoot, 'opencode.db');
@@ -466,5 +489,63 @@ describe('structured and SQLite statistics', () => {
     database.close();
 
     expect((await computeProjectStats(openCodeRoot, '/repo/alpha', 'opencode'))?.totals.sessions).toBe(1);
+  });
+});
+
+describe('global statistics', () => {
+  test('aggregates every agent and project into matching agent totals', async () => {
+    const home = await newDir();
+    const claude = await newDir();
+    const codebuddy = await newDir();
+
+    await writeSession(claude, 'alpha', 'a.jsonl', [assistantTurn('shared', 2, 0.2)]);
+    await writeSession(codebuddy, 'beta', 'b.jsonl', [assistantTurn('shared', 3)]);
+
+    const roots: AgentRoots = {
+      ...resolveAgentPaths({
+        env: {},
+        home,
+      }),
+      claude: [claude],
+      codebuddy: [codebuddy],
+    };
+    const stats = await computeGlobalStats(roots);
+    const agentTokens = stats.agents.reduce((total, agent) => {
+      return total + agent.tokens;
+    }, 0);
+
+    expect(stats.totals.sessions).toBe(2);
+    expect(stats.totals.billingTokens).toBe(50);
+    expect(stats.totals.conversationTokens + stats.totals.nonConversationTokens)
+      .toBe(stats.totals.billingTokens);
+    expect(agentTokens).toBe(stats.totals.billingTokens);
+    expect(stats.agents).toEqual([
+      {
+        agent: 'codebuddy',
+        tokens: 30,
+        sessions: 1,
+        projects: 1,
+      },
+      {
+        agent: 'claude',
+        tokens: 20,
+        sessions: 1,
+        projects: 1,
+      },
+    ]);
+    expect(stats.models[0]?.basis).toBe('estimated');
+  });
+
+  test('exposes global statistics through the endpoint handler', async () => {
+    const home = await newDir();
+    const response = await handleGlobalStats({ home });
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      stats: {
+        projectId: 'global',
+        agents: [],
+      },
+    });
   });
 });
