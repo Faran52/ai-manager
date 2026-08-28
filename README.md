@@ -42,6 +42,26 @@ Six locales, including right-to-left Arabic with a fully mirrored layout:
 
 ![Arabic right-to-left interface](docs/screenshots/rtl-arabic.jpg)
 
+## Install
+
+Grab the build for your platform from the
+[latest release](https://github.com/Faran52/ai-chat-manager/releases/latest).
+
+The app is not signed with a paid Developer ID, so the first launch needs one
+extra step. Nothing is wrong with the download; both systems simply distrust
+binaries whose publisher has not paid for a certificate.
+
+- **macOS.** Right-click the app and choose *Open*, then *Open* again in the
+  dialog. Double-clicking shows a refusal with no way past it, which is why the
+  first launch has to be a right-click. macOS remembers the choice afterwards.
+- **Windows.** SmartScreen shows *Windows protected your PC*. Choose *More info*
+  → *Run anyway*.
+- **Linux.** `chmod +x AIChatManager-linux.AppImage`, then run it.
+
+Building from source avoids the prompt entirely: the warning comes from the
+quarantine flag a browser attaches to a download, and a local build never
+carries one.
+
 ## Quick start
 
 ```bash
@@ -102,8 +122,10 @@ hands off to an installer and exits.
 | Linux | helper swaps the AppImage, relaunches |
 | Windows | `msiexec` takes the `.msi` |
 
-Set `UPDATE_FEED_URL` (and `UPDATE_PUBLIC_KEY` to require signed manifests).
-Without a feed the app simply never offers updates.
+The feed URL and its Ed25519 public key are inlined into the bundle at build
+time, so a release verifies the manifest against a key it already carries and
+refuses an unsigned feed. `UPDATE_FEED_URL` and `UPDATE_PUBLIC_KEY` override
+both; see [.env.example](.env.example).
 
 Cutting a release is one tag push; see [RELEASE.md](RELEASE.md).
 
