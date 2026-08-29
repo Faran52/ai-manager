@@ -16,11 +16,13 @@ import { parseJsonContainer } from '@utils/jsonUtils';
 import { humanPreview } from '@utils/titleUtils';
 
 import { splitUserText } from '../../session/utils/parserUtils';
+import { SKIPPED_SCAN_DIRS } from '../constants';
 
 import { conversationMessageCount, firstUserMessageText } from './outcomeUtils';
 
 import type { AgentId } from '@config/agents';
 import type { JsonObject, JsonValue } from '@utils/jsonUtils';
+import type { Dirent } from 'node:fs';
 import type {
   HistoryEntry,
   ProjectSummary,
@@ -44,8 +46,6 @@ interface WalkOptions {
 }
 
 const supportedExtensions = new Set(['.json', '.jsonl', '.md', '.ndjson', '.txt']);
-
-const SKIPPED_DIRS = new Set(['node_modules', '.git']);
 
 const isRecord = (value: JsonValue | undefined): value is JsonObject => {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -312,6 +312,43 @@ const isAgentFile = (agent: AgentId, filePath: string): boolean => {
   return supportedExtensions.has(extname(name));
 };
 
+const childrenOf = async (dir: string): Promise<readonly Dirent[]> => {
+  try {
+    return await readdir(dir, { withFileTypes: true });
+  }
+  catch {
+    return [];
+  }
+};
+
+/**
+ * Siblings are read together because these roots are ordinary source trees:
+ * walking thousands of directories one await at a time is what made the scan
+ * slow, not the work done at any single one of them.
+ */
+const walkDir = async (dir: string, options: WalkOptions): Promise<readonly string[]> => {
+  const found = await Promise.all((await childrenOf(dir)).map(async (dirent) => {
+    if (SKIPPED_SCAN_DIRS.has(dirent.name)) {
+      return [];
+    }
+
+    const child = `${dir}/${dirent.name}`;
+
+    if (dirent.isFile()) {
+      return isAgentFile(options.agent, child) ? [child] : [];
+    }
+
+    return dirent.isDirectory() && options.maxDepth > 0
+      ? walkDir(child, {
+          ...options,
+          maxDepth: options.maxDepth - 1,
+        })
+      : [];
+  }));
+
+  return found.flat();
+};
+
 const walk = async (root: string, options: WalkOptions): Promise<readonly string[]> => {
   try {
     const info = await stat(root);
@@ -319,33 +356,12 @@ const walk = async (root: string, options: WalkOptions): Promise<readonly string
     if (info.isFile()) {
       return isAgentFile(options.agent, root) ? [root] : [];
     }
-
-    const dirents = await readdir(root, { withFileTypes: true });
-    const files: string[] = [];
-
-    for (const dirent of dirents) {
-      if (SKIPPED_DIRS.has(dirent.name)) {
-        continue;
-      }
-
-      const child = `${root}/${dirent.name}`;
-
-      if (dirent.isFile() && isAgentFile(options.agent, child)) {
-        files.push(child);
-      }
-      else if (dirent.isDirectory() && options.maxDepth > 0) {
-        files.push(...await walk(child, {
-          ...options,
-          maxDepth: options.maxDepth - 1,
-        }));
-      }
-    }
-
-    return files;
   }
   catch {
     return [];
   }
+
+  return walkDir(root, options);
 };
 
 const projectIdFor = (root: string, filePath: string): string => {

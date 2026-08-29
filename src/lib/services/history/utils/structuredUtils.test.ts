@@ -180,9 +180,13 @@ describe('structured history discovery', () => {
     }));
     await writeFile(join(project, 'empty.json'), '{}');
     const unreadable = join(project, 'unreadable.json');
+    const lockedDir = join(root, 'locked');
 
     await writeFile(unreadable, content);
     await chmod(unreadable, 0o000);
+    await mkdir(lockedDir, { recursive: true });
+    await writeFile(join(lockedDir, 'chat.json'), content);
+    await chmod(lockedDir, 0o000);
     await writeFile(join(project, 'skip.bin'), content);
     await writeFile(join(root, 'node_modules', 'ignored', 'chat.json'), content);
     await writeFile(join(root, '.git', 'chat.json'), content);
@@ -199,6 +203,7 @@ describe('structured history discovery', () => {
     expect(await listStructuredSessions('continue', [root], 'missing')).toEqual([]);
 
     await chmod(unreadable, 0o600);
+    await chmod(lockedDir, 0o700);
   });
 
   test('supports a direct file root and Aider filename filtering', async () => {

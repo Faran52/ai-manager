@@ -18,12 +18,14 @@ import { containedIn } from '@utils/pathUtils';
 import { humanPreview } from '@utils/titleUtils';
 
 import { parseToolInput, splitUserText } from '../../session/utils/parserUtils';
+import { SKIPPED_SCAN_DIRS } from '../constants';
 
 import { conversationMessageCount, firstUserMessageText } from './outcomeUtils';
 import { parseStructuredHistory } from './structuredUtils';
 
 import type { AgentId } from '@config/agents';
 import type { JsonObject, JsonValue } from '@utils/jsonUtils';
+import type { Dirent } from 'node:fs';
 import type { SQLOutputValue } from 'node:sqlite';
 import type {
   AssistantBlock,
@@ -113,6 +115,27 @@ export const decodeReference = (filePath: string): SqliteReference | undefined =
   }
 };
 
+const databaseChildren = async (dir: string, depth: number): Promise<readonly string[]> => {
+  let dirents: readonly Dirent[] = [];
+
+  try {
+    dirents = await readdir(dir, { withFileTypes: true });
+  }
+  catch {
+    return [];
+  }
+
+  const found = await Promise.all(dirents.map(async (dirent) => {
+    if (SKIPPED_SCAN_DIRS.has(dirent.name)) {
+      return [];
+    }
+
+    return databaseFiles(`${dir}/${dirent.name}`, depth - 1);
+  }));
+
+  return found.flat();
+};
+
 export const databaseFiles = async (root: string, depth: number): Promise<readonly string[]> => {
   try {
     const info = await stat(root);
@@ -124,22 +147,12 @@ export const databaseFiles = async (root: string, depth: number): Promise<readon
     if (!info.isDirectory() || depth < 1) {
       return [];
     }
-
-    const files: string[] = [];
-
-    for (const dirent of await readdir(root, { withFileTypes: true })) {
-      if (dirent.name === 'node_modules' || dirent.name === '.git') {
-        continue;
-      }
-
-      files.push(...await databaseFiles(`${root}/${dirent.name}`, depth - 1));
-    }
-
-    return files;
   }
   catch {
     return [];
   }
+
+  return databaseChildren(root, depth);
 };
 
 const tableNames = (database: DatabaseSync): readonly string[] => {

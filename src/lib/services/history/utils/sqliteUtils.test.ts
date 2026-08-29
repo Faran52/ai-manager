@@ -1,4 +1,5 @@
 import {
+  chmod,
   mkdir,
   mkdtemp,
   writeFile,
@@ -478,11 +479,18 @@ describe('SQLite history discovery', () => {
       await mkdir(deep);
     }
 
+    const locked = join(root, 'locked');
+
     await mkdir(join(root, 'node_modules'));
     await mkdir(join(root, '.git'));
+    await mkdir(locked);
+    createDatabase(join(locked, 'unreachable.db'));
+    await chmod(locked, 0o000);
     createDatabase(join(deep, 'hidden.db'));
 
     expect(await listSqliteProjects('cursor', [root])).toEqual([]);
+
+    await chmod(locked, 0o700);
   });
   test('renders Cursor tool calls, their results and single thought bubbles', async () => {
     const root = await mkdtemp(join(tmpdir(), 'cursor-tools-'));

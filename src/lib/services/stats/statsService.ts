@@ -9,40 +9,26 @@ import { listSqliteSessions } from '../history/utils/sqliteUtils';
 import { listStructuredSessions } from '../history/utils/structuredUtils';
 import { loadSessionEntriesOrEmpty } from '../session/utils/loaderUtils';
 
+import {
+  aggregateSession,
+  cachedAggregate,
+  createAccumulator,
+  foldAggregate,
+} from './aggregateUtils';
 import { summarizePricing } from './pricingUtils';
 
 import type { AgentId } from '@config/agents';
 import type { AgentRoots } from '../agents/agentsService';
+import type { SessionSummary } from '../history/types';
 import type {
-  HistoryEntry,
-  SessionSummary,
-  TokenUsage,
-} from '../history/types';
-import type { PricedModelUsage, PricingEntry } from './pricingUtils';
-
-type TurnEntry = Extract<HistoryEntry, { kind: 'user' | 'assistant' }>;
+  Accumulator,
+  DayActivity,
+  SessionTokenTotals,
+  ToolUsage,
+} from './aggregateUtils';
+import type { PricedModelUsage } from './pricingUtils';
 
 export type StatsModelUsage = PricedModelUsage;
-
-export interface ToolUsage {
-  readonly tool: string;
-  readonly count: number;
-}
-
-export interface DayActivity {
-  readonly date: string;
-  readonly messages: number;
-  readonly tokens: number;
-}
-
-export interface SessionTokenTotals {
-  readonly filePath: string;
-  readonly sessionId: string;
-  readonly title?: string | undefined;
-  readonly tokens: number;
-  readonly messages: number;
-  readonly lastTimestampMs: number;
-}
 
 export interface StatsTotals {
   readonly usageRecorded: boolean;
@@ -96,29 +82,16 @@ export interface GlobalStats extends ProjectStats {
   readonly agents: readonly AgentStatsUsage[];
 }
 
-interface Accumulator {
-  usageRecorded: boolean;
-  sessions: number;
-  messages: number;
-  inputTokens: number;
-  outputTokens: number;
-  cacheCreationTokens: number;
-  cacheReadTokens: number;
-  conversationTokens: number;
-  nonConversationTokens: number;
-  billingTokens: number;
-  splitUnavailable: boolean;
-  durationMs: number;
-  pricingEntries: PricingEntry[];
-  tools: Map<string, number>;
-  days: Map<string, DayActivity>;
-  perSession: SessionTokenTotals[];
-}
-
 interface AgentAccumulator {
   readonly accumulator: Accumulator;
   projects: number;
 }
+
+export type {
+  DayActivity,
+  SessionTokenTotals,
+  ToolUsage,
+} from './aggregateUtils';
 
 const sessionsForStats = async (
   agentDirs: readonly string[],
@@ -156,119 +129,10 @@ const sessionsForStats = async (
     : listStructuredSessions(agent, agentDirs, projectId);
 };
 
-const EMPTY_USAGE: TokenUsage = {
-  inputTokens: 0,
-  outputTokens: 0,
-  cacheCreationTokens: 0,
-  cacheReadTokens: 0,
-};
-
-const totalTokens = (usage: TokenUsage): number => {
-  return usage.inputTokens + usage.outputTokens + usage.cacheCreationTokens + usage.cacheReadTokens;
-};
-
-const createAccumulator = (): Accumulator => {
-  return {
-    usageRecorded: false,
-    sessions: 0,
-    messages: 0,
-    inputTokens: 0,
-    outputTokens: 0,
-    cacheCreationTokens: 0,
-    cacheReadTokens: 0,
-    conversationTokens: 0,
-    nonConversationTokens: 0,
-    billingTokens: 0,
-    splitUnavailable: false,
-    durationMs: 0,
-    pricingEntries: [],
-    tools: new Map(),
-    days: new Map(),
-    perSession: [],
-  };
-};
-
 const splitAvailableFor = (agent: AgentId): boolean => {
   const format = agentOption(agent).format;
 
   return format === 'claude' || format === 'codex' || format === 'opencode';
-};
-
-const dayKeyOf = (entry: TurnEntry): string | undefined => {
-  const day = entry.timestamp.slice(0, 10);
-
-  return day.length === 10 ? day : undefined;
-};
-
-const addUsage = (
-  accumulator: Accumulator,
-  entry: HistoryEntry,
-  splitAvailable: boolean,
-): void => {
-  if (entry.kind !== 'assistant') {
-    return;
-  }
-
-  accumulator.messages += 1;
-  accumulator.usageRecorded ||= entry.usage != null
-    || entry.costUsd != null
-    || entry.durationMs != null;
-
-  const usage = entry.usage ?? EMPTY_USAGE;
-  const conversationTokens = usage.inputTokens + usage.outputTokens;
-  const nonConversationTokens = usage.cacheCreationTokens + usage.cacheReadTokens;
-  const billingTokens = conversationTokens + nonConversationTokens;
-  const model = entry.model ?? 'unknown';
-
-  accumulator.inputTokens += usage.inputTokens;
-  accumulator.outputTokens += usage.outputTokens;
-  accumulator.cacheCreationTokens += usage.cacheCreationTokens;
-  accumulator.cacheReadTokens += usage.cacheReadTokens;
-  accumulator.conversationTokens += splitAvailable ? conversationTokens : billingTokens;
-  accumulator.nonConversationTokens += splitAvailable ? nonConversationTokens : 0;
-  accumulator.billingTokens += billingTokens;
-  accumulator.splitUnavailable ||= !splitAvailable && entry.usage != null;
-  accumulator.durationMs += entry.durationMs ?? 0;
-  accumulator.pricingEntries.push({
-    model,
-    inputTokens: usage.inputTokens + usage.cacheCreationTokens + usage.cacheReadTokens,
-    outputTokens: usage.outputTokens,
-    costUsd: entry.costUsd,
-  });
-
-  for (const block of entry.blocks) {
-    if (block.blockType !== 'tool-use') {
-      continue;
-    }
-
-    accumulator.tools.set(block.call.name, (accumulator.tools.get(block.call.name) ?? 0) + 1);
-  }
-};
-
-const addActivity = (accumulator: Accumulator, rawEntry: HistoryEntry): void => {
-  if (rawEntry.kind !== 'user' && rawEntry.kind !== 'assistant') {
-    return;
-  }
-
-  const entry: TurnEntry = rawEntry;
-  const day = dayKeyOf(entry);
-
-  if (day == null) {
-    return;
-  }
-
-  const usage = entry.kind === 'assistant' ? (entry.usage ?? EMPTY_USAGE) : EMPTY_USAGE;
-  const existing = accumulator.days.get(day) ?? {
-    date: day,
-    messages: 0,
-    tokens: 0,
-  };
-
-  accumulator.days.set(day, {
-    date: day,
-    messages: existing.messages + 1,
-    tokens: existing.tokens + (entry.kind === 'assistant' ? totalTokens(usage) : 0),
-  });
 };
 
 const addSession = async (
@@ -277,33 +141,15 @@ const addSession = async (
   agent: AgentId,
   agentDirs: readonly string[],
 ): Promise<void> => {
-  const entries = await loadSessionEntriesOrEmpty(session.filePath, agent, agentDirs);
-  const splitAvailable = splitAvailableFor(agent);
-  let messages = 0;
-  let tokens = 0;
-
-  for (const entry of entries) {
-    for (const accumulator of accumulators) {
-      addUsage(accumulator, entry, splitAvailable);
-      addActivity(accumulator, entry);
-    }
-
-    if (entry.kind === 'assistant') {
-      messages += 1;
-      tokens += totalTokens(entry.usage ?? EMPTY_USAGE);
-    }
-  }
+  const aggregate = await cachedAggregate(session, async () => {
+    return aggregateSession(
+      await loadSessionEntriesOrEmpty(session.filePath, agent, agentDirs),
+      splitAvailableFor(agent),
+    );
+  });
 
   for (const accumulator of accumulators) {
-    accumulator.sessions += 1;
-    accumulator.perSession.push({
-      filePath: session.filePath,
-      sessionId: session.id,
-      title: session.title ?? session.summary ?? session.preview,
-      tokens,
-      messages,
-      lastTimestampMs: session.lastTimestampMs,
-    });
+    foldAggregate(accumulator, aggregate, session);
   }
 };
 
