@@ -1,4 +1,4 @@
-import { readdir, stat } from 'node:fs/promises';
+import { stat } from 'node:fs/promises';
 import {
   basename,
   dirname,
@@ -18,14 +18,13 @@ import { containedIn } from '@utils/pathUtils';
 import { humanPreview } from '@utils/titleUtils';
 
 import { parseToolInput, splitUserText } from '../../session/utils/parserUtils';
-import { SKIPPED_SCAN_DIRS } from '../constants';
 
 import { conversationMessageCount, firstUserMessageText } from './outcomeUtils';
 import { parseStructuredHistory } from './structuredUtils';
+import { listTree } from './treeUtils';
 
 import type { AgentId } from '@config/agents';
 import type { JsonObject, JsonValue } from '@utils/jsonUtils';
-import type { Dirent } from 'node:fs';
 import type { SQLOutputValue } from 'node:sqlite';
 import type {
   AssistantBlock,
@@ -115,44 +114,10 @@ export const decodeReference = (filePath: string): SqliteReference | undefined =
   }
 };
 
-const databaseChildren = async (dir: string, depth: number): Promise<readonly string[]> => {
-  let dirents: readonly Dirent[] = [];
-
-  try {
-    dirents = await readdir(dir, { withFileTypes: true });
-  }
-  catch {
-    return [];
-  }
-
-  const found = await Promise.all(dirents.map(async (dirent) => {
-    if (SKIPPED_SCAN_DIRS.has(dirent.name)) {
-      return [];
-    }
-
-    return databaseFiles(`${dir}/${dirent.name}`, depth - 1);
-  }));
-
-  return found.flat();
-};
-
 export const databaseFiles = async (root: string, depth: number): Promise<readonly string[]> => {
-  try {
-    const info = await stat(root);
-
-    if (info.isFile()) {
-      return databaseExtensions.has(extname(root).toLowerCase()) ? [root] : [];
-    }
-
-    if (!info.isDirectory() || depth < 1) {
-      return [];
-    }
-  }
-  catch {
-    return [];
-  }
-
-  return databaseChildren(root, depth);
+  return (await listTree(root, depth)).filter((filePath) => {
+    return databaseExtensions.has(extname(filePath).toLowerCase());
+  });
 };
 
 const tableNames = (database: DatabaseSync): readonly string[] => {

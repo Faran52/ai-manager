@@ -1,8 +1,4 @@
-import {
-  readdir,
-  readFile,
-  stat,
-} from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import {
   basename,
   dirname,
@@ -21,6 +17,7 @@ import { humanPreview } from '@utils/titleUtils';
 
 import { parseToolInput, splitUserText } from '../../session/utils/parserUtils';
 
+import { fileFactsStore } from './fileFactsUtils';
 import { conversationMessageCount, firstUserMessageText } from './outcomeUtils';
 
 import type { AgentId } from '@config/agents';
@@ -36,6 +33,7 @@ import type {
   ToolOutcome,
 } from '../types';
 import type { RawToolInput } from './claudeRawUtils';
+import type { FileFacts } from './fileFactsUtils';
 
 interface ToolInvocationParts {
   readonly call: ToolCall;
@@ -51,10 +49,19 @@ interface ParsedCopilotHistory {
   readonly title: string | undefined;
 }
 
-interface CopilotFileSession extends ParsedCopilotHistory {
+// What a listing needs to know about a session file. The turns themselves are
+// deliberately absent: they are the large part, and only the viewer reads them.
+interface CopilotSessionFacts {
+  readonly sessionId: string;
+  readonly preview: string | undefined;
+  readonly title: string | undefined;
+  readonly messageCount: number;
+  readonly firstTimestampMs: number;
+  readonly lastTimestampMs: number;
+}
+
+interface CopilotFileSession extends CopilotSessionFacts, FileFacts {
   readonly filePath: string;
-  readonly modifiedMs: number;
-  readonly sizeBytes: number;
 }
 
 interface ReplayState {
@@ -76,6 +83,9 @@ interface RequestDraft {
   resolvedModel: string | undefined;
   timestamp?: number;
 }
+
+// One file per session, so this covers a long history of them.
+const CACHED_SESSIONS = 2_048;
 
 const WORKSPACE_DEPTH = 3;
 const CHAT_SESSIONS_DIR = 'chatSessions';
@@ -792,25 +802,31 @@ const sessionFiles = async (root: string): Promise<readonly string[]> => {
   }
 };
 
+const copilotFacts = fileFactsStore<CopilotSessionFacts | undefined>(CACHED_SESSIONS);
+
 const fileSession = async (filePath: string): Promise<CopilotFileSession | undefined> => {
-  try {
-    const [content, facts] = await Promise.all([readFile(filePath, 'utf8'), stat(filePath)]);
+  const facts = await copilotFacts(filePath, (content) => {
     const parsed = parseCopilotHistory(content);
 
-    if (parsed == null || parsed.entries.length === 0) {
-      return undefined;
-    }
+    return parsed == null || parsed.entries.length === 0
+      ? undefined
+      : {
+          sessionId: parsed.sessionId,
+          preview: parsed.preview,
+          title: parsed.title,
+          messageCount: conversationMessageCount(parsed.entries),
+          firstTimestampMs: parsed.firstTimestampMs,
+          lastTimestampMs: parsed.lastTimestampMs,
+        };
+  });
 
-    return {
-      ...parsed,
-      filePath,
-      modifiedMs: facts.mtimeMs,
-      sizeBytes: facts.size,
-    };
-  }
-  catch {
-    return undefined;
-  }
+  return facts?.sessionId == null
+    ? undefined
+    : {
+        ...facts,
+        sessionId: facts.sessionId,
+        filePath,
+      };
 };
 
 // VS Code keys chat storage by an opaque hash; the real folder lives in a record above it.
@@ -867,7 +883,7 @@ export const listCopilotSessions = async (
         projectId: folder ?? 'unknown',
         preview: session.preview,
         title: session.title,
-        messageCount: conversationMessageCount(session.entries),
+        messageCount: session.messageCount,
         firstTimestampMs: session.firstTimestampMs,
         lastTimestampMs: Math.max(session.lastTimestampMs, session.modifiedMs),
         modifiedMs: session.modifiedMs,

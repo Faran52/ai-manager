@@ -1,5 +1,5 @@
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 
 import type { AgentId } from '@config/agents';
 
@@ -13,6 +13,24 @@ export interface RootResolutionOptions {
   readonly home?: string | undefined;
   readonly platform?: NodeJS.Platform | undefined;
 }
+
+/**
+ * Agents that keep history inside projects are pointed at several likely
+ * parents, and the working directory is often one of those parents' children.
+ * Scanning both would walk the same tree twice for no new results, so a root
+ * that sits inside another is dropped.
+ */
+const withoutNested = (roots: readonly string[]): readonly string[] => {
+  const outermost = [...new Set(roots)].sort((left, right) => {
+    return left.length - right.length;
+  });
+
+  return outermost.filter((root, index) => {
+    return !outermost.slice(0, index).some((earlier) => {
+      return root.startsWith(`${earlier}${sep}`);
+    });
+  });
+};
 
 const envPath = (
   env: Readonly<Record<string, string | undefined>>,
@@ -56,7 +74,12 @@ export const resolveAgentPaths = ({
   const apps = appData(home, platform);
   const vscode = editorStorage(home, platform, 'Code');
   const cursor = editorStorage(home, platform, 'Cursor');
-  const commonProjects = [process.cwd(), join(home, 'Projects'), join(home, 'Developer'), join(home, 'src')];
+  const commonProjects = withoutNested([
+    process.cwd(),
+    join(home, 'Projects'),
+    join(home, 'Developer'),
+    join(home, 'src'),
+  ]);
 
   return {
     'aider': commonProjects,

@@ -1,8 +1,4 @@
-import {
-  readdir,
-  readFile,
-  stat,
-} from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
 import { appConfig } from '@config/appConfig';
@@ -11,6 +7,7 @@ import { humanPreview } from '@utils/titleUtils';
 
 import { parseToolInput, splitUserText } from '../../session/utils/parserUtils';
 
+import { fileFactsStore } from './fileFactsUtils';
 import { conversationMessageCount } from './outcomeUtils';
 
 import type {
@@ -23,6 +20,7 @@ import type {
   ToolOutcome,
 } from '../types';
 import type { RawToolInput } from './claudeRawUtils';
+import type { FileFacts } from './fileFactsUtils';
 
 interface CodexContentPart {
   readonly text?: string | undefined;
@@ -108,11 +106,24 @@ interface CodexScan {
   counter: number;
 }
 
-interface CodexFileSession extends ParsedCodexSession {
-  readonly filePath: string;
-  readonly modifiedMs: number;
-  readonly sizeBytes: number;
+// What a listing needs to know about a rollout file. The turns themselves are
+// deliberately absent: they are the large part, and only the viewer reads them.
+interface CodexSessionFacts {
+  readonly actualSessionId: string;
+  readonly cwd: string;
+  readonly title: string | undefined;
+  readonly turnCount: number;
+  readonly messageCount: number;
+  readonly firstTimestampMs: number;
+  readonly lastTimestampMs: number;
 }
+
+interface CodexFileSession extends CodexSessionFacts, FileFacts {
+  readonly filePath: string;
+}
+
+// Rollouts are one file per session, so this covers a long history of them.
+const CACHED_SESSIONS = 2_048;
 
 const isCodexLine = (value: unknown): value is CodexLine => {
   return typeof value === 'object' && value !== null;
@@ -465,28 +476,39 @@ const rolloutFiles = async (codexDir: string): Promise<readonly string[]> => {
   return files;
 };
 
+const codexFacts = fileFactsStore<CodexSessionFacts>(CACHED_SESSIONS);
+
 const fileSession = async (filePath: string): Promise<CodexFileSession | undefined> => {
-  try {
-    const [content, facts] = await Promise.all([readFile(filePath, 'utf8'), stat(filePath)]);
+  const facts = await codexFacts(filePath, (content) => {
+    const parsed = parseCodexHistory(content);
 
     return {
-      ...parseCodexHistory(content),
-      filePath,
-      modifiedMs: facts.mtimeMs,
-      sizeBytes: facts.size,
+      actualSessionId: parsed.actualSessionId,
+      cwd: parsed.cwd,
+      title: parsed.title,
+      turnCount: parsed.entries.length,
+      messageCount: conversationMessageCount(parsed.entries),
+      firstTimestampMs: parsed.firstTimestampMs,
+      lastTimestampMs: parsed.lastTimestampMs,
     };
-  }
-  /* v8 ignore next -- the file can disappear between directory scan and read */
-  catch {
+  });
+
+  /* v8 ignore next 3 -- the file can disappear between the directory scan and the read */
+  if (facts == null) {
     return undefined;
   }
+
+  return {
+    ...facts,
+    filePath,
+  };
 };
 
 export const listCodexSessions = async (codexDir: string, projectId: string): Promise<readonly SessionSummary[]> => {
   const sessions = await Promise.all((await rolloutFiles(codexDir)).map(fileSession));
 
   return sessions.flatMap((session) => {
-    if (session?.cwd !== projectId || session.entries.length === 0) {
+    if (session?.cwd !== projectId || session.turnCount === 0) {
       return [];
     }
 
@@ -497,7 +519,7 @@ export const listCodexSessions = async (codexDir: string, projectId: string): Pr
       filePath: session.filePath,
       projectId,
       title: session.title,
-      messageCount: conversationMessageCount(session.entries),
+      messageCount: session.messageCount,
       firstTimestampMs: session.firstTimestampMs,
       lastTimestampMs: Math.max(session.lastTimestampMs, session.modifiedMs),
       modifiedMs: session.modifiedMs,
@@ -521,7 +543,7 @@ export const listCodexProjects = async (codexDir: string): Promise<readonly Proj
       continue;
     }
 
-    if (session.entries.length > 0) {
+    if (session.turnCount > 0) {
       byCwd.set(session.cwd, [...(byCwd.get(session.cwd) ?? []), session]);
     }
   }
@@ -534,7 +556,7 @@ export const listCodexProjects = async (codexDir: string): Promise<readonly Proj
       actualPath: cwd === 'unknown' ? undefined : cwd,
       sessionCount: projectSessions.length,
       messageCount: projectSessions.reduce((total, session) => {
-        return total + conversationMessageCount(session.entries);
+        return total + session.messageCount;
       }, 0),
       lastActivityMs: projectSessions.reduce((latest, session) => {
         return Math.max(latest, session.lastTimestampMs, session.modifiedMs);

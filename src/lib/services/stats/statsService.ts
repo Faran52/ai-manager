@@ -20,10 +20,11 @@ import { effortFrom, rhythmFrom } from './rhythmUtils';
 
 import type { AgentId } from '@config/agents';
 import type { AgentRoots } from '../agents/agentsService';
-import type { SessionSummary } from '../history/types';
+import type { ProjectSummary, SessionSummary } from '../history/types';
 import type {
   Accumulator,
   DayActivity,
+  SessionAggregate,
   SessionTokenTotals,
   ToolUsage,
 } from './aggregateUtils';
@@ -91,6 +92,11 @@ interface AgentAccumulator {
   projects: number;
 }
 
+interface CountedSession {
+  readonly session: SessionSummary;
+  readonly aggregate: SessionAggregate;
+}
+
 export type {
   DayActivity,
   SessionTokenTotals,
@@ -143,22 +149,54 @@ const splitAvailableFor = (agent: AgentId): boolean => {
   return format === 'claude' || format === 'codex' || format === 'opencode';
 };
 
+const aggregateFor = async (
+  session: SessionSummary,
+  agent: AgentId,
+  agentDirs: readonly string[],
+): Promise<SessionAggregate> => {
+  return cachedAggregate(session, async () => {
+    return aggregateSession(
+      await loadSessionEntriesOrEmpty(session.filePath, agent, agentDirs),
+      splitAvailableFor(agent),
+    );
+  });
+};
+
 const addSession = async (
   accumulators: readonly Accumulator[],
   session: SessionSummary,
   agent: AgentId,
   agentDirs: readonly string[],
 ): Promise<void> => {
-  const aggregate = await cachedAggregate(session, async () => {
-    return aggregateSession(
-      await loadSessionEntriesOrEmpty(session.filePath, agent, agentDirs),
-      splitAvailableFor(agent),
-    );
-  });
+  const aggregate = await aggregateFor(session, agent, agentDirs);
 
   for (const accumulator of accumulators) {
     foldAggregate(accumulator, aggregate, session);
   }
+};
+
+/**
+ * One project's whole contribution, counted before anything is folded in.
+ * Projects are read at the same time because each waits mostly on the disk;
+ * their sessions are read one after another so a large history cannot open
+ * every transcript it owns at once.
+ */
+const countProject = async (
+  project: ProjectSummary,
+  roots: AgentRoots,
+): Promise<readonly CountedSession[]> => {
+  const agentDirs = pathsFor(roots, project.agent);
+  const sessions = await sessionsForStats(agentDirs, project.id, project.agent);
+  const counted: CountedSession[] = [];
+
+  for (const session of sessions) {
+    counted.push({
+      session,
+      aggregate: await aggregateFor(session, project.agent, agentDirs),
+    });
+  }
+
+  return counted;
 };
 
 const projectStatsFrom = (projectId: string, accumulator: Accumulator): CompleteProjectStats => {
@@ -230,10 +268,16 @@ export const computeProjectStats = async (
 
 export const computeGlobalStats = async (roots: AgentRoots): Promise<GlobalStats> => {
   const projects = await listAgentProjects(roots);
+  const counted = await Promise.all(projects.map(async (project) => {
+    return {
+      project,
+      sessions: await countProject(project, roots),
+    };
+  }));
   const globalAccumulator = createAccumulator();
   const byAgent = new Map<AgentId, AgentAccumulator>();
 
-  for (const project of projects) {
+  for (const { project, sessions } of counted) {
     const agentAccumulator = byAgent.get(project.agent) ?? {
       accumulator: createAccumulator(),
       projects: 0,
@@ -242,16 +286,9 @@ export const computeGlobalStats = async (roots: AgentRoots): Promise<GlobalStats
     agentAccumulator.projects += 1;
     byAgent.set(project.agent, agentAccumulator);
 
-    const agentDirs = pathsFor(roots, project.agent);
-    const sessions = await sessionsForStats(agentDirs, project.id, project.agent);
-
-    for (const session of sessions) {
-      await addSession(
-        [globalAccumulator, agentAccumulator.accumulator],
-        session,
-        project.agent,
-        agentDirs,
-      );
+    for (const entry of sessions) {
+      foldAggregate(globalAccumulator, entry.aggregate, entry.session);
+      foldAggregate(agentAccumulator.accumulator, entry.aggregate, entry.session);
     }
   }
 
