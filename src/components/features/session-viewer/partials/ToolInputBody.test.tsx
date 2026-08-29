@@ -80,6 +80,35 @@ test('renders each supported tool input family', () => {
   expect(screen.queryByText('/a')).toBeNull();
 });
 
+test('shows the change a file tool asked for', () => {
+  render(
+    <ToolInputBody
+      call={call({
+        kind: 'file-write',
+        path: '/repo/new.ts',
+        content: 'written',
+      })}
+    />,
+  );
+
+  expect(screen.getByText('+written')).toBeDefined();
+});
+
+test('leaves the asked-for change out once the agent recorded what it applied', () => {
+  render(
+    <ToolInputBody
+      changeRecorded
+      call={call({
+        kind: 'file-write',
+        path: '/repo/new.ts',
+        content: 'written',
+      })}
+    />,
+  );
+
+  expect(screen.queryByText('+written')).toBeNull();
+});
+
 test('renders an mcp call through its server identity', () => {
   render(
     <ToolInputBody

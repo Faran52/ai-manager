@@ -50,7 +50,9 @@ export const ToolExecutionCard: FC<ToolExecutionCardProps> = ({ call, outcome })
   const { t } = useTranslation('session');
   const status: ToolStatus = outcome?.status ?? 'ok';
   const [open, setOpen] = useState(status === 'error');
-  const isDiff = call.input.kind === 'file-edit' || call.input.kind === 'multi-edit';
+  const isDiff = call.input.kind === 'file-edit'
+    || call.input.kind === 'multi-edit'
+    || call.input.kind === 'file-write';
   const showOutcome = outcome != null;
   const mcpIdentity = mcpToolIdentity(call);
   const summary = toolSummary(call, outcome);
@@ -130,7 +132,7 @@ export const ToolExecutionCard: FC<ToolExecutionCardProps> = ({ call, outcome })
             className="overflow-hidden"
           >
             <div className="space-y-2 border-t border-border px-3 py-2">
-              <ToolInputBody call={call} />
+              <ToolInputBody call={call} changeRecorded={outcome?.patch != null} />
               {showOutcome && isDiff && outcome.patch != null && <PatchView hunks={outcome.patch} />}
               {showOutcome && !isDiff && <OutcomeBody outcome={outcome} kind={outcomeKind} />}
               {showOutcome && isDiff && outcome.patch == null && <OutcomeBody outcome={outcome} />}

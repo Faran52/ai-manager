@@ -67,5 +67,6 @@
   "statusOk": "完了",
   "statusPending": "保留中",
   "statusError": "エラー",
-  "statusInterrupted": "中断"
+  "statusInterrupted": "中断",
+  "noChangeRequested": "変更内容は記録されていません。"
 }

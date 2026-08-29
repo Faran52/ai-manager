@@ -67,5 +67,6 @@
   "statusOk": "완료",
   "statusPending": "대기 중",
   "statusError": "오류",
-  "statusInterrupted": "중단됨"
+  "statusInterrupted": "중단됨",
+  "noChangeRequested": "설명된 변경 사항이 없습니다."
 }

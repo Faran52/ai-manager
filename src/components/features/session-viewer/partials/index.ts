@@ -2,6 +2,7 @@ export * from './AssistantTurn';
 export * from './BashToolBody';
 export * from './DateDivider';
 export * from './ExportMenu';
+export * from './FileChangeBody';
 export * from './FloatingDate';
 export * from './MessageFilterToolbar';
 export * from './MessageHeader';

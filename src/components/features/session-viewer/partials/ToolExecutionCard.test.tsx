@@ -541,3 +541,58 @@ describe('mcp calls', () => {
     expect(screen.getByText('two issues')).toBeDefined();
   });
 });
+
+describe('ToolExecutionCard file changes', () => {
+  const writeCall: ToolCall = {
+    id: 'tu9',
+    name: 'Write',
+    input: {
+      kind: 'file-write',
+      path: '/repo/new.ts',
+      content: 'written line',
+    },
+  };
+
+  test('shows the change a write asked for when nothing recorded what it applied', async () => {
+    render(
+      <ToolExecutionCard
+        call={writeCall}
+        outcome={{
+          toolUseId: 'tu9',
+          status: 'ok',
+          images: [],
+          text: 'File created',
+        }}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button'));
+
+    expect(screen.getByText('+written line')).toBeDefined();
+  });
+
+  test('prefers the change the agent recorded applying', async () => {
+    render(
+      <ToolExecutionCard
+        call={writeCall}
+        outcome={{
+          toolUseId: 'tu9',
+          status: 'ok',
+          images: [],
+          patch: [{
+            oldStart: 1,
+            oldLines: 1,
+            newStart: 1,
+            newLines: 1,
+            lines: ['+what landed'],
+          }],
+        }}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button'));
+
+    expect(screen.getByText('+what landed')).toBeDefined();
+    expect(screen.queryByText('+written line')).toBeNull();
+  });
+});

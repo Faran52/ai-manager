@@ -3,9 +3,9 @@ import { basename, join } from 'node:path';
 
 import { appConfig } from '@config/appConfig';
 
+import { diffLines, parseUnifiedDiff } from '@utils/diffUtils';
 import { humanPreview } from '@utils/titleUtils';
 
-import { diffLines, parseUnifiedDiff } from '../../file-history/utils/diffUtils';
 import { parseToolInput, splitUserText } from '../../session/utils/parserUtils';
 
 import { fileFactsStore } from './fileFactsUtils';

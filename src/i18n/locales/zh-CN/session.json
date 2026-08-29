@@ -67,5 +67,6 @@
   "statusOk": "完成",
   "statusPending": "待处理",
   "statusError": "错误",
-  "statusInterrupted": "已中断"
+  "statusInterrupted": "已中断",
+  "noChangeRequested": "未描述任何更改。"
 }

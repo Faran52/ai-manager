@@ -79,5 +79,6 @@
   "statusOk": "تم",
   "statusPending": "قيد الانتظار",
   "statusError": "خطأ",
-  "statusInterrupted": "مقاطَع"
+  "statusInterrupted": "مقاطَع",
+  "noChangeRequested": "لم يُوصف أي تغيير."
 }

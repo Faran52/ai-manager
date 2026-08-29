@@ -4,12 +4,12 @@ import { DatabaseSync } from 'node:sqlite';
 
 import { appConfig } from '@config/appConfig';
 
+import { parseUnifiedDiff } from '@utils/diffUtils';
 import { truncate } from '@utils/formatUtils';
 import { isJsonObject, parseJsonContainer } from '@utils/jsonUtils';
 import { containedIn } from '@utils/pathUtils';
 import { humanPreview, humanTitle } from '@utils/titleUtils';
 
-import { parseUnifiedDiff } from '../../file-history/utils/diffUtils';
 import { parseToolInput, splitUserText } from '../../session/utils/parserUtils';
 
 import { conversationMessageCount } from './outcomeUtils';

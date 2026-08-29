@@ -7,7 +7,7 @@ import {
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-import { diffLines } from './utils/diffUtils';
+import { diffLines } from '@utils/diffUtils';
 
 import type { PatchHunk } from '../history/types';
 

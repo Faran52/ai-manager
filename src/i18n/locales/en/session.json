@@ -67,5 +67,6 @@
   "statusOk": "OK",
   "statusPending": "Pending",
   "statusError": "Error",
-  "statusInterrupted": "Interrupted"
+  "statusInterrupted": "Interrupted",
+  "noChangeRequested": "No change was described."
 }
