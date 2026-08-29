@@ -22,9 +22,14 @@ import {
   TextInput,
 } from '@ui/index';
 
-import { ArchiveCard, PromptHistoryPanel } from './partials';
+import {
+  ArchiveCard,
+  PromptHistoryPanel,
+  RetentionCard,
+} from './partials';
 
 import type { AsyncResource } from '@features/history-data';
+import type { RetentionStatusResponse } from '@lib/apis/contracts';
 import type { ArchivedSession, ArchiveSummary } from '@services/archive/archiveService';
 import type { PromptHistory } from '@services/prompts/promptsService';
 import type { FC } from 'react';
@@ -34,6 +39,7 @@ export type ArchivePanel = 'archives' | 'prompts';
 export interface ArchiveViewProps {
   readonly archives: AsyncResource<readonly ArchiveSummary[]>;
   readonly prompts: AsyncResource<PromptHistory>;
+  readonly retention: AsyncResource<RetentionStatusResponse>;
   readonly nowMs: number;
   readonly onOpenSession: (session: ArchivedSession) => void;
   readonly onOpenPrompt: (filePath: string, timestampMs: number) => void;
@@ -65,6 +71,7 @@ const totalsOf = (archives: readonly ArchiveSummary[]): {
 export const ArchiveView: FC<ArchiveViewProps> = ({
   archives,
   prompts,
+  retention,
   nowMs,
   onOpenSession,
   onOpenPrompt,
@@ -146,6 +153,8 @@ export const ArchiveView: FC<ArchiveViewProps> = ({
         {panel === 'archives' && (
           <>
             <p className="text-sm text-muted-foreground">{t('intro')}</p>
+
+            <RetentionCard retention={retention} nowMs={nowMs} />
 
             <div className="
               grid gap-3

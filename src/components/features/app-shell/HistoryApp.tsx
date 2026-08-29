@@ -16,11 +16,16 @@ import {
   deleteProject,
   deleteSession,
   renameSession,
+  runRetention,
 } from '@lib/apis/apiClient';
 import { findAgentProject } from '@services/history/historyService';
 import { isTypingTarget, matchesShortcut } from '@utils/shortcutUtils';
 
-import { fadeTransition, PaneDivider } from '@ui/index';
+import {
+  fadeTransition,
+  PaneDivider,
+  Toast,
+} from '@ui/index';
 import { AgentSetupPanel } from '@features/agent-setup';
 import { AnalyticsView } from '@features/analytics';
 import { AppHeader } from '@features/app-header';
@@ -33,6 +38,7 @@ import {
   useProjectStats,
   usePrompts,
   useRecentEdits,
+  useRetention,
   useSearch,
   useSessions,
   useSettings,
@@ -72,12 +78,14 @@ initI18n();
 
 export const HistoryApp: FC = () => {
   const { t } = useTranslation('sidebar');
+  const { t: tArchive } = useTranslation('archive');
   const projects = useProjects();
   const [selectedProject, setSelectedProject] = useState<ProjectSummary | null>(null);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const [view, setView] = useState<AppView>('analytics');
   const [searchOpen, setSearchOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [retentionNotice, setRetentionNotice] = useState<string | null>(null);
   const [highlightTimestamp, setHighlightTimestamp] = useState<string | undefined>(undefined);
   const [archivedSession, setArchivedSession] = useState<ArchivedSession | null>(null);
   const [sidebarWidth, setSidebarWidth] = useState(initialSidebarWidth);
@@ -89,6 +97,7 @@ export const HistoryApp: FC = () => {
   const agentSetup = useAgentSetup(view === 'health' ? (selectedProject?.actualPath ?? null) : null);
   const archives = useArchives(view === 'archive');
   const prompts = usePrompts(view === 'archive');
+  const retention = useRetention(view === 'archive');
   const settings = useSettings(view === 'settings' ? (selectedProject?.actualPath ?? '') : null);
   const edits = useRecentEdits(view === 'board' ? selectedProject : null);
   const sessionCounts = useMemo(() => {
@@ -128,6 +137,35 @@ export const HistoryApp: FC = () => {
   useEffect(() => {
     localStorage.setItem(sidebarWidthStorageKey, String(sidebarWidth));
   }, [sidebarWidth]);
+
+  /**
+   * The agents prune on their own schedule and this app is only running some of
+   * the time, so the one moment it can get ahead of them is launch. Safe to do
+   * unasked because retention copies and never deletes; a failure stays silent
+   * rather than greeting someone with an error they did not ask for.
+   */
+  useEffect(() => {
+    // A plain `let` reads as always-true to the compiler inside this closure, so
+    // the flag lives on an object the cleanup can flip where it can be seen.
+    const mounted = { current: true };
+
+    void (async (): Promise<void> => {
+      try {
+        const { result } = await runRetention();
+
+        if (mounted.current && result.archived > 0) {
+          setRetentionNotice(tArchive('retentionArchived', { count: result.archived }));
+        }
+      }
+      catch {
+        // Retention is a background courtesy; the Archive view reports failures properly.
+      }
+    })();
+
+    return () => {
+      mounted.current = false;
+    };
+  }, [tArchive]);
 
   // One listener for every global binding, so a shortcut is added by adding a
   // row here and to `appShortcuts` rather than by growing another effect.
@@ -302,6 +340,7 @@ export const HistoryApp: FC = () => {
       <ArchiveView
         archives={archives}
         prompts={prompts}
+        retention={retention}
         nowMs={nowMs}
         onOpenSession={openArchivedSession}
         onOpenPrompt={openPromptSession}
@@ -404,6 +443,8 @@ export const HistoryApp: FC = () => {
             </motion.div>
           </div>
         </div>
+
+        <Toast message={retentionNotice} />
 
         <ShortcutsDialog
           open={shortcutsOpen}

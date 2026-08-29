@@ -14,6 +14,7 @@ import {
 import { ArchiveView } from './ArchiveView';
 
 import type { AsyncResource } from '@features/history-data';
+import type { RetentionStatusResponse } from '@lib/apis/contracts';
 import type { ArchiveSummary } from '@services/archive/archiveService';
 import type { PromptHistory } from '@services/prompts/promptsService';
 
@@ -34,6 +35,19 @@ const archive: ArchiveSummary = {
 
 const noop = (): void => {
   return undefined;
+};
+
+const retentionResource: AsyncResource<RetentionStatusResponse> = {
+  status: 'ready',
+  data: {
+    policy: {
+      enabled: false,
+      olderThanDays: 30,
+      agents: [],
+    },
+    due: { sessions: [] },
+  },
+  reload: noop,
 };
 
 const promptResource: AsyncResource<PromptHistory> = {
@@ -69,6 +83,7 @@ test('totals the archives it was given', () => {
       }])}
       onOpenSession={noop}
       prompts={promptResource}
+      retention={retentionResource}
       nowMs={NOW}
       onOpenPrompt={noop}
     />,
@@ -85,6 +100,7 @@ test('invites a first archive when there are none', () => {
       archives={resource('ready', [])}
       onOpenSession={noop}
       prompts={promptResource}
+      retention={retentionResource}
       nowMs={NOW}
       onOpenPrompt={noop}
     />,
@@ -99,6 +115,7 @@ test('waits while the list is loading', () => {
       archives={resource('loading', undefined)}
       onOpenSession={noop}
       prompts={promptResource}
+      retention={retentionResource}
       nowMs={NOW}
       onOpenPrompt={noop}
     />,
@@ -119,6 +136,7 @@ test('creates an archive with a note and reloads the list', async () => {
       archives={resource('ready', [])}
       onOpenSession={noop}
       prompts={promptResource}
+      retention={retentionResource}
       nowMs={NOW}
       onOpenPrompt={noop}
     />,
@@ -129,6 +147,7 @@ test('creates an archive with a note and reloads the list', async () => {
       archives={resource('ready', [], reload)}
       onOpenSession={noop}
       prompts={promptResource}
+      retention={retentionResource}
       nowMs={NOW}
       onOpenPrompt={noop}
     />,
@@ -146,6 +165,7 @@ test('creates an archive with a note and reloads the list', async () => {
       archives={resource('ready', [archive], reload)}
       onOpenSession={noop}
       prompts={promptResource}
+      retention={retentionResource}
       nowMs={NOW}
       onOpenPrompt={noop}
     />,
@@ -163,6 +183,7 @@ test('reports a failed creation', async () => {
       archives={resource('ready', [])}
       onOpenSession={noop}
       prompts={promptResource}
+      retention={retentionResource}
       nowMs={NOW}
       onOpenPrompt={noop}
     />,
@@ -183,6 +204,7 @@ test('confirms before deleting, then reloads', async () => {
       archives={resource('ready', [archive], reload)}
       onOpenSession={noop}
       prompts={promptResource}
+      retention={retentionResource}
       nowMs={NOW}
       onOpenPrompt={noop}
     />,
@@ -206,6 +228,7 @@ test('leaves the archive alone when the confirmation is dismissed', async () => 
       archives={resource('ready', [archive], reload)}
       onOpenSession={noop}
       prompts={promptResource}
+      retention={retentionResource}
       nowMs={NOW}
       onOpenPrompt={noop}
     />,
@@ -229,6 +252,7 @@ test('reports a failed deletion', async () => {
       archives={resource('ready', [archive])}
       onOpenSession={noop}
       prompts={promptResource}
+      retention={retentionResource}
       nowMs={NOW}
       onOpenPrompt={noop}
     />,
@@ -253,6 +277,7 @@ test('switches to the prompt history panel', async () => {
         },
         reload: noop,
       }}
+      retention={retentionResource}
       nowMs={NOW}
       onOpenSession={noop}
       onOpenPrompt={noop}

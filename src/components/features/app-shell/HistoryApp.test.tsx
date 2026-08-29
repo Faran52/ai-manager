@@ -917,3 +917,60 @@ describe('HistoryApp prompt history', () => {
     expect(await screen.findByText('the question')).toBeDefined();
   });
 });
+
+describe('HistoryApp retention on launch', () => {
+  test('says so when the rule captured sessions before the agents pruned them', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: RequestInfo | URL) => {
+        const path = toPath(url);
+
+        if (path.endsWith('/retention-run')) {
+          return Response.json({
+            result: {
+              archived: 3,
+              archiveId: 'a1',
+            },
+          });
+        }
+        if (path.endsWith('/projects')) {
+          return Response.json(projectPayload);
+        }
+
+        return Response.json({ stats: null });
+      }),
+    );
+
+    render(<HistoryApp />);
+
+    expect(await screen.findByText('Retention archived 3 sessions')).toBeDefined();
+  });
+
+  test('stays quiet when the rule captured nothing', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: RequestInfo | URL) => {
+        const path = toPath(url);
+
+        if (path.endsWith('/retention-run')) {
+          return Response.json({
+            result: {
+              archived: 0,
+              archiveId: undefined,
+            },
+          });
+        }
+        if (path.endsWith('/projects')) {
+          return Response.json(projectPayload);
+        }
+
+        return Response.json({ stats: null });
+      }),
+    );
+
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+
+    expect(screen.queryByText(/Retention archived/)).toBeNull();
+  });
+});
