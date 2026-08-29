@@ -16,6 +16,7 @@ import {
   foldAggregate,
 } from './aggregateUtils';
 import { summarizePricing } from './pricingUtils';
+import { effortFrom, rhythmFrom } from './rhythmUtils';
 
 import type { AgentId } from '@config/agents';
 import type { AgentRoots } from '../agents/agentsService';
@@ -27,6 +28,7 @@ import type {
   ToolUsage,
 } from './aggregateUtils';
 import type { PricedModelUsage } from './pricingUtils';
+import type { StatsEffort, StatsRhythm } from './rhythmUtils';
 
 export type StatsModelUsage = PricedModelUsage;
 
@@ -55,6 +57,8 @@ export interface ProjectStats {
   readonly tools: readonly ToolUsage[];
   readonly activity: readonly DayActivity[];
   readonly topSessions: readonly SessionTokenTotals[];
+  readonly rhythm: StatsRhythm;
+  readonly effort: StatsEffort;
 }
 
 export interface CompleteStatsTotals extends StatsTotals {
@@ -92,6 +96,10 @@ export type {
   SessionTokenTotals,
   ToolUsage,
 } from './aggregateUtils';
+export type {
+  StatsEffort,
+  StatsRhythm,
+} from './rhythmUtils';
 
 const sessionsForStats = async (
   agentDirs: readonly string[],
@@ -194,6 +202,8 @@ const projectStatsFrom = (projectId: string, accumulator: Accumulator): Complete
       }),
     activity,
     topSessions,
+    rhythm: rhythmFrom(activity, accumulator.hours, accumulator.weekdays, Date.now()),
+    effort: effortFrom(accumulator.tools, accumulator.userMessages, accumulator.userChars),
   };
 };
 

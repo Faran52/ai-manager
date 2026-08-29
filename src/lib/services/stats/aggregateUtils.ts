@@ -52,6 +52,12 @@ export interface SessionAggregate {
   readonly pricing: readonly PricingEntry[];
   readonly tools: Readonly<Record<string, number>>;
   readonly days: Readonly<Record<string, DayCount>>;
+  // Turns per local hour of day, and per weekday with Monday first.
+  readonly hours: Readonly<Record<string, number>>;
+  readonly weekdays: Readonly<Record<string, number>>;
+  // Only what the person typed themselves, so tool output does not read as effort.
+  readonly userMessages: number;
+  readonly userChars: number;
 }
 
 export interface Accumulator {
@@ -71,6 +77,10 @@ export interface Accumulator {
   tools: Map<string, number>;
   days: Map<string, DayActivity>;
   perSession: SessionTokenTotals[];
+  hours: Map<number, number>;
+  weekdays: Map<number, number>;
+  userMessages: number;
+  userChars: number;
 }
 
 interface Draft {
@@ -91,6 +101,9 @@ interface CachedAggregate {
   readonly fingerprint: string;
   readonly aggregate: SessionAggregate;
 }
+
+export const HOURS_IN_DAY = 24;
+export const DAYS_IN_WEEK = 7;
 
 const EMPTY_USAGE: TokenUsage = {
   inputTokens: 0,
@@ -121,6 +134,10 @@ export const createAccumulator = (): Accumulator => {
     tools: new Map(),
     days: new Map(),
     perSession: [],
+    hours: new Map(),
+    weekdays: new Map(),
+    userMessages: 0,
+    userChars: 0,
   };
 };
 
@@ -189,6 +206,27 @@ const addDay = (days: Record<string, DayCount>, day: string, tokens: number): vo
   };
 };
 
+// Buckets follow the reader's own clock, since the question they answer is
+// when this person works, not when a server recorded it.
+const bump = (counts: Record<string, number>, slot: number): void => {
+  counts[slot] = (counts[slot] ?? 0) + 1;
+};
+
+const addClock = (
+  hours: Record<string, number>,
+  weekdays: Record<string, number>,
+  timestamp: string,
+): void => {
+  const when = new Date(timestamp);
+
+  if (Number.isNaN(when.getTime())) {
+    return;
+  }
+
+  bump(hours, when.getHours());
+  bump(weekdays, (when.getDay() + 6) % DAYS_IN_WEEK);
+};
+
 export const aggregateSession = (
   entries: readonly HistoryEntry[],
   splitAvailable: boolean,
@@ -197,6 +235,10 @@ export const aggregateSession = (
   const pricing: PricingEntry[] = [];
   const tools: Record<string, number> = {};
   const days: Record<string, DayCount> = {};
+  const hours: Record<string, number> = {};
+  const weekdays: Record<string, number> = {};
+  let userMessages = 0;
+  let userChars = 0;
 
   for (const entry of entries) {
     if (entry.kind !== 'user' && entry.kind !== 'assistant') {
@@ -210,6 +252,13 @@ export const aggregateSession = (
       addAssistant(draft, entry, splitAvailable, pricing, tools);
     }
 
+    if (entry.kind === 'user' && !entry.meta) {
+      userMessages += 1;
+      userChars += entry.text.length;
+    }
+
+    addClock(hours, weekdays, entry.timestamp);
+
     if (day.length === 10) {
       addDay(days, day, tokens);
     }
@@ -220,6 +269,10 @@ export const aggregateSession = (
     pricing,
     tools,
     days,
+    hours,
+    weekdays,
+    userMessages,
+    userChars,
   };
 };
 
@@ -241,6 +294,16 @@ export const foldAggregate = (
   accumulator.splitUnavailable ||= aggregate.splitUnavailable;
   accumulator.durationMs += aggregate.durationMs;
   accumulator.pricingEntries.push(...aggregate.pricing);
+  accumulator.userMessages += aggregate.userMessages;
+  accumulator.userChars += aggregate.userChars;
+
+  for (const [slot, count] of Object.entries(aggregate.hours)) {
+    accumulator.hours.set(Number(slot), (accumulator.hours.get(Number(slot)) ?? 0) + count);
+  }
+
+  for (const [slot, count] of Object.entries(aggregate.weekdays)) {
+    accumulator.weekdays.set(Number(slot), (accumulator.weekdays.get(Number(slot)) ?? 0) + count);
+  }
 
   for (const [tool, count] of Object.entries(aggregate.tools)) {
     accumulator.tools.set(tool, (accumulator.tools.get(tool) ?? 0) + count);

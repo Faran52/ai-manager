@@ -340,6 +340,23 @@ describe('HistoryApp cross-view flows', () => {
               messages: 1,
               lastTimestampMs: Date.UTC(2026, 0, 2),
             }],
+            rhythm: {
+              hours: [],
+              weekdays: [],
+              activeDays: 0,
+              spanDays: 0,
+              currentStreak: 0,
+              longestStreak: 0,
+            },
+            effort: {
+              userMessages: 0,
+              userChars: 0,
+              userWords: 0,
+              codeEdits: 0,
+              commandsRun: 0,
+              searches: 0,
+              webActions: 0,
+            },
           },
         });
       }

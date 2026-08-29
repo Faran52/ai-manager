@@ -6,3 +6,4 @@ export * from './ModelDistribution';
 export * from './PricingCoverage';
 export * from './ProviderDistribution';
 export * from './TopSessions';
+export * from './WorkRhythm';

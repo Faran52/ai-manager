@@ -61,6 +61,26 @@ const stats: ProjectStats = {
     messages: 5,
     lastTimestampMs: Date.UTC(2026, 0, 1),
   }],
+  rhythm: {
+    hours: Array.from({ length: 24 }, (_unused, hour) => {
+      return hour === 14 ? 40 : 1;
+    }),
+    weekdays: [9, 8, 7, 6, 5, 4, 3],
+    peakHour: 14,
+    activeDays: 12,
+    spanDays: 20,
+    currentStreak: 3,
+    longestStreak: 6,
+  },
+  effort: {
+    userMessages: 120,
+    userChars: 6_000,
+    userWords: 1_200,
+    codeEdits: 40,
+    commandsRun: 30,
+    searches: 20,
+    webActions: 10,
+  },
 };
 
 const globalStats: GlobalStats = {

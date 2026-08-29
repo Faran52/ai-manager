@@ -31,6 +31,7 @@ import {
   PricingCoverage,
   ProviderDistribution,
   TopSessions,
+  WorkRhythm,
 } from './partials';
 
 import type {
@@ -268,6 +269,8 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
             })}
           />
         </div>
+
+        <WorkRhythm rhythm={selectedStats.rhythm} effort={selectedStats.effort} />
 
         {effectiveScope === 'project' && (
           <TopSessions
