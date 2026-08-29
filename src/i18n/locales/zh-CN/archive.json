@@ -44,5 +44,12 @@
   "archiveMeta_other": "{{count}} 个会话 · {{size}}",
   "archiveEmpty": "此归档中没有会话。",
   "deleteArchive": "删除归档",
-  "deleteArchiveWarning": "归档副本将被永久删除。智能体那边已经删掉的内容之后将无法恢复。"
+  "deleteArchiveWarning": "归档副本将被永久删除。智能体那边已经删掉的内容之后将无法恢复。",
+  "panelStorage": "存储",
+  "storageIntro": "各智能体在磁盘上占用的空间。仅作查看：什么可以安全删除是另一个问题。",
+  "storageTotal": "智能体占用",
+  "storageAgents": "涉及的智能体",
+  "storagePartial": "至少这么多；扫描已达上限停止",
+  "storageNone": "未找到智能体存储",
+  "storageReadOnly": "本应用不会删除此处的任何内容。"
 }

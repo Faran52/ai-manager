@@ -42,6 +42,7 @@ import {
   useSearch,
   useSessions,
   useSettings,
+  useStorage,
 } from '@features/history-data';
 import { SearchDialog } from '@features/search';
 import { SessionViewer } from '@features/session-viewer';
@@ -98,6 +99,7 @@ export const HistoryApp: FC = () => {
   const archives = useArchives(view === 'archive');
   const prompts = usePrompts(view === 'archive');
   const retention = useRetention(view === 'archive');
+  const storage = useStorage(view === 'archive');
   const settings = useSettings(view === 'settings' ? (selectedProject?.actualPath ?? '') : null);
   const edits = useRecentEdits(view === 'board' ? selectedProject : null);
   const sessionCounts = useMemo(() => {
@@ -341,6 +343,7 @@ export const HistoryApp: FC = () => {
         archives={archives}
         prompts={prompts}
         retention={retention}
+        storage={storage}
         nowMs={nowMs}
         onOpenSession={openArchivedSession}
         onOpenPrompt={openPromptSession}

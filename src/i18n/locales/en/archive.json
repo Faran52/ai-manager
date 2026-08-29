@@ -44,5 +44,12 @@
   "archiveMeta_other": "{{count}} sessions · {{size}}",
   "archiveEmpty": "This archive holds no sessions.",
   "deleteArchive": "Delete archive",
-  "deleteArchiveWarning": "The archived copies are removed for good. Whatever the agents have since deleted cannot be recovered afterwards."
+  "deleteArchiveWarning": "The archived copies are removed for good. Whatever the agents have since deleted cannot be recovered afterwards.",
+  "panelStorage": "Storage",
+  "storageIntro": "What each agent is holding on disk. Reading only: deciding what is safe to remove is a separate question.",
+  "storageTotal": "Held by agents",
+  "storageAgents": "Agents on disk",
+  "storagePartial": "At least this much; the scan stopped at its limit",
+  "storageNone": "No agent storage found",
+  "storageReadOnly": "Nothing here is deleted by this app."
 }

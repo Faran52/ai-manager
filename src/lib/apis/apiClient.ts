@@ -26,6 +26,7 @@ import type {
   SettingsBody,
   SettingsResponse,
   StatsResponse,
+  StorageResponse,
   UpdateCheckResponse,
   WriteRetentionBody,
   WriteSettingsBody,
@@ -80,6 +81,10 @@ const hasArchives = (value: object): value is ArchivesResponse => {
 
 const isArchiveDetail = (value: object): value is ArchiveDetailResponse => {
   return 'archive' in value;
+};
+
+const hasStorage = (value: object): value is StorageResponse => {
+  return 'agents' in value && Array.isArray(value.agents) && 'totalBytes' in value;
 };
 
 const hasPrompts = (value: object): value is PromptsResponse => {
@@ -166,6 +171,11 @@ const ARCHIVE_DELETE: EndpointDefinition<MutationResponse> = {
   path: '/api/archive-delete',
   accepts: isMutationResponse,
   label: 'archive deletion',
+};
+const STORAGE: EndpointDefinition<StorageResponse> = {
+  path: '/api/storage',
+  accepts: hasStorage,
+  label: 'storage report',
 };
 const PROMPTS: EndpointDefinition<PromptsResponse> = {
   path: '/api/prompts',
@@ -295,6 +305,10 @@ export const fetchStats = (body: ProjectStatsBody): Promise<StatsResponse> => {
 
 export const deleteSession = (body: SessionMutationBody): Promise<MutationResponse> => {
   return requestEndpoint(DELETE_SESSION, body);
+};
+
+export const fetchStorage = (): Promise<StorageResponse> => {
+  return requestEndpoint(STORAGE, {});
 };
 
 export const fetchPrompts = (): Promise<PromptsResponse> => {

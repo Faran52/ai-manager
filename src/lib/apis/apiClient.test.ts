@@ -22,6 +22,7 @@ import {
   fetchSessions,
   fetchSettings,
   fetchStats,
+  fetchStorage,
   renameSession,
   runRetention,
   writeRetention,
@@ -450,5 +451,27 @@ describe('prompt history endpoint', () => {
     }));
 
     await expect(fetchPrompts()).rejects.toThrow('unexpected shape');
+  });
+});
+
+describe('storage endpoint', () => {
+  test('returns the measured report', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return jsonResponse({
+        agents: [],
+        totalBytes: 0,
+        partial: false,
+      });
+    }));
+
+    await expect(fetchStorage()).resolves.toMatchObject({ totalBytes: 0 });
+  });
+
+  test('rejects a response of the wrong shape', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return jsonResponse({ agents: 'many' });
+    }));
+
+    await expect(fetchStorage()).rejects.toThrow('unexpected shape');
   });
 });

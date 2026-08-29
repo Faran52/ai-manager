@@ -26,31 +26,35 @@ import {
   ArchiveCard,
   PromptHistoryPanel,
   RetentionCard,
+  StoragePanel,
 } from './partials';
 
 import type { AsyncResource } from '@features/history-data';
 import type { RetentionStatusResponse } from '@lib/apis/contracts';
 import type { ArchivedSession, ArchiveSummary } from '@services/archive/archiveService';
 import type { PromptHistory } from '@services/prompts/promptsService';
+import type { StorageReport } from '@services/storage/storageService';
 import type { FC } from 'react';
 
-export type ArchivePanel = 'archives' | 'prompts';
+export type ArchivePanel = 'archives' | 'prompts' | 'storage';
 
 export interface ArchiveViewProps {
   readonly archives: AsyncResource<readonly ArchiveSummary[]>;
   readonly prompts: AsyncResource<PromptHistory>;
   readonly retention: AsyncResource<RetentionStatusResponse>;
+  readonly storage: AsyncResource<StorageReport>;
   readonly nowMs: number;
   readonly onOpenSession: (session: ArchivedSession) => void;
   readonly onOpenPrompt: (filePath: string, timestampMs: number) => void;
 }
 
-const PANELS: readonly ArchivePanel[] = ['archives', 'prompts'];
+const PANELS: readonly ArchivePanel[] = ['archives', 'prompts', 'storage'];
 
 // Keys, not text, the map lives outside the component where t is unavailable.
 const PANEL_LABELS: Record<ArchivePanel, string> = {
   archives: 'panelArchives',
   prompts: 'panelPrompts',
+  storage: 'panelStorage',
 };
 
 const totalsOf = (archives: readonly ArchiveSummary[]): {
@@ -72,6 +76,7 @@ export const ArchiveView: FC<ArchiveViewProps> = ({
   archives,
   prompts,
   retention,
+  storage,
   nowMs,
   onOpenSession,
   onOpenPrompt,
@@ -145,6 +150,8 @@ export const ArchiveView: FC<ArchiveViewProps> = ({
             );
           })}
         </nav>
+
+        {panel === 'storage' && <StoragePanel storage={storage} />}
 
         {panel === 'prompts' && (
           <PromptHistoryPanel history={prompts} nowMs={nowMs} onOpenPrompt={onOpenPrompt} />

@@ -44,5 +44,12 @@
   "archiveMeta_other": "{{count}} 件のセッション · {{size}}",
   "archiveEmpty": "このアーカイブにセッションはありません。",
   "deleteArchive": "アーカイブを削除",
-  "deleteArchiveWarning": "アーカイブされた複製は完全に削除されます。エージェント側で削除済みのものは復元できなくなります。"
+  "deleteArchiveWarning": "アーカイブされた複製は完全に削除されます。エージェント側で削除済みのものは復元できなくなります。",
+  "panelStorage": "ストレージ",
+  "storageIntro": "各エージェントがディスク上に保持している容量です。表示のみで、何を安全に削除できるかは別の問題です。",
+  "storageTotal": "エージェントの使用量",
+  "storageAgents": "対象エージェント",
+  "storagePartial": "少なくともこの量です。走査は上限で停止しました",
+  "storageNone": "エージェントのストレージは見つかりません",
+  "storageReadOnly": "このアプリはここから何も削除しません。"
 }

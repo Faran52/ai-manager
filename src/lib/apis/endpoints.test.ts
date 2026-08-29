@@ -37,6 +37,7 @@ import {
   handleRetentionStatus,
   handleRunRetention,
   handleSearch,
+  handleStorageReport,
   handleUpdateCheck,
   handleWriteRetention,
   handleWriteSettings,
@@ -948,5 +949,25 @@ describe('prompt history endpoint', () => {
       total: 1,
       prompts: [{ text: 'find the needle' }],
     });
+  });
+});
+
+describe('storage endpoint', () => {
+  test('reports what the agents hold', { timeout: 30_000 }, async () => {
+    const home = await mkdtemp(join(tmpdir(), 'storage-api-'));
+
+    await mkdir(join(home, '.claude'), { recursive: true });
+    await writeFile(join(home, '.claude', 'big.jsonl'), 'x'.repeat(500), 'utf8');
+
+    const response = await handleStorageReport({ home });
+
+    expect(response.status).toBe(200);
+    expect(await jsonOf(response)).toMatchObject({ agents: [{ agent: 'claude' }] });
+  });
+
+  test('measures the real home when the caller names none', { timeout: 30_000 }, async () => {
+    const response = await handleStorageReport();
+
+    expect(response.status).toBe(200);
   });
 });

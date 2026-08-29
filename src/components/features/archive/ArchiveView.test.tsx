@@ -17,6 +17,7 @@ import type { AsyncResource } from '@features/history-data';
 import type { RetentionStatusResponse } from '@lib/apis/contracts';
 import type { ArchiveSummary } from '@services/archive/archiveService';
 import type { PromptHistory } from '@services/prompts/promptsService';
+import type { StorageReport } from '@services/storage/storageService';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -46,6 +47,16 @@ const retentionResource: AsyncResource<RetentionStatusResponse> = {
       agents: [],
     },
     due: { sessions: [] },
+  },
+  reload: noop,
+};
+
+const storageResource: AsyncResource<StorageReport> = {
+  status: 'ready',
+  data: {
+    agents: [],
+    totalBytes: 0,
+    partial: false,
   },
   reload: noop,
 };
@@ -84,6 +95,7 @@ test('totals the archives it was given', () => {
       onOpenSession={noop}
       prompts={promptResource}
       retention={retentionResource}
+      storage={storageResource}
       nowMs={NOW}
       onOpenPrompt={noop}
     />,
@@ -101,6 +113,7 @@ test('invites a first archive when there are none', () => {
       onOpenSession={noop}
       prompts={promptResource}
       retention={retentionResource}
+      storage={storageResource}
       nowMs={NOW}
       onOpenPrompt={noop}
     />,
@@ -116,6 +129,7 @@ test('waits while the list is loading', () => {
       onOpenSession={noop}
       prompts={promptResource}
       retention={retentionResource}
+      storage={storageResource}
       nowMs={NOW}
       onOpenPrompt={noop}
     />,
@@ -137,6 +151,7 @@ test('creates an archive with a note and reloads the list', async () => {
       onOpenSession={noop}
       prompts={promptResource}
       retention={retentionResource}
+      storage={storageResource}
       nowMs={NOW}
       onOpenPrompt={noop}
     />,
@@ -148,6 +163,7 @@ test('creates an archive with a note and reloads the list', async () => {
       onOpenSession={noop}
       prompts={promptResource}
       retention={retentionResource}
+      storage={storageResource}
       nowMs={NOW}
       onOpenPrompt={noop}
     />,
@@ -166,6 +182,7 @@ test('creates an archive with a note and reloads the list', async () => {
       onOpenSession={noop}
       prompts={promptResource}
       retention={retentionResource}
+      storage={storageResource}
       nowMs={NOW}
       onOpenPrompt={noop}
     />,
@@ -184,6 +201,7 @@ test('reports a failed creation', async () => {
       onOpenSession={noop}
       prompts={promptResource}
       retention={retentionResource}
+      storage={storageResource}
       nowMs={NOW}
       onOpenPrompt={noop}
     />,
@@ -205,6 +223,7 @@ test('confirms before deleting, then reloads', async () => {
       onOpenSession={noop}
       prompts={promptResource}
       retention={retentionResource}
+      storage={storageResource}
       nowMs={NOW}
       onOpenPrompt={noop}
     />,
@@ -229,6 +248,7 @@ test('leaves the archive alone when the confirmation is dismissed', async () => 
       onOpenSession={noop}
       prompts={promptResource}
       retention={retentionResource}
+      storage={storageResource}
       nowMs={NOW}
       onOpenPrompt={noop}
     />,
@@ -253,6 +273,7 @@ test('reports a failed deletion', async () => {
       onOpenSession={noop}
       prompts={promptResource}
       retention={retentionResource}
+      storage={storageResource}
       nowMs={NOW}
       onOpenPrompt={noop}
     />,
@@ -262,6 +283,33 @@ test('reports a failed deletion', async () => {
   await userEvent.click(screen.getAllByText('Delete archive').at(-1) ?? document.body);
 
   expect(await screen.findByText('archive locked')).toBeDefined();
+});
+
+test('switches to the storage panel', async () => {
+  render(
+    <ArchiveView
+      archives={resource('ready', [archive])}
+      prompts={promptResource}
+      retention={retentionResource}
+      storage={{
+        status: 'ready',
+        data: {
+          agents: [],
+          totalBytes: 2_048,
+          partial: false,
+        },
+        reload: noop,
+      }}
+      nowMs={NOW}
+      onOpenSession={noop}
+      onOpenPrompt={noop}
+    />,
+  );
+
+  await userEvent.click(screen.getByRole('button', { name: 'Storage' }));
+
+  expect(screen.getByText('2KB')).toBeDefined();
+  expect(screen.queryByText('before the upgrade')).toBeNull();
 });
 
 test('switches to the prompt history panel', async () => {
@@ -278,6 +326,7 @@ test('switches to the prompt history panel', async () => {
         reload: noop,
       }}
       retention={retentionResource}
+      storage={storageResource}
       nowMs={NOW}
       onOpenSession={noop}
       onOpenPrompt={noop}

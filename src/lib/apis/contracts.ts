@@ -23,6 +23,7 @@ import type {
   SettingsScope,
 } from '@services/settings/settingsService';
 import type { ProjectStats } from '@services/stats/statsService';
+import type { StorageReport } from '@services/storage/storageService';
 
 export interface ProjectsResponse {
   readonly projects: readonly ProjectSummary[];
@@ -127,6 +128,8 @@ export interface RecentEditsResponse {
 }
 
 export type PromptsResponse = PromptHistory;
+
+export type StorageResponse = StorageReport;
 
 export interface SettingsBody {
   readonly projectPath: string;

@@ -40,6 +40,7 @@ import {
   writeScopeSettings,
 } from '@services/settings/settingsService';
 import { computeGlobalStats, computeProjectStats } from '@services/stats/statsService';
+import { readStorageReport } from '@services/storage/storageService';
 import { checkForUpdate, updateConfigFromEnv } from '@services/updates';
 
 import {
@@ -450,6 +451,17 @@ export const handleRecentEdits = async (request: Request, deps?: EndpointDeps): 
 export const handlePromptHistory = (deps?: EndpointDeps): Promise<Response> => {
   return withJsonErrors(async () => {
     return jsonOk(await readPromptHistory(deps?.home));
+  });
+};
+
+export const handleStorageReport = (deps?: EndpointDeps): Promise<Response> => {
+  return withJsonErrors(async () => {
+    return jsonOk(await readStorageReport(deps?.home == null
+      ? { env: process.env }
+      : {
+          env: process.env,
+          home: deps.home,
+        }));
   });
 };
 

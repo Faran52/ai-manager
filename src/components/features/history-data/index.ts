@@ -9,4 +9,5 @@ export * from './hooks/useRetention';
 export * from './hooks/useSearch';
 export * from './hooks/useSessions';
 export * from './hooks/useSettings';
+export * from './hooks/useStorage';
 export * from './utils/asyncResourceUtils';

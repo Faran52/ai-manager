@@ -644,6 +644,13 @@ describe('HistoryApp keyboard shortcuts', () => {
             total: 0,
           });
         }
+        if (path.endsWith('/storage')) {
+          return Response.json({
+            agents: [],
+            totalBytes: 0,
+            partial: false,
+          });
+        }
         if (path.endsWith('/recent-edits')) {
           return Response.json({ files: [] });
         }
