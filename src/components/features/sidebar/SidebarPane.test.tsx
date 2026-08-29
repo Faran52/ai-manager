@@ -733,3 +733,40 @@ describe('SidebarPane session threads', () => {
     expect(screen.queryByRole('button', { name: /parts/ })).toBeNull();
   });
 });
+
+describe('SidebarPane branches', () => {
+  const onBranch = (id: string, title: string, branch?: string): SessionSummary => {
+    return {
+      ...session(id, title),
+      gitBranch: branch,
+    };
+  };
+
+  test('names the branch a session was working on', () => {
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p', 'webapp')]}
+        sessions={[onBranch('a', 'Alpha', 'feat/login'), onBranch('b', 'Beta')]}
+      />,
+    );
+
+    expect(screen.getByText('feat/login')).toBeDefined();
+    expect(document.querySelectorAll('[data-session-branch]')).toHaveLength(1);
+  });
+
+  test('finds sessions by the branch they were on', async () => {
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p', 'webapp')]}
+        sessions={[onBranch('a', 'Alpha', 'feat/login'), onBranch('b', 'Beta', 'main')]}
+      />,
+    );
+
+    await userEvent.type(screen.getByLabelText('Filter sessions'), 'feat/');
+
+    expect(screen.getByText('Alpha')).toBeDefined();
+    expect(screen.queryByText('Beta')).toBeNull();
+  });
+});

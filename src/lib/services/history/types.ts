@@ -212,4 +212,5 @@ export interface SessionSummary {
   readonly modifiedMs: number;
   readonly sizeBytes: number;
   readonly cwd?: string | undefined;
+  readonly gitBranch?: string | undefined;
 }

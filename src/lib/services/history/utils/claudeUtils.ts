@@ -13,6 +13,7 @@ import { humanPreview, humanTitle } from '@utils/titleUtils';
 import { parseHistoryLine } from '../../session/utils/parserUtils';
 import {
   ASSISTANT_MARKER,
+  BRANCH_PREFIX,
   CWD_PREFIX,
   JSONL_SUFFIX,
   SIDECHAIN_MARKER,
@@ -36,6 +37,7 @@ interface SessionMeta {
   readonly firstTimestampMs: number;
   readonly lastTimestampMs: number;
   readonly cwd?: string | undefined;
+  readonly gitBranch?: string | undefined;
 }
 
 interface FileFacts {
@@ -61,6 +63,7 @@ interface MetaScan {
   customTitle?: string | undefined;
   preview?: string | undefined;
   cwd?: string | undefined;
+  gitBranch?: string | undefined;
 }
 
 const isRawLine = (value: unknown): value is RawTitleLine => {
@@ -69,8 +72,8 @@ const isRawLine = (value: unknown): value is RawTitleLine => {
 
 const cache = new LruCache<CacheEntry>(512);
 
-const truncateCwd = (cwd: string | undefined): string | undefined => {
-  return cwd != null && cwd.length > 0 ? cwd : undefined;
+const nonEmpty = (value: string | undefined): string | undefined => {
+  return value != null && value.length > 0 ? value : undefined;
 };
 
 const fallbackProjectName = (projectId: string): string => {
@@ -155,6 +158,12 @@ const absorbLine = (scan: MetaScan, rawLine: string): void => {
 
   updateStamps(scan, rawLine);
   scan.cwd ??= quotedValue(rawLine, CWD_PREFIX);
+  /**
+   * The last branch named is the one the session ended on, which is the one
+   * worth showing: a session that started on main and moved onto a feature
+   * branch belongs to the feature branch.
+   */
+  scan.gitBranch = nonEmpty(quotedValue(rawLine, BRANCH_PREFIX)) ?? scan.gitBranch;
 
   if (rawLine.includes(SUMMARY_MARKER)) {
     const entry = parseHistoryLine(rawLine);
@@ -203,7 +212,8 @@ const extractSessionMeta = (content: string): SessionMeta => {
     turnCount: scan.turnCount,
     firstTimestampMs: Number.isFinite(scan.firstTimestampMs) ? scan.firstTimestampMs : 0,
     lastTimestampMs: scan.lastTimestampMs,
-    cwd: truncateCwd(scan.cwd),
+    cwd: nonEmpty(scan.cwd),
+    gitBranch: scan.gitBranch,
   };
 };
 
@@ -299,6 +309,7 @@ export const listSessions = async (
       modifiedMs: facts.mtimeMs,
       sizeBytes: facts.sizeBytes,
       cwd: meta.cwd,
+      gitBranch: meta.gitBranch,
     });
   }
 

@@ -6,6 +6,7 @@ export const USER_MARKER = '"type":"user"';
 export const ASSISTANT_MARKER = '"type":"assistant"';
 export const SIDECHAIN_MARKER = '"isSidechain":true';
 export const CWD_PREFIX = '"cwd":"';
+export const BRANCH_PREFIX = '"gitBranch":"';
 export const JSONL_SUFFIX = '.jsonl';
 
 /**
