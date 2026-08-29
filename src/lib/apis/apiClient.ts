@@ -18,6 +18,8 @@ import type {
   PromptsResponse,
   RecentEditsBody,
   RecentEditsResponse,
+  ReclaimBody,
+  ReclaimResponse,
   RenameSessionBody,
   RetentionStatusResponse,
   RunRetentionResponse,
@@ -95,6 +97,14 @@ const hasPrompts = (value: object): value is PromptsResponse => {
 
 const hasFiles = (value: object): value is RecentEditsResponse => {
   return 'files' in value && Array.isArray(value.files);
+};
+
+const hasReclaimResult = (value: object): value is ReclaimResponse => {
+  return 'result' in value
+    && typeof value.result === 'object'
+    && value.result !== null
+    && 'removed' in value.result
+    && Array.isArray(value.result.removed);
 };
 
 const hasHistory = (value: object): value is FileHistoryResponse => {
@@ -196,6 +206,11 @@ const RECENT_EDITS: EndpointDefinition<RecentEditsResponse> = {
   path: '/api/recent-edits',
   accepts: hasFiles,
   label: 'recent edits',
+};
+const RECLAIM: EndpointDefinition<ReclaimResponse> = {
+  path: '/api/storage-reclaim',
+  accepts: hasReclaimResult,
+  label: 'storage reclaim',
 };
 const FILE_HISTORY: EndpointDefinition<FileHistoryResponse> = {
   path: '/api/file-history',
@@ -332,6 +347,10 @@ export const fetchPrompts = (): Promise<PromptsResponse> => {
 
 export const fetchRecentEdits = (body: RecentEditsBody): Promise<RecentEditsResponse> => {
   return requestEndpoint(RECENT_EDITS, body);
+};
+
+export const reclaimStorage = (body: ReclaimBody): Promise<ReclaimResponse> => {
+  return requestEndpoint(RECLAIM, body);
 };
 
 export const fetchFileHistory = (body: FileHistoryBody): Promise<FileHistoryResponse> => {

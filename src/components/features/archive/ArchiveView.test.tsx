@@ -56,6 +56,7 @@ const storageResource: AsyncResource<StorageReport> = {
   data: {
     agents: [],
     totalBytes: 0,
+    reclaimableBytes: 0,
     partial: false,
   },
   reload: noop,
@@ -296,6 +297,7 @@ test('switches to the storage panel', async () => {
         data: {
           agents: [],
           totalBytes: 2_048,
+          reclaimableBytes: 0,
           partial: false,
         },
         reload: noop,

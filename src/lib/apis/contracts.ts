@@ -24,7 +24,7 @@ import type {
   SettingsScope,
 } from '@services/settings/settingsService';
 import type { ProjectStats } from '@services/stats/statsService';
-import type { StorageReport } from '@services/storage/storageService';
+import type { ReclaimResult, StorageReport } from '@services/storage/storageService';
 
 export interface ProjectsResponse {
   readonly projects: readonly ProjectSummary[];
@@ -126,6 +126,14 @@ export interface RecentEditsBody {
 
 export interface RecentEditsResponse {
   readonly files: readonly EditedFile[];
+}
+
+export interface ReclaimBody {
+  readonly paths: readonly string[];
+}
+
+export interface ReclaimResponse {
+  readonly result: ReclaimResult;
 }
 
 export interface FileHistoryBody {

@@ -51,5 +51,14 @@
   "storageAgents": "Agents on disk",
   "storagePartial": "At least this much; the scan stopped at its limit",
   "storageNone": "No agent storage found",
-  "storageReadOnly": "Nothing here is deleted by this app."
+  "storageReadOnly": "Nothing here is deleted by this app.",
+  "reclaimAvailable": "{{size}} of it is working files the agents can rebuild.",
+  "reclaimAction": "Free it up",
+  "reclaimHeading": "Delete rebuildable working files?",
+  "reclaimExplain": "These are caches, logs and temporary files. No transcript, archive or generated file is touched, and the agents will rebuild what they need.",
+  "reclaimConfirm": "Delete them",
+  "reclaimBusy": "Deleting…",
+  "reclaimFreed_one": "Removed {{count}} item, freeing {{size}}.",
+  "reclaimFreed_other": "Removed {{count}} items, freeing {{size}}.",
+  "reclaimFailed": "Nothing was deleted: the files could not be removed."
 }

@@ -51,5 +51,14 @@
   "storageAgents": "涉及的代理",
   "storagePartial": "至少這麼多；掃描已達上限停止",
   "storageNone": "未找到代理儲存空間",
-  "storageReadOnly": "本應用不會刪除此處的任何內容。"
+  "storageReadOnly": "本應用不會刪除此處的任何內容。",
+  "reclaimAvailable": "其中 {{size}} 是代理可以重新產生的工作檔案。",
+  "reclaimAction": "釋放空間",
+  "reclaimHeading": "刪除可重新產生的工作檔案？",
+  "reclaimExplain": "這些是快取、記錄與暫存檔。不會動到任何記錄、封存或產生的檔案，代理會重新產生所需內容。",
+  "reclaimConfirm": "刪除",
+  "reclaimBusy": "正在刪除…",
+  "reclaimFreed_one": "已刪除 {{count}} 項，釋放 {{size}}。",
+  "reclaimFreed_other": "已刪除 {{count}} 項，釋放 {{size}}。",
+  "reclaimFailed": "未能刪除，沒有做任何變更。"
 }

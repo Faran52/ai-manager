@@ -51,5 +51,14 @@
   "storageAgents": "涉及的智能体",
   "storagePartial": "至少这么多；扫描已达上限停止",
   "storageNone": "未找到智能体存储",
-  "storageReadOnly": "本应用不会删除此处的任何内容。"
+  "storageReadOnly": "本应用不会删除此处的任何内容。",
+  "reclaimAvailable": "其中 {{size}} 是代理可以重新生成的工作文件。",
+  "reclaimAction": "释放空间",
+  "reclaimHeading": "删除可重新生成的工作文件？",
+  "reclaimExplain": "这些是缓存、日志和临时文件。不会触及任何记录、归档或生成的文件，代理会重新生成所需内容。",
+  "reclaimConfirm": "删除",
+  "reclaimBusy": "正在删除…",
+  "reclaimFreed_one": "已删除 {{count}} 项，释放 {{size}}。",
+  "reclaimFreed_other": "已删除 {{count}} 项，释放 {{size}}。",
+  "reclaimFailed": "未能删除，没有做任何更改。"
 }
