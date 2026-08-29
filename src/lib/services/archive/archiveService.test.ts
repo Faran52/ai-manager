@@ -28,6 +28,7 @@ import {
   deleteArchive,
   listArchives,
   readArchive,
+  sessionKey,
 } from './archiveService';
 
 import type { AgentRoots } from '../agents/agentsService';
@@ -164,6 +165,20 @@ describe('createArchive', () => {
     expect(manifest.sessions.map((session) => {
       return session.agent;
     })).toEqual(['claude']);
+  });
+
+  test('copies only the session keys requested by a caller', async () => {
+    const home = await newHome();
+    const projectDir = join(home, '.claude', 'projects', 'proj');
+
+    await writeFile(join(projectDir, 'other.jsonl'), JSON.stringify(LINES[0]), 'utf8');
+
+    const manifest = await createArchive(rootsFor(home), '', home, new Set([sessionKey('claude', 's')]));
+
+    expect(manifest.sessions.map((session) => {
+      return session.actualSessionId;
+    })).toEqual(['s']);
+    expect(sessionKey('claude', 's')).toBe('claude:s');
   });
 
   test('drops a session whose destination cannot be written', { timeout: 20_000 }, async () => {

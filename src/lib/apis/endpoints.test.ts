@@ -3,6 +3,7 @@ import {
   mkdtemp,
   rm,
   stat,
+  utimes,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -33,8 +34,11 @@ import {
   handleReadSettings,
   handleRecentEdits,
   handleRenameSession,
+  handleRetentionStatus,
+  handleRunRetention,
   handleSearch,
   handleUpdateCheck,
+  handleWriteRetention,
   handleWriteSettings,
   parseLoadSessionBody,
   resolveEndpointRoots,
@@ -811,6 +815,48 @@ describe('settings endpoints', () => {
       scope: 'project',
       patch: emptyPatch,
     }), { home })).status).toBe(500);
+  });
+});
+
+describe('retention endpoints', () => {
+  test('reports due sessions, saves a policy and runs it', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'retention-api-home-'));
+    const dir = await newDirWithSession();
+    const deps = {
+      claudeDir: dir,
+      home,
+    };
+
+    const sessionPath = join(dir, 'projects', 'proj', 's.jsonl');
+
+    await utimes(sessionPath, new Date('2026-06-01T00:00:00Z'), new Date('2026-06-01T00:00:00Z'));
+
+    expect(await jsonOf(await handleRetentionStatus(deps))).toMatchObject({
+      policy: { enabled: false },
+      due: { sessions: [{ actualSessionId: 's' }] },
+    });
+    expect(await jsonOf(await handleWriteRetention(post({
+      policy: {
+        enabled: true,
+        olderThanDays: 30,
+        agents: ['claude'],
+      },
+    }), deps))).toMatchObject({ policy: { enabled: true } });
+    expect(await jsonOf(await handleRunRetention(deps))).toMatchObject({
+      result: { archived: 1 },
+    });
+  });
+
+  test('rejects malformed retention policies', async () => {
+    expect((await handleWriteRetention(post({}))).status).toBe(400);
+    expect((await handleWriteRetention(post('nonsense'))).status).toBe(400);
+    expect((await handleWriteRetention(post({
+      policy: {
+        enabled: true,
+        olderThanDays: 0,
+        agents: [],
+      },
+    }))).status).toBe(400);
   });
 });
 

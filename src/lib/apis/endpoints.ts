@@ -21,6 +21,12 @@ import {
 } from '@services/archive/archiveService';
 import { listRecentEdits } from '@services/edits/editsService';
 import { readPromptHistory } from '@services/prompts/promptsService';
+import {
+  dueForArchive,
+  readRetentionPolicy,
+  runRetention,
+  writeRetentionPolicy,
+} from '@services/retention/retentionService';
 import { searchAgentHistory } from '@services/search/searchService';
 import {
   deleteProject,
@@ -60,6 +66,7 @@ import type {
   SearchBody,
   SessionMutationBody,
   SettingsBody,
+  WriteRetentionBody,
   WriteSettingsBody,
 } from './contracts';
 
@@ -162,6 +169,19 @@ const isWriteSettingsBody = (body: object): body is WriteSettingsBody => {
   return lists.every((key) => {
     return key in permissions && isRuleList(Reflect.get(permissions, key));
   }) && patch.env.every(isEnvEntry);
+};
+
+const isWriteRetentionBody = (body: object): body is WriteRetentionBody => {
+  if (!('policy' in body) || typeof body.policy !== 'object' || body.policy === null) {
+    return false;
+  }
+
+  const { policy } = body;
+
+  return 'enabled' in policy && typeof policy.enabled === 'boolean'
+    && 'olderThanDays' in policy && typeof policy.olderThanDays === 'number'
+    && Number.isInteger(policy.olderThanDays) && policy.olderThanDays >= 1
+    && 'agents' in policy && Array.isArray(policy.agents) && policy.agents.every(isAgent);
 };
 
 const isSearchBody = (body: object): body is SearchBody => {
@@ -365,6 +385,40 @@ export const handleDeleteArchive = async (request: Request, deps?: EndpointDeps)
     await deleteArchive(body.id, deps?.home);
 
     return jsonOk({ ok: true });
+  });
+};
+
+export const handleRetentionStatus = (deps?: EndpointDeps): Promise<Response> => {
+  return withJsonErrors(async () => {
+    const policy = await readRetentionPolicy(deps?.home);
+
+    return jsonOk({
+      policy,
+      due: await dueForArchive(resolveEndpointRoots(deps), policy, deps?.home),
+    });
+  });
+};
+
+export const handleWriteRetention = async (request: Request, deps?: EndpointDeps): Promise<Response> => {
+  return withJsonErrors(async () => {
+    const body = await readJsonObject(request);
+
+    if (body == null || !isWriteRetentionBody(body)) {
+      return jsonError(BAD_REQUEST, 'A valid retention policy is required.');
+    }
+
+    const policy = await writeRetentionPolicy(body.policy, deps?.home);
+
+    return jsonOk({
+      policy,
+      due: await dueForArchive(resolveEndpointRoots(deps), policy, deps?.home),
+    });
+  });
+};
+
+export const handleRunRetention = (deps?: EndpointDeps): Promise<Response> => {
+  return withJsonErrors(async () => {
+    return jsonOk({ result: await runRetention(resolveEndpointRoots(deps), deps?.home) });
   });
 };
 

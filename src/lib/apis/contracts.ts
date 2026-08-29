@@ -10,6 +10,11 @@ import type { ArchiveManifest, ArchiveSummary } from '@services/archive/archiveS
 import type { EditedFile } from '@services/edits/editsService';
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
 import type { PromptHistory } from '@services/prompts/promptsService';
+import type {
+  RetentionDue,
+  RetentionPolicy,
+  RetentionRun,
+} from '@services/retention/retentionService';
 import type { SearchOutcome } from '@services/search/searchService';
 import type { SessionPage } from '@services/session/sessionService';
 import type {
@@ -95,6 +100,19 @@ export interface CreateArchiveBody {
 
 export interface CreateArchiveResponse {
   readonly archive: ArchiveSummary;
+}
+
+export interface RetentionStatusResponse {
+  readonly policy: RetentionPolicy;
+  readonly due: RetentionDue;
+}
+
+export interface WriteRetentionBody {
+  readonly policy: RetentionPolicy;
+}
+
+export interface RunRetentionResponse {
+  readonly result: RetentionRun;
 }
 
 export interface RecentEditsBody {

@@ -17,6 +17,8 @@ import type {
   RecentEditsBody,
   RecentEditsResponse,
   RenameSessionBody,
+  RetentionStatusResponse,
+  RunRetentionResponse,
   SearchBody,
   SearchResponse,
   SessionMutationBody,
@@ -25,6 +27,7 @@ import type {
   SettingsResponse,
   StatsResponse,
   UpdateCheckResponse,
+  WriteRetentionBody,
   WriteSettingsBody,
   WriteSettingsResponse,
 } from './contracts';
@@ -189,6 +192,27 @@ const RENAME_SESSION: EndpointDefinition<MutationResponse> = {
   accepts: isMutationResponse,
   label: 'session rename',
 };
+const RETENTION_STATUS: EndpointDefinition<RetentionStatusResponse> = {
+  path: '/api/retention-status',
+  accepts: (value): value is RetentionStatusResponse => {
+    return 'policy' in value && 'due' in value;
+  },
+  label: 'retention status',
+};
+const RETENTION_WRITE: EndpointDefinition<RetentionStatusResponse> = {
+  path: '/api/retention-write',
+  accepts: (value): value is RetentionStatusResponse => {
+    return 'policy' in value && 'due' in value;
+  },
+  label: 'retention save',
+};
+const RETENTION_RUN: EndpointDefinition<RunRetentionResponse> = {
+  path: '/api/retention-run',
+  accepts: (value): value is RunRetentionResponse => {
+    return 'result' in value && typeof value.result === 'object' && value.result !== null;
+  },
+  label: 'retention run',
+};
 
 const errorMessageFrom = async (response: Response, label: string): Promise<string> => {
   try {
@@ -303,6 +327,18 @@ export const createArchive = (body: CreateArchiveBody): Promise<CreateArchiveRes
 
 export const deleteArchive = (body: ArchiveBody): Promise<MutationResponse> => {
   return requestEndpoint(ARCHIVE_DELETE, body);
+};
+
+export const fetchRetentionStatus = (): Promise<RetentionStatusResponse> => {
+  return requestEndpoint(RETENTION_STATUS, {});
+};
+
+export const writeRetention = (body: WriteRetentionBody): Promise<RetentionStatusResponse> => {
+  return requestEndpoint(RETENTION_WRITE, body);
+};
+
+export const runRetention = (): Promise<RunRetentionResponse> => {
+  return requestEndpoint(RETENTION_RUN, {});
 };
 
 export const deleteProject = (body: ProjectMutationBody): Promise<MutationResponse> => {

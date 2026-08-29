@@ -5,6 +5,7 @@ export * from './hooks/useProjects';
 export * from './hooks/useProjectStats';
 export * from './hooks/usePrompts';
 export * from './hooks/useRecentEdits';
+export * from './hooks/useRetention';
 export * from './hooks/useSearch';
 export * from './hooks/useSessions';
 export * from './hooks/useSettings';

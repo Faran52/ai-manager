@@ -85,6 +85,10 @@ const safeSegment = (value: string): string => {
   return value.replaceAll(/[^\w.-]/gu, '_').slice(0, 120);
 };
 
+export const sessionKey = (agent: AgentId, actualSessionId: string): string => {
+  return `${agent}:${actualSessionId}`;
+};
+
 /**
  * False rather than a throw: an agent may delete the very transcript being
  * copied, which is the race this feature exists to survive, so one lost file
@@ -106,6 +110,7 @@ export const createArchive = async (
   roots: AgentRoots,
   note = '',
   home?: string,
+  only?: ReadonlySet<string>,
 ): Promise<ArchiveManifest> => {
   const createdMs = Date.now();
   const id = archiveId(createdMs);
@@ -123,6 +128,10 @@ export const createArchive = async (
     const found = await listAgentSessions(roots, project.agent, project.id);
 
     for (const session of found) {
+      if (only != null && !only.has(sessionKey(session.agent, session.actualSessionId))) {
+        continue;
+      }
+
       const relativePath = join(
         FILES_DIR,
         project.agent,

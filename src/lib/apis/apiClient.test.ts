@@ -17,11 +17,14 @@ import {
   fetchProjects,
   fetchPrompts,
   fetchRecentEdits,
+  fetchRetentionStatus,
   fetchSearch,
   fetchSessions,
   fetchSettings,
   fetchStats,
   renameSession,
+  runRetention,
+  writeRetention,
   writeSettings,
 } from './apiClient';
 
@@ -354,6 +357,53 @@ describe('settings endpoints', () => {
         env: [],
       },
     })).rejects.toThrow('unexpected shape');
+  });
+});
+
+describe('retention endpoints', () => {
+  const status = {
+    policy: {
+      enabled: true,
+      olderThanDays: 30,
+      agents: [],
+    },
+    due: { sessions: [] },
+  };
+
+  test('reads, saves and runs retention', async () => {
+    vi.stubGlobal('fetch', vi.fn((path: string) => {
+      return path.endsWith('/retention-run')
+        ? jsonResponse({
+            result: {
+              archived: 1,
+              archiveId: 'retained',
+            },
+          })
+        : jsonResponse(status);
+    }));
+
+    await expect(fetchRetentionStatus()).resolves.toEqual(status);
+    await expect(writeRetention({ policy: status.policy })).resolves.toEqual(status);
+    await expect(runRetention()).resolves.toEqual({
+      result: {
+        archived: 1,
+        archiveId: 'retained',
+      },
+    });
+  });
+
+  test('rejects retention responses of the wrong shape', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return jsonResponse({ due: { sessions: [] } });
+    }));
+
+    await expect(fetchRetentionStatus()).rejects.toThrow('unexpected shape');
+
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return jsonResponse({ result: false });
+    }));
+
+    await expect(runRetention()).rejects.toThrow('unexpected shape');
   });
 });
 
