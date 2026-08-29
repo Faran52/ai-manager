@@ -8,6 +8,7 @@ import type {
 } from '@services/agents/agentsService';
 import type { ArchiveManifest, ArchiveSummary } from '@services/archive/archiveService';
 import type { EditedFile } from '@services/edits/editsService';
+import type { FileHistory, FileVersionDiff } from '@services/file-history/fileHistoryService';
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
 import type { PromptHistory } from '@services/prompts/promptsService';
 import type {
@@ -125,6 +126,17 @@ export interface RecentEditsBody {
 
 export interface RecentEditsResponse {
   readonly files: readonly EditedFile[];
+}
+
+export interface FileHistoryBody {
+  readonly sessionId: string;
+  readonly path: string;
+  readonly version?: number | undefined;
+}
+
+export interface FileHistoryResponse {
+  readonly history: FileHistory;
+  readonly diff: FileVersionDiff | null;
 }
 
 export type PromptsResponse = PromptHistory;

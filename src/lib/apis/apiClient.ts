@@ -6,6 +6,8 @@ import type {
   ArchivesResponse,
   CreateArchiveBody,
   CreateArchiveResponse,
+  FileHistoryBody,
+  FileHistoryResponse,
   ListSessionsBody,
   LoadSessionBody,
   MessagesResponse,
@@ -93,6 +95,14 @@ const hasPrompts = (value: object): value is PromptsResponse => {
 
 const hasFiles = (value: object): value is RecentEditsResponse => {
   return 'files' in value && Array.isArray(value.files);
+};
+
+const hasHistory = (value: object): value is FileHistoryResponse => {
+  return 'history' in value
+    && typeof value.history === 'object'
+    && value.history !== null
+    && 'versions' in value.history
+    && Array.isArray(value.history.versions);
 };
 
 const hasScopes = (value: object): value is SettingsResponse => {
@@ -186,6 +196,11 @@ const RECENT_EDITS: EndpointDefinition<RecentEditsResponse> = {
   path: '/api/recent-edits',
   accepts: hasFiles,
   label: 'recent edits',
+};
+const FILE_HISTORY: EndpointDefinition<FileHistoryResponse> = {
+  path: '/api/file-history',
+  accepts: hasHistory,
+  label: 'file history',
 };
 const SETTINGS: EndpointDefinition<SettingsResponse> = {
   path: '/api/settings',
@@ -317,6 +332,10 @@ export const fetchPrompts = (): Promise<PromptsResponse> => {
 
 export const fetchRecentEdits = (body: RecentEditsBody): Promise<RecentEditsResponse> => {
   return requestEndpoint(RECENT_EDITS, body);
+};
+
+export const fetchFileHistory = (body: FileHistoryBody): Promise<FileHistoryResponse> => {
+  return requestEndpoint(FILE_HISTORY, body);
 };
 
 export const fetchSettings = (body: SettingsBody): Promise<SettingsResponse> => {

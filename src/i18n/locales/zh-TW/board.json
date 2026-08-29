@@ -21,5 +21,11 @@
   "editCount_one": "{{count}} 處改動",
   "editCount_other": "{{count}} 處改動",
   "edited": "編輯",
-  "written": "寫入"
+  "written": "寫入",
+  "showDiff": "顯示變更",
+  "versionLabel": "v{{version}}",
+  "firstSnapshot": "此變更之前的內容未被保存。",
+  "noSnapshots": "該工作階段沒有保留檔案快照。",
+  "noChangeRecorded": "此變更前後的快照完全相同。",
+  "diffFailed": "無法讀取已儲存的變更。"
 }

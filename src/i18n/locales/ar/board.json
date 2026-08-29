@@ -29,5 +29,11 @@
   "editCount_many": "{{count}} تغييرًا",
   "editCount_other": "{{count}} تغيير",
   "edited": "عُدِّل",
-  "written": "كُتِب"
+  "written": "كُتِب",
+  "showDiff": "عرض التغييرات",
+  "versionLabel": "الإصدار {{version}}",
+  "firstSnapshot": "لم يُحفظ شيء من قبل هذا التغيير.",
+  "noSnapshots": "لم تُحفظ أي لقطات للملفات في هذه الجلسة.",
+  "noChangeRecorded": "اللقطتان على جانبي هذا التغيير متطابقتان.",
+  "diffFailed": "تعذّرت قراءة التغييرات المحفوظة."
 }

@@ -8,7 +8,6 @@ export * from './MessageHeader';
 export * from './MessageNavigator';
 export * from './OutcomeBody';
 export * from './OutcomeImages';
-export * from './PatchView';
 export * from './RowsList';
 export * from './StatusBadge';
 export * from './SummaryDivider';

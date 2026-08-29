@@ -15,13 +15,12 @@ import { AnimatePresence, motion } from 'motion/react';
 
 import { cn } from '@utils/cnUtils';
 
-import { collapseTransition } from '@ui/index';
+import { collapseTransition, PatchView } from '@ui/index';
 
 import { mcpToolIdentity } from '../utils/mcpToolUtils';
 import { toolSummary } from '../utils/toolSummaryUtils';
 
 import { OutcomeBody } from './OutcomeBody';
-import { PatchView } from './PatchView';
 import { StatusBadge } from './StatusBadge';
 import { ToolInputBody } from './ToolInputBody';
 

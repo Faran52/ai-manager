@@ -21,5 +21,11 @@
   "editCount_one": "{{count}} 处改动",
   "editCount_other": "{{count}} 处改动",
   "edited": "编辑",
-  "written": "写入"
+  "written": "写入",
+  "showDiff": "显示更改",
+  "versionLabel": "v{{version}}",
+  "firstSnapshot": "此更改之前的内容未被保存。",
+  "noSnapshots": "该会话没有保留文件快照。",
+  "noChangeRecorded": "此更改前后的快照完全相同。",
+  "diffFailed": "无法读取已保存的更改。"
 }

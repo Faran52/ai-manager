@@ -21,5 +21,11 @@
   "editCount_one": "{{count}} 件の変更",
   "editCount_other": "{{count}} 件の変更",
   "edited": "編集",
-  "written": "作成"
+  "written": "作成",
+  "showDiff": "変更を表示",
+  "versionLabel": "v{{version}}",
+  "firstSnapshot": "この変更より前の状態は保存されていません。",
+  "noSnapshots": "このセッションのファイルスナップショットはありません。",
+  "noChangeRecorded": "この変更の前後のスナップショットは同一です。",
+  "diffFailed": "保存された変更を読み取れませんでした。"
 }

@@ -20,6 +20,7 @@ import {
   readArchive,
 } from '@services/archive/archiveService';
 import { listRecentEdits } from '@services/edits/editsService';
+import { readFileHistory, readVersionDiff } from '@services/file-history/fileHistoryService';
 import { readPromptHistory } from '@services/prompts/promptsService';
 import {
   dueForArchive,
@@ -60,6 +61,7 @@ import type {
   AgentSetupBody,
   ArchiveBody,
   CreateArchiveBody,
+  FileHistoryBody,
   ListSessionsBody,
   LoadSessionBody,
   ProjectMutationBody,
@@ -124,6 +126,19 @@ const isSessionsBody = (body: object): body is ListSessionsBody => {
     && body.projectId.length > 0
     && 'agent' in body
     && isAgent(body.agent);
+};
+
+const isFileHistoryBody = (body: object): body is FileHistoryBody => {
+  if ('version' in body && typeof body.version !== 'number') {
+    return false;
+  }
+
+  return 'sessionId' in body
+    && typeof body.sessionId === 'string'
+    && body.sessionId.length > 0
+    && 'path' in body
+    && typeof body.path === 'string'
+    && body.path.length > 0;
 };
 
 const isArchiveBody = (body: object): body is ArchiveBody => {
@@ -444,6 +459,29 @@ export const handleRecentEdits = async (request: Request, deps?: EndpointDeps): 
 
     return jsonOk({
       files: await listRecentEdits(resolveEndpointRoots(deps), target.agent, target.projectId),
+    });
+  });
+};
+
+export const handleFileHistory = async (
+  request: Request,
+  deps?: EndpointDeps,
+): Promise<Response> => {
+  return withJsonErrors(async () => {
+    const body = await readJsonObject(request);
+
+    if (body == null || !isFileHistoryBody(body)) {
+      return jsonError(BAD_REQUEST, 'A non-empty sessionId and path are required.');
+    }
+
+    const history = await readFileHistory(body.sessionId, body.path, deps?.home);
+    const wanted = body.version ?? history.versions.at(-1)?.version;
+
+    return jsonOk({
+      history,
+      diff: wanted == null
+        ? null
+        : await readVersionDiff(body.sessionId, body.path, wanted, deps?.home) ?? null,
     });
   });
 };

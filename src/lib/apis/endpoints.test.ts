@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import {
   mkdir,
   mkdtemp,
@@ -24,6 +25,7 @@ import {
   handleDeleteArchive,
   handleDeleteProject,
   handleDeleteSession,
+  handleFileHistory,
   handleListArchives,
   handleListProjects,
   handleListSessions,
@@ -927,6 +929,86 @@ describe('recent edits endpoint', () => {
   test('rejects a request with no project', async () => {
     expect((await handleRecentEdits(post({}))).status).toBe(400);
     expect((await handleRecentEdits(post('nonsense'))).status).toBe(400);
+  });
+});
+
+describe('file history endpoint', () => {
+  const SESSION = 'session-9';
+  const TRACKED = '/repo/a.ts';
+
+  const newSnapshotHome = async (): Promise<string> => {
+    const home = await mkdtemp(join(tmpdir(), 'file-history-api-'));
+    const dir = join(home, '.claude', 'file-history', SESSION);
+    const key = createHash('sha256').update(TRACKED).digest('hex').slice(0, 16);
+
+    await mkdir(dir, { recursive: true });
+    await writeFile(join(dir, `${key}@v1`), 'one\ntwo', 'utf8');
+    await writeFile(join(dir, `${key}@v2`), 'one\nTWO', 'utf8');
+
+    return home;
+  };
+
+  test('compares the newest version when no version is asked for', async () => {
+    const home = await newSnapshotHome();
+    const response = await handleFileHistory(post({
+      sessionId: SESSION,
+      path: TRACKED,
+    }), { home });
+
+    expect(response.status).toBe(200);
+    expect(await jsonOf(response)).toMatchObject({
+      history: { versions: [{ version: 1 }, { version: 2 }] },
+      diff: {
+        version: 2,
+        firstRecorded: false,
+      },
+    });
+  });
+
+  test('compares the version that was asked for', async () => {
+    const home = await newSnapshotHome();
+    const response = await handleFileHistory(post({
+      sessionId: SESSION,
+      path: TRACKED,
+      version: 1,
+    }), { home });
+
+    expect(await jsonOf(response)).toMatchObject({ diff: { firstRecorded: true } });
+  });
+
+  test('reports no comparison for a file that was never kept', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'file-history-api-'));
+    const response = await handleFileHistory(post({
+      sessionId: SESSION,
+      path: TRACKED,
+    }), { home });
+
+    expect(await jsonOf(response)).toMatchObject({
+      history: { versions: [] },
+      diff: null,
+    });
+  });
+
+  test('reports no comparison for a version that was never kept', async () => {
+    const home = await newSnapshotHome();
+    const response = await handleFileHistory(post({
+      sessionId: SESSION,
+      path: TRACKED,
+      version: 7,
+    }), { home });
+
+    expect(await jsonOf(response)).toMatchObject({ diff: null });
+  });
+
+  test('rejects a request without a session and a path', async () => {
+    expect((await handleFileHistory(post({}))).status).toBe(400);
+    expect((await handleFileHistory(post({
+      sessionId: SESSION,
+      path: TRACKED,
+      version: 'two',
+    }))).status).toBe(400);
+    expect((await handleFileHistory(post({ sessionId: SESSION }))).status).toBe(400);
+    expect((await handleFileHistory(post('nonsense'))).status).toBe(400);
   });
 });
 

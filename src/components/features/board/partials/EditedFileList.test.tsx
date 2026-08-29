@@ -6,6 +6,8 @@ import {
   vi,
 } from 'vitest';
 
+import { parseJsonContainer } from '@utils/jsonUtils';
+
 import { EditedFileList } from './EditedFileList';
 
 import type { EditedFile } from '@services/edits/editsService';
@@ -96,4 +98,57 @@ test('opens the session an edit came from', async () => {
   await userEvent.click(screen.getByText('Login fix'));
 
   expect(onOpenEdit).toHaveBeenCalledWith(file.recent[0]);
+});
+
+test('opens the stored changes for the session that made them', async () => {
+  let asked: string | undefined;
+  const fetchMock = vi.fn((_url: RequestInfo | URL, init?: RequestInit) => {
+    asked = typeof init?.body === 'string' ? init.body : undefined;
+
+    return Promise.resolve(Response.json({
+      history: {
+        path: '/repo/src/a.ts',
+        versions: [{
+          version: 1,
+          savedMs: NOW,
+          sizeBytes: 4,
+        }],
+      },
+      diff: {
+        version: 1,
+        hunks: [{
+          oldStart: 1,
+          oldLines: 1,
+          newStart: 1,
+          newLines: 1,
+          lines: ['+written'],
+        }],
+        firstRecorded: true,
+      },
+    }));
+  });
+
+  vi.stubGlobal('fetch', fetchMock);
+  render(
+    <EditedFileList
+      files={[file]}
+      projectPath="/repo"
+      nowMs={NOW}
+      onOpenEdit={() => {
+        return undefined;
+      }}
+    />,
+  );
+
+  await userEvent.click(screen.getByText('src/a.ts'));
+  await userEvent.click(screen.getAllByLabelText('Show changes')[0] ?? document.body);
+
+  expect(await screen.findByText('+written')).toBeDefined();
+  expect(parseJsonContainer(asked ?? '{}')).toMatchObject({ sessionId: 's1' });
+
+  await userEvent.click(screen.getAllByLabelText('Show changes')[0] ?? document.body);
+
+  expect(screen.queryByText('+written')).toBeNull();
+
+  vi.unstubAllGlobals();
 });

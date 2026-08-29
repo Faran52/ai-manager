@@ -1,13 +1,19 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { ChevronDown, FileDiff } from 'lucide-react';
+import {
+  ChevronDown,
+  FileDiff,
+  GitCompare,
+} from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
 import { cn } from '@utils/cnUtils';
 import { formatTimeAgo } from '@utils/formatUtils';
 
 import { collapseTransition } from '@ui/index';
+
+import { FileDiffPanel } from './FileDiffPanel';
 
 import type { EditedFile, FileEdit } from '@services/edits/editsService';
 import type { FC } from 'react';
@@ -33,6 +39,7 @@ export const EditedFileList: FC<EditedFileListProps> = ({
 }) => {
   const { t } = useTranslation('board');
   const [openPath, setOpenPath] = useState<string>();
+  const [diffSession, setDiffSession] = useState<string>();
 
   return (
     <ul className="grid gap-1" data-edited-files>
@@ -48,6 +55,7 @@ export const EditedFileList: FC<EditedFileListProps> = ({
               type="button"
               aria-expanded={open}
               onClick={() => {
+                setDiffSession(undefined);
                 setOpenPath(open ? undefined : file.path);
               }}
               className="flex w-full items-center gap-2 px-3 py-2 text-start"
@@ -86,15 +94,18 @@ export const EditedFileList: FC<EditedFileListProps> = ({
                   <ul className="grid gap-0.5 border-t border-border px-3 py-2">
                     {file.recent.map((edit) => {
                       return (
-                        <li key={`${edit.sessionId}-${String(edit.timestampMs)}`}>
+                        <li
+                          key={`${edit.sessionId}-${String(edit.timestampMs)}`}
+                          className="flex items-center gap-1"
+                        >
                           <button
                             type="button"
                             onClick={() => {
                               onOpenEdit(edit);
                             }}
                             className="
-                              flex w-full items-center gap-2 rounded-md px-2
-                              py-1 text-start
+                              flex min-w-0 flex-1 items-center gap-2 rounded-md
+                              px-2 py-1 text-start
                               hover:bg-accent
                             "
                           >
@@ -118,10 +129,32 @@ export const EditedFileList: FC<EditedFileListProps> = ({
                               {formatTimeAgo(edit.timestampMs, nowMs)}
                             </span>
                           </button>
+                          <button
+                            type="button"
+                            aria-label={t('showDiff')}
+                            aria-pressed={diffSession === edit.sessionId}
+                            data-show-diff={edit.sessionId}
+                            onClick={() => {
+                              setDiffSession(diffSession === edit.sessionId
+                                ? undefined
+                                : edit.sessionId);
+                            }}
+                            className={cn(`
+                              shrink-0 rounded-md p-1 text-muted-foreground
+                              hover:bg-accent hover:text-foreground
+                            `, diffSession === edit.sessionId && 'text-primary')}
+                          >
+                            <GitCompare className="size-3.5" />
+                          </button>
                         </li>
                       );
                     })}
                   </ul>
+                  {diffSession != null && (
+                    <div className="border-t border-border px-3 py-2">
+                      <FileDiffPanel sessionId={diffSession} path={file.path} />
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>

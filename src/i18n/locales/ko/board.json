@@ -21,5 +21,11 @@
   "editCount_one": "변경 {{count}}건",
   "editCount_other": "변경 {{count}}건",
   "edited": "편집",
-  "written": "작성"
+  "written": "작성",
+  "showDiff": "변경 사항 보기",
+  "versionLabel": "v{{version}}",
+  "firstSnapshot": "이 변경 이전 상태는 저장되어 있지 않습니다.",
+  "noSnapshots": "이 세션에 대한 파일 스냅샷이 없습니다.",
+  "noChangeRecorded": "이 변경 전후의 스냅샷이 동일합니다.",
+  "diffFailed": "저장된 변경 사항을 읽지 못했습니다."
 }

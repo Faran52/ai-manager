@@ -21,5 +21,11 @@
   "editCount_one": "{{count}} change",
   "editCount_other": "{{count}} changes",
   "edited": "edited",
-  "written": "wrote"
+  "written": "wrote",
+  "showDiff": "Show changes",
+  "versionLabel": "v{{version}}",
+  "firstSnapshot": "Nothing is stored from before this change.",
+  "noSnapshots": "No file snapshots were kept for this session.",
+  "noChangeRecorded": "The snapshots either side of this change are identical.",
+  "diffFailed": "The stored changes could not be read."
 }
