@@ -17,6 +17,8 @@ import { agentOption } from '@config/agents';
 import { appConfig } from '@config/appConfig';
 import { projectsPaneStorageKey } from '@config/storageKeys';
 
+import { createArchive } from '@lib/apis/apiClient';
+import { saveTextFile } from '@utils/browserFilesUtils';
 import { cn } from '@utils/cnUtils';
 import { toErrorMessage } from '@utils/errorUtils';
 import { formatTimeAgo } from '@utils/formatUtils';
@@ -27,6 +29,7 @@ import {
   SectionHeader,
   Spinner,
   TextInput,
+  Toast,
 } from '@ui/index';
 
 import {
@@ -38,6 +41,7 @@ import {
   SessionSelectionBar,
   SidebarContextMenu,
 } from './partials';
+import { exportSessions } from './utils/bulkExportUtils';
 
 import type { AgentId } from '@config/agents';
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
@@ -104,6 +108,8 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
   const [renameTarget, setRenameTarget] = useState<SessionSummary | null>(null);
   const [deleteProjectTarget, setDeleteProjectTarget] = useState<ProjectSummary | null>(null);
   const [deleteTargets, setDeleteTargets] = useState<readonly SessionSummary[]>([]);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkNotice, setBulkNotice] = useState<string | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedSessionPaths, setSelectedSessionPaths] = useState<readonly string[]>([]);
   const [mutationBusy, setMutationBusy] = useState(false);
@@ -148,6 +154,47 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
       return selectedSessionPaths.includes(session.filePath);
     });
   }, [selectedSessionPaths, sessions]);
+
+  /*
+   * Both actions add rather than remove, so neither asks for confirmation the
+   * way deleting does. Archiving names the exact sessions instead of sweeping
+   * everything the agents hold.
+   */
+  const archiveSelected = (): void => {
+    setBulkBusy(true);
+    void (async (): Promise<void> => {
+      try {
+        const { archive } = await createArchive({
+          note: t('bulkArchiveNote'),
+          sessionKeys: selectedSessions.map((session) => {
+            return `${session.agent}:${session.actualSessionId}`;
+          }),
+        });
+
+        setBulkNotice(t('bulkArchived', { count: archive.sessionCount }));
+      }
+      catch (cause) {
+        setBulkNotice(toErrorMessage(cause));
+      }
+      finally {
+        setBulkBusy(false);
+      }
+    })();
+  };
+
+  const exportSelected = (): void => {
+    setBulkBusy(true);
+    void (async (): Promise<void> => {
+      const result = await exportSessions(selectedSessions, selectedProject?.name ?? '', Date.now());
+
+      if (result.markdown.length > 0) {
+        saveTextFile(`${selectedProject?.name ?? 'sessions'}.md`, result.markdown, 'text/markdown');
+      }
+
+      setBulkNotice(result.failed > 0 ? t('bulkExportFailed') : null);
+      setBulkBusy(false);
+    })();
+  };
 
   const projectCount = useMemo(() => {
     return new Set(projects.map((project) => {
@@ -374,9 +421,12 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
             selectedCount={selectedSessions.length}
             allSelected={allSelectableSelected}
             onToggleAll={toggleAllSessions}
+            busy={bulkBusy}
             onDelete={() => {
               setDeleteTargets(selectedSessions);
             }}
+            onArchive={archiveSelected}
+            onExport={exportSelected}
           />
         )}
         <div className="shrink-0 px-3 pb-2">
@@ -538,6 +588,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
           void runDelete(targets);
         }}
       />
+      <Toast message={bulkNotice} />
       {copiedLabel.length > 0 && <span className="sr-only" role="status">{copiedLabel}</span>}
       {mutationError.length > 0 && <span className="sr-only" role="alert">{mutationError}</span>}
     </aside>

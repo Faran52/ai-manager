@@ -17,6 +17,15 @@
   "deleteProjectDetail": "Saved memories and cached tool results for this project",
   "deleteProjectHistory": "Delete project history",
   "deleteSelected": "Delete selected",
+  "selectedCount_one": "{{count}} selected",
+  "selectedCount_other": "{{count}} selected",
+  "archiveAction": "Archive",
+  "exportAction": "Export",
+  "archiveSelected": "Archive the selected sessions",
+  "exportSelected": "Export the selected sessions",
+  "bulkArchived_one": "Archived {{count}} session",
+  "bulkArchived_other": "Archived {{count}} sessions",
+  "bulkExportFailed": "Could not export every selected session.",
   "deleteSession": "Delete session",
   "deleteSessionConfirm": "Delete session permanently?",
   "filter": "Filter",
@@ -54,5 +63,6 @@
   "sessionIdCopied": "Session ID copied",
   "sessionPathCopied": "Session path copied",
   "sessionTitle": "Session title",
-  "sessions": "Sessions"
+  "sessions": "Sessions",
+  "bulkArchiveNote": "Selected sessions"
 }

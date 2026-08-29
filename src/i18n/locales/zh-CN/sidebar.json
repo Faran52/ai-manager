@@ -17,6 +17,15 @@
   "deleteProjectDetail": "该项目已保存的记忆与缓存的工具结果",
   "deleteProjectHistory": "删除项目历史",
   "deleteSelected": "删除所选",
+  "selectedCount_one": "已选择 {{count}} 个",
+  "selectedCount_other": "已选择 {{count}} 个",
+  "archiveAction": "归档",
+  "exportAction": "导出",
+  "archiveSelected": "归档所选会话",
+  "exportSelected": "导出所选会话",
+  "bulkArchived_one": "已归档 {{count}} 个会话",
+  "bulkArchived_other": "已归档 {{count}} 个会话",
+  "bulkExportFailed": "部分会话无法导出。",
   "deleteSession": "删除会话",
   "deleteSessionConfirm": "永久删除该会话？",
   "filter": "筛选",
@@ -54,5 +63,6 @@
   "sessionIdCopied": "已复制会话 ID",
   "sessionPathCopied": "已复制会话路径",
   "sessionTitle": "会话标题",
-  "sessions": "会话"
+  "sessions": "会话",
+  "bulkArchiveNote": "所选会话"
 }

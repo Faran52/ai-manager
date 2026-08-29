@@ -17,6 +17,15 @@
   "deleteProjectDetail": "このプロジェクトの保存済みメモリとツール結果のキャッシュ",
   "deleteProjectHistory": "プロジェクトの履歴を削除",
   "deleteSelected": "選択項目を削除",
+  "selectedCount_one": "{{count}} 件選択中",
+  "selectedCount_other": "{{count}} 件選択中",
+  "archiveAction": "アーカイブ",
+  "exportAction": "エクスポート",
+  "archiveSelected": "選択したセッションをアーカイブ",
+  "exportSelected": "選択したセッションをエクスポート",
+  "bulkArchived_one": "{{count}} 件をアーカイブしました",
+  "bulkArchived_other": "{{count}} 件をアーカイブしました",
+  "bulkExportFailed": "一部のセッションをエクスポートできませんでした。",
   "deleteSession": "セッションを削除",
   "deleteSessionConfirm": "セッションを完全に削除しますか？",
   "filter": "絞り込み",
@@ -54,5 +63,6 @@
   "sessionIdCopied": "セッション ID をコピーしました",
   "sessionPathCopied": "セッションのパスをコピーしました",
   "sessionTitle": "セッション名",
-  "sessions": "セッション"
+  "sessions": "セッション",
+  "bulkArchiveNote": "選択したセッション"
 }

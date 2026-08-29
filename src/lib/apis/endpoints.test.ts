@@ -671,12 +671,36 @@ describe('archive endpoints', () => {
     expect(await jsonOf(await handleReadArchive(post({ id: 'nope' }), { home }))).toEqual({ archive: null });
   });
 
+  test('captures only the sessions a request names', { timeout: 30_000 }, async () => {
+    const home = await mkdtemp(join(tmpdir(), 'archive-api-only-'));
+    const projectDir = join(home, '.claude', 'projects', 'proj');
+
+    await mkdir(projectDir, { recursive: true });
+
+    for (const name of ['keep', 'skip']) {
+      await writeFile(join(projectDir, `${name}.jsonl`), JSON.stringify({
+        type: 'user',
+        uuid: `u-${name}`,
+        timestamp: '2026-06-01T10:00:00Z',
+        message: {
+          role: 'user',
+          content: name,
+        },
+      }), 'utf8');
+    }
+
+    const created = await jsonOf(await handleCreateArchive(post({ sessionKeys: ['claude:keep'] }), { home }));
+
+    expect(created).toMatchObject({ archive: { sessionCount: 1 } });
+  });
+
   test('rejects malformed archive requests', async () => {
     const home = await mkdtemp(join(tmpdir(), 'archive-api-bad-'));
 
     expect((await handleReadArchive(post({}), { home })).status).toBe(400);
     expect((await handleDeleteArchive(post({ id: '' }), { home })).status).toBe(400);
     expect((await handleCreateArchive(post({ note: 7 }), { home })).status).toBe(400);
+    expect((await handleCreateArchive(post({ sessionKeys: [7] }), { home })).status).toBe(400);
     expect((await handleReadArchive(post('nonsense'), { home })).status).toBe(400);
     expect((await handleCreateArchive(post('nonsense'), { home })).status).toBe(400);
     expect((await handleDeleteArchive(post('nonsense'), { home })).status).toBe(400);

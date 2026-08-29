@@ -165,7 +165,7 @@ describe('SidebarPane', () => {
       />,
     );
 
-    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(screen.getByRole('status', { name: 'loading' })).toBeDefined();
   });
 
   test('uses singular session counts and distinguishes empty session states', async () => {
@@ -304,7 +304,7 @@ describe('SidebarPane context actions', () => {
     expect(writeText).toHaveBeenNthCalledWith(5, "cd '/repo/team'\\''s-app' && claude --resume 'a'");
     expect(writeText).toHaveBeenNthCalledWith(6, '/r/a.jsonl');
     expect(writeText).toHaveBeenNthCalledWith(7, "claude --resume 'b'");
-    expect(screen.getByRole('status').textContent).toBe('Resume command copied');
+    expect(document.querySelector('.sr-only[role="status"]')?.textContent).toBe('Resume command copied');
   });
 
   test('does not announce a rejected clipboard write', async () => {
@@ -320,7 +320,7 @@ describe('SidebarPane context actions', () => {
     fireEvent.contextMenu(screen.getByText('webapp'));
     await userEvent.click(screen.getByText('Copy project ID'));
 
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(document.querySelector('.sr-only[role="status"]')).toBeNull();
   });
 
   test('labels session menus from every title fallback', async () => {
@@ -520,5 +520,160 @@ describe('SidebarPane agent and mutation actions', () => {
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).toBeNull();
     });
+  });
+});
+
+describe('SidebarPane bulk actions', () => {
+  const enterSelection = async (): Promise<void> => {
+    await userEvent.click(screen.getByRole('button', { name: 'Select sessions' }));
+  };
+
+  test('archives the selected sessions and says how many were captured', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return Response.json({
+        archive: {
+          id: 'a1',
+          createdMs: 1,
+          note: '',
+          sessionCount: 2,
+          sizeBytes: 10,
+          agents: ['claude'],
+        },
+      });
+    }));
+
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p', 'webapp')]}
+        sessions={[session('a', 'Login fix'), session('b', 'Parser work')]}
+      />,
+    );
+    await enterSelection();
+    await userEvent.click(screen.getByRole('button', { name: 'Select all sessions' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Archive the selected sessions' }));
+
+    expect(await screen.findByText('Archived 2 sessions')).toBeDefined();
+  });
+
+  test('reports a refused archive', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return new Response('{"error":"disk full"}', { status: 500 });
+    }));
+
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p', 'webapp')]}
+        sessions={[session('a', 'Login fix'), session('b', 'Parser work')]}
+      />,
+    );
+    await enterSelection();
+    await userEvent.click(screen.getByRole('button', { name: 'Select all sessions' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Archive the selected sessions' }));
+
+    expect(await screen.findByText('disk full')).toBeDefined();
+  });
+
+  test('exports the selected sessions to a file', async () => {
+    const clicked = vi.fn();
+
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return Response.json({
+        entries: [],
+        total: 0,
+        messageCount: 0,
+        hasMore: false,
+        nextOffset: 0,
+      });
+    }));
+    vi.stubGlobal('URL', {
+      createObjectURL: () => {
+        return 'blob:x';
+      },
+      revokeObjectURL: () => {
+        return undefined;
+      },
+    });
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(clicked);
+
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p', 'webapp')]}
+        sessions={[session('a', 'Login fix'), session('b', 'Parser work')]}
+      />,
+    );
+    await enterSelection();
+    await userEvent.click(screen.getByRole('button', { name: 'Select all sessions' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Export the selected sessions' }));
+
+    await waitFor(() => {
+      expect(clicked).toHaveBeenCalled();
+    });
+
+    vi.restoreAllMocks();
+  });
+
+  test('names the export file generically when no project is selected', async () => {
+    const names: string[] = [];
+
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return Response.json({
+        entries: [],
+        total: 0,
+        messageCount: 0,
+        hasMore: false,
+        nextOffset: 0,
+      });
+    }));
+    vi.stubGlobal('URL', {
+      createObjectURL: () => {
+        return 'blob:x';
+      },
+      revokeObjectURL: () => {
+        return undefined;
+      },
+    });
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function capture(this: HTMLAnchorElement) {
+      names.push(this.download);
+    });
+
+    render(
+      <SidebarPane
+        {...base}
+        selectedProject={null}
+        projects={[project('p', 'webapp')]}
+        sessions={[session('a', 'Login fix')]}
+      />,
+    );
+    await enterSelection();
+    await userEvent.click(screen.getByRole('button', { name: 'Select all sessions' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Export the selected sessions' }));
+
+    await waitFor(() => {
+      expect(names).toEqual(['sessions.md']);
+    });
+
+    vi.restoreAllMocks();
+  });
+
+  test('says so when a selected session could not be exported', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return new Response('{"error":"gone"}', { status: 500 });
+    }));
+
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p', 'webapp')]}
+        sessions={[session('a', 'Login fix'), session('b', 'Parser work')]}
+      />,
+    );
+    await enterSelection();
+    await userEvent.click(screen.getByRole('button', { name: 'Select all sessions' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Export the selected sessions' }));
+
+    expect(await screen.findByText('Could not export every selected session.')).toBeDefined();
   });
 });

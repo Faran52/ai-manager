@@ -17,6 +17,15 @@
   "deleteProjectDetail": "此專案已儲存的記憶與快取的工具結果",
   "deleteProjectHistory": "刪除專案紀錄",
   "deleteSelected": "刪除所選",
+  "selectedCount_one": "已選擇 {{count}} 個",
+  "selectedCount_other": "已選擇 {{count}} 個",
+  "archiveAction": "封存",
+  "exportAction": "匯出",
+  "archiveSelected": "封存所選工作階段",
+  "exportSelected": "匯出所選工作階段",
+  "bulkArchived_one": "已封存 {{count}} 個工作階段",
+  "bulkArchived_other": "已封存 {{count}} 個工作階段",
+  "bulkExportFailed": "部分工作階段無法匯出。",
   "deleteSession": "刪除工作階段",
   "deleteSessionConfirm": "永久刪除此工作階段？",
   "filter": "篩選",
@@ -54,5 +63,6 @@
   "sessionIdCopied": "已複製工作階段 ID",
   "sessionPathCopied": "已複製工作階段路徑",
   "sessionTitle": "工作階段標題",
-  "sessions": "工作階段"
+  "sessions": "工作階段",
+  "bulkArchiveNote": "所選工作階段"
 }

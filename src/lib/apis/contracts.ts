@@ -96,6 +96,8 @@ export interface ArchiveDetailResponse {
 
 export interface CreateArchiveBody {
   readonly note?: string | undefined;
+  // Session keys to capture. Absent means every session the agents still hold.
+  readonly sessionKeys?: readonly string[] | undefined;
 }
 
 export interface CreateArchiveResponse {

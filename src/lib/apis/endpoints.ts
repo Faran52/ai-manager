@@ -130,7 +130,11 @@ const isArchiveBody = (body: object): body is ArchiveBody => {
 };
 
 const isCreateArchiveBody = (body: object): body is CreateArchiveBody => {
-  return !('note' in body) || typeof body.note === 'string';
+  if ('note' in body && typeof body.note !== 'string') {
+    return false;
+  }
+
+  return !('sessionKeys' in body) || isRuleList(body.sessionKeys);
 };
 
 const isSettingsBody = (body: object): body is SettingsBody => {
@@ -355,7 +359,12 @@ export const handleCreateArchive = async (request: Request, deps?: EndpointDeps)
       return jsonError(BAD_REQUEST, 'A note must be text.');
     }
 
-    const manifest = await createArchive(resolveEndpointRoots(deps), body.note ?? '', deps?.home);
+    const manifest = await createArchive(
+      resolveEndpointRoots(deps),
+      body.note ?? '',
+      deps?.home,
+      body.sessionKeys == null ? undefined : new Set(body.sessionKeys),
+    );
 
     return jsonOk({
       archive: {

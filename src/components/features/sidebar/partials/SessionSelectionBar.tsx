@@ -1,6 +1,11 @@
 import { useTranslation } from 'react-i18next';
 
-import { CheckCheck, Trash2 } from 'lucide-react';
+import {
+  Archive,
+  CheckCheck,
+  Download,
+  Trash2,
+} from 'lucide-react';
 
 import type { FC } from 'react';
 
@@ -9,6 +14,9 @@ export interface SessionSelectionBarProps {
   readonly allSelected: boolean;
   readonly onToggleAll: () => void;
   readonly onDelete: () => void;
+  readonly onArchive: () => void;
+  readonly onExport: () => void;
+  readonly busy?: boolean;
 }
 
 export const SessionSelectionBar: FC<SessionSelectionBarProps> = ({
@@ -16,11 +24,16 @@ export const SessionSelectionBar: FC<SessionSelectionBarProps> = ({
   allSelected,
   onToggleAll,
   onDelete,
+  onArchive,
+  onExport,
+  busy = false,
 }) => {
   const { t } = useTranslation('sidebar');
   return (
     <div className="session-selection-bar">
-      <span className="session-selection-count">{`${String(selectedCount)} selected`}</span>
+      <span className="session-selection-count">
+        {t('selectedCount', { count: selectedCount })}
+      </span>
       <button
         type="button"
         aria-label={allSelected ? t('clearSelected') : t('selectAllSessions')}
@@ -32,8 +45,28 @@ export const SessionSelectionBar: FC<SessionSelectionBarProps> = ({
       </button>
       <button
         type="button"
+        aria-label={t('archiveSelected')}
+        disabled={busy || selectedCount === 0}
+        onClick={onArchive}
+        className="session-selection-action"
+      >
+        <Archive className="size-3" />
+        {t('archiveAction')}
+      </button>
+      <button
+        type="button"
+        aria-label={t('exportSelected')}
+        disabled={busy || selectedCount === 0}
+        onClick={onExport}
+        className="session-selection-action"
+      >
+        <Download className="size-3" />
+        {t('exportAction')}
+      </button>
+      <button
+        type="button"
         aria-label={t('deleteSelected')}
-        disabled={selectedCount === 0}
+        disabled={busy || selectedCount === 0}
         onClick={onDelete}
         className="session-selection-delete"
       >

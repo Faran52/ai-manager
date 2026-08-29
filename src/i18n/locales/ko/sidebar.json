@@ -17,6 +17,15 @@
   "deleteProjectDetail": "이 프로젝트의 저장된 메모리와 캐시된 도구 결과",
   "deleteProjectHistory": "프로젝트 기록 삭제",
   "deleteSelected": "선택 항목 삭제",
+  "selectedCount_one": "{{count}}개 선택됨",
+  "selectedCount_other": "{{count}}개 선택됨",
+  "archiveAction": "보관",
+  "exportAction": "내보내기",
+  "archiveSelected": "선택한 세션 보관",
+  "exportSelected": "선택한 세션 내보내기",
+  "bulkArchived_one": "세션 {{count}}개를 보관했습니다",
+  "bulkArchived_other": "세션 {{count}}개를 보관했습니다",
+  "bulkExportFailed": "일부 세션을 내보내지 못했습니다.",
   "deleteSession": "세션 삭제",
   "deleteSessionConfirm": "세션을 영구히 삭제할까요?",
   "filter": "필터",
@@ -54,5 +63,6 @@
   "sessionIdCopied": "세션 ID를 복사했습니다",
   "sessionPathCopied": "세션 경로를 복사했습니다",
   "sessionTitle": "세션 제목",
-  "sessions": "세션"
+  "sessions": "세션",
+  "bulkArchiveNote": "선택한 세션"
 }
