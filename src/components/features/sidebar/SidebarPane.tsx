@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 
 import {
   CheckSquare2,
+  ChevronDown,
   FolderClosed,
   MessagesSquare,
   Search,
@@ -42,6 +43,7 @@ import {
   SidebarContextMenu,
 } from './partials';
 import { exportSessions } from './utils/bulkExportUtils';
+import { buildSessionThreads } from './utils/sessionThreadUtils';
 
 import type { AgentId } from '@config/agents';
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
@@ -108,6 +110,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
   const [renameTarget, setRenameTarget] = useState<SessionSummary | null>(null);
   const [deleteProjectTarget, setDeleteProjectTarget] = useState<ProjectSummary | null>(null);
   const [deleteTargets, setDeleteTargets] = useState<readonly SessionSummary[]>([]);
+  const [expandedThreads, setExpandedThreads] = useState<readonly string[]>([]);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [bulkNotice, setBulkNotice] = useState<string | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
@@ -143,6 +146,37 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
         });
   }, [sessionFilter, sessions]);
 
+  /**
+   * Resuming or compacting a session writes a fresh transcript, so one piece of
+   * work arrives as several files. They are shown as one row that opens to its
+   * parts rather than as unrelated neighbours in the list.
+   */
+  const sessionRows = useMemo(() => {
+    return buildSessionThreads(visibleSessions).flatMap((thread) => {
+      const head = {
+        session: thread.head,
+        threadKey: thread.key,
+        partCount: thread.parts.length,
+        messageCount: thread.messageCount,
+        continuation: false,
+      };
+
+      if (thread.parts.length === 1 || !expandedThreads.includes(thread.key)) {
+        return [head];
+      }
+
+      return [head, ...thread.parts.slice(1).map((session) => {
+        return {
+          session,
+          threadKey: thread.key,
+          partCount: 1,
+          messageCount: session.messageCount,
+          continuation: true,
+        };
+      })];
+    });
+  }, [expandedThreads, visibleSessions]);
+
   const selectableSessions = useMemo(() => {
     return visibleSessions.filter((session) => {
       return agentOption(session.agent).canDelete;
@@ -160,6 +194,16 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
    * way deleting does. Archiving names the exact sessions instead of sweeping
    * everything the agents hold.
    */
+  const toggleThread = (key: string): void => {
+    setExpandedThreads((current) => {
+      return current.includes(key)
+        ? current.filter((open) => {
+            return open !== key;
+          })
+        : [...current, key];
+    });
+  };
+
   const archiveSelected = (): void => {
     setBulkBusy(true);
     void (async (): Promise<void> => {
@@ -440,14 +484,42 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
           />
         </div>
         <ul className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
-          {visibleSessions.map((session) => {
+          {sessionRows.map((row) => {
+            const session = row.session;
             const active = session.filePath === selectedFilePath;
             const canDelete = agentOption(session.agent).canDelete;
             const selectedForDelete = selectedSessionPaths.includes(session.filePath);
             const title = session.title ?? session.summary ?? session.preview ?? session.id;
+            const threaded = row.partCount > 1;
+            const open = expandedThreads.includes(row.threadKey);
 
             return (
-              <li key={session.filePath}>
+              <li
+                key={session.filePath}
+                className={cn(row.continuation && 'ps-4')}
+              >
+                {threaded && (
+                  <button
+                    type="button"
+                    aria-expanded={open}
+                    aria-label={t('threadParts', { count: row.partCount })}
+                    data-thread-toggle={row.threadKey}
+                    onClick={() => {
+                      toggleThread(row.threadKey);
+                    }}
+                    className="
+                      flex w-full items-center gap-1.5 px-2 pt-1 text-[11px]
+                      text-muted-foreground
+                      hover:text-foreground
+                    "
+                  >
+                    <ChevronDown className={cn('size-3 transition-transform', !open && `
+                      -rotate-90
+                    `)}
+                    />
+                    {t('threadParts', { count: row.partCount })}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -498,7 +570,8 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                   "
                   >
                     <span>{formatTimeAgo(session.lastTimestampMs, nowMs, i18n.language)}</span>
-                    <span>{t('messageCount', { count: session.messageCount })}</span>
+                    <span>{t('messageCount', { count: row.messageCount })}</span>
+                    {row.continuation && <span>{t('threadContinues')}</span>}
                   </span>
                 </button>
               </li>

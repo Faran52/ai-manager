@@ -88,5 +88,12 @@
   "sessionPathCopied": "تم نسخ مسار الجلسة",
   "sessionTitle": "عنوان الجلسة",
   "sessions": "الجلسات",
-  "bulkArchiveNote": "الجلسات المحددة"
+  "bulkArchiveNote": "الجلسات المحددة",
+  "threadParts_zero": "لا أجزاء",
+  "threadParts_one": "جزء واحد",
+  "threadParts_two": "جزآن",
+  "threadParts_few": "{{count}} أجزاء",
+  "threadParts_many": "{{count}} جزءًا",
+  "threadParts_other": "{{count}} جزء",
+  "threadContinues": "تكملة"
 }

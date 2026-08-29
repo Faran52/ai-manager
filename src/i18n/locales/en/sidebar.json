@@ -64,5 +64,8 @@
   "sessionPathCopied": "Session path copied",
   "sessionTitle": "Session title",
   "sessions": "Sessions",
-  "bulkArchiveNote": "Selected sessions"
+  "bulkArchiveNote": "Selected sessions",
+  "threadParts_one": "{{count}} part",
+  "threadParts_other": "{{count}} parts",
+  "threadContinues": "continued"
 }

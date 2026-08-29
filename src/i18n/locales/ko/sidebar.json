@@ -64,5 +64,8 @@
   "sessionPathCopied": "세션 경로를 복사했습니다",
   "sessionTitle": "세션 제목",
   "sessions": "세션",
-  "bulkArchiveNote": "선택한 세션"
+  "bulkArchiveNote": "선택한 세션",
+  "threadParts_one": "{{count}}개 부분",
+  "threadParts_other": "{{count}}개 부분",
+  "threadContinues": "이어짐"
 }

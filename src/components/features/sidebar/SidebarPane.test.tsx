@@ -677,3 +677,59 @@ describe('SidebarPane bulk actions', () => {
     expect(await screen.findByText('Could not export every selected session.')).toBeDefined();
   });
 });
+
+describe('SidebarPane session threads', () => {
+  const MINUTE = 60_000;
+  const START = Date.UTC(2026, 0, 2, 9);
+
+  const part = (id: string, startMs: number, endMs: number): SessionSummary => {
+    return {
+      ...session(id, `Part ${id}`),
+      cwd: '/repo/app',
+      firstTimestampMs: startMs,
+      lastTimestampMs: endMs,
+      messageCount: 5,
+    };
+  };
+
+  test('shows a resumed conversation as one row that opens to its parts', async () => {
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p', 'webapp')]}
+        sessions={[
+          part('a', START, START + 10 * MINUTE),
+          part('b', START + 11 * MINUTE, START + 20 * MINUTE),
+        ]}
+      />,
+    );
+
+    expect(screen.getByText('Part a')).toBeDefined();
+    expect(screen.queryByText('Part b')).toBeNull();
+    expect(screen.getByText('10 messages')).toBeDefined();
+
+    await userEvent.click(screen.getByRole('button', { name: '2 parts' }));
+    expect(screen.getByText('Part b')).toBeDefined();
+    expect(screen.getByText('continued')).toBeDefined();
+
+    await userEvent.click(screen.getByRole('button', { name: '2 parts' }));
+    expect(screen.queryByText('Part b')).toBeNull();
+  });
+
+  test('leaves unrelated sessions as their own rows', () => {
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p', 'webapp')]}
+        sessions={[
+          part('a', START, START + 10 * MINUTE),
+          part('b', START + 200 * MINUTE, START + 210 * MINUTE),
+        ]}
+      />,
+    );
+
+    expect(screen.getByText('Part a')).toBeDefined();
+    expect(screen.getByText('Part b')).toBeDefined();
+    expect(screen.queryByRole('button', { name: /parts/ })).toBeNull();
+  });
+});
