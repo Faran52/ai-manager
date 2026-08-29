@@ -158,3 +158,46 @@ export const diffLines = (beforeText: string, afterText: string): readonly Patch
     ],
   }];
 };
+
+const HUNK_HEADER = /^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/u;
+
+const countOf = (value: string | undefined): number | undefined => {
+  return value == null ? undefined : Number(value);
+};
+
+/**
+ * Some agents record the difference they applied rather than the file it was
+ * applied to, already written as a unified diff. Reading it back is cheaper and
+ * more faithful than reconstructing one, so their own account is kept.
+ *
+ * Anything outside a hunk is ignored: the headers naming the file are already
+ * known from the tool call that produced them.
+ */
+export const parseUnifiedDiff = (text: string): readonly PatchHunk[] => {
+  const hunks: PatchHunk[] = [];
+  let lines: string[] | undefined;
+
+  for (const line of text.split('\n')) {
+    const header = HUNK_HEADER.exec(line);
+
+    if (header != null) {
+      lines = [];
+      hunks.push({
+        oldStart: Number(header[1]),
+        oldLines: countOf(header[2]) ?? 1,
+        newStart: Number(header[3]),
+        newLines: countOf(header[4]) ?? 1,
+        lines,
+      });
+      continue;
+    }
+
+    if (lines != null && /^[ +-]/u.test(line)) {
+      lines.push(line);
+    }
+  }
+
+  return hunks.filter((hunk) => {
+    return hunk.lines.length > 0;
+  });
+};

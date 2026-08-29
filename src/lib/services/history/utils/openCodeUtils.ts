@@ -9,6 +9,7 @@ import { isJsonObject, parseJsonContainer } from '@utils/jsonUtils';
 import { containedIn } from '@utils/pathUtils';
 import { humanPreview, humanTitle } from '@utils/titleUtils';
 
+import { parseUnifiedDiff } from '../../file-history/utils/diffUtils';
 import { parseToolInput, splitUserText } from '../../session/utils/parserUtils';
 
 import { conversationMessageCount } from './outcomeUtils';
@@ -21,6 +22,7 @@ import type {
   AssistantBlock,
   AssistantTurnEntry,
   HistoryEntry,
+  PatchHunk,
   ProjectSummary,
   SessionSummary,
   ToolOutcome,
@@ -136,12 +138,30 @@ const outputText = (state: JsonObject): string | undefined => {
   return undefined;
 };
 
+// OpenCode records the difference it applied alongside the result, so the real
+// before and after are already written down and need only be read back.
+const patchOf = (state: JsonObject): readonly PatchHunk[] | undefined => {
+  const metadata = isJsonObject(state.metadata) ? state.metadata : undefined;
+  const diff = metadata?.diff;
+
+  if (typeof diff !== 'string') {
+    return undefined;
+  }
+
+  const hunks = parseUnifiedDiff(diff);
+
+  return hunks.length > 0 ? hunks : undefined;
+};
+
 const outcomeFromPart = (callId: string, state: JsonObject): ToolOutcome => {
+  const patch = patchOf(state);
+
   return {
     toolUseId: callId,
     status: statusOf(state),
     text: outputText(state),
     images: [],
+    ...patch == null ? {} : { patch },
   };
 };
 

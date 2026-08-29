@@ -20,6 +20,8 @@ import {
   parseCodexHistory,
 } from './codexUtils';
 
+import type { HistoryEntry, PatchHunk } from '../types';
+
 const line = (type: string, payload: object, timestamp = '2026-01-01T00:00:00.000Z'): string => {
   return JSON.stringify({
     type,
@@ -465,5 +467,166 @@ describe('codex events that carry a whole call', () => {
       kind: 'summary',
       text: 'Conversation compacted',
     }]);
+  });
+});
+
+describe('codex branches', () => {
+  test('keeps the branch the session was started on', () => {
+    const parsed = parseCodexHistory([
+      line('session_meta', {
+        id: 'thread-9',
+        cwd: '/repo',
+        git: { branch: 'feat/login' },
+      }),
+    ].join('\n'));
+
+    expect(parsed.gitBranch).toBe('feat/login');
+  });
+
+  test('reports no branch when the work was not in a repository', () => {
+    const outside = parseCodexHistory([
+      line('session_meta', {
+        id: 'thread-9',
+        cwd: '/repo',
+        git: { branch: '' },
+      }),
+    ].join('\n'));
+    const unrecorded = parseCodexHistory([
+      line('session_meta', {
+        id: 'thread-9',
+        cwd: '/repo',
+      }),
+    ].join('\n'));
+
+    expect(outside.gitBranch).toBeUndefined();
+    expect(unrecorded.gitBranch).toBeUndefined();
+  });
+});
+
+describe('codex patches', () => {
+  const applied = (changes: object): readonly HistoryEntry[] => {
+    return parseCodexHistory([
+      line('session_meta', {
+        id: 'thread-p',
+        cwd: '/repo',
+      }),
+      line('response_item', {
+        type: 'custom_tool_call',
+        call_id: 'call-1',
+        name: 'shell',
+        input: 'apply_patch',
+      }),
+      line('event_msg', {
+        type: 'patch_apply_end',
+        call_id: 'exec-1',
+        changes,
+      }),
+      line('response_item', {
+        type: 'custom_tool_call_output',
+        call_id: 'call-1',
+        output: 'Success',
+      }),
+    ].join('\n')).entries;
+  };
+
+  const patchOf = (entries: readonly HistoryEntry[]): readonly PatchHunk[] => {
+    const outcome = entries.flatMap((entry) => {
+      return entry.kind === 'user' ? entry.outcomes : [];
+    })[0];
+
+    return outcome?.patch ?? [];
+  };
+
+  test('shows the change an edit made as the tool call that made it', () => {
+    const hunks = patchOf(applied({
+      '/repo/a.ts': {
+        type: 'update',
+        unified_diff: '@@ -2,3 +2,3 @@\n kept\n-gone\n+added\n',
+      },
+    }));
+
+    expect(hunks[0]?.lines).toEqual([' kept', '-gone', '+added']);
+  });
+
+  test('shows a written file whole and a removed one as taken away', () => {
+    expect(patchOf(applied({
+      '/repo/new.ts': {
+        type: 'add',
+        content: 'first\nsecond',
+      },
+    }))[0]?.lines).toEqual(['-', '+first', '+second']);
+
+    expect(patchOf(applied({
+      '/repo/old.ts': {
+        type: 'delete',
+        content: 'gone',
+      },
+    }))[0]?.lines).toEqual(['-gone', '+']);
+  });
+
+  test('adds no patch when the change recorded nothing', () => {
+    expect(patchOf(applied({
+      '/repo/empty.ts': {
+        type: 'add',
+        content: '',
+      },
+    }))).toEqual([]);
+
+    expect(patchOf(applied({ '/repo/silent.ts': { type: 'add' } }))).toEqual([]);
+  });
+
+  test('adds no patch when the event named no files at all', () => {
+    const entries = parseCodexHistory([
+      line('session_meta', {
+        id: 'thread-p',
+        cwd: '/repo',
+      }),
+      line('event_msg', {
+        type: 'patch_apply_end',
+        call_id: 'exec-1',
+      }),
+      line('response_item', {
+        type: 'custom_tool_call_output',
+        call_id: 'call-1',
+        output: 'nothing',
+      }),
+    ].join('\n')).entries;
+
+    expect(patchOf(entries)).toEqual([]);
+  });
+
+  test('gives the patch to the call it belongs to and no other', () => {
+    const entries = parseCodexHistory([
+      line('session_meta', {
+        id: 'thread-p',
+        cwd: '/repo',
+      }),
+      line('event_msg', {
+        type: 'patch_apply_end',
+        call_id: 'exec-1',
+        changes: {
+          '/repo/a.ts': {
+            type: 'update',
+            unified_diff: '@@ -1,1 +1,1 @@\n-old\n+new\n',
+          },
+        },
+      }),
+      line('response_item', {
+        type: 'custom_tool_call_output',
+        call_id: 'call-1',
+        output: 'patched',
+      }),
+      line('response_item', {
+        type: 'custom_tool_call_output',
+        call_id: 'call-2',
+        output: 'unrelated',
+      }),
+    ].join('\n')).entries;
+    const outcomes = entries.flatMap((entry) => {
+      return entry.kind === 'user' ? entry.outcomes : [];
+    });
+
+    expect(outcomes[0]?.patch).toHaveLength(1);
+    expect(outcomes[1]?.patch).toBeUndefined();
   });
 });

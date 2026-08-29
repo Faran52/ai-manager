@@ -4,7 +4,7 @@ import {
   test,
 } from 'vitest';
 
-import { diffLines } from './diffUtils';
+import { diffLines, parseUnifiedDiff } from './diffUtils';
 
 const linesOf = (before: string, after: string): readonly string[] => {
   return diffLines(before, after)[0]?.lines ?? [];
@@ -91,5 +91,50 @@ describe('diffLines', () => {
     expect(lines).toHaveLength(2_200);
     expect(lines[0]).toBe('-old-0');
     expect(lines[1_100]).toBe('+new-0');
+  });
+});
+
+describe('parseUnifiedDiff', () => {
+  test('reads back the hunks an agent recorded', () => {
+    const hunks = parseUnifiedDiff([
+      'Index: /repo/a.ts',
+      '===================================================================',
+      '--- /repo/a.ts',
+      '+++ /repo/a.ts',
+      '@@ -33,9 +33,9 @@',
+      ' kept',
+      '-gone',
+      '+added',
+      '@@ -100,2 +100,3 @@',
+      '+one more',
+    ].join('\n'));
+
+    expect(hunks).toHaveLength(2);
+    expect(hunks[0]).toEqual({
+      oldStart: 33,
+      oldLines: 9,
+      newStart: 33,
+      newLines: 9,
+      lines: [' kept', '-gone', '+added'],
+    });
+    expect(hunks[1]?.newStart).toBe(100);
+  });
+
+  test('treats a hunk without counts as covering a single line', () => {
+    expect(parseUnifiedDiff('@@ -4 +4 @@\n-old\n+new')[0]).toEqual({
+      oldStart: 4,
+      oldLines: 1,
+      newStart: 4,
+      newLines: 1,
+      lines: ['-old', '+new'],
+    });
+  });
+
+  test('ignores a hunk that turned out to hold nothing', () => {
+    expect(parseUnifiedDiff('@@ -1,0 +1,0 @@\nnot a diff line')).toEqual([]);
+  });
+
+  test('reports nothing for text that is not a diff', () => {
+    expect(parseUnifiedDiff('just some output')).toEqual([]);
   });
 });

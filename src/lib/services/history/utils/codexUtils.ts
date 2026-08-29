@@ -5,6 +5,7 @@ import { appConfig } from '@config/appConfig';
 
 import { humanPreview } from '@utils/titleUtils';
 
+import { diffLines, parseUnifiedDiff } from '../../file-history/utils/diffUtils';
 import { parseToolInput, splitUserText } from '../../session/utils/parserUtils';
 
 import { fileFactsStore } from './fileFactsUtils';
@@ -14,6 +15,7 @@ import type {
   AssistantBlock,
   AssistantTurnEntry,
   HistoryEntry,
+  PatchHunk,
   ProjectSummary,
   SessionSummary,
   ToolCall,
@@ -41,11 +43,23 @@ interface CodexMcpResult {
   readonly Err?: string | undefined;
 }
 
+interface CodexFileChange {
+  readonly type?: string | undefined;
+  readonly content?: string | undefined;
+  readonly unified_diff?: string | undefined;
+}
+
+interface CodexRepository {
+  readonly branch?: string | undefined;
+}
+
 interface CodexPayload {
   readonly arguments?: string | undefined;
   readonly call_id?: string | undefined;
   readonly content?: readonly CodexContentPart[] | undefined;
   readonly cwd?: string | undefined;
+  readonly changes?: Readonly<Record<string, CodexFileChange>> | undefined;
+  readonly git?: CodexRepository | undefined;
   readonly id?: string | undefined;
   readonly info?: CodexTokenInfo | undefined;
   readonly input?: string | undefined;
@@ -90,6 +104,7 @@ interface ParsedCodexSession {
   readonly cwd: string;
   readonly entries: readonly HistoryEntry[];
   readonly firstTimestampMs: number;
+  readonly gitBranch: string | undefined;
   readonly lastTimestampMs: number;
   readonly title: string | undefined;
 }
@@ -103,6 +118,10 @@ interface CodexScan {
   lastTimestampMs: number;
   model: string | undefined;
   title: string | undefined;
+  gitBranch: string | undefined;
+  // Codex reports what a patch did as its own event, between the tool call and
+  // the call's output, so it waits here for the outcome it belongs to.
+  pendingPatch: readonly PatchHunk[] | undefined;
   counter: number;
 }
 
@@ -112,6 +131,7 @@ interface CodexSessionFacts {
   readonly actualSessionId: string;
   readonly cwd: string;
   readonly title: string | undefined;
+  readonly gitBranch: string | undefined;
   readonly turnCount: number;
   readonly messageCount: number;
   readonly firstTimestampMs: number;
@@ -178,7 +198,7 @@ const commandFrom = (payload: CodexPayload): ToolCall => {
   };
 };
 
-const outcomeFrom = (payload: CodexPayload): ToolOutcome => {
+const outcomeFrom = (payload: CodexPayload, patch: readonly PatchHunk[] | undefined): ToolOutcome => {
   const output = outputContent(payload);
   const parsed = output.length === 0 ? undefined : parsedJson(output);
   const text = isCommandOutput(parsed) ? parsed.output : (output || undefined);
@@ -188,7 +208,30 @@ const outcomeFrom = (payload: CodexPayload): ToolOutcome => {
     status: 'ok',
     text,
     images: [],
+    ...patch == null ? {} : { patch },
   };
+};
+
+// A written file has no earlier version to compare against and a removed one
+// has no later version, so each is shown whole against nothing.
+const hunksOfChange = (change: CodexFileChange): readonly PatchHunk[] => {
+  if (change.unified_diff != null) {
+    return parseUnifiedDiff(change.unified_diff);
+  }
+
+  const content = change.content ?? '';
+
+  if (content.length === 0) {
+    return [];
+  }
+
+  return change.type === 'delete' ? diffLines(content, '') : diffLines('', content);
+};
+
+const absorbPatchApply = (scan: CodexScan, payload: CodexPayload): void => {
+  const hunks = Object.values(payload.changes ?? {}).flatMap(hunksOfChange);
+
+  scan.pendingPatch = hunks.length > 0 ? hunks : undefined;
 };
 
 /**
@@ -365,8 +408,9 @@ const absorbResponseItem = (scan: CodexScan, payload: CodexPayload, timestamp: s
       sidechain: false,
       meta: true,
       text: '',
-      outcomes: [outcomeFrom(payload)],
+      outcomes: [outcomeFrom(payload, scan.pendingPatch)],
     });
+    scan.pendingPatch = undefined;
   }
   else if (payload.type === 'reasoning') {
     const thinking = (payload.summary ?? []).flatMap((part) => {
@@ -389,6 +433,11 @@ const absorbResponseItem = (scan: CodexScan, payload: CodexPayload, timestamp: s
   }
 };
 
+// Codex writes an empty branch outside a repository, which is not a branch.
+const nonEmptyBranch = (branch: string | undefined): string | undefined => {
+  return branch != null && branch.length > 0 ? branch : undefined;
+};
+
 const absorbCodexLine = (scan: CodexScan, line: CodexLine): void => {
   const payload = line.payload;
   const timestamp = line.timestamp ?? '';
@@ -398,6 +447,7 @@ const absorbCodexLine = (scan: CodexScan, line: CodexLine): void => {
   if (line.type === 'session_meta' && scan.actualSessionId.length === 0) {
     scan.actualSessionId = payload?.id ?? '';
     scan.cwd = payload?.cwd ?? '';
+    scan.gitBranch = nonEmptyBranch(payload?.git?.branch);
   }
   else if (line.type === 'turn_context') {
     scan.model = payload?.model ?? scan.model;
@@ -418,6 +468,9 @@ const absorbCodexLine = (scan: CodexScan, line: CodexLine): void => {
   else if (line.type === 'event_msg' && payload?.type === 'mcp_tool_call_end') {
     absorbMcpCall(scan, payload, timestamp);
   }
+  else if (line.type === 'event_msg' && payload?.type === 'patch_apply_end') {
+    absorbPatchApply(scan, payload);
+  }
 };
 
 export const parseCodexHistory = (content: string): ParsedCodexSession => {
@@ -430,6 +483,8 @@ export const parseCodexHistory = (content: string): ParsedCodexSession => {
     lastTimestampMs: 0,
     model: undefined,
     title: undefined,
+    gitBranch: undefined,
+    pendingPatch: undefined,
     counter: 0,
   };
 
@@ -448,6 +503,7 @@ export const parseCodexHistory = (content: string): ParsedCodexSession => {
     firstTimestampMs: Number.isFinite(scan.firstTimestampMs) ? scan.firstTimestampMs : 0,
     lastTimestampMs: scan.lastTimestampMs,
     title: scan.title,
+    gitBranch: scan.gitBranch,
   };
 };
 
@@ -486,6 +542,7 @@ const fileSession = async (filePath: string): Promise<CodexFileSession | undefin
       actualSessionId: parsed.actualSessionId,
       cwd: parsed.cwd,
       title: parsed.title,
+      gitBranch: parsed.gitBranch,
       turnCount: parsed.entries.length,
       messageCount: conversationMessageCount(parsed.entries),
       firstTimestampMs: parsed.firstTimestampMs,
@@ -525,6 +582,7 @@ export const listCodexSessions = async (codexDir: string, projectId: string): Pr
       modifiedMs: session.modifiedMs,
       sizeBytes: session.sizeBytes,
       cwd: session.cwd,
+      gitBranch: session.gitBranch,
     };
 
     return [summary];

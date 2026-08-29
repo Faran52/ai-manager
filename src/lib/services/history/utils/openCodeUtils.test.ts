@@ -248,6 +248,55 @@ beforeEach(async () => {
     }),
   );
   addRawMessage(database, 'msg_d', 'ses_b', null, { role: 'user' });
+
+  database.prepare(
+    'INSERT INTO session (id, title, directory, parent_id, time_created, time_updated) VALUES (?, ?, ?, ?, ?, ?)',
+  ).run('ses_patch', 'Patchwork', '/repo/patchwork', null, 100, 200);
+  addMessage(database, 'msg_patch', 'ses_patch', 'assistant', 100);
+  addPart(database, 'part_c6', 'msg_patch', 100, {
+    type: 'tool',
+    tool: 'edit',
+    callID: 'call_edit',
+    state: {
+      status: 'completed',
+      input: { filePath: '/f' },
+      output: 'Edit applied successfully.',
+      metadata: {
+        diff: [
+          'Index: /f',
+          '--- /f',
+          '+++ /f',
+          '@@ -1,2 +1,2 @@',
+          ' kept',
+          '-gone',
+          '+added',
+        ].join('\n'),
+      },
+    },
+  });
+  addPart(database, 'part_c7', 'msg_patch', 101, {
+    type: 'tool',
+    tool: 'edit',
+    callID: 'call_nodiff',
+    state: {
+      status: 'completed',
+      input: { filePath: '/g' },
+      output: 'nothing to show',
+      metadata: { diff: 'not a diff at all' },
+    },
+  });
+  addPart(database, 'part_c8', 'msg_patch', 102, {
+    type: 'tool',
+    tool: 'edit',
+    callID: 'call_badmeta',
+    state: {
+      status: 'completed',
+      input: { filePath: '/h' },
+      output: 'no metadata',
+      metadata: { diff: 5 },
+    },
+  });
+
   addRawPart(database, 'part_d', 'ses_b', 'msg_d', null, {
     type: 'text',
     text: 'No timestamp',
@@ -375,7 +424,7 @@ describe('listOpenCodeSessions', () => {
   it('builds summaries and previews from genuine first user text', async () => {
     const sessions = await listOpenCodeSessions('opencode', [join(root, 'data')]);
 
-    expect(sessions).toHaveLength(8);
+    expect(sessions).toHaveLength(9);
 
     const alpha = sessions.find((session) => {
       return session.actualSessionId === 'ses_a';
@@ -461,7 +510,7 @@ describe('listOpenCodeProjects', () => {
   it('groups by session directory and names projects by folder', async () => {
     const projects = await listOpenCodeProjects('opencode', [join(root, 'data')]);
 
-    expect(projects).toHaveLength(7);
+    expect(projects).toHaveLength(8);
 
     const alpha = projects.find((project) => {
       return project.id === '/repo/alpha';
@@ -754,5 +803,21 @@ describe('loadOpenCodeEntries', () => {
     const entries = await loadOpenCodeEntries(brokenReference, [root]);
 
     expect(entries).toEqual([]);
+  });
+});
+
+describe('opencode patches', () => {
+  test('shows the change an edit recorded, and nothing when it recorded none', async () => {
+    const entries = await loadOpenCodeEntries(reference('ses_patch'), [root]);
+    const outcomes = (entries ?? []).flatMap((entry) => {
+      return entry.kind === 'user' ? entry.outcomes : [];
+    });
+    const byId = new Map(outcomes.map((outcome) => {
+      return [outcome.toolUseId, outcome];
+    }));
+
+    expect(byId.get('call_edit')?.patch?.[0]?.lines).toEqual([' kept', '-gone', '+added']);
+    expect(byId.get('call_nodiff')?.patch).toBeUndefined();
+    expect(byId.get('call_badmeta')?.patch).toBeUndefined();
   });
 });
