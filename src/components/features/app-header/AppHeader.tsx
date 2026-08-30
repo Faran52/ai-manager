@@ -9,7 +9,6 @@ import {
   LayoutGrid,
   RefreshCw,
   Search,
-  SlidersHorizontal,
 } from 'lucide-react';
 
 import { cn } from '@utils/cnUtils';
@@ -133,17 +132,6 @@ export const AppHeader: FC<AppHeaderProps> = ({
           >
             <Archive className="size-3.5" />
             {t('navArchive')}
-          </Button>
-          <Button
-            size="sm"
-            variant={view === 'settings' ? 'primary' : 'ghost'}
-            onClick={() => {
-              onViewChange('settings');
-            }}
-            pressed={view === 'settings'}
-          >
-            <SlidersHorizontal className="size-3.5" />
-            {t('navSettings')}
           </Button>
           <Button
             size="sm"

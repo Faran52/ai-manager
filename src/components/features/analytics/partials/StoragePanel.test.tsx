@@ -78,10 +78,11 @@ test('says the total is a floor when the scan was cut short', () => {
   expect(screen.getByText(/stopped at its limit/)).toBeDefined();
 });
 
-test('promises it deletes nothing', () => {
+test('says what it will and will not remove', () => {
   render(<StoragePanel storage={resource('ready', report)} />);
 
-  expect(screen.getByText(/deleted by this app/)).toBeDefined();
+  expect(screen.getByText(/Transcripts, archives and generated files are never touched/))
+    .toBeDefined();
 });
 
 test('says so when no agent holds anything', () => {

@@ -7,6 +7,7 @@ import {
 import { useTranslation } from 'react-i18next';
 
 import { initI18n } from '@i18n/index';
+import { Settings } from 'lucide-react';
 import { motion, MotionConfig } from 'motion/react';
 
 import { appShortcuts } from '@config/shortcuts';
@@ -19,9 +20,11 @@ import {
   runRetention,
 } from '@lib/apis/apiClient';
 import { findAgentProject } from '@services/history/historyService';
+import { cn } from '@utils/cnUtils';
 import { isTypingTarget, matchesShortcut } from '@utils/shortcutUtils';
 
 import {
+  Button,
   fadeTransition,
   PaneDivider,
   Toast,
@@ -44,6 +47,7 @@ import {
   useSettings,
   useStorage,
 } from '@features/history-data';
+import { PromptHistoryPanel } from '@features/prompts';
 import { SearchDialog } from '@features/search';
 import { SessionViewer } from '@features/session-viewer';
 import { SettingsView } from '@features/settings';
@@ -62,6 +66,8 @@ import type { SearchHit } from '@services/search/searchService';
 import type { SessionTokenTotals } from '@services/stats/statsService';
 import type { FC, ReactNode } from 'react';
 
+type SessionsPanel = 'sessions' | 'prompts';
+
 const EMPTY_PROJECTS: readonly ProjectSummary[] = [];
 const MIN_SIDEBAR_WIDTH = 280;
 const MAX_SIDEBAR_WIDTH = 520;
@@ -77,13 +83,17 @@ const initialSidebarWidth = (): number => {
 
 initI18n();
 
+const SESSION_PANELS: readonly SessionsPanel[] = ['sessions', 'prompts'];
+
 export const HistoryApp: FC = () => {
   const { t } = useTranslation('sidebar');
   const { t: tArchive } = useTranslation('archive');
+  const { t: tCommon } = useTranslation('common');
   const projects = useProjects();
   const [selectedProject, setSelectedProject] = useState<ProjectSummary | null>(null);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const [view, setView] = useState<AppView>('analytics');
+  const [sessionsPanel, setSessionsPanel] = useState<SessionsPanel>('sessions');
   const [searchOpen, setSearchOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [retentionNotice, setRetentionNotice] = useState<string | null>(null);
@@ -97,9 +107,9 @@ export const HistoryApp: FC = () => {
   const stats = useProjectStats(view === 'analytics' ? selectedProject : null);
   const agentSetup = useAgentSetup(view === 'health' ? (selectedProject?.actualPath ?? null) : null);
   const archives = useArchives(view === 'archive');
-  const prompts = usePrompts(view === 'archive');
+  const prompts = usePrompts(view === 'sessions' && sessionsPanel === 'prompts');
   const retention = useRetention(view === 'archive');
-  const storage = useStorage(view === 'archive');
+  const storage = useStorage(view === 'analytics');
   const settings = useSettings(view === 'settings' ? (selectedProject?.actualPath ?? '') : null);
   const edits = useRecentEdits(view === 'board' ? selectedProject : null);
   const sessionCounts = useMemo(() => {
@@ -229,13 +239,22 @@ export const HistoryApp: FC = () => {
     setArchivedSession(null);
   }, []);
 
+  /*
+   * Every way of opening a transcript lands in the same place, so asking for
+   * one from the prompt list does not leave the list still covering it.
+   */
+  const showSession = useCallback(() => {
+    setView('sessions');
+    setSessionsPanel('sessions');
+  }, []);
+
   const selectSession = useCallback((session: SessionSummary) => {
     setSelectedProject(findAgentProject(projects.data, session.projectId, session.agent));
     setSelectedFilePath(session.filePath);
     setHighlightTimestamp(undefined);
     setArchivedSession(null);
-    setView('sessions');
-  }, [projects.data]);
+    showSession();
+  }, [projects.data, showSession]);
 
   const deleteSelectedProject = useCallback(async (project: ProjectSummary) => {
     const wasSelected = selectedProject?.id === project.id && selectedProject.agent === project.agent;
@@ -291,25 +310,25 @@ export const HistoryApp: FC = () => {
   // An archived transcript has no live project behind it, so the viewer is
   // pointed straight at the backup copy and the sidebar selection is cleared.
   const openArchivedSession = useCallback((session: ArchivedSession) => {
-    setView('sessions');
+    showSession();
     setSelectedProject(null);
     setArchivedSession(session);
     setSelectedFilePath(session.archivePath);
     setHighlightTimestamp(undefined);
-  }, []);
+  }, [showSession]);
 
   // The panel only offers a prompt whose transcript survives, so the path resolves.
   const openPromptSession = useCallback((filePath: string, timestampMs: number) => {
-    setView('sessions');
+    showSession();
     setSelectedProject(null);
     setArchivedSession(null);
     setSelectedFilePath(filePath);
     setHighlightTimestamp(new Date(timestampMs).toISOString());
-  }, []);
+  }, [showSession]);
 
   const openStatsSession = useCallback(
     (session: SessionTokenTotals) => {
-      setView('sessions');
+      showSession();
       setSelectedFilePath(session.filePath);
       setHighlightTimestamp(new Date(session.lastTimestampMs).toISOString());
     },
@@ -318,21 +337,64 @@ export const HistoryApp: FC = () => {
 
   const VIEWS: Record<AppView, ReactNode> = {
     sessions: (
-      <SessionViewer
-        filePath={selectedFilePath}
-        agent={archivedSession?.agent ?? selectedSession?.agent ?? selectedProject?.agent ?? 'claude'}
-        projectLabel={archivedSession?.projectName ?? selectedProject?.name ?? ''}
-        sessionTitle={archivedSession?.title
-          ?? selectedSession?.title
-          ?? selectedSession?.summary
-          ?? selectedSession?.preview}
-        highlightTimestamp={highlightTimestamp}
-        sourceModifiedMs={selectedSession?.modifiedMs ?? 0}
-      />
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <nav
+          className="
+            flex shrink-0 items-center gap-1 border-b border-border px-3 py-2
+          "
+          aria-label={tCommon('sessionsPanels')}
+        >
+          {SESSION_PANELS.map((name) => {
+            return (
+              <Button
+                key={name}
+                size="sm"
+                variant={name === sessionsPanel ? 'primary' : 'ghost'}
+                pressed={name === sessionsPanel}
+                onClick={() => {
+                  setSessionsPanel(name);
+                }}
+              >
+                {tCommon(name === 'sessions' ? 'navSessions' : 'navPrompts')}
+              </Button>
+            );
+          })}
+        </nav>
+
+        {sessionsPanel === 'prompts'
+          ? (
+              <div className="min-h-0 flex-1 overflow-y-auto p-4">
+                <div className="mx-auto max-w-4xl">
+                  <PromptHistoryPanel
+                    history={prompts}
+                    nowMs={nowMs}
+                    onOpenPrompt={openPromptSession}
+                  />
+                </div>
+              </div>
+            )
+          : (
+              <SessionViewer
+                filePath={selectedFilePath}
+                agent={archivedSession?.agent
+                  ?? selectedSession?.agent
+                  ?? selectedProject?.agent
+                  ?? 'claude'}
+                projectLabel={archivedSession?.projectName ?? selectedProject?.name ?? ''}
+                sessionTitle={archivedSession?.title
+                  ?? selectedSession?.title
+                  ?? selectedSession?.summary
+                  ?? selectedSession?.preview}
+                highlightTimestamp={highlightTimestamp}
+                sourceModifiedMs={selectedSession?.modifiedMs ?? 0}
+              />
+            )}
+      </div>
     ),
     analytics: (
       <AnalyticsView
         stats={stats.data}
+        storage={storage}
         status={stats.status}
         projectName={selectedProject?.name ?? t('noProject')}
         projectKey={selectedProject == null ? '' : `${selectedProject.agent}:${selectedProject.id}`}
@@ -342,12 +404,9 @@ export const HistoryApp: FC = () => {
     archive: (
       <ArchiveView
         archives={archives}
-        prompts={prompts}
         retention={retention}
-        storage={storage}
         nowMs={nowMs}
         onOpenSession={openArchivedSession}
-        onOpenPrompt={openPromptSession}
       />
     ),
     settings: (
@@ -447,6 +506,30 @@ export const HistoryApp: FC = () => {
             </motion.div>
           </div>
         </div>
+
+        {/*
+          * Settings are reached from a corner rather than from the row of
+          * views: they are somewhere you go once to change something, not one
+          * of the places you work.
+          */}
+        <button
+          type="button"
+          aria-label={tCommon('navSettings')}
+          aria-pressed={view === 'settings'}
+          title={tCommon('navSettings')}
+          data-settings-button
+          onClick={() => {
+            setView(view === 'settings' ? 'sessions' : 'settings');
+          }}
+          className={cn(`
+            fixed inset-e-4 bottom-4 z-20 flex size-9 items-center
+            justify-center rounded-full border border-border bg-card
+            text-muted-foreground shadow-lg transition-colors
+            hover:text-foreground
+          `, view === 'settings' && 'bg-primary text-primary-foreground')}
+        >
+          <Settings className="size-4" />
+        </button>
 
         <Toast message={retentionNotice} />
 

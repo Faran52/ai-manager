@@ -68,5 +68,15 @@
   "statusPending": "保留中",
   "statusError": "エラー",
   "statusInterrupted": "中断",
-  "noChangeRequested": "変更内容は記録されていません。"
+  "noChangeRequested": "変更内容は記録されていません。",
+  "panelPrompts": "プロンプト履歴",
+  "promptsIntro": "Claude Code は入力したプロンプトをすべて記録し、その記録を削除しないため、記録は会話ログよりも長く残ります。",
+  "promptsRecorded": "記録されたプロンプト",
+  "promptProjects": "プロジェクト",
+  "promptsOrphaned": "失われたプロジェクト",
+  "promptsOrphanedHint": "会話ログはすべて消え、プロンプトだけが残っています",
+  "searchPrompts": "プロンプトを検索",
+  "noPrompts": "一致するプロンプトはありません",
+  "openPromptSession": "入力元のセッションを開く",
+  "promptSessionGone": "セッション削除済み"
 }

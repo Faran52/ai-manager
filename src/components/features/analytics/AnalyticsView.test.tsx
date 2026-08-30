@@ -10,7 +10,9 @@ import {
 
 import { AnalyticsView } from './AnalyticsView';
 
+import type { AsyncResource } from '@features/history-data';
 import type { GlobalStats, ProjectStats } from '@services/stats/statsService';
+import type { StorageReport } from '@services/storage/storageService';
 
 const stats: ProjectStats = {
   projectId: 'p',
@@ -117,6 +119,19 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+const storageResource: AsyncResource<StorageReport> = {
+  status: 'ready',
+  data: {
+    agents: [],
+    totalBytes: 2_048,
+    reclaimableBytes: 0,
+    partial: false,
+  },
+  reload: () => {
+    return undefined;
+  },
+};
+
 const renderView = (
   projectStats: ProjectStats | null = stats,
   status: 'loading' | 'ready' | 'error' = 'ready',
@@ -126,6 +141,7 @@ const renderView = (
   return render(
     <AnalyticsView
       stats={projectStats}
+      storage={storageResource}
       status={status}
       projectName="webapp"
       projectKey={projectKey}
@@ -168,6 +184,7 @@ test('shows project loading and empty states after changing scope', async () => 
   view.rerender(
     <AnalyticsView
       stats={null}
+      storage={storageResource}
       status="ready"
       projectName="webapp"
       projectKey="claude:webapp"
@@ -324,6 +341,7 @@ test('follows the project that was chosen instead of staying on the global repor
   view.rerender(
     <AnalyticsView
       stats={stats}
+      storage={storageResource}
       status="ready"
       projectName="webapp"
       projectKey="claude:webapp"
@@ -344,6 +362,7 @@ test('leaves the reader on the global report when they asked for it', async () =
   view.rerender(
     <AnalyticsView
       stats={stats}
+      storage={storageResource}
       status="ready"
       projectName="webapp"
       projectKey="claude:webapp"

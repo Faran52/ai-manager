@@ -67,5 +67,7 @@
   "searchAllChatsLabel": "البحث في كل المحادثات",
   "typeTwoCharacters": "اكتب حرفين على الأقل.",
   "languageSystem": "لغة النظام",
-  "languageSystemNamed": "لغة النظام ({{language}})"
+  "languageSystemNamed": "لغة النظام ({{language}})",
+  "navPrompts": "الطلبات",
+  "sessionsPanels": "لوحات الجلسة"
 }

@@ -69,5 +69,21 @@
   "weekdayThu": "Thu",
   "weekdayFri": "Fri",
   "weekdaySat": "Sat",
-  "weekdaySun": "Sun"
+  "weekdaySun": "Sun",
+  "panelStorage": "Storage",
+  "storageIntro": "What each agent is holding on disk.",
+  "storageTotal": "Held by agents",
+  "storageAgents": "Agents on disk",
+  "storagePartial": "At least this much; the scan stopped at its limit",
+  "storageNone": "No agent storage found",
+  "storageReadOnly": "Only caches, logs and temporary files can be removed here. Transcripts, archives and generated files are never touched.",
+  "reclaimAvailable": "{{size}} of it is working files the agents can rebuild.",
+  "reclaimAction": "Free it up",
+  "reclaimHeading": "Delete rebuildable working files?",
+  "reclaimExplain": "These are caches, logs and temporary files. No transcript, archive or generated file is touched, and the agents will rebuild what they need.",
+  "reclaimConfirm": "Delete them",
+  "reclaimBusy": "Deleting…",
+  "reclaimFreed_one": "Removed {{count}} item, freeing {{size}}.",
+  "reclaimFreed_other": "Removed {{count}} items, freeing {{size}}.",
+  "reclaimFailed": "Nothing was deleted: the files could not be removed."
 }

@@ -68,5 +68,15 @@
   "statusPending": "待处理",
   "statusError": "错误",
   "statusInterrupted": "已中断",
-  "noChangeRequested": "未描述任何更改。"
+  "noChangeRequested": "未描述任何更改。",
+  "panelPrompts": "提示词历史",
+  "promptsIntro": "Claude Code 会记录你输入的每一条提示词且从不清理，因此这份记录比会话本身留存得更久。",
+  "promptsRecorded": "已记录提示词",
+  "promptProjects": "项目",
+  "promptsOrphaned": "已丢失项目",
+  "promptsOrphanedHint": "会话已全部删除，只剩下提示词",
+  "searchPrompts": "搜索提示词",
+  "noPrompts": "没有匹配的提示词",
+  "openPromptSession": "打开输入它的会话",
+  "promptSessionGone": "会话已删除"
 }

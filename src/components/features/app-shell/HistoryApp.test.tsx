@@ -934,8 +934,8 @@ describe('HistoryApp prompt history', () => {
     render(<HistoryApp />);
     await screen.findByText('alpha');
 
-    await userEvent.click(screen.getByRole('button', { name: /Archive/ }));
-    await userEvent.click(await screen.findByRole('button', { name: 'Prompt history' }));
+    await userEvent.click(screen.getByRole('button', { name: /Sessions/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Prompts' }));
     await userEvent.click(await screen.findByText('the first ask'));
 
     expect(await screen.findByText('the question')).toBeDefined();
@@ -996,5 +996,33 @@ describe('HistoryApp retention on launch', () => {
     await screen.findByText('alpha');
 
     expect(screen.queryByText(/Retention archived/)).toBeNull();
+  });
+});
+
+describe('HistoryApp settings', () => {
+  test('opens settings from the corner and closes it again', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: RequestInfo | URL) => {
+        return toPath(url).endsWith('/projects')
+          ? Response.json(projectPayload)
+          : Response.json({ sessions: [] });
+      }),
+    );
+
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+
+    const gear = screen.getByRole('button', { name: 'Settings' });
+
+    expect(gear.getAttribute('aria-pressed')).toBe('false');
+
+    await userEvent.click(gear);
+
+    expect(gear.getAttribute('aria-pressed')).toBe('true');
+
+    await userEvent.click(gear);
+
+    expect(gear.getAttribute('aria-pressed')).toBe('false');
   });
 });

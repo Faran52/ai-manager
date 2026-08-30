@@ -67,5 +67,7 @@
   "searchAllChatsLabel": "모든 대화 검색",
   "typeTwoCharacters": "두 글자 이상 입력하세요.",
   "languageSystem": "시스템 설정",
-  "languageSystemNamed": "시스템({{language}})"
+  "languageSystemNamed": "시스템({{language}})",
+  "navPrompts": "프롬프트",
+  "sessionsPanels": "세션 패널"
 }

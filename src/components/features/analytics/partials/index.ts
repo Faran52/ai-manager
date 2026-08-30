@@ -5,5 +5,6 @@ export * from './BillingBreakdown';
 export * from './ModelDistribution';
 export * from './PricingCoverage';
 export * from './ProviderDistribution';
+export * from './StoragePanel';
 export * from './TopSessions';
 export * from './WorkRhythm';

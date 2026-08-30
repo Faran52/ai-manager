@@ -28,7 +28,7 @@ export interface StoragePanelProps {
 }
 
 export const StoragePanel: FC<StoragePanelProps> = ({ storage }) => {
-  const { t } = useTranslation('archive');
+  const { t } = useTranslation('analytics');
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string>();

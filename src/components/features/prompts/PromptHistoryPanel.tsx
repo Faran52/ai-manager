@@ -34,7 +34,7 @@ export const PromptHistoryPanel: FC<PromptHistoryPanelProps> = ({
   nowMs,
   onOpenPrompt,
 }) => {
-  const { t, i18n } = useTranslation('archive');
+  const { t, i18n } = useTranslation('session');
   const [query, setQuery] = useState('');
   const data = history.data;
   const needle = query.trim().toLowerCase();

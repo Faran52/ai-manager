@@ -68,5 +68,15 @@
   "statusPending": "Pending",
   "statusError": "Error",
   "statusInterrupted": "Interrupted",
-  "noChangeRequested": "No change was described."
+  "noChangeRequested": "No change was described.",
+  "panelPrompts": "Prompt history",
+  "promptsIntro": "Claude Code records every prompt you type and never prunes that record, so it outlives the transcripts themselves.",
+  "promptsRecorded": "Prompts recorded",
+  "promptProjects": "Projects",
+  "promptsOrphaned": "Lost projects",
+  "promptsOrphanedHint": "Every transcript gone; only the prompts remain",
+  "searchPrompts": "Search prompts",
+  "noPrompts": "No prompts match",
+  "openPromptSession": "Open the session this was typed into",
+  "promptSessionGone": "session deleted"
 }

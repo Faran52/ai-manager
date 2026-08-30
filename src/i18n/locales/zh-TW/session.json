@@ -68,5 +68,15 @@
   "statusPending": "待處理",
   "statusError": "錯誤",
   "statusInterrupted": "已中斷",
-  "noChangeRequested": "未描述任何變更。"
+  "noChangeRequested": "未描述任何變更。",
+  "panelPrompts": "提示詞歷史",
+  "promptsIntro": "Claude Code 會記錄你輸入的每一則提示詞且從不清理，因此這份紀錄比工作階段本身保存得更久。",
+  "promptsRecorded": "已記錄提示詞",
+  "promptProjects": "專案",
+  "promptsOrphaned": "已遺失專案",
+  "promptsOrphanedHint": "工作階段已全部刪除，只剩下提示詞",
+  "searchPrompts": "搜尋提示詞",
+  "noPrompts": "沒有相符的提示詞",
+  "openPromptSession": "開啟輸入它的工作階段",
+  "promptSessionGone": "工作階段已刪除"
 }

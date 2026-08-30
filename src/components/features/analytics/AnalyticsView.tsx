@@ -30,19 +30,25 @@ import {
   ModelDistribution,
   PricingCoverage,
   ProviderDistribution,
+  StoragePanel,
   TopSessions,
   WorkRhythm,
 } from './partials';
 
+import type { AsyncResource } from '@features/history-data';
 import type {
   GlobalStats,
   ProjectStats,
   SessionTokenTotals,
 } from '@services/stats/statsService';
+import type { StorageReport } from '@services/storage/storageService';
 import type { FC, ReactNode } from 'react';
 
 export interface AnalyticsViewProps {
   readonly stats: ProjectStats | null | undefined;
+  // What the agents hold on disk is global by nature, so it is shown whichever
+  // scope the reader is in rather than switching with it.
+  readonly storage: AsyncResource<StorageReport>;
   readonly status: 'loading' | 'ready' | 'error';
   readonly projectName: string;
   // Identifies the project rather than naming it, so that picking a different
@@ -191,6 +197,7 @@ const metricsFor = (
 
 export const AnalyticsView: FC<AnalyticsViewProps> = ({
   stats,
+  storage,
   status,
   projectName,
   projectKey,
@@ -308,6 +315,8 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
         </div>
 
         <WorkRhythm rhythm={selectedStats.rhythm} effort={selectedStats.effort} />
+
+        <StoragePanel storage={storage} />
 
         {effectiveScope === 'project' && (
           <TopSessions

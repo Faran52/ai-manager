@@ -69,5 +69,21 @@
   "weekdayThu": "木",
   "weekdayFri": "金",
   "weekdaySat": "土",
-  "weekdaySun": "日"
+  "weekdaySun": "日",
+  "panelStorage": "ストレージ",
+  "storageIntro": "各エージェントがディスク上に保持している内容です。",
+  "storageTotal": "エージェントの使用量",
+  "storageAgents": "対象エージェント",
+  "storagePartial": "少なくともこの量です。走査は上限で停止しました",
+  "storageNone": "エージェントのストレージは見つかりません",
+  "storageReadOnly": "ここで削除できるのはキャッシュ、ログ、一時ファイルだけです。記録、アーカイブ、生成ファイルには触れません。",
+  "reclaimAvailable": "そのうち {{size}} はエージェントが再生成できる作業ファイルです。",
+  "reclaimAction": "解放する",
+  "reclaimHeading": "再生成可能な作業ファイルを削除しますか？",
+  "reclaimExplain": "キャッシュ、ログ、一時ファイルです。記録、アーカイブ、生成ファイルには触れず、必要なものはエージェントが作り直します。",
+  "reclaimConfirm": "削除する",
+  "reclaimBusy": "削除中…",
+  "reclaimFreed_one": "{{count}} 件を削除し、{{size}} を解放しました。",
+  "reclaimFreed_other": "{{count}} 件を削除し、{{size}} を解放しました。",
+  "reclaimFailed": "削除できなかったため、何も変更されていません。"
 }

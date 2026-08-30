@@ -67,5 +67,7 @@
   "searchAllChatsLabel": "すべてのチャットを検索",
   "typeTwoCharacters": "2 文字以上入力してください。",
   "languageSystem": "システムに合わせる",
-  "languageSystemNamed": "システム（{{language}}）"
+  "languageSystemNamed": "システム（{{language}}）",
+  "navPrompts": "プロンプト",
+  "sessionsPanels": "セッションのパネル"
 }

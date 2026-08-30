@@ -67,5 +67,7 @@
   "searchAllChatsLabel": "搜尋所有對話",
   "typeTwoCharacters": "請至少輸入兩個字元。",
   "languageSystem": "跟隨系統",
-  "languageSystemNamed": "跟隨系統（{{language}}）"
+  "languageSystemNamed": "跟隨系統（{{language}}）",
+  "navPrompts": "提示詞",
+  "sessionsPanels": "工作階段面板"
 }
