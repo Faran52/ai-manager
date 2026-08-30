@@ -4,6 +4,34 @@ Release notes are composed from the `## <version>` section below, so every
 released version needs one. The release workflow refuses to publish a tag whose
 version is missing here rather than shipping empty notes.
 
+## 0.2.0
+
+### Renamed to AI Manager
+
+- The scope is moving from reading history to managing agent setup, and the name
+  now matches. The repository, the bundle identifier (`com.faran52.ai-manager`),
+  the release artifacts and the on-disk state directory (`~/.ai-manager`) all
+  moved. An existing 0.1.0 install is a separate app and does not upgrade in
+  place.
+
+### Setup validation
+
+- The Health tab reports hook scripts that are missing or not executable,
+  plugins enabled from a marketplace this machine does not know, project MCP
+  servers that were never approved, and marketplace directories that no longer
+  resolve
+
+### Faster, smaller desktop build
+
+- The packaged app drops from 1.4 GB to about 70 MB and first launch from
+  roughly twenty seconds to three: the build no longer embeds `node_modules`,
+  and the unused Sharp image pipeline is gone
+
+### Fixes
+
+- The storage panel no longer nests a list item inside another, which React
+  flagged as a hydration error
+
 ## 0.1.0
 
 First public release.

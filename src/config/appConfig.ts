@@ -12,7 +12,7 @@ export interface AppConfig {
 export * from './envVars';
 
 export const appConfig: AppConfig = {
-  version: '0.1.0',
+  version: '0.2.0',
   pageSize: 120,
   maxPageSize: 400,
   previewLength: 140,
