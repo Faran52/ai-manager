@@ -97,6 +97,22 @@ signed artifact, verifies it, hands off to an installer and exits. A running app
 cannot replace itself, which is why macOS and Linux spawn a helper that waits for
 the process to exit first, and Windows lets `msiexec` do it.
 
+## Bundle size
+
+The build runs `deno desktop ... --exclude ./node_modules`. Without it `deno
+desktop` embeds the whole npm snapshot from `package.json`, ~1.35 GB: every
+devDependency, and Sharp's per-platform libvips build for all sixteen targets
+reached through its `require("@img/sharp-<platform>/sharp.node")` switch. That is
+a 1.4 GB app that takes ~20s to first paint.
+
+`astro.config.mjs` makes the exclude safe: `image.service` is the passthrough
+service (nothing here uses `astro:assets`, so Sharp is dead weight) and
+`vite.ssr.noExternal` bundles every remaining dep into `dist/server`, so the
+runtime needs no `node_modules` directory at all. Result is ~70 MB, ~3s to a
+window. If a future dependency does something `noExternal` cannot bundle (a
+native `.node` addon), the desktop build breaks loudly at runtime with a
+resolution error rather than silently shipping it.
+
 ## Toolchain floor
 
 **Deno 2.9.6 or newer.** [#36418](https://github.com/denoland/deno/issues/36418)

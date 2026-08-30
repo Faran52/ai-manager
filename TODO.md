@@ -50,6 +50,18 @@ The differentiator. No comparable tool surfaces this.
 - [ ] Surface per-project `lastCost`, token totals, cache reads, and `lastModelUsage` from `~/.claude.json` under `projects[path]`.
 - [ ] Attribute context cost to enabled plugins using `claude plugin details`.
 
+# Structure cleanup
+
+On hold, planned as one pass.
+
+- [ ] Move every flat-laid-out UI component into its own kebab-case folder holding
+      `SameFile.tsx` and `SameFile.test.tsx`, leaving the barrel export file where it is.
+- [ ] Extract any reusable component that currently lives inside a `partials` file.
+- [ ] One entry file per `lib/services` module: `*Service.ts` at the root, `./utils/*Utils`
+      split by category, `./partials` holding only PascalCase `.tsx` files, and `constants.ts`
+      the only place constants live. Nothing else in those folders.
+- [ ] Fold in any other code refinement identified along the way.
+
 # Open defects
 
 - [ ] Confirm the modal enter and exit animations look right in a foreground tab. The wiring is in place and the timings were slowed, but automation runs in a hidden tab where `requestAnimationFrame` never fires, so smoothness was never actually observed.

@@ -5,9 +5,9 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "desktop": "astro build && deno desktop .",
+    "desktop": "astro build && deno desktop . --exclude ./node_modules",
     "desktop:dev": "deno desktop . --hmr",
-    "desktop:build": "deno desktop . --output ./dist/AIChatManager"
+    "desktop:build": "deno desktop . --exclude ./node_modules --output ./dist/AIChatManager"
   },
   "desktop": {
     "app": {
