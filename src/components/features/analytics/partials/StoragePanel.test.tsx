@@ -66,6 +66,16 @@ test('names each agent, its total and what is largest inside', () => {
   expect(screen.getByText('1')).toBeDefined();
 });
 
+test('never puts a list item straight inside another, which breaks hydration', () => {
+  const { container } = render(<StoragePanel storage={resource('ready', report)} />);
+
+  const misnested = [...container.querySelectorAll('li')].filter((item) => {
+    return item.parentElement?.tagName === 'LI';
+  });
+
+  expect(misnested).toHaveLength(0);
+});
+
 test('says the total is a floor when the scan was cut short', () => {
   render(
     <StoragePanel storage={resource('ready', {

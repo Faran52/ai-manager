@@ -199,12 +199,14 @@ export const StoragePanel: FC<StoragePanelProps> = ({
                           p-3
                         "
                       >
-                        <BarRow
-                          label={held.label}
-                          max={totalBytes}
-                          value={held.bytes}
-                          formatValue={sizeLabel}
-                        />
+                        <ul>
+                          <BarRow
+                            label={held.label}
+                            max={totalBytes}
+                            value={held.bytes}
+                            formatValue={sizeLabel}
+                          />
+                        </ul>
                         <ul className="grid gap-0.5 ps-2">
                           {held.entries.map((entry) => {
                             return (
