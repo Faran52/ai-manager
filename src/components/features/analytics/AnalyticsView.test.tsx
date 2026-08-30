@@ -121,12 +121,14 @@ const renderView = (
   projectStats: ProjectStats | null = stats,
   status: 'loading' | 'ready' | 'error' = 'ready',
   onOpenSession = vi.fn(),
+  projectKey = 'claude:webapp',
 ) => {
   return render(
     <AnalyticsView
       stats={projectStats}
       status={status}
       projectName="webapp"
+      projectKey={projectKey}
       onOpenSession={onOpenSession}
     />,
   );
@@ -136,8 +138,8 @@ const selectProject = async (): Promise<void> => {
   await userEvent.click(screen.getByRole('button', { name: 'Project: webapp' }));
 };
 
-test('defaults to global analytics and shows provider distribution', async () => {
-  renderView();
+test('shows the global report when no project has been chosen', async () => {
+  renderView(stats, 'ready', vi.fn(), '');
 
   expect(await screen.findByText('Provider distribution')).toBeDefined();
   expect(screen.getByText('Claude Code · 3 sessions · 2 projects')).toBeDefined();
@@ -149,6 +151,14 @@ test('defaults to global analytics and shows provider distribution', async () =>
   expect(screen.getByText('Provider distribution')).toBeDefined();
 });
 
+test('opens on the project already chosen rather than on the global report', async () => {
+  renderView();
+
+  expect(await screen.findByText('Big one')).toBeDefined();
+  expect(screen.getByRole('button', { name: 'Project: webapp' }).getAttribute('aria-pressed'))
+    .toBe('true');
+});
+
 test('shows project loading and empty states after changing scope', async () => {
   const view = renderView(null, 'loading');
 
@@ -156,7 +166,13 @@ test('shows project loading and empty states after changing scope', async () => 
   expect(screen.getByRole('status')).toBeDefined();
 
   view.rerender(
-    <AnalyticsView stats={null} status="ready" projectName="webapp" onOpenSession={vi.fn()} />,
+    <AnalyticsView
+      stats={null}
+      status="ready"
+      projectName="webapp"
+      projectKey="claude:webapp"
+      onOpenSession={vi.fn()}
+    />,
   );
 
   expect(screen.getByText(/No analytics for webapp/)).toBeDefined();
@@ -297,4 +313,43 @@ test('does not report a request error after unmounting', async () => {
 
   await expect(pending.promise).rejects.toThrow('offline');
   expect(document.querySelector('[data-analytics-view]')).toBeNull();
+});
+
+test('follows the project that was chosen instead of staying on the global report', async () => {
+  const view = renderView(stats, 'ready', vi.fn(), '');
+
+  expect(await screen.findByText('Provider distribution')).toBeDefined();
+  expect(screen.getByRole('button', { name: 'Global' }).getAttribute('aria-pressed')).toBe('true');
+
+  view.rerender(
+    <AnalyticsView
+      stats={stats}
+      status="ready"
+      projectName="webapp"
+      projectKey="claude:webapp"
+      onOpenSession={vi.fn()}
+    />,
+  );
+
+  expect(screen.getByRole('button', { name: 'Project: webapp' }).getAttribute('aria-pressed'))
+    .toBe('true');
+  expect(screen.getByText('Big one')).toBeDefined();
+});
+
+test('leaves the reader on the global report when they asked for it', async () => {
+  const view = renderView(stats, 'ready', vi.fn(), 'claude:webapp');
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Global' }));
+
+  view.rerender(
+    <AnalyticsView
+      stats={stats}
+      status="ready"
+      projectName="webapp"
+      projectKey="claude:webapp"
+      onOpenSession={vi.fn()}
+    />,
+  );
+
+  expect(screen.getByRole('button', { name: 'Global' }).getAttribute('aria-pressed')).toBe('true');
 });

@@ -335,6 +335,7 @@ export const HistoryApp: FC = () => {
         stats={stats.data}
         status={stats.status}
         projectName={selectedProject?.name ?? t('noProject')}
+        projectKey={selectedProject == null ? '' : `${selectedProject.agent}:${selectedProject.id}`}
         onOpenSession={openStatsSession}
       />
     ),

@@ -45,6 +45,9 @@ export interface AnalyticsViewProps {
   readonly stats: ProjectStats | null | undefined;
   readonly status: 'loading' | 'ready' | 'error';
   readonly projectName: string;
+  // Identifies the project rather than naming it, so that picking a different
+  // one is noticed even where two projects share a name.
+  readonly projectKey: string;
   readonly onOpenSession: (session: SessionTokenTotals) => void;
 }
 
@@ -56,6 +59,8 @@ interface GlobalSnapshot {
   readonly data?: GlobalStats | undefined;
   readonly status: 'loading' | 'ready' | 'error';
 }
+
+type Scope = 'global' | 'project';
 
 const isGlobalStatsResponse = (value: unknown): value is GlobalStatsResponse => {
   return typeof value === 'object'
@@ -102,6 +107,37 @@ const useGlobalStats = (): GlobalSnapshot => {
   }, []);
 
   return global;
+};
+
+const scopeFor = (projectKey: string): Scope => {
+  return projectKey.length > 0 ? 'project' : 'global';
+};
+
+/**
+ * A chosen project is a request to see that project, both on arriving here and
+ * on choosing a different one afterwards. Left to itself the view stayed on the
+ * global report and only the scope button's label changed, which reads as the
+ * analytics ignoring the choice. Asking for the global report still holds until
+ * the project changes again.
+ */
+const useAnalyticsScope = (projectKey: string): {
+  readonly scope: Scope;
+  readonly setScope: (next: Scope) => void;
+} => {
+  const [scope, setScope] = useState<Scope>(() => {
+    return scopeFor(projectKey);
+  });
+  const [shownProject, setShownProject] = useState(projectKey);
+
+  if (projectKey !== shownProject) {
+    setShownProject(projectKey);
+    setScope(scopeFor(projectKey));
+  }
+
+  return {
+    scope,
+    setScope,
+  };
 };
 
 const metricsFor = (
@@ -157,9 +193,10 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
   stats,
   status,
   projectName,
+  projectKey,
   onOpenSession,
 }) => {
-  const [scope, setScope] = useState<'global' | 'project'>('global');
+  const { scope, setScope } = useAnalyticsScope(projectKey);
   const global = useGlobalStats();
   const { t } = useTranslation('analytics');
   const effectiveScope = scope === 'global' && global.status !== 'error' ? 'global' : 'project';
