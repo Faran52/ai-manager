@@ -65,5 +65,7 @@
   "navSettings": "設定",
   "navBoard": "ボード",
   "searchAllChatsLabel": "すべてのチャットを検索",
-  "typeTwoCharacters": "2 文字以上入力してください。"
+  "typeTwoCharacters": "2 文字以上入力してください。",
+  "languageSystem": "システムに合わせる",
+  "languageSystemNamed": "システム（{{language}}）"
 }

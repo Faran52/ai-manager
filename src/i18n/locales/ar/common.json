@@ -65,5 +65,7 @@
   "navSettings": "الإعدادات",
   "navBoard": "اللوحة",
   "searchAllChatsLabel": "البحث في كل المحادثات",
-  "typeTwoCharacters": "اكتب حرفين على الأقل."
+  "typeTwoCharacters": "اكتب حرفين على الأقل.",
+  "languageSystem": "لغة النظام",
+  "languageSystemNamed": "لغة النظام ({{language}})"
 }

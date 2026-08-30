@@ -65,5 +65,7 @@
   "navSettings": "Settings",
   "navBoard": "Board",
   "searchAllChatsLabel": "Search all chats",
-  "typeTwoCharacters": "Type at least two characters."
+  "typeTwoCharacters": "Type at least two characters.",
+  "languageSystem": "System",
+  "languageSystemNamed": "System ({{language}})"
 }

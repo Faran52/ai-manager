@@ -13,15 +13,55 @@ import {
   test,
 } from 'vitest';
 
+import { languageStorageKey } from '@config/storageKeys';
+
 import { LanguagePicker } from './LanguagePicker';
 
-initI18n();
+const i18n = initI18n();
 
 afterEach(() => {
   cleanup();
 });
 
 describe('LanguagePicker', () => {
+  test('follows the system until a language is chosen, and again on request', async () => {
+    await i18n.changeLanguage('en');
+    localStorage.removeItem(languageStorageKey);
+    render(<LanguagePicker />);
+
+    await userEvent.click(screen.getByRole('button'));
+
+    expect(screen.getByText('System')).toBeDefined();
+
+    await userEvent.click(screen.getByText('한국어'));
+
+    expect(localStorage.getItem(languageStorageKey)).toBe('ko');
+    expect(document.documentElement.lang).toBe('ko');
+
+    await userEvent.click(screen.getByRole('button'));
+    // The menu is in Korean by now, so the system entry is found by its place.
+    await userEvent.click(screen.getAllByRole('menuitem')[0] ?? document.body);
+
+    await waitFor(() => {
+      expect(localStorage.getItem(languageStorageKey)).toBeNull();
+    });
+  });
+
+  test('marks the system as the choice in force while nothing is stored', async () => {
+    await i18n.changeLanguage('en');
+    localStorage.removeItem(languageStorageKey);
+    render(<LanguagePicker />);
+
+    await userEvent.click(screen.getByRole('button'));
+
+    const items = screen.getAllByRole('menuitem');
+    const system = items[0];
+
+    expect(system?.textContent).toContain('System');
+    expect(system?.querySelector('svg.text-primary')).not.toBeNull();
+    expect(items[1]?.querySelector('svg.text-primary')).toBeNull();
+  });
+
   test('lists every language and switches the active one', async () => {
     render(<LanguagePicker />);
 

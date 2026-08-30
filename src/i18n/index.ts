@@ -3,6 +3,8 @@ import { initReactI18next } from 'react-i18next';
 import i18next from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
+import { languageStorageKey } from '@config/storageKeys';
+
 import {
   directionOf,
   fallbackLanguage,
@@ -118,8 +120,13 @@ export const initI18n = (): typeof i18next => {
         interpolation: { escapeValue: false },
         detection: {
           order: ['localStorage', 'navigator'],
-          caches: ['localStorage'],
-          lookupLocalStorage: 'ai-chat-manager-language',
+          /*
+           * Nothing is written here. Storing what was merely detected would
+           * make every first visit look like a decision, and the reader could
+           * never get back to following their own system.
+           */
+          caches: [],
+          lookupLocalStorage: languageStorageKey,
         },
       });
 
