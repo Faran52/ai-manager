@@ -1,4 +1,4 @@
-# AI Chat Manager
+# AI Manager
 
 **English** ·
 [العربية](docs/readme/README.ar.md) ·
@@ -45,7 +45,7 @@ Six locales, including right-to-left Arabic with a fully mirrored layout:
 ## Install
 
 Grab the build for your platform from the
-[latest release](https://github.com/Faran52/ai-chat-manager/releases/latest).
+[latest release](https://github.com/Faran52/ai-manager/releases/latest).
 
 The app is not signed with a paid Developer ID, so the first launch needs one
 extra step. Nothing is wrong with the download; both systems simply distrust
@@ -56,7 +56,7 @@ binaries whose publisher has not paid for a certificate.
   first launch has to be a right-click. macOS remembers the choice afterwards.
 - **Windows.** SmartScreen shows *Windows protected your PC*. Choose *More info*
   → *Run anyway*.
-- **Linux.** `chmod +x AIChatManager-linux.AppImage`, then run it.
+- **Linux.** `chmod +x AIManager-linux.AppImage`, then run it.
 
 Building from source avoids the prompt entirely: the warning comes from the
 quarantine flag a browser attaches to a download, and a local build never
@@ -76,7 +76,7 @@ pnpm check          # lint + stylelint + typecheck + tests(100%) + build
 ```bash
 pnpm desktop        # build once, then compile & launch the desktop app
 pnpm desktop:dev    # desktop shell around the dev server (hot reload)
-pnpm desktop:build  # produce dist/AIChatManager.app
+pnpm desktop:build  # produce dist/AIManager.app
 ```
 
 Deno auto-detects Astro, embeds `dist/`, and runs the Node-adapter server

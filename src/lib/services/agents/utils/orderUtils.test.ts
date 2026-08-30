@@ -40,8 +40,8 @@ describe('compareProjects', () => {
   });
 
   test('falls back to agent for one folder opened in two agents', () => {
-    const openCode = project('opencode', 'ai-chat-manager', 1_000);
-    const claude = project('claude', 'ai-chat-manager', 1_000);
+    const openCode = project('opencode', 'ai-manager', 1_000);
+    const claude = project('claude', 'ai-manager', 1_000);
 
     expect([openCode, claude].sort(compareProjects)).toEqual([claude, openCode]);
   });

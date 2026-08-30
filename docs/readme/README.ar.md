@@ -54,7 +54,7 @@ pnpm check          # فحص وتنسيق وأنواع واختبارات (100٪
 ```bash
 pnpm desktop        # ابنِ مرة واحدة ثم صرّف وشغّل تطبيق سطح المكتب
 pnpm desktop:dev    # غلاف سطح مكتب حول خادم التطوير (إعادة تحميل حية)
-pnpm desktop:build  # إنتاج dist/AIChatManager.app
+pnpm desktop:build  # إنتاج dist/AIManager.app
 ```
 
 يكتشف Deno إطار Astro تلقائيًا، ويضمّن `dist/`، ويشغّل خادم محوّل Node داخل

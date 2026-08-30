@@ -58,7 +58,7 @@ const FILES_DIR = 'files';
 const ID_PATTERN = /^[\w.-]+$/u;
 
 export const archiveRoot = (home: string = homedir()): string => {
-  return join(home, '.ai-chat-manager', 'archives');
+  return join(home, '.ai-manager', 'archives');
 };
 
 // Colons and plus signs are legal in an ISO string and illegal in a Windows path segment.

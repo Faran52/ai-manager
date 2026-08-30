@@ -1,4 +1,4 @@
-# AI Chat Manager
+# AI Manager
 
 [English](../../README.md) ·
 [العربية](README.ar.md) ·
@@ -54,7 +54,7 @@ pnpm check          # lint + stylelint + 型別檢查 + 測試(100%) + 建置
 ```bash
 pnpm desktop        # 先建置一次，接著編譯並啟動桌面應用程式
 pnpm desktop:dev    # 包住開發伺服器的桌面外殼（熱重載）
-pnpm desktop:build  # 產生 dist/AIChatManager.app
+pnpm desktop:build  # 產生 dist/AIManager.app
 ```
 
 Deno 會自動偵測 Astro，內嵌 `dist/`，並在 Deno 執行環境中執行 Node 轉接器伺服器；

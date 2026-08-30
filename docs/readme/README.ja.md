@@ -1,4 +1,4 @@
-# AI Chat Manager
+# AI Manager
 
 [English](../../README.md) ·
 [العربية](README.ar.md) ·
@@ -56,7 +56,7 @@ pnpm check          # lint + stylelint + 型チェック + テスト(100%) + ビ
 ```bash
 pnpm desktop        # 一度ビルドしてからデスクトップアプリを起動
 pnpm desktop:dev    # 開発サーバーを包むデスクトップシェル（ホットリロード）
-pnpm desktop:build  # dist/AIChatManager.app を生成
+pnpm desktop:build  # dist/AIManager.app を生成
 ```
 
 Deno は Astro を自動検出して `dist/` を埋め込み、Node アダプターのサーバーを

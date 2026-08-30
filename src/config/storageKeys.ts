@@ -2,7 +2,7 @@
 // React islands. The boot script runs before any bundle, so both sides must agree.
 export const themeStorageKey = 'acm-theme';
 // Absent means the reader has not chosen, so the system's own language decides.
-export const languageStorageKey = 'ai-chat-manager-language';
+export const languageStorageKey = 'ai-manager-language';
 export const accentStorageKey = 'acm-accent';
 export const fontSizeStorageKey = 'acm-font-size';
 export const projectsPaneStorageKey = 'acm-projects-pane';

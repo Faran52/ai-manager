@@ -7,7 +7,7 @@ import {
 import { helperScriptFor, installCommandFor } from './installUtils';
 
 const request = {
-  appPath: '/Applications/AI Chat Manager.app',
+  appPath: '/Applications/AI Manager.app',
   archivePath: '/tmp-staging/update.zip',
   helperPath: '/tmp-staging/swap.sh',
   pid: 4242,

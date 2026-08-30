@@ -44,7 +44,7 @@ export const defaultRetentionPolicy: RetentionPolicy = {
 };
 
 const retentionPath = (home: string = homedir()): string => {
-  return join(home, '.ai-chat-manager', 'retention.json');
+  return join(home, '.ai-manager', 'retention.json');
 };
 
 const isRetentionPolicy = (value: unknown): value is RetentionPolicy => {

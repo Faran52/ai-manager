@@ -38,7 +38,7 @@ const config = await defineConfig({
  * *Service.ts entry point.
  */
 const placement = {
-  name: 'ai-chat-manager/component-module-placement',
+  name: 'ai-manager/component-module-placement',
   files: ['src/components/**/*.ts'],
   ignores: ['src/components/**/*.test.ts'],
   rules: {

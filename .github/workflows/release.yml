@@ -135,38 +135,38 @@ jobs:
           PY
 
       # Deno appends `.app` itself on macOS, so the output path carries no
-      # extension: `--output ./dist/AIChatManager.app` lands on `.app.app`.
+      # extension: `--output ./dist/AIManager.app` lands on `.app.app`.
       - name: Build the app bundle
         run: |
           # --exclude ./node_modules: astro.config's ssr.noExternal bundles every
           # dep into dist/server, so the 1.35 GB node_modules tree (all of Sharp's
           # per-platform libvips builds, every rolldown binding, the devDeps) does
           # not belong in the binary. Drops the bundle from 1.4 GB to ~70 MB.
-          deno desktop -E -R -S . --exclude ./node_modules --output ./dist/AIChatManager
+          deno desktop -E -R -S . --exclude ./node_modules --output ./dist/AIManager
           # ditto keeps the bundle's symlinks and extended attributes; zip does not.
-          ditto -c -k --keepParent ./dist/AIChatManager.app ./AIChatManager-macos.zip
+          ditto -c -k --keepParent ./dist/AIManager.app ./AIManager-macos.zip
 
       - name: Verify the signature survived packaging
         if: env.MACOS_SIGN_IDENTITY != ''
-        run: codesign --verify --deep --strict --verbose=2 ./dist/AIChatManager.app
+        run: codesign --verify --deep --strict --verbose=2 ./dist/AIManager.app
 
       - name: Notarize and staple
         if: env.APPLE_ID != ''
         run: |
-          xcrun notarytool submit ./AIChatManager-macos.zip \
+          xcrun notarytool submit ./AIManager-macos.zip \
             --apple-id "$APPLE_ID" \
             --team-id "$APPLE_TEAM_ID" \
             --password "$APPLE_APP_PASSWORD" \
             --wait
-          xcrun stapler staple ./dist/AIChatManager.app
+          xcrun stapler staple ./dist/AIManager.app
           # Re-zip so the published archive carries the stapled ticket.
-          rm -f ./AIChatManager-macos.zip
-          ditto -c -k --keepParent ./dist/AIChatManager.app ./AIChatManager-macos.zip
+          rm -f ./AIManager-macos.zip
+          ditto -c -k --keepParent ./dist/AIManager.app ./AIManager-macos.zip
 
       - uses: actions/upload-artifact@v4
         with:
           name: macos
-          path: ./AIChatManager-macos.zip
+          path: ./AIManager-macos.zip
 
   linux:
     needs: guard
@@ -184,12 +184,12 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - run: deno desktop -E -R -S . --exclude ./node_modules --output ./AIChatManager-linux.AppImage
+      - run: deno desktop -E -R -S . --exclude ./node_modules --output ./AIManager-linux.AppImage
 
       - uses: actions/upload-artifact@v4
         with:
           name: linux
-          path: ./AIChatManager-linux.AppImage
+          path: ./AIManager-linux.AppImage
 
   windows:
     needs: guard
@@ -210,7 +210,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - run: deno desktop -E -R -S . --exclude ./node_modules --output ./AIChatManager-windows.msi
+      - run: deno desktop -E -R -S . --exclude ./node_modules --output ./AIManager-windows.msi
 
       - name: Sign the installer
         if: env.WINDOWS_CERTIFICATE != ''
@@ -220,13 +220,13 @@ jobs:
           [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
           & signtool sign /f $pfx /p $env:WINDOWS_CERTIFICATE_PASSWORD `
             /tr http://timestamp.digicert.com /td sha256 /fd sha256 `
-            .\AIChatManager-windows.msi
+            .\AIManager-windows.msi
           Remove-Item $pfx
 
       - uses: actions/upload-artifact@v4
         with:
           name: windows
-          path: ./AIChatManager-windows.msi
+          path: ./AIManager-windows.msi
 
   publish:
     needs: [macos, linux, windows]

@@ -81,7 +81,7 @@ export const AppHeader: FC<AppHeaderProps> = ({
             text-sm font-semibold tracking-[-0.02em] text-foreground
           "
           >
-            AI Chat Manager
+            AI Manager
           </h1>
         </div>
 

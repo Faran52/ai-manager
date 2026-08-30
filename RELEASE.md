@@ -25,11 +25,11 @@ generated commit list underneath.
 pnpm release:key
 ```
 
-Writes an Ed25519 private key to `~/.ai-chat-manager/update-signing-key.pem`
+Writes an Ed25519 private key to `~/.ai-manager/update-signing-key.pem`
 (mode 600, outside the repository) and prints the public half.
 
 ```bash
-gh secret set UPDATE_SIGNING_KEY < ~/.ai-chat-manager/update-signing-key.pem
+gh secret set UPDATE_SIGNING_KEY < ~/.ai-manager/update-signing-key.pem
 ```
 
 The public half goes to builds through `UPDATE_PUBLIC_KEY`. A build given a
@@ -126,8 +126,8 @@ Homebrew may lag; the workflow pins the version itself.
 Confirmed on this repo with Deno 2.9.5 and an icon configured:
 
 ```
-$ codesign --verify --deep --strict dist/AIChatManager.app
-dist/AIChatManager.app: a sealed resource is missing or invalid
+$ codesign --verify --deep --strict dist/AIManager.app
+dist/AIManager.app: a sealed resource is missing or invalid
 file added: .../Contents/Resources/AppIcon.icns
 ```
 
@@ -158,9 +158,9 @@ about never, which is why they are committed rather than generated.
 node -e "..."                                   # or just run the app against the feed
 
 # the macOS bundle is signed and notarized
-codesign --verify --deep --strict --verbose=2 AIChatManager.app
-spctl --assess --type execute --verbose AIChatManager.app
-xcrun stapler validate AIChatManager.app
+codesign --verify --deep --strict --verbose=2 AIManager.app
+spctl --assess --type execute --verbose AIManager.app
+xcrun stapler validate AIManager.app
 ```
 
 `spctl` is the one that answers the question users actually hit: whether

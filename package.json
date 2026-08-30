@@ -1,5 +1,5 @@
 {
-  "name": "ai-chat-manager",
+  "name": "ai-manager",
   "type": "module",
   "version": "0.1.0",
   "license": "MIT",
@@ -25,7 +25,7 @@
     "prepare": "astro sync && husky",
     "desktop": "pnpm build && deno desktop -E -R -S . --exclude ./node_modules",
     "desktop:dev": "deno desktop -E -R -S . --hmr",
-    "desktop:build": "pnpm build && deno desktop -E -R -S . --exclude ./node_modules --output ./dist/AIChatManager",
+    "desktop:build": "pnpm build && deno desktop -E -R -S . --exclude ./node_modules --output ./dist/AIManager",
     "version:check": "node scripts/syncVersion.ts",
     "version:set": "node scripts/syncVersion.ts",
     "release:key": "node scripts/generateUpdateKey.ts",

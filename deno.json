@@ -1,5 +1,5 @@
 {
-  "name": "ai-chat-manager",
+  "name": "ai-manager",
   "version": "0.1.0",
   "tasks": {
     "dev": "astro dev",
@@ -7,12 +7,12 @@
     "preview": "astro preview",
     "desktop": "astro build && deno desktop . --exclude ./node_modules",
     "desktop:dev": "deno desktop . --hmr",
-    "desktop:build": "deno desktop . --exclude ./node_modules --output ./dist/AIChatManager"
+    "desktop:build": "deno desktop . --exclude ./node_modules --output ./dist/AIManager"
   },
   "desktop": {
     "app": {
-      "name": "AI Chat Manager",
-      "identifier": "com.linteljs.ai-chat-manager",
+      "name": "AI Manager",
+      "identifier": "com.faran52.ai-manager",
       "icons": {
         "macos": "./public/icon-1024.png",
         "windows": "./public/icon.ico",
@@ -21,12 +21,12 @@
     },
     "backend": "webview",
     "release": {
-      "baseUrl": "https://github.com/Faran52/ai-chat-manager/releases/latest/download"
+      "baseUrl": "https://github.com/Faran52/ai-manager/releases/latest/download"
     },
     "output": {
-      "macos": "./dist/AIChatManager",
-      "windows": "./dist/AIChatManager.msi",
-      "linux": "./dist/AIChatManager.AppImage"
+      "macos": "./dist/AIManager",
+      "windows": "./dist/AIManager.msi",
+      "linux": "./dist/AIManager.AppImage"
     }
   },
   "exports": "./dist/server/entry.mjs",

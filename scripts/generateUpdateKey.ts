@@ -18,7 +18,7 @@ import {
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-const KEY_DIR = join(homedir(), '.ai-chat-manager');
+const KEY_DIR = join(homedir(), '.ai-manager');
 const KEY_PATH = join(KEY_DIR, 'update-signing-key.pem');
 
 const main = async (): Promise<void> => {

@@ -60,11 +60,11 @@ describe('retention policy', () => {
     const home = await newHome();
 
     expect(await readRetentionPolicy(home)).toEqual(defaultRetentionPolicy);
-    await mkdir(join(home, '.ai-chat-manager'), { recursive: true });
-    await writeFile(join(home, '.ai-chat-manager', 'retention.json'), '{', 'utf8');
+    await mkdir(join(home, '.ai-manager'), { recursive: true });
+    await writeFile(join(home, '.ai-manager', 'retention.json'), '{', 'utf8');
 
     expect(await readRetentionPolicy(home)).toEqual(defaultRetentionPolicy);
-    await writeFile(join(home, '.ai-chat-manager', 'retention.json'), JSON.stringify({
+    await writeFile(join(home, '.ai-manager', 'retention.json'), JSON.stringify({
       enabled: true,
       olderThanDays: 0,
       agents: [],
@@ -84,7 +84,7 @@ describe('retention policy', () => {
     await writeRetentionPolicy(policy, home);
 
     expect(await readRetentionPolicy(home)).toEqual(policy);
-    expect(await readFile(join(home, '.ai-chat-manager', 'retention.json'), 'utf8')).toContain('14');
+    expect(await readFile(join(home, '.ai-manager', 'retention.json'), 'utf8')).toContain('14');
   });
 });
 
@@ -114,7 +114,7 @@ describe('dueForArchive', () => {
     vi.setSystemTime(new Date('2026-03-01T00:00:00Z'));
     const manifest = await createArchive(rootsFor(home), '', home);
 
-    await writeFile(join(home, '.ai-chat-manager', 'archives', manifest.id, 'manifest.json'), '{', 'utf8');
+    await writeFile(join(home, '.ai-manager', 'archives', manifest.id, 'manifest.json'), '{', 'utf8');
 
     expect((await dueForArchive(rootsFor(home), {
       enabled: true,
