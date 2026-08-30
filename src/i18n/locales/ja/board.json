@@ -4,7 +4,7 @@
   "panels": "ボードパネル",
   "panelSessions": "セッション",
   "panelEdits": "ファイル変更",
-  "colourBy": "明るさが示すもの",
+  "colourBy": "強調する値",
   "attributeMessages": "メッセージ数",
   "attributeSize": "記録の大きさ",
   "attributeDuration": "かかった時間",
