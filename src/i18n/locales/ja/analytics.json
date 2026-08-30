@@ -89,5 +89,12 @@
   "panelReport": "レポート",
   "panelBoard": "ボード",
   "panelEdits": "ファイル編集",
-  "analyticsPanels": "分析のパネル"
+  "analyticsPanels": "分析のパネル",
+  "storageProject": "このプロジェクトの記録",
+  "storageProjectHint_one": "{{count}} 件のセッション",
+  "storageProjectHint_other": "{{count}} 件のセッション",
+  "storageAgentTotal": "このエージェントの保持量",
+  "storageAgentShared": "関わったすべてのプロジェクトで共有",
+  "heatmapLess": "少",
+  "heatmapMore": "多"
 }

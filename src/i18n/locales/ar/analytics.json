@@ -101,5 +101,16 @@
   "panelReport": "التقرير",
   "panelBoard": "اللوحة",
   "panelEdits": "تعديلات الملفات",
-  "analyticsPanels": "لوحات التحليلات"
+  "analyticsPanels": "لوحات التحليلات",
+  "storageProject": "سجلات هذا المشروع",
+  "storageProjectHint_zero": "من لا جلسات",
+  "storageProjectHint_one": "من جلسة واحدة",
+  "storageProjectHint_two": "من جلستين",
+  "storageProjectHint_few": "من {{count}} جلسات",
+  "storageProjectHint_many": "من {{count}} جلسة",
+  "storageProjectHint_other": "من {{count}} جلسة",
+  "storageAgentTotal": "ما يحتفظ به هذا الوكيل",
+  "storageAgentShared": "مشترك بين كل مشروع تعامل معه",
+  "heatmapLess": "أقل",
+  "heatmapMore": "أكثر"
 }

@@ -89,5 +89,12 @@
   "panelReport": "報告",
   "panelBoard": "面板",
   "panelEdits": "檔案編輯",
-  "analyticsPanels": "分析面板"
+  "analyticsPanels": "分析面板",
+  "storageProject": "本專案的記錄",
+  "storageProjectHint_one": "來自 {{count}} 個工作階段",
+  "storageProjectHint_other": "來自 {{count}} 個工作階段",
+  "storageAgentTotal": "該代理保存的總量",
+  "storageAgentShared": "由它接觸過的所有專案共享",
+  "heatmapLess": "少",
+  "heatmapMore": "多"
 }

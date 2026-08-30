@@ -201,6 +201,7 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
         globalAgents={globalAgents}
         wholeMachine={effectiveScope === 'global'}
         projectAgent={projectAgent}
+        sessions={sessions}
         onOpenSession={onOpenSession}
       />
     </div>

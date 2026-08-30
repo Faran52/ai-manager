@@ -437,6 +437,22 @@ const titleFor = (stored: string | null, built: SessionBuild): string | undefine
   return humanTitle(stored) ?? built.preview;
 };
 
+/*
+ * One database holds every session, so its file size says nothing about any one
+ * of them: reporting it made every OpenCode session look identical and enormous.
+ * The stored length of a session's own parts is the honest per-session figure.
+ */
+const sizesBySession = (database: DatabaseSync): ReadonlyMap<string, number> => {
+  const rows = database.prepare(
+    'SELECT session_id, total(length(data)) AS bytes FROM part GROUP BY session_id',
+  ).all();
+
+  return new Map(rows.map((row) => {
+    /* v8 ignore next -- total() answers with a number for every group it returns */
+    return [asString(row.session_id), asNumber(row.bytes) ?? 0];
+  }));
+};
+
 const sessionsFromDatabase = async (
   agent: AgentId,
   databasePath: string,
@@ -454,6 +470,7 @@ const sessionsFromDatabase = async (
       'SELECT id, title, directory, time_created, time_updated FROM session'
       + ' ORDER BY time_updated DESC',
     ).all();
+    const sizes = sizesBySession(opened);
 
     return rows.flatMap((raw) => {
       const row = {
@@ -487,7 +504,7 @@ const sessionsFromDatabase = async (
         // whenever any of them does. `time_updated` is the per-session equivalent.
         lastTimestampMs: Math.max(built.lastMs, row.time_updated ?? 0),
         modifiedMs: info.mtimeMs,
-        sizeBytes: info.size,
+        sizeBytes: sizes.get(row.id) ?? 0,
         cwd: directory.length > 0 ? directory : undefined,
       };
 

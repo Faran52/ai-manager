@@ -89,5 +89,12 @@
   "panelReport": "报告",
   "panelBoard": "面板",
   "panelEdits": "文件编辑",
-  "analyticsPanels": "分析面板"
+  "analyticsPanels": "分析面板",
+  "storageProject": "本项目的记录",
+  "storageProjectHint_one": "来自 {{count}} 个会话",
+  "storageProjectHint_other": "来自 {{count}} 个会话",
+  "storageAgentTotal": "该代理保存的总量",
+  "storageAgentShared": "由它接触过的所有项目共享",
+  "heatmapLess": "少",
+  "heatmapMore": "多"
 }

@@ -89,5 +89,12 @@
   "panelReport": "리포트",
   "panelBoard": "보드",
   "panelEdits": "파일 편집",
-  "analyticsPanels": "분석 패널"
+  "analyticsPanels": "분석 패널",
+  "storageProject": "이 프로젝트의 기록",
+  "storageProjectHint_one": "세션 {{count}}개",
+  "storageProjectHint_other": "세션 {{count}}개",
+  "storageAgentTotal": "이 에이전트가 보관 중",
+  "storageAgentShared": "이 에이전트가 다룬 모든 프로젝트가 공유",
+  "heatmapLess": "적음",
+  "heatmapMore": "많음"
 }

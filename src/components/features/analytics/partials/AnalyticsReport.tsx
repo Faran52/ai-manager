@@ -27,6 +27,7 @@ import { WorkRhythm } from './WorkRhythm';
 
 import type { AgentId } from '@config/agents';
 import type { AsyncResource } from '@features/history-data';
+import type { SessionSummary } from '@services/history/historyService';
 import type {
   AgentStatsUsage,
   ProjectStats,
@@ -41,6 +42,7 @@ export interface AnalyticsReportProps {
   readonly globalAgents: readonly AgentStatsUsage[];
   readonly wholeMachine: boolean;
   readonly projectAgent?: AgentId | undefined;
+  readonly sessions: readonly SessionSummary[];
   readonly onOpenSession: (session: SessionTokenTotals) => void;
 }
 
@@ -99,6 +101,7 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
   globalAgents,
   wholeMachine,
   projectAgent,
+  sessions,
   onOpenSession,
 }) => {
   const { t } = useTranslation('analytics');
@@ -151,7 +154,8 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
 
       <StoragePanel
         storage={storage}
-        agent={!wholeMachine ? projectAgent : undefined}
+        agent={wholeMachine ? undefined : projectAgent}
+        projectSessions={wholeMachine ? undefined : sessions}
       />
 
       {!wholeMachine && (

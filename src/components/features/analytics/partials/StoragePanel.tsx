@@ -21,6 +21,7 @@ import {
 
 import type { AgentId } from '@config/agents';
 import type { AsyncResource } from '@features/history-data';
+import type { SessionSummary } from '@services/history/historyService';
 import type {
   AgentStorage,
   StorageEntry,
@@ -32,6 +33,12 @@ export interface StoragePanelProps {
   readonly storage: AsyncResource<StorageReport>;
   // Naming an agent narrows the report to what that agent alone is holding.
   readonly agent?: AgentId | undefined;
+  /*
+   * A project's own transcripts, which is the only part of an agent's storage
+   * that belongs to one project. Everything else an agent holds, its plugins,
+   * caches and logs, is shared by every project it has ever touched.
+   */
+  readonly projectSessions?: readonly SessionSummary[] | undefined;
 }
 
 interface Held {
@@ -64,7 +71,11 @@ const heldBy = (report: StorageReport | undefined, agent: AgentId | undefined): 
   };
 };
 
-export const StoragePanel: FC<StoragePanelProps> = ({ storage, agent }) => {
+export const StoragePanel: FC<StoragePanelProps> = ({
+  storage,
+  agent,
+  projectSessions,
+}) => {
   const { t } = useTranslation('analytics');
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -76,6 +87,10 @@ export const StoragePanel: FC<StoragePanelProps> = ({ storage, agent }) => {
     reclaimableBytes,
     disposable,
   } = heldBy(report, agent);
+  const projectBytes = (projectSessions ?? []).reduce((total, session) => {
+    return total + session.sizeBytes;
+  }, 0);
+  const onlyThisProject = projectSessions != null;
 
   const freeThem = (): void => {
     setBusy(true);
@@ -104,6 +119,8 @@ export const StoragePanel: FC<StoragePanelProps> = ({ storage, agent }) => {
     })();
   };
 
+  const partialHint = report?.partial === true ? t('storagePartial') : undefined;
+
   return (
     <div className="grid gap-3" data-storage-panel>
       <p className="text-sm text-muted-foreground">{t('storageIntro')}</p>
@@ -129,15 +146,21 @@ export const StoragePanel: FC<StoragePanelProps> = ({ storage, agent }) => {
           "
           >
             <MetricCard
-              label={t('storageTotal')}
-              value={sizeLabel(totalBytes)}
-              hint={report.partial ? t('storagePartial') : undefined}
+              label={onlyThisProject ? t('storageProject') : t('storageTotal')}
+              value={sizeLabel(onlyThisProject ? projectBytes : totalBytes)}
+              hint={onlyThisProject
+                ? t('storageProjectHint', { count: projectSessions.length })
+                : partialHint}
               icon={<HardDrive className="size-3.5" />}
             />
-            <MetricCard label={t('storageAgents')} value={String(shown.length)} />
+            <MetricCard
+              label={onlyThisProject ? t('storageAgentTotal') : t('storageAgents')}
+              value={onlyThisProject ? sizeLabel(totalBytes) : String(shown.length)}
+              hint={onlyThisProject ? t('storageAgentShared') : undefined}
+            />
           </div>
 
-          {disposable.length > 0 && (
+          {disposable.length > 0 && !onlyThisProject && (
             <div className="
               flex flex-wrap items-center justify-between gap-2 rounded-xl
               border border-border bg-card p-3

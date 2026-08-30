@@ -89,5 +89,12 @@
   "panelReport": "Report",
   "panelBoard": "Board",
   "panelEdits": "File edits",
-  "analyticsPanels": "Analytics panels"
+  "analyticsPanels": "Analytics panels",
+  "storageProject": "This project's transcripts",
+  "storageProjectHint_one": "across {{count}} session",
+  "storageProjectHint_other": "across {{count}} sessions",
+  "storageAgentTotal": "Held by this agent",
+  "storageAgentShared": "Shared by every project it has touched",
+  "heatmapLess": "Less",
+  "heatmapMore": "More"
 }

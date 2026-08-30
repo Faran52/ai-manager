@@ -15,6 +15,8 @@ export interface WorkRhythmProps {
 interface Slot {
   readonly key: string;
   readonly label: string;
+  // Written under the bar, so a reader never has to count along the row.
+  readonly tick: string;
   readonly count: number;
 }
 
@@ -28,16 +30,27 @@ const WEEKDAY_KEYS = [
   'weekdaySun',
 ] as const;
 
+/*
+ * Every hour carries its own label. Labelling only some of them meant counting
+ * along the row to work out which bar was which, which is the thing a label is
+ * supposed to save you from.
+ */
 const hourSlots = (counts: readonly number[]): Slot[] => {
   return counts.map((count, hour) => {
     return {
       key: String(hour),
       label: `${String(hour)}:00`,
+      tick: String(hour).padStart(2, '0'),
       count,
     };
   });
 };
 
+/*
+ * A bar with nothing written under it says only that something happened, not
+ * when. The labels were in the hover text alone, which is no use on a touch
+ * screen and no use at a glance.
+ */
 const Strip: FC<{ readonly slots: readonly Slot[];
   readonly caption: string; }> = ({ slots, caption }) => {
   const peak = slots.reduce((best, slot) => {
@@ -47,16 +60,26 @@ const Strip: FC<{ readonly slots: readonly Slot[];
   return (
     <div className="grid gap-1">
       <p className="text-[11px] text-muted-foreground">{caption}</p>
-      <div className="flex h-16 items-end gap-0.5" role="img" aria-label={caption}>
+      <div className="flex items-end gap-0.5" role="img" aria-label={caption}>
         {slots.map((slot) => {
           return (
-            <div
-              key={slot.key}
-              title={`${slot.label}: ${formatTokens(slot.count)}`}
-              data-rhythm-bar={slot.key}
-              className="flex-1 rounded-t-sm bg-primary/70"
-              style={{ height: `${String(peak === 0 ? 0 : (slot.count / peak) * 100)}%` }}
-            />
+            <div key={slot.key} className="grid min-w-0 flex-1 gap-1">
+              <div className="flex h-16 items-end">
+                <div
+                  title={`${slot.label}: ${formatTokens(slot.count)}`}
+                  data-rhythm-bar={slot.key}
+                  className="w-full rounded-t-sm bg-primary/70"
+                  style={{ height: `${String(peak === 0 ? 0 : (slot.count / peak) * 100)}%` }}
+                />
+              </div>
+              <span className="
+                overflow-hidden text-center text-[10px] leading-none
+                text-muted-foreground tabular-nums
+              "
+              >
+                {slot.tick}
+              </span>
+            </div>
           );
         })}
       </div>
@@ -92,6 +115,7 @@ export const WorkRhythm: FC<WorkRhythmProps> = ({ rhythm, effort }) => {
             return {
               key,
               label: t(key),
+              tick: t(key),
               count: rhythm.weekdays[slot] ?? 0,
             };
           })}
