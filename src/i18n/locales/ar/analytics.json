@@ -112,5 +112,10 @@
   "storageAgentTotal": "ما يحتفظ به هذا الوكيل",
   "storageAgentShared": "مشترك بين كل مشروع تعامل معه",
   "heatmapLess": "أقل",
-  "heatmapMore": "أكثر"
+  "heatmapMore": "أكثر",
+  "sectionOverview": "نظرة عامة",
+  "sectionCost": "التكلفة",
+  "sectionActivity": "النشاط والجهد",
+  "sectionStorage": "التخزين",
+  "sectionSessions": "الجلسات"
 }

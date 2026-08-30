@@ -96,5 +96,10 @@
   "storageAgentTotal": "该代理保存的总量",
   "storageAgentShared": "由它接触过的所有项目共享",
   "heatmapLess": "少",
-  "heatmapMore": "多"
+  "heatmapMore": "多",
+  "sectionOverview": "概览",
+  "sectionCost": "费用",
+  "sectionActivity": "活动与投入",
+  "sectionStorage": "存储",
+  "sectionSessions": "会话"
 }

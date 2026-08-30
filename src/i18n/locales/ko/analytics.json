@@ -96,5 +96,10 @@
   "storageAgentTotal": "이 에이전트가 보관 중",
   "storageAgentShared": "이 에이전트가 다룬 모든 프로젝트가 공유",
   "heatmapLess": "적음",
-  "heatmapMore": "많음"
+  "heatmapMore": "많음",
+  "sectionOverview": "개요",
+  "sectionCost": "비용",
+  "sectionActivity": "활동과 작업량",
+  "sectionStorage": "저장 공간",
+  "sectionSessions": "세션"
 }

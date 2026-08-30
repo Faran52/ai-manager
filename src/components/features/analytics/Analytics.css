@@ -1,6 +1,7 @@
 @layer components {
+  /* Full height so panels sharing a row end level with each other. */
   .analytics-panel {
-    @apply rounded-xl border border-border bg-card p-4 shadow-sm;
+    @apply flex h-full flex-col rounded-xl border border-border bg-card p-4 shadow-sm;
   }
 
   .analytics-title {

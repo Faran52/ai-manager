@@ -96,5 +96,10 @@
   "storageAgentTotal": "Held by this agent",
   "storageAgentShared": "Shared by every project it has touched",
   "heatmapLess": "Less",
-  "heatmapMore": "More"
+  "heatmapMore": "More",
+  "sectionOverview": "Overview",
+  "sectionCost": "Cost",
+  "sectionActivity": "Activity and effort",
+  "sectionStorage": "Storage",
+  "sectionSessions": "Sessions"
 }

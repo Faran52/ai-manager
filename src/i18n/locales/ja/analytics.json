@@ -96,5 +96,10 @@
   "storageAgentTotal": "このエージェントの保持量",
   "storageAgentShared": "関わったすべてのプロジェクトで共有",
   "heatmapLess": "少",
-  "heatmapMore": "多"
+  "heatmapMore": "多",
+  "sectionOverview": "概要",
+  "sectionCost": "コスト",
+  "sectionActivity": "活動と作業量",
+  "sectionStorage": "ストレージ",
+  "sectionSessions": "セッション"
 }

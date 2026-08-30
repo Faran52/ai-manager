@@ -103,7 +103,7 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
       </div>
 
       <div className="
-        mt-2 flex items-center justify-end gap-1 text-[10px]
+        mt-auto flex items-center justify-end gap-1 pt-3 text-[10px]
         text-muted-foreground
       "
       >

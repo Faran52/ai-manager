@@ -95,6 +95,25 @@ const metricsFor = (
   );
 };
 
+/*
+ * A named group of panels. Without them the report was one long column of cards
+ * with nothing to say where one subject ended and the next began.
+ */
+const Section: FC<{ readonly title: string;
+  readonly children: ReactNode; }> = ({ title, children }) => {
+  return (
+    <section className="grid gap-4">
+      <h3 className="
+        text-xs font-semibold tracking-wider text-foreground/80 uppercase
+      "
+      >
+        {title}
+      </h3>
+      {children}
+    </section>
+  );
+};
+
 export const AnalyticsReport: FC<AnalyticsReportProps> = ({
   stats: selectedStats,
   storage,
@@ -107,71 +126,76 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
   const { t } = useTranslation('analytics');
 
   return (
-    <div className="space-y-6 p-4">
-      {metricsFor(selectedStats, t)}
+    <div className="space-y-8 p-4">
+      <Section title={t('sectionOverview')}>
+        {metricsFor(selectedStats, t)}
+      </Section>
 
-      {/*
-        * One grid rather than a full-width card above a half-empty row: the
-        * panels share the space they are given, however many of them there are.
-        */}
-      <div className="
-        grid items-start gap-4
-        lg:grid-cols-2
-      "
-      >
-        <BillingBreakdown totals={selectedStats.totals} />
-        <PricingCoverage totals={selectedStats.totals} />
-        {wholeMachine && (
-          <ProviderDistribution agents={globalAgents} />
-        )}
-      </div>
+      <Section title={t('sectionCost')}>
+        <div className="
+          grid gap-4
+          lg:grid-cols-2
+        "
+        >
+          <BillingBreakdown totals={selectedStats.totals} />
+          <PricingCoverage totals={selectedStats.totals} />
+          {wholeMachine && (
+            <ProviderDistribution agents={globalAgents} />
+          )}
+        </div>
 
-      {/*
-        * The grid of days is narrow by nature, so it shares its row rather than
-        * leaving half the width empty. Model names and their bars are wide, so
-        * they get the full width to themselves below.
-        */}
-      <div className="
-        grid items-start gap-4
-        lg:grid-cols-2
-      "
-      >
-        {selectedStats.totals.usageRecorded
-          ? <ActivityHeatmap activity={selectedStats.activity} />
-          : (
-              <AnalyticsPanel title={t('activity')}>
-                <p className="mt-3 text-sm text-muted-foreground">
-                  {t('tokenActivityMissing')}
-                </p>
-              </AnalyticsPanel>
-            )}
-        <BarList
-          title={t('toolCalls')}
-          items={selectedStats.tools.slice(0, 10).map((tool) => {
-            return {
-              label: tool.tool,
-              value: tool.count,
-            };
-          })}
+        <ModelDistribution models={selectedStats.models} />
+      </Section>
+
+      <Section title={t('sectionActivity')}>
+        {/*
+          * The grid of days is narrow by nature, so it shares its row rather
+          * than leaving half the width empty.
+          */}
+        <div className="
+          grid gap-4
+          lg:grid-cols-2
+        "
+        >
+          {selectedStats.totals.usageRecorded
+            ? <ActivityHeatmap activity={selectedStats.activity} />
+            : (
+                <AnalyticsPanel title={t('activity')}>
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    {t('tokenActivityMissing')}
+                  </p>
+                </AnalyticsPanel>
+              )}
+          <BarList
+            title={t('toolCalls')}
+            items={selectedStats.tools.slice(0, 10).map((tool) => {
+              return {
+                label: tool.tool,
+                value: tool.count,
+              };
+            })}
+          />
+        </div>
+
+        <WorkRhythm rhythm={selectedStats.rhythm} effort={selectedStats.effort} />
+      </Section>
+
+      <Section title={t('sectionStorage')}>
+        <StoragePanel
+          storage={storage}
+          agent={wholeMachine ? undefined : projectAgent}
+          projectSessions={wholeMachine ? undefined : sessions}
         />
-      </div>
-
-      <ModelDistribution models={selectedStats.models} />
-
-      <WorkRhythm rhythm={selectedStats.rhythm} effort={selectedStats.effort} />
-
-      <StoragePanel
-        storage={storage}
-        agent={wholeMachine ? undefined : projectAgent}
-        projectSessions={wholeMachine ? undefined : sessions}
-      />
+      </Section>
 
       {!wholeMachine && (
-        <TopSessions
-          sessions={selectedStats.topSessions}
-          usageRecorded={selectedStats.totals.usageRecorded}
-          onOpenSession={onOpenSession}
-        />
+        <Section title={t('sectionSessions')}>
+          <TopSessions
+            sessions={selectedStats.topSessions}
+            usageRecorded={selectedStats.totals.usageRecorded}
+            onOpenSession={onOpenSession}
+          />
+        </Section>
       )}
     </div>
   );

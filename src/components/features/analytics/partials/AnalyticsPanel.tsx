@@ -8,7 +8,7 @@ export interface AnalyticsPanelProps {
 export const AnalyticsPanel: FC<AnalyticsPanelProps> = ({ children, title }) => {
   return (
     <section className="analytics-panel">
-      <h3 className="analytics-title">{title}</h3>
+      <h4 className="analytics-title">{title}</h4>
       {children}
     </section>
   );
