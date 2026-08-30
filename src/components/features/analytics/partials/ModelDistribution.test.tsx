@@ -25,9 +25,8 @@ test('shows exact and estimated model costs', () => {
     />,
   );
 
-  expect(screen.getByText('EXACT')).toBeDefined();
-  expect(screen.getByText('EST.')).toBeDefined();
   expect(screen.getByText('$1.00')).toBeDefined();
+  expect(screen.getByText('$0.50')).toBeDefined();
 });
 
 test('shows an empty model state', () => {
@@ -57,6 +56,6 @@ test('never displays an invented cost for unpriced models', () => {
     />,
   );
 
-  expect(screen.getAllByText('unpriced')).toHaveLength(2);
-  expect(screen.getAllByText('Cost unavailable')).toHaveLength(2);
+  expect(screen.getAllByText('No cost recorded')).toHaveLength(2);
+  expect(screen.getAllByText('No cost recorded')).toHaveLength(2);
 });

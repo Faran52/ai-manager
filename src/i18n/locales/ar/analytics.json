@@ -40,7 +40,7 @@
   "tokensWithShare": "{{tokens}} · {{share}}٪",
   "noProviders": "لم يُسجَّل استخدام لأي مزوّد.",
   "modelDistribution": "توزيع النماذج",
-  "costUnavailable": "التكلفة غير متاحة",
+  "costUnavailable": "لم تُسجّل أي تكلفة",
   "pricingBasisExact": "دقيق",
   "pricingBasisEstimated": "تقديري",
   "pricingBasisUnpriced": "بلا تسعير",

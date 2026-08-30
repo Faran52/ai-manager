@@ -7,6 +7,7 @@ import {
   IDLE_CLASS,
   levelClass,
   levelFor,
+  monthsOf,
   weeksTo,
 } from '../utils/heatmapUtils';
 
@@ -40,11 +41,11 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
   const peak = activity.reduce((best, day) => {
     return Math.max(best, day.tokens);
   }, 0);
-  const weeks = weeksTo(activity, todayMs);
+  const months = monthsOf(weeksTo(activity, todayMs));
 
   return (
     <AnalyticsPanel title={t('activity')}>
-      <div className="mt-3 flex gap-2 overflow-x-auto" data-activity-heatmap>
+      <div className="mt-3 flex gap-2" data-activity-heatmap>
         <div className="grid shrink-0 gap-1 pt-4">
           {ROW_LABELS.map((label, weekday) => {
             return (
@@ -61,32 +62,40 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
           })}
         </div>
 
-        <div className="grid grid-flow-col gap-1" role="img" aria-label={t('dailyHeatmap')}>
-          {weeks.map((week) => {
+        <div className="flex gap-3" role="img" aria-label={t('dailyHeatmap')}>
+          {months.map((month) => {
             return (
-              <div key={week.key} className="grid gap-1">
+              <div key={month.key} className="grid gap-1" data-heatmap-month={month.label}>
                 <span className="
                   h-3 text-[10px] leading-none text-muted-foreground
                 "
                 >
-                  {week.month ?? ''}
+                  {month.label}
                 </span>
-                {week.days.map((day) => {
-                  return (
-                    <span
-                      key={day.date}
-                      title={t('heatmapDay', {
-                        date: day.date,
-                        tokens: formatTokens(day.tokens),
-                      })}
-                      data-level={String(levelFor(day.tokens, peak))}
-                      className={`
-                        size-3 rounded-sm
-                        ${levelClass(day.tokens, peak)}
-                      `}
-                    />
-                  );
-                })}
+                <div className="grid grid-flow-col gap-1">
+                  {month.weeks.map((week) => {
+                    return (
+                      <div key={week.key} className="grid gap-1">
+                        {week.days.map((day) => {
+                          return (
+                            <span
+                              key={day.date}
+                              title={t('heatmapDay', {
+                                date: day.date,
+                                tokens: formatTokens(day.tokens),
+                              })}
+                              data-level={String(levelFor(day.tokens, peak))}
+                              className={`
+                                size-3 rounded-sm
+                                ${levelClass(day.tokens, peak)}
+                              `}
+                            />
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             );
           })}

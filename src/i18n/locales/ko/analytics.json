@@ -36,7 +36,7 @@
   "tokensWithShare": "{{tokens}} · {{share}}%",
   "noProviders": "기록된 제공자 사용량이 없습니다.",
   "modelDistribution": "모델 분포",
-  "costUnavailable": "비용 정보 없음",
+  "costUnavailable": "비용 기록 없음",
   "pricingBasisExact": "정확",
   "pricingBasisEstimated": "추정",
   "pricingBasisUnpriced": "가격 미정",

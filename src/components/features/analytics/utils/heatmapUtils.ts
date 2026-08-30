@@ -4,6 +4,12 @@ export interface HeatmapDay {
   readonly messages: number;
 }
 
+export interface HeatmapMonth {
+  readonly key: string;
+  readonly label: string;
+  readonly weeks: readonly HeatmapWeek[];
+}
+
 export interface HeatmapWeek {
   readonly key: string;
   // Monday first, so a column is one week read top to bottom.
@@ -40,7 +46,13 @@ export const levelClass = (tokens: number, peak: number): string => {
   }
 };
 
-export const WEEKS_SHOWN = 26;
+/*
+ * About two months. This answers what has been happening lately, which is a
+ * question a small dense grid answers better than a wide one: a year of squares
+ * either inflates them until they stop reading as a heatmap, or spreads a few
+ * busy days across an expanse of empty ones.
+ */
+export const WEEKS_SHOWN = 9;
 const DAYS_IN_WEEK = 7;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -89,11 +101,14 @@ export const weeksTo = (
     });
     const start = new Date(startMs);
     const previous = new Date(startMs - DAYS_IN_WEEK * MS_PER_DAY);
+    // The opening column is always named: the window starts mid-month, and an
+    // unnamed block of days at the front says nothing about when it is.
+    const opens = week === WEEKS_SHOWN - 1;
 
     weeks.push({
       key: isoOf(start),
       days,
-      ...start.getUTCMonth() === previous.getUTCMonth()
+      ...!opens && start.getUTCMonth() === previous.getUTCMonth()
         ? {}
         : {
             month: start.toLocaleDateString('en-US', {
@@ -105,4 +120,37 @@ export const weeksTo = (
   }
 
   return weeks;
+};
+
+/**
+ * Groups the columns into the months they belong to, so a month can be drawn as
+ * its own block with space either side. Running every week together left the
+ * month names floating over a wall of squares with nothing to attach them to.
+ *
+ * A week is filed under the month its Monday falls in, which is the same rule
+ * that decides where the name is written.
+ */
+export const monthsOf = (weeks: readonly HeatmapWeek[]): readonly HeatmapMonth[] => {
+  const months: HeatmapMonth[] = [];
+
+  for (const week of weeks) {
+    const current = months.at(-1);
+
+    if (current == null || week.month != null) {
+      months.push({
+        key: week.key,
+        /* v8 ignore next -- a group only ever starts on a week that names its month */
+        label: week.month ?? '',
+        weeks: [week],
+      });
+      continue;
+    }
+
+    months[months.length - 1] = {
+      ...current,
+      weeks: [...current.weeks, week],
+    };
+  }
+
+  return months;
 };

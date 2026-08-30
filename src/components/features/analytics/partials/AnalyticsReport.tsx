@@ -123,22 +123,25 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
         )}
       </div>
 
-      {selectedStats.totals.usageRecorded
-        ? <ActivityHeatmap activity={selectedStats.activity} />
-        : (
-            <AnalyticsPanel title={t('activity')}>
-              <p className="mt-3 text-sm text-muted-foreground">
-                {t('tokenActivityMissing')}
-              </p>
-            </AnalyticsPanel>
-          )}
-
+      {/*
+        * The grid of days is narrow by nature, so it shares its row rather than
+        * leaving half the width empty. Model names and their bars are wide, so
+        * they get the full width to themselves below.
+        */}
       <div className="
         grid gap-4
         lg:grid-cols-2
       "
       >
-        <ModelDistribution models={selectedStats.models} />
+        {selectedStats.totals.usageRecorded
+          ? <ActivityHeatmap activity={selectedStats.activity} />
+          : (
+              <AnalyticsPanel title={t('activity')}>
+                <p className="mt-3 text-sm text-muted-foreground">
+                  {t('tokenActivityMissing')}
+                </p>
+              </AnalyticsPanel>
+            )}
         <BarList
           title={t('toolCalls')}
           items={selectedStats.tools.slice(0, 10).map((tool) => {
@@ -149,6 +152,8 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
           })}
         />
       </div>
+
+      <ModelDistribution models={selectedStats.models} />
 
       <WorkRhythm rhythm={selectedStats.rhythm} effort={selectedStats.effort} />
 

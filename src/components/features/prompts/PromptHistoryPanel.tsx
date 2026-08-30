@@ -80,7 +80,20 @@ export const PromptHistoryPanel: FC<PromptHistoryPanelProps> = ({
   const { t, i18n } = useTranslation('session');
   const [query, setQuery] = useState('');
   const [chosen, setChosen] = useState<PromptScope>();
+  const selection = `${projectPath ?? ''} ${sessionId ?? ''}`;
+  const [shownSelection, setShownSelection] = useState(selection);
   const data = history.data;
+
+  /*
+   * Widening to everything answers about what is open now, not about whatever
+   * is opened next. Left in place the choice made a new project or session look
+   * as though it were not being filtered at all.
+   */
+  if (selection !== shownSelection) {
+    setShownSelection(selection);
+    setChosen(undefined);
+  }
+
   const needle = query.trim().toLowerCase();
   /*
    * The narrowest thing selected is what the reader is looking at, so that is

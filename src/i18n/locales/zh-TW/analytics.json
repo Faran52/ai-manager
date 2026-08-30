@@ -36,7 +36,7 @@
   "tokensWithShare": "{{tokens}} · {{share}}%",
   "noProviders": "沒有供應商用量記錄。",
   "modelDistribution": "模型分布",
-  "costUnavailable": "費用無法取得",
+  "costUnavailable": "未記錄費用",
   "pricingBasisExact": "精確",
   "pricingBasisEstimated": "估算",
   "pricingBasisUnpriced": "未定價",

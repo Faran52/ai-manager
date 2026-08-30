@@ -38,7 +38,7 @@ describe('ActivityHeatmap', () => {
     for (const level of ['0', '1', '2', '3']) {
       expect(levels.has(level)).toBe(true);
     }
-    expect(cells).toHaveLength(26 * 7);
+    expect(cells).toHaveLength(9 * 7);
   });
 });
 
@@ -72,7 +72,7 @@ describe('ActivityHeatmap reference points', () => {
     expect(labels).toContain('Fri');
     expect(labels.filter((text) => {
       return /^[A-Z][a-z]{2}$/u.test(text) && !['Mon', 'Wed', 'Fri'].includes(text);
-    }).length).toBeGreaterThan(3);
+    }).length).toBeGreaterThan(1);
   });
 
   test('says which end of the scale is which', () => {

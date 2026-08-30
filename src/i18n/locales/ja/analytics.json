@@ -36,7 +36,7 @@
   "tokensWithShare": "{{tokens}} · {{share}}%",
   "noProviders": "プロバイダーの使用記録はありません。",
   "modelDistribution": "モデル別分布",
-  "costUnavailable": "コスト不明",
+  "costUnavailable": "コストの記録なし",
   "pricingBasisExact": "正確",
   "pricingBasisEstimated": "推定",
   "pricingBasisUnpriced": "未価格設定",

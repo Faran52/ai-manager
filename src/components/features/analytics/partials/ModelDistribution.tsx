@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import { formatCost, formatTokens } from '@utils/formatUtils';
 
-import { Badge, BarRow } from '@ui/index';
+import { BarRow } from '@ui/index';
 
 import { AnalyticsPanel } from './AnalyticsPanel';
 
@@ -12,24 +12,6 @@ import type { FC } from 'react';
 export interface ModelDistributionProps {
   readonly models: readonly StatsModelUsage[];
 }
-
-const toneFor = (basis: StatsModelUsage['basis']): 'neutral' | 'success' | 'warn' => {
-  if (basis === 'exact') {
-    return 'success';
-  }
-
-  return basis === 'estimated' ? 'warn' : 'neutral';
-};
-
-const labelKeyFor = (
-  basis: StatsModelUsage['basis'],
-): 'pricingBasisExact' | 'pricingBasisEstimated' | 'pricingBasisUnpriced' => {
-  if (basis === 'exact') {
-    return 'pricingBasisExact';
-  }
-
-  return basis === 'estimated' ? 'pricingBasisEstimated' : 'pricingBasisUnpriced';
-};
 
 export const ModelDistribution: FC<ModelDistributionProps> = ({ models }) => {
   const { t } = useTranslation('analytics');
@@ -61,7 +43,6 @@ export const ModelDistribution: FC<ModelDistributionProps> = ({ models }) => {
                 <span className="font-mono text-xs text-muted-foreground">
                   {model.costUsd == null ? t('costUnavailable') : formatCost(model.costUsd)}
                 </span>
-                <Badge tone={toneFor(model.basis)}>{t(labelKeyFor(model.basis))}</Badge>
               </div>
             </div>
           );

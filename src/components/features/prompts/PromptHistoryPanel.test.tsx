@@ -199,6 +199,34 @@ describe('prompt scope', () => {
     expect(screen.getByText('another project entirely')).toBeDefined();
   });
 
+  test('narrows again for the next session rather than staying widened', async () => {
+    const view = render(
+      <PromptHistoryPanel
+        history={scoped()}
+        nowMs={NOW}
+        projectPath="/repo/alpha"
+        sessionId="s1"
+        onOpenPrompt={noop}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Everything' }));
+    expect(screen.getByText('another project entirely')).toBeDefined();
+
+    view.rerender(
+      <PromptHistoryPanel
+        history={scoped()}
+        nowMs={NOW}
+        projectPath="/repo/alpha"
+        sessionId="s2"
+        onOpenPrompt={noop}
+      />,
+    );
+
+    expect(screen.getByText('elsewhere in this project')).toBeDefined();
+    expect(screen.queryByText('another project entirely')).toBeNull();
+  });
+
   test('answers about the project when no session is open', () => {
     render(
       <PromptHistoryPanel

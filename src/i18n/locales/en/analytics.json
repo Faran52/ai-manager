@@ -36,7 +36,7 @@
   "tokensWithShare": "{{tokens}} · {{share}}%",
   "noProviders": "No provider usage recorded.",
   "modelDistribution": "Model distribution",
-  "costUnavailable": "Cost unavailable",
+  "costUnavailable": "No cost recorded",
   "pricingBasisExact": "EXACT",
   "pricingBasisEstimated": "EST.",
   "pricingBasisUnpriced": "unpriced",
