@@ -14,9 +14,9 @@ import {
   cachedAggregate,
   createAccumulator,
   foldAggregate,
-} from './aggregateUtils';
-import { summarizePricing } from './pricingUtils';
-import { effortFrom, rhythmFrom } from './rhythmUtils';
+} from './utils/aggregateUtils';
+import { summarizePricing } from './utils/pricingUtils';
+import { effortFrom, rhythmFrom } from './utils/rhythmUtils';
 
 import type { AgentId } from '@config/agents';
 import type { AgentRoots } from '../agents/agentsService';
@@ -27,9 +27,9 @@ import type {
   SessionAggregate,
   SessionTokenTotals,
   ToolUsage,
-} from './aggregateUtils';
-import type { PricedModelUsage } from './pricingUtils';
-import type { StatsEffort, StatsRhythm } from './rhythmUtils';
+} from './utils/aggregateUtils';
+import type { PricedModelUsage } from './utils/pricingUtils';
+import type { StatsEffort, StatsRhythm } from './utils/rhythmUtils';
 
 export type StatsModelUsage = PricedModelUsage;
 
@@ -101,11 +101,11 @@ export type {
   DayActivity,
   SessionTokenTotals,
   ToolUsage,
-} from './aggregateUtils';
+} from './utils/aggregateUtils';
 export type {
   StatsEffort,
   StatsRhythm,
-} from './rhythmUtils';
+} from './utils/rhythmUtils';
 
 const sessionsForStats = async (
   agentDirs: readonly string[],

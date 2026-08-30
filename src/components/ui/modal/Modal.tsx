@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'motion/react';
 
 import { cn } from '@utils/cnUtils';
 
-import { fadeTransition, riseTransition } from './constants';
+import { fadeTransition, riseTransition } from '../constants';
 
 import type { FC, ReactNode } from 'react';
 

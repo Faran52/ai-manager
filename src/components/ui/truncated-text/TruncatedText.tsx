@@ -1,4 +1,4 @@
-import { CodeLine } from './CodeLine';
+import { CodeLine } from '../code-line/CodeLine';
 
 import type { FC } from 'react';
 

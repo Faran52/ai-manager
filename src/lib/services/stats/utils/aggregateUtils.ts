@@ -4,7 +4,7 @@ import type {
   HistoryEntry,
   SessionSummary,
   TokenUsage,
-} from '../history/types';
+} from '../../history/types';
 import type { PricingEntry } from './pricingUtils';
 
 export interface ToolUsage {

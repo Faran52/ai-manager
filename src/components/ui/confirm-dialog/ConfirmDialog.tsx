@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
-import { Button } from './Button';
-import { Modal } from './Modal';
+import { Button } from '../button/Button';
+import { Modal } from '../modal/Modal';
 
 import type { FC, ReactNode } from 'react';
 

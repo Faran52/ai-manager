@@ -16,7 +16,7 @@ import type {
   HistoryEntry,
   SessionSummary,
   TokenUsage,
-} from '../history/types';
+} from '../../history/types';
 import type { SessionAggregate } from './aggregateUtils';
 
 const usage = (input: number, output: number, creation = 0, read = 0): TokenUsage => {

@@ -2,7 +2,7 @@ import ReactMarkdown from 'react-markdown';
 
 import remarkGfm from 'remark-gfm';
 
-import { CodeBlock } from './CodeBlock';
+import { CodeBlock } from '../code-block/CodeBlock';
 
 import type { FC, ReactNode } from 'react';
 

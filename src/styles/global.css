@@ -8,8 +8,8 @@
 @import "../components/features/app-header/AppHeader.css";
 @import "../components/features/agent-tag/AgentTag.css";
 @import "../components/features/sidebar/Sidebar.css";
-@import "../components/ui/PopupMenu.css";
-@import "../components/ui/Toast.css";
+@import "../components/ui/popup-menu/PopupMenu.css";
+@import "../components/ui/toast/Toast.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
