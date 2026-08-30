@@ -10,6 +10,7 @@ import {
 import { formatTimeAgo } from '@utils/formatUtils';
 
 import {
+  Button,
   EmptyState,
   MetricCard,
   Spinner,
@@ -17,29 +18,80 @@ import {
 } from '@ui/index';
 
 import type { AsyncResource } from '@features/history-data';
-import type { PromptHistory } from '@services/prompts/promptsService';
+import type { PromptHistory, PromptRecord } from '@services/prompts/promptsService';
 import type { FC } from 'react';
+
+export type PromptScope = 'session' | 'project' | 'all';
 
 export interface PromptHistoryPanelProps {
   readonly history: AsyncResource<PromptHistory>;
   readonly nowMs: number;
+  // What is selected elsewhere, so the list can answer about that rather than
+  // about everything ever typed.
+  readonly projectPath?: string | undefined;
+  readonly sessionId?: string | undefined;
   // Only ever called for a prompt whose transcript still exists.
   readonly onOpenPrompt: (filePath: string, timestampMs: number) => void;
 }
 
 const MAX_ROWS = 300;
 
+const SCOPE_LABELS: Record<PromptScope, string> = {
+  session: 'promptScopeSession',
+  project: 'promptScopeProject',
+  all: 'promptScopeAll',
+};
+
+const narrowestOf = (
+  projectPath: string | undefined,
+  sessionId: string | undefined,
+): PromptScope => {
+  if (sessionId != null) {
+    return 'session';
+  }
+
+  return projectPath == null ? 'all' : 'project';
+};
+
+const inScope = (
+  prompt: PromptRecord,
+  scope: PromptScope,
+  projectPath: string | undefined,
+  sessionId: string | undefined,
+): boolean => {
+  if (scope === 'all') {
+    return true;
+  }
+
+  if (scope === 'session') {
+    return prompt.sessionId === sessionId;
+  }
+
+  return prompt.projectPath === projectPath;
+};
+
 export const PromptHistoryPanel: FC<PromptHistoryPanelProps> = ({
   history,
   nowMs,
+  projectPath,
+  sessionId,
   onOpenPrompt,
 }) => {
   const { t, i18n } = useTranslation('session');
   const [query, setQuery] = useState('');
+  const [chosen, setChosen] = useState<PromptScope>();
   const data = history.data;
   const needle = query.trim().toLowerCase();
+  /*
+   * The narrowest thing selected is what the reader is looking at, so that is
+   * what the list answers about until they ask for something wider.
+   */
+  const narrowest = narrowestOf(projectPath, sessionId);
+  const scope = chosen ?? narrowest;
   const matches = useMemo(() => {
-    const prompts = data?.prompts ?? [];
+    const prompts = (data?.prompts ?? []).filter((prompt) => {
+      return inScope(prompt, scope, projectPath, sessionId);
+    });
     const filtered = needle.length === 0
       ? prompts
       : prompts.filter((prompt) => {
@@ -48,7 +100,12 @@ export const PromptHistoryPanel: FC<PromptHistoryPanelProps> = ({
         });
 
     return filtered.slice(0, MAX_ROWS);
-  }, [data, needle]);
+  }, [data, needle, projectPath, scope, sessionId]);
+  const scopes: readonly PromptScope[] = [
+    ...sessionId == null ? [] : ['session' as const],
+    ...projectPath == null ? [] : ['project' as const],
+    'all',
+  ];
   const orphanedProjects = (data?.projects ?? []).filter((project) => {
     return project.orphaned;
   });
@@ -72,6 +129,30 @@ export const PromptHistoryPanel: FC<PromptHistoryPanelProps> = ({
 
       {data != null && (
         <>
+          {scopes.length > 1 && (
+            <nav
+              className="
+                flex w-fit items-center gap-1 rounded-lg bg-muted p-0.5
+              "
+              aria-label={t('promptScopes')}
+            >
+              {scopes.map((name) => {
+                return (
+                  <Button
+                    key={name}
+                    size="sm"
+                    variant={name === scope ? 'primary' : 'ghost'}
+                    pressed={name === scope}
+                    onClick={() => {
+                      setChosen(name);
+                    }}
+                  >
+                    {t(SCOPE_LABELS[name])}
+                  </Button>
+                );
+              })}
+            </nav>
+          )}
           <div className="
             grid gap-3
             sm:grid-cols-3

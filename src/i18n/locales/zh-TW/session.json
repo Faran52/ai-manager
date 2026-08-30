@@ -78,5 +78,9 @@
   "searchPrompts": "搜尋提示詞",
   "noPrompts": "沒有相符的提示詞",
   "openPromptSession": "開啟輸入它的工作階段",
-  "promptSessionGone": "工作階段已刪除"
+  "promptSessionGone": "工作階段已刪除",
+  "promptScopeSession": "本次工作階段",
+  "promptScopeProject": "本專案",
+  "promptScopeAll": "全部",
+  "promptScopes": "提示詞範圍"
 }

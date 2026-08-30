@@ -57,11 +57,11 @@ const projectPayload: ProjectPayload = {
   ],
 };
 
-const sessionsPayload = (name: string) => {
+const sessionsPayload = (name: string, agent = 'claude') => {
   return {
     sessions: [
       {
-        agent: 'claude',
+        agent,
         actualSessionId: 's1',
         id: 's1',
         filePath: `/r/${name}/s1.jsonl`,
@@ -730,7 +730,7 @@ describe('HistoryApp keyboard shortcuts', () => {
     expect(await screen.findByText('Settings manager')).toBeDefined();
 
     await userEvent.keyboard('6');
-    expect(await screen.findByText('No project selected')).toBeDefined();
+    expect(await screen.findByRole('button', { name: 'Board' })).toBeDefined();
 
     await userEvent.keyboard('2');
     expect(await screen.findByText(/No analytics for/)).toBeDefined();
@@ -885,10 +885,8 @@ describe('HistoryApp board', () => {
     await screen.findByText('alpha');
     await openProject('alpha');
 
-    await userEvent.click(screen.getByRole('button', { name: /Board/ }));
-    expect(await screen.findByText('Board for alpha')).toBeDefined();
-
-    await userEvent.click(screen.getByRole('button', { name: /File edits/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Analytics/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'File edits' }));
     await userEvent.click(await screen.findByText('src/a.ts'));
     await userEvent.click(await screen.findByText('Login fix'));
 
@@ -996,6 +994,121 @@ describe('HistoryApp retention on launch', () => {
     await screen.findByText('alpha');
 
     expect(screen.queryByText(/Retention archived/)).toBeNull();
+  });
+});
+
+describe('HistoryApp prompt scope', () => {
+  test('offers no session scope for an agent that records no prompts', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: RequestInfo | URL) => {
+        const path = toPath(url);
+
+        if (path.endsWith('/projects')) {
+          return Response.json({
+            projects: [{
+              agent: 'codex',
+              id: 'proj-a',
+              name: 'alpha',
+              actualPath: '/repo/alpha',
+              sessionCount: 1,
+              messageCount: 2,
+              lastActivityMs: Date.UTC(2026, 0, 1),
+            }],
+          });
+        }
+        if (path.endsWith('/sessions')) {
+          return Response.json({
+            sessions: [{
+              ...sessionsPayload('alpha').sessions[0],
+              agent: 'codex',
+              projectId: 'proj-a',
+            }],
+          });
+        }
+        if (path.endsWith('/prompts')) {
+          return Response.json({
+            total: 1,
+            projects: [],
+            prompts: [{
+              text: 'a claude prompt',
+              timestampMs: Date.UTC(2026, 0, 1),
+              projectPath: '/repo/alpha',
+              projectName: 'alpha',
+              sessionId: 's1',
+              filePath: '/r/alpha/s1.jsonl',
+            }],
+          });
+        }
+
+        return Response.json({ sessions: [] });
+      }),
+    );
+
+    render(<HistoryApp />);
+
+    const label = await screen.findByText('alpha');
+
+    await userEvent.click(label);
+
+    const item = label.closest('li');
+
+    await userEvent.click(within(item ?? document.body).getByText('Codex CLI'));
+    await userEvent.click(screen.getByRole('button', { name: /Sessions/ }));
+    await userEvent.click(await screen.findByText('The chosen one'));
+    await userEvent.click(await screen.findByRole('button', { name: 'Prompts' }));
+
+    expect(await screen.findByText('a claude prompt')).toBeDefined();
+    expect(screen.queryByRole('button', { name: 'This session' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Everything' })).toBeDefined();
+  });
+
+  test('narrows to the session in view when its agent records prompts', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: RequestInfo | URL) => {
+        const path = toPath(url);
+
+        if (path.endsWith('/projects')) {
+          return Response.json(projectPayload);
+        }
+        if (path.endsWith('/sessions')) {
+          return Response.json({
+            sessions: [{
+              ...sessionsPayload('alpha').sessions[0],
+              projectId: 'proj-a',
+            }],
+          });
+        }
+        if (path.endsWith('/prompts')) {
+          return Response.json({
+            total: 1,
+            projects: [],
+            prompts: [{
+              text: 'typed here',
+              timestampMs: Date.UTC(2026, 0, 1),
+              projectPath: '/repo/alpha',
+              projectName: 'alpha',
+              sessionId: 's1',
+              filePath: '/r/alpha/s1.jsonl',
+            }],
+          });
+        }
+
+        return Response.json({ sessions: [] });
+      }),
+    );
+
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+    await openProject('alpha');
+
+    await userEvent.click(screen.getByRole('button', { name: /Sessions/ }));
+    await userEvent.click(await screen.findByText('The chosen one'));
+    await userEvent.click(await screen.findByRole('button', { name: 'Prompts' }));
+
+    expect(await screen.findByRole('button', { name: 'This session' })).toBeDefined();
+    expect(screen.getByText('typed here')).toBeDefined();
   });
 });
 

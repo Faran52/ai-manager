@@ -285,6 +285,21 @@ beforeEach(async () => {
       metadata: { diff: 'not a diff at all' },
     },
   });
+  addPart(database, 'part_c9', 'msg_patch', 103, {
+    type: 'tool',
+    tool: 'edit',
+    callID: 'call_camel',
+    state: {
+      status: 'completed',
+      input: {
+        filePath: '/camel.ts',
+        oldString: 'before',
+        newString: 'after',
+        replaceAll: true,
+      },
+      output: 'Edit applied successfully.',
+    },
+  });
   addPart(database, 'part_c8', 'msg_patch', 102, {
     type: 'tool',
     tool: 'edit',
@@ -819,5 +834,24 @@ describe('opencode patches', () => {
     expect(byId.get('call_edit')?.patch?.[0]?.lines).toEqual([' kept', '-gone', '+added']);
     expect(byId.get('call_nodiff')?.patch).toBeUndefined();
     expect(byId.get('call_badmeta')?.patch).toBeUndefined();
+  });
+});
+
+describe('opencode field casing', () => {
+  test('reads the camel case names opencode writes', async () => {
+    const entries = await loadOpenCodeEntries(reference('ses_patch'), [root]);
+    const call = (entries ?? []).flatMap((entry) => {
+      return entry.kind === 'assistant' ? entry.blocks : [];
+    }).flatMap((block) => {
+      return block.blockType === 'tool-use' && block.call.id === 'call_camel' ? [block.call] : [];
+    })[0];
+
+    expect(call?.input).toEqual({
+      kind: 'file-edit',
+      path: '/camel.ts',
+      oldString: 'before',
+      newString: 'after',
+      replaceAll: true,
+    });
   });
 });

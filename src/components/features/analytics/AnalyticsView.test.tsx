@@ -11,8 +11,10 @@ import {
 import { AnalyticsView } from './AnalyticsView';
 
 import type { AsyncResource } from '@features/history-data';
+import type { EditedFile } from '@services/edits/editsService';
 import type { GlobalStats, ProjectStats } from '@services/stats/statsService';
 import type { StorageReport } from '@services/storage/storageService';
+import type { AnalyticsViewProps } from './AnalyticsView';
 
 const stats: ProjectStats = {
   projectId: 'p',
@@ -132,62 +134,92 @@ const storageResource: AsyncResource<StorageReport> = {
   },
 };
 
+const noop = (): void => {
+  return undefined;
+};
+
+const editsResource = {
+  status: 'ready',
+  data: [],
+  reload: noop,
+} satisfies AsyncResource<readonly EditedFile[]>;
+
+const boardProps = {
+  sessions: [],
+  sessionsStatus: 'ready',
+  edits: editsResource,
+  nowMs: Date.UTC(2026, 0, 3),
+  panel: 'report',
+  onPanelChange: noop,
+  onOpenBoardSession: noop,
+  onOpenEdit: noop,
+} satisfies Pick<
+  AnalyticsViewProps,
+  'sessions'
+  | 'sessionsStatus'
+  | 'edits'
+  | 'nowMs'
+  | 'panel'
+  | 'onPanelChange'
+  | 'onOpenBoardSession'
+  | 'onOpenEdit'
+>;
+
 const renderView = (
   projectStats: ProjectStats | null = stats,
   status: 'loading' | 'ready' | 'error' = 'ready',
   onOpenSession = vi.fn(),
-  projectKey = 'claude:webapp',
+  scope: 'global' | 'project' = 'project',
+  onScopeChange: (next: 'global' | 'project') => void = noop,
 ) => {
   return render(
     <AnalyticsView
+      {...boardProps}
       stats={projectStats}
       storage={storageResource}
       status={status}
       projectName="webapp"
-      projectKey={projectKey}
+      scope={scope}
+      onScopeChange={onScopeChange}
       onOpenSession={onOpenSession}
     />,
   );
 };
 
-const selectProject = async (): Promise<void> => {
-  await userEvent.click(screen.getByRole('button', { name: 'Project: webapp' }));
-};
-
-test('shows the global report when no project has been chosen', async () => {
-  renderView(stats, 'ready', vi.fn(), '');
+test('reports on the whole machine in the global scope', async () => {
+  renderView(stats, 'ready', vi.fn(), 'global');
 
   expect(await screen.findByText('Provider distribution')).toBeDefined();
   expect(screen.getByText('Claude Code · 3 sessions · 2 projects')).toBeDefined();
   expect(screen.queryByText('Big one')).toBeNull();
+});
 
-  await selectProject();
+test('asks for the scope the reader picked', async () => {
+  const onScopeChange = vi.fn();
+
+  renderView(stats, 'ready', vi.fn(), 'global', onScopeChange);
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Project: webapp' }));
+  expect(onScopeChange).toHaveBeenCalledWith('project');
+
   await userEvent.click(screen.getByRole('button', { name: 'Global' }));
-
-  expect(screen.getByText('Provider distribution')).toBeDefined();
+  expect(onScopeChange).toHaveBeenCalledWith('global');
 });
 
-test('opens on the project already chosen rather than on the global report', async () => {
-  renderView();
-
-  expect(await screen.findByText('Big one')).toBeDefined();
-  expect(screen.getByRole('button', { name: 'Project: webapp' }).getAttribute('aria-pressed'))
-    .toBe('true');
-});
-
-test('shows project loading and empty states after changing scope', async () => {
+test('shows project loading and empty states', () => {
   const view = renderView(null, 'loading');
 
-  await selectProject();
   expect(screen.getByRole('status')).toBeDefined();
 
   view.rerender(
     <AnalyticsView
+      {...boardProps}
       stats={null}
       storage={storageResource}
       status="ready"
       projectName="webapp"
-      projectKey="claude:webapp"
+      scope="project"
+      onScopeChange={noop}
       onOpenSession={vi.fn()}
     />,
   );
@@ -199,7 +231,6 @@ test('renders project metrics, panels and opens a top session', async () => {
   const onOpenSession = vi.fn();
 
   renderView(stats, 'ready', onOpenSession);
-  await selectProject();
 
   expect(screen.getByText('12k')).toBeDefined();
   expect(screen.getAllByText('3.5k').length).toBeGreaterThan(0);
@@ -214,17 +245,16 @@ test('renders project metrics, panels and opens a top session', async () => {
   expect(onOpenSession).toHaveBeenCalledWith(stats.topSessions[0]);
 });
 
-test('renders project analytics without ranked sessions', async () => {
+test('renders project analytics without ranked sessions', () => {
   renderView({
     ...stats,
     topSessions: [],
   });
-  await selectProject();
 
   expect(document.querySelector('[data-top-sessions]')).not.toBeNull();
 });
 
-test('labels project metrics without recorded usage', async () => {
+test('labels project metrics without recorded usage', () => {
   renderView({
     ...stats,
     totals: {
@@ -240,14 +270,13 @@ test('labels project metrics without recorded usage', async () => {
       durationMs: 0,
     },
   });
-  await selectProject();
 
   expect(screen.getAllByText('Not recorded')).toHaveLength(2);
   expect(screen.getByText("Token activity isn't recorded for this agent.")).toBeDefined();
   expect(document.querySelector('[data-activity-heatmap]')).toBeNull();
 });
 
-test('derives a project billing total from a legacy payload', async () => {
+test('derives a project billing total from a legacy payload', () => {
   renderView({
     ...stats,
     totals: {
@@ -255,12 +284,11 @@ test('derives a project billing total from a legacy payload', async () => {
       billingTokens: undefined,
     },
   });
-  await selectProject();
 
   expect(screen.getAllByText('3.5k').length).toBeGreaterThan(0);
 });
 
-test('shows the session id when a ranked session has no title', async () => {
+test('shows the session id when a ranked session has no title', () => {
   renderView({
     ...stats,
     topSessions: [{
@@ -272,14 +300,12 @@ test('shows the session id when a ranked session has no title', async () => {
       lastTimestampMs: 0,
     }],
   });
-  await selectProject();
 
   expect(screen.getByText('zzz')).toBeDefined();
 });
 
-test('shows a project error state', async () => {
+test('shows a project error state', () => {
   renderView(null, 'error');
-  await selectProject();
 
   expect(screen.getByText("Couldn't load analytics for webapp")).toBeDefined();
   expect(screen.getByText('Try refreshing from the header.')).toBeDefined();
@@ -330,45 +356,4 @@ test('does not report a request error after unmounting', async () => {
 
   await expect(pending.promise).rejects.toThrow('offline');
   expect(document.querySelector('[data-analytics-view]')).toBeNull();
-});
-
-test('follows the project that was chosen instead of staying on the global report', async () => {
-  const view = renderView(stats, 'ready', vi.fn(), '');
-
-  expect(await screen.findByText('Provider distribution')).toBeDefined();
-  expect(screen.getByRole('button', { name: 'Global' }).getAttribute('aria-pressed')).toBe('true');
-
-  view.rerender(
-    <AnalyticsView
-      stats={stats}
-      storage={storageResource}
-      status="ready"
-      projectName="webapp"
-      projectKey="claude:webapp"
-      onOpenSession={vi.fn()}
-    />,
-  );
-
-  expect(screen.getByRole('button', { name: 'Project: webapp' }).getAttribute('aria-pressed'))
-    .toBe('true');
-  expect(screen.getByText('Big one')).toBeDefined();
-});
-
-test('leaves the reader on the global report when they asked for it', async () => {
-  const view = renderView(stats, 'ready', vi.fn(), 'claude:webapp');
-
-  await userEvent.click(await screen.findByRole('button', { name: 'Global' }));
-
-  view.rerender(
-    <AnalyticsView
-      stats={stats}
-      storage={storageResource}
-      status="ready"
-      projectName="webapp"
-      projectKey="claude:webapp"
-      onOpenSession={vi.fn()}
-    />,
-  );
-
-  expect(screen.getByRole('button', { name: 'Global' }).getAttribute('aria-pressed')).toBe('true');
 });

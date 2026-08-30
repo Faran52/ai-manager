@@ -85,5 +85,9 @@
   "reclaimBusy": "正在删除…",
   "reclaimFreed_one": "已删除 {{count}} 项，释放 {{size}}。",
   "reclaimFreed_other": "已删除 {{count}} 项，释放 {{size}}。",
-  "reclaimFailed": "未能删除，没有做任何更改。"
+  "reclaimFailed": "未能删除，没有做任何更改。",
+  "panelReport": "报告",
+  "panelBoard": "面板",
+  "panelEdits": "文件编辑",
+  "analyticsPanels": "分析面板"
 }

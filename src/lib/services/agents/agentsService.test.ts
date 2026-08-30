@@ -7,11 +7,16 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
-import { expect, test } from 'vitest';
+import {
+  describe,
+  expect,
+  test,
+} from 'vitest';
 
 import {
   listAgentProjects,
   listAgentSessions,
+  listNewestSessions,
   loadAgentEntries,
   resolveAgentPaths,
 } from './agentsService';
@@ -366,4 +371,51 @@ test('loadAgentEntries reads antigravity transcripts and refuses ones outside th
   const outside = await mkdtemp(join(tmpdir(), 'antigravity-outside-'));
 
   await expect(loadAgentEntries(file, 'antigravity', [outside])).resolves.toBeUndefined();
+});
+
+describe('listNewestSessions', () => {
+  const homeWithTwo = async (): Promise<string> => {
+    const home = await mkdtemp(join(tmpdir(), 'newest-'));
+    const claude = join(home, '.claude', 'projects', 'p');
+
+    await mkdir(claude, { recursive: true });
+
+    for (const [name, day] of [['old', '01'], ['new', '09']]) {
+      await writeFile(join(claude, `${String(name)}.jsonl`), JSON.stringify({
+        type: 'user',
+        uuid: String(name),
+        timestamp: `2026-01-${String(day)}T00:00:00Z`,
+        message: {
+          role: 'user',
+          content: 'Hi',
+        },
+      }));
+    }
+
+    return home;
+  };
+
+  test('gathers sessions from every project, newest first', async () => {
+    const home = await homeWithTwo();
+    const sessions = await listNewestSessions(resolveAgentPaths({
+      env: {},
+      home,
+    }), 10);
+
+    expect(sessions.map((session) => {
+      return session.id;
+    })).toEqual(['new', 'old']);
+  });
+
+  test('stops at the cap it was given', async () => {
+    const home = await homeWithTwo();
+    const sessions = await listNewestSessions(resolveAgentPaths({
+      env: {},
+      home,
+    }), 1);
+
+    expect(sessions.map((session) => {
+      return session.id;
+    })).toEqual(['new']);
+  });
 });

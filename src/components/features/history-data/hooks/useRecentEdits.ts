@@ -14,12 +14,18 @@ import type { AsyncResource, AsyncSnapshot } from '../utils/asyncResourceUtils';
 
 const EMPTY: readonly EditedFile[] = [];
 
+/*
+ * A null project asks about the whole machine rather than nothing at all, so
+ * the board answers in both scopes; `enabled` is what decides whether to ask.
+ */
 export const useRecentEdits = (
   project: ProjectSummary | null,
+  enabled = true,
 ): AsyncResource<readonly EditedFile[]> => {
   const [snapshot, setSnapshot] = useState<AsyncSnapshot<readonly EditedFile[]>>({ status: 'loading' });
   const [nonce, setNonce] = useState(0);
-  const projectKey = project == null ? '' : `${project.agent}:${project.id}`;
+  const chosen = project == null ? '' : `${project.agent}:${project.id}`;
+  const projectKey = `${String(enabled)} ${chosen}`;
   const [prevProjectKey, setPrevProjectKey] = useState(projectKey);
 
   if (projectKey !== prevProjectKey) {
@@ -32,9 +38,13 @@ export const useRecentEdits = (
 
     void runLoad(
       async () => {
-        return project == null
-          ? EMPTY
-          : (await fetchRecentEdits({
+        if (!enabled) {
+          return EMPTY;
+        }
+
+        return (await fetchRecentEdits(project == null
+          ? {}
+          : {
               agent: project.agent,
               projectId: project.id,
             })).files;
@@ -49,7 +59,7 @@ export const useRecentEdits = (
     return () => {
       active = false;
     };
-  }, [nonce, project]);
+  }, [enabled, nonce, project]);
 
   const reload = useCallback(() => {
     setNonce((value) => {

@@ -10,6 +10,7 @@ import type {
   AssistantTurnEntry,
   HistoryEntry,
   ResultImage,
+  SingleEdit,
   SystemTurnEntry,
   TodoItem,
   ToolCall,
@@ -24,6 +25,7 @@ import type {
   RawHistoryLine,
   RawMessagePayload,
   RawResultPart,
+  RawSingleEdit,
   RawToolInput,
   RawToolResultBlock,
   RawToolUseBlock,
@@ -212,6 +214,23 @@ const genericRows = (input: RawToolInput): readonly ToolInputRow[] => {
   return rows;
 };
 
+/*
+ * Agents disagree about casing for the same field: Claude writes file_path and
+ * OpenCode writes filePath. Reading both here keeps one shape for everything
+ * downstream, and stops an edit arriving with no file attached to it.
+ */
+const pathOf = (input: RawToolInput): string => {
+  return input.file_path ?? input.filePath ?? '';
+};
+
+const editOf = (edit: RawSingleEdit): SingleEdit => {
+  return {
+    oldString: edit.old_string ?? edit.oldString ?? '',
+    newString: edit.new_string ?? edit.newString ?? '',
+    replaceAll: (edit.replace_all ?? edit.replaceAll) === true,
+  };
+};
+
 export const parseToolInput = (name: string, input: RawToolInput): ToolCallInput => {
   switch (name) {
     case 'Bash':
@@ -223,37 +242,27 @@ export const parseToolInput = (name: string, input: RawToolInput): ToolCallInput
     case 'Write':
       return {
         kind: 'file-write',
-        path: input.file_path ?? '',
+        path: pathOf(input),
         content: input.content ?? '',
       };
     case 'Edit': {
       return {
         kind: 'file-edit',
-        path: input.file_path ?? '',
-        oldString: input.old_string ?? '',
-        newString: input.new_string ?? '',
-        replaceAll: input.replace_all === true,
+        path: pathOf(input),
+        ...editOf(input),
       };
     }
     case 'MultiEdit': {
-      const edits = (input.edits ?? []).map((edit) => {
-        return {
-          oldString: edit.old_string ?? '',
-          newString: edit.new_string ?? '',
-          replaceAll: edit.replace_all === true,
-        };
-      });
-
       return {
         kind: 'multi-edit',
-        path: input.file_path ?? '',
-        edits,
+        path: pathOf(input),
+        edits: (input.edits ?? []).map(editOf),
       };
     }
     case 'Read':
       return {
         kind: 'file-read',
-        path: input.file_path ?? '',
+        path: pathOf(input),
         offset: input.offset,
         limit: input.limit,
       };

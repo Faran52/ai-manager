@@ -1,5 +1,6 @@
 import {
   listAgentSessions,
+  listNewestSessions,
   loadAgentEntries,
   pathsFor,
 } from '../agents/agentsService';
@@ -79,7 +80,24 @@ const targetOf = (input: ToolCallInput): EditTarget | undefined => {
   }
 };
 
+/*
+ * A change is described either by the call that asked for it or by the report
+ * that followed it, depending on the agent. Both are read here so that no agent
+ * looks as though it changed nothing.
+ */
 const editsInEntry = (entry: HistoryEntry): readonly EditTarget[] => {
+  if (entry.kind === 'user') {
+    return entry.outcomes.flatMap((outcome) => {
+      return (outcome.changed ?? []).map((file) => {
+        return {
+          path: file.path,
+          kind: file.added ? 'write' : 'edit',
+          changes: 1,
+        };
+      });
+    });
+  }
+
   if (entry.kind !== 'assistant') {
     return [];
   }
@@ -117,21 +135,31 @@ const record = (
   files.set(target.path, existing);
 };
 
+/*
+ * Without a project this answers for the whole machine, from the same newest
+ * few sessions the board draws, so the two views never disagree about what has
+ * been happening lately.
+ */
 export const listRecentEdits = async (
   roots: AgentRoots,
-  agent: AgentId,
-  projectId: string,
+  agent?: AgentId,
+  projectId?: string,
 ): Promise<readonly EditedFile[]> => {
-  const agentDirs = pathsFor(roots, agent);
-  const sessions = [...await listAgentSessions(roots, agent, projectId)]
-    .sort((left, right) => {
-      return right.lastTimestampMs - left.lastTimestampMs;
-    })
-    .slice(0, SESSION_SCAN_LIMIT);
+  const sessions = agent == null || projectId == null
+    ? await listNewestSessions(roots, SESSION_SCAN_LIMIT)
+    : [...await listAgentSessions(roots, agent, projectId)]
+        .sort((left, right) => {
+          return right.lastTimestampMs - left.lastTimestampMs;
+        })
+        .slice(0, SESSION_SCAN_LIMIT);
   const files = new Map<string, FileAccumulator>();
 
   for (const session of sessions) {
-    const entries = await loadAgentEntries(session.filePath, agent, agentDirs) ?? [];
+    const entries = await loadAgentEntries(
+      session.filePath,
+      session.agent,
+      pathsFor(roots, session.agent),
+    ) ?? [];
     const title = session.title ?? session.summary ?? session.preview ?? session.id;
 
     for (const entry of entries) {

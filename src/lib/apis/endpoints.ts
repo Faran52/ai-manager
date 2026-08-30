@@ -3,6 +3,7 @@ import { isAgentId } from '@config/agents';
 import {
   listAgentProjects,
   listAgentSessions,
+  listNewestSessions,
   managedAgents,
   pathsFor,
   readAgentSetup,
@@ -85,6 +86,9 @@ export interface UpdateEndpointDeps {
   readonly updateDeps?: Parameters<typeof checkForUpdate>[1] | undefined;
 }
 
+// One square per session, so the board stays a picture rather than a list.
+const BOARD_LIMIT = 400;
+
 const isAgent = (value: unknown): value is AgentId => {
   return typeof value === 'string' && isAgentId(value);
 };
@@ -136,6 +140,14 @@ const isReclaimBody = (body: object): body is ReclaimBody => {
     && body.paths.every((path) => {
       return typeof path === 'string' && path.length > 0;
     });
+};
+
+const isRecentEditsBody = (body: object): body is RecentEditsBody => {
+  if ('projectId' in body && typeof body.projectId !== 'string') {
+    return false;
+  }
+
+  return !('agent' in body) || isAgent(body.agent);
 };
 
 const isFileHistoryBody = (body: object): body is FileHistoryBody => {
@@ -461,15 +473,24 @@ export const handleRecentEdits = async (request: Request, deps?: EndpointDeps): 
   return withJsonErrors(async () => {
     const body = await readJsonObject(request);
 
-    if (body == null || !isSessionsBody(body)) {
-      return jsonError(BAD_REQUEST, 'A non-empty projectId is required.');
+    if (body == null || !isRecentEditsBody(body)) {
+      return jsonError(BAD_REQUEST, 'A projectId must be a string and an agent must be known.');
     }
 
-    const target: RecentEditsBody = body;
-
     return jsonOk({
-      files: await listRecentEdits(resolveEndpointRoots(deps), target.agent, target.projectId),
+      files: await listRecentEdits(resolveEndpointRoots(deps), body.agent, body.projectId),
     });
+  });
+};
+
+export const handleNewestSessions = async (
+  request: Request,
+  deps?: EndpointDeps,
+): Promise<Response> => {
+  return withJsonErrors(async () => {
+    await request.text();
+
+    return jsonOk({ sessions: await listNewestSessions(resolveEndpointRoots(deps), BOARD_LIMIT) });
   });
 };
 

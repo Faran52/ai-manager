@@ -19,25 +19,63 @@ import {
   Spinner,
 } from '@ui/index';
 
+import type { AgentId } from '@config/agents';
 import type { AsyncResource } from '@features/history-data';
-import type { StorageReport } from '@services/storage/storageService';
+import type {
+  AgentStorage,
+  StorageEntry,
+  StorageReport,
+} from '@services/storage/storageService';
 import type { FC } from 'react';
 
 export interface StoragePanelProps {
   readonly storage: AsyncResource<StorageReport>;
+  // Naming an agent narrows the report to what that agent alone is holding.
+  readonly agent?: AgentId | undefined;
 }
 
-export const StoragePanel: FC<StoragePanelProps> = ({ storage }) => {
+interface Held {
+  readonly shown: readonly AgentStorage[];
+  readonly totalBytes: number;
+  readonly reclaimableBytes: number;
+  readonly disposable: readonly StorageEntry[];
+}
+
+// Naming an agent narrows every figure here, not only the list, so a project's
+// own total never reads as the whole machine's.
+const heldBy = (report: StorageReport | undefined, agent: AgentId | undefined): Held => {
+  const shown = (report?.agents ?? []).filter((held) => {
+    return agent == null || held.agent === agent;
+  });
+
+  return {
+    shown,
+    totalBytes: shown.reduce((total, held) => {
+      return total + held.bytes;
+    }, 0),
+    reclaimableBytes: shown.reduce((total, held) => {
+      return total + held.reclaimableBytes;
+    }, 0),
+    disposable: shown.flatMap((held) => {
+      return held.entries.filter((entry) => {
+        return entry.reclaimable;
+      });
+    }),
+  };
+};
+
+export const StoragePanel: FC<StoragePanelProps> = ({ storage, agent }) => {
   const { t } = useTranslation('analytics');
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string>();
   const report = storage.data;
-  const disposable = (report?.agents ?? []).flatMap((agent) => {
-    return agent.entries.filter((entry) => {
-      return entry.reclaimable;
-    });
-  });
+  const {
+    shown,
+    totalBytes,
+    reclaimableBytes,
+    disposable,
+  } = heldBy(report, agent);
 
   const freeThem = (): void => {
     setBusy(true);
@@ -92,11 +130,11 @@ export const StoragePanel: FC<StoragePanelProps> = ({ storage }) => {
           >
             <MetricCard
               label={t('storageTotal')}
-              value={sizeLabel(report.totalBytes)}
+              value={sizeLabel(totalBytes)}
               hint={report.partial ? t('storagePartial') : undefined}
               icon={<HardDrive className="size-3.5" />}
             />
-            <MetricCard label={t('storageAgents')} value={String(report.agents.length)} />
+            <MetricCard label={t('storageAgents')} value={String(shown.length)} />
           </div>
 
           {disposable.length > 0 && (
@@ -106,7 +144,7 @@ export const StoragePanel: FC<StoragePanelProps> = ({ storage }) => {
             "
             >
               <p className="text-xs text-muted-foreground">
-                {t('reclaimAvailable', { size: sizeLabel(report.reclaimableBytes) })}
+                {t('reclaimAvailable', { size: sizeLabel(reclaimableBytes) })}
               </p>
               <Button
                 size="sm"
@@ -125,27 +163,27 @@ export const StoragePanel: FC<StoragePanelProps> = ({ storage }) => {
             <p className="text-xs text-muted-foreground" data-reclaim-notice>{notice}</p>
           )}
 
-          {report.agents.length === 0
+          {shown.length === 0
             ? <EmptyState icon={<HardDrive className="size-8" />} title={t('storageNone')} />
             : (
                 <ul className="grid gap-3">
-                  {report.agents.map((agent) => {
+                  {shown.map((held) => {
                     return (
                       <li
-                        key={agent.agent}
+                        key={held.agent}
                         className="
                           grid gap-1.5 rounded-xl border border-border bg-card
                           p-3
                         "
                       >
                         <BarRow
-                          label={agent.label}
-                          max={report.totalBytes}
-                          value={agent.bytes}
+                          label={held.label}
+                          max={totalBytes}
+                          value={held.bytes}
                           formatValue={sizeLabel}
                         />
                         <ul className="grid gap-0.5 ps-2">
-                          {agent.entries.map((entry) => {
+                          {held.entries.map((entry) => {
                             return (
                               <li
                                 key={entry.path}

@@ -90,5 +90,9 @@
   "searchPrompts": "البحث في المطالبات",
   "noPrompts": "لا توجد مطالبات مطابقة",
   "openPromptSession": "افتح الجلسة التي كُتبت فيها",
-  "promptSessionGone": "حُذفت الجلسة"
+  "promptSessionGone": "حُذفت الجلسة",
+  "promptScopeSession": "هذه الجلسة",
+  "promptScopeProject": "هذا المشروع",
+  "promptScopeAll": "كل شيء",
+  "promptScopes": "نطاق الطلبات"
 }

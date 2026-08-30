@@ -6,26 +6,16 @@ import {
   vi,
 } from 'vitest';
 
-import { BoardView } from './BoardView';
+import { BoardPanels } from './BoardPanels';
 
 import type { AsyncResource } from '@features/history-data';
-import type { EditedFile } from '@services/edits/editsService';
-import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
+import type { EditedFile, FileEdit } from '@services/edits/editsService';
+import type { SessionSummary } from '@services/history/historyService';
 
 const NOW = Date.parse('2026-08-28T12:00:00Z');
 
 const noop = (): void => {
   return undefined;
-};
-
-const PROJECT: ProjectSummary = {
-  agent: 'claude',
-  id: 'proj',
-  name: 'webapp',
-  actualPath: '/repo',
-  sessionCount: 2,
-  messageCount: 10,
-  lastActivityMs: NOW,
 };
 
 const session = (id: string, messageCount: number): SessionSummary => {
@@ -74,16 +64,18 @@ const editsResource = (
 };
 
 const renderBoard = (overrides: {
-  readonly project?: ProjectSummary | null;
+  readonly panel?: 'sessions' | 'edits';
+  readonly project?: string | undefined;
   readonly sessions?: readonly SessionSummary[];
-  readonly sessionsStatus?: AsyncResource<readonly SessionSummary[]>['status'];
+  readonly sessionsStatus?: 'loading' | 'ready' | 'error';
   readonly edits?: AsyncResource<readonly EditedFile[]>;
   readonly onOpenSession?: (session: SessionSummary) => void;
-  readonly onOpenEdit?: (edit: EditedFile['recent'][number]) => void;
+  readonly onOpenEdit?: (edit: FileEdit) => void;
 } = {}): void => {
   render(
-    <BoardView
-      project={overrides.project === undefined ? PROJECT : overrides.project}
+    <BoardPanels
+      panel={overrides.panel ?? 'sessions'}
+      project={'project' in overrides ? overrides.project : '/repo'}
       sessions={overrides.sessions ?? [session('a', 10), session('b', 5)]}
       sessionsStatus={overrides.sessionsStatus ?? 'ready'}
       edits={overrides.edits ?? editsResource('ready', [FILE])}
@@ -94,21 +86,14 @@ const renderBoard = (overrides: {
   );
 };
 
-test('asks for a project before laying anything out', () => {
-  renderBoard({ project: null });
-
-  expect(screen.getByText('No project selected')).toBeDefined();
-});
-
 test('lays the sessions out with a timeline under them', () => {
   renderBoard();
 
-  expect(screen.getByText('Board for webapp')).toBeDefined();
   expect(screen.getByLabelText('Session a, 10')).toBeDefined();
   expect(screen.getByText('Sessions per day')).toBeDefined();
 });
 
-test('recolours the grid by another attribute', async () => {
+test('highlights the grid by another measure', async () => {
   renderBoard();
 
   await userEvent.click(screen.getByRole('button', { name: 'Transcript size' }));
@@ -127,8 +112,9 @@ test('opens a session from the grid', async () => {
 
 test('waits for sessions and says when there are none', () => {
   const { unmount } = render(
-    <BoardView
-      project={PROJECT}
+    <BoardPanels
+      panel="sessions"
+      project="/repo"
       sessions={[]}
       sessionsStatus="loading"
       edits={editsResource('ready', [])}
@@ -148,11 +134,13 @@ test('waits for sessions and says when there are none', () => {
   expect(screen.getByText('This project has no sessions yet')).toBeDefined();
 });
 
-test('switches to the files those sessions changed', async () => {
+test('shows the files those sessions changed', async () => {
   const onOpenEdit = vi.fn();
 
-  renderBoard({ onOpenEdit });
-  await userEvent.click(screen.getByRole('button', { name: 'File edits' }));
+  renderBoard({
+    panel: 'edits',
+    onOpenEdit,
+  });
 
   expect(screen.getByText('src/a.ts')).toBeDefined();
   expect(screen.queryByText('Sessions per day')).toBeNull();
@@ -163,21 +151,44 @@ test('switches to the files those sessions changed', async () => {
   expect(onOpenEdit).toHaveBeenCalledTimes(1);
 });
 
-test('waits for the edit scan and says when it found nothing', async () => {
-  renderBoard({ edits: editsResource('loading', undefined) });
-  await userEvent.click(screen.getByRole('button', { name: 'File edits' }));
+test('names a file in full when no project shortens it', () => {
+  renderBoard({
+    panel: 'edits',
+    project: undefined,
+  });
+
+  expect(screen.getByText('/repo/src/a.ts')).toBeDefined();
+});
+
+test('waits for the edit scan and says when it found nothing', () => {
+  const { unmount } = render(
+    <BoardPanels
+      panel="edits"
+      project="/repo"
+      sessions={[]}
+      sessionsStatus="ready"
+      edits={editsResource('loading', undefined)}
+      nowMs={NOW}
+      onOpenSession={noop}
+      onOpenEdit={noop}
+    />,
+  );
 
   expect(screen.queryByText('No file edits found')).toBeNull();
+  unmount();
 
-  renderBoard({ edits: editsResource('ready', []) });
-  await userEvent.click(screen.getAllByRole('button', { name: 'File edits' })[1] ?? document.body);
-
+  renderBoard({
+    panel: 'edits',
+    edits: editsResource('ready', []),
+  });
   expect(screen.getByText('No file edits found')).toBeDefined();
 });
 
-test('reports a failed edit scan', async () => {
-  renderBoard({ edits: editsResource('error', undefined, 'transcripts unreadable') });
-  await userEvent.click(screen.getByRole('button', { name: 'File edits' }));
+test('reports a failed edit scan', () => {
+  renderBoard({
+    panel: 'edits',
+    edits: editsResource('error', undefined, 'transcripts unreadable'),
+  });
 
   expect(screen.getByText('transcripts unreadable')).toBeDefined();
 });

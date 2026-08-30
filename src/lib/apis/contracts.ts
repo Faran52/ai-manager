@@ -119,9 +119,10 @@ export interface RunRetentionResponse {
   readonly result: RetentionRun;
 }
 
+/* Both absent means the whole machine rather than one project. */
 export interface RecentEditsBody {
-  readonly agent: AgentId;
-  readonly projectId: string;
+  readonly agent?: AgentId | undefined;
+  readonly projectId?: string | undefined;
 }
 
 export interface RecentEditsResponse {

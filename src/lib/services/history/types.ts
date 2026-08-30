@@ -107,6 +107,12 @@ export interface ResultImage {
   readonly url?: string | undefined;
 }
 
+/* A file a tool call changed, as reported by the agent that made the change. */
+export interface ChangedFile {
+  readonly path: string;
+  readonly added: boolean;
+}
+
 export interface ToolOutcome {
   readonly toolUseId: string;
   readonly status: ToolStatus;
@@ -116,6 +122,12 @@ export interface ToolOutcome {
   readonly stdout?: string | undefined;
   readonly stderr?: string | undefined;
   readonly filePath?: string | undefined;
+  /*
+   * Some agents apply a patch and report afterwards which files it touched,
+   * rather than naming a file in the call itself. Without this, everything that
+   * counts edits would see those agents as having changed nothing.
+   */
+  readonly changed?: readonly ChangedFile[] | undefined;
 }
 
 export interface TextBlock {

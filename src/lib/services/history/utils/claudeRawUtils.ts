@@ -29,14 +29,19 @@ export interface RawTodoItem {
 
 export interface RawSingleEdit {
   readonly old_string?: string;
+  readonly oldString?: string;
   readonly new_string?: string;
+  readonly newString?: string;
   readonly replace_all?: boolean;
+  readonly replaceAll?: boolean;
 }
 
 export interface RawToolInput {
   readonly command?: string | undefined;
   readonly description?: string | undefined;
   readonly file_path?: string;
+  /* OpenCode names the same fields in camel case. */
+  readonly filePath?: string;
   readonly path?: string | undefined;
   readonly pattern?: string | undefined;
   readonly glob?: string | undefined;
@@ -44,8 +49,11 @@ export interface RawToolInput {
   readonly url?: string | undefined;
   readonly prompt?: string | undefined;
   readonly old_string?: string;
+  readonly oldString?: string;
   readonly new_string?: string;
+  readonly newString?: string;
   readonly replace_all?: boolean;
+  readonly replaceAll?: boolean;
   readonly content?: string | undefined;
   readonly skill?: string | undefined;
   readonly subagent_type?: string;

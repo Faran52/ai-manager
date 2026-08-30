@@ -78,5 +78,9 @@
   "searchPrompts": "Search prompts",
   "noPrompts": "No prompts match",
   "openPromptSession": "Open the session this was typed into",
-  "promptSessionGone": "session deleted"
+  "promptSessionGone": "session deleted",
+  "promptScopeSession": "This session",
+  "promptScopeProject": "This project",
+  "promptScopeAll": "Everything",
+  "promptScopes": "Prompt scope"
 }

@@ -223,6 +223,9 @@ const rawInputOf = (state: JsonObject): RawToolInput => {
       command: optionalString(state, 'command'),
       description: optionalString(state, 'description'),
       file_path: optionalString(state, 'file_path'),
+      // OpenCode names these in camel case; without them an edit arrives with
+      // no file attached and is dropped from everything that counts edits.
+      filePath: optionalString(state, 'filePath'),
       path: optionalString(state, 'path'),
       pattern: optionalString(state, 'pattern'),
       glob: optionalString(state, 'glob'),
@@ -230,8 +233,11 @@ const rawInputOf = (state: JsonObject): RawToolInput => {
       url: optionalString(state, 'url'),
       prompt: optionalString(state, 'prompt'),
       old_string: optionalString(state, 'old_string'),
+      oldString: optionalString(state, 'oldString'),
       new_string: optionalString(state, 'new_string'),
+      newString: optionalString(state, 'newString'),
       replace_all: state.replace_all === true ? true : undefined,
+      replaceAll: state.replaceAll === true ? true : undefined,
       content: optionalString(state, 'content'),
       skill: optionalString(state, 'skill'),
       subagent_type: optionalString(state, 'subagent_type'),

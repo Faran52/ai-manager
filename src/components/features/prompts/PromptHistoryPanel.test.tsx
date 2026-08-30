@@ -140,3 +140,98 @@ test('waits while loading and reports a failure', () => {
   renderPanel(resource('error', undefined, 'unreadable'));
   expect(screen.getByText('unreadable')).toBeDefined();
 });
+
+describe('prompt scope', () => {
+  const scoped = (): AsyncResource<PromptHistory> => {
+    return resource('ready', {
+      total: 3,
+      projects: [],
+      prompts: [
+        {
+          text: 'in this session',
+          timestampMs: NOW - 1_000,
+          projectPath: '/repo/alpha',
+          projectName: 'alpha',
+          sessionId: 's1',
+          filePath: '/sessions/s1.jsonl',
+        },
+        {
+          text: 'elsewhere in this project',
+          timestampMs: NOW - 2_000,
+          projectPath: '/repo/alpha',
+          projectName: 'alpha',
+          sessionId: 's2',
+          filePath: '/sessions/s2.jsonl',
+        },
+        {
+          text: 'another project entirely',
+          timestampMs: NOW - 3_000,
+          projectPath: '/repo/beta',
+          projectName: 'beta',
+          sessionId: 's3',
+          filePath: '/sessions/s3.jsonl',
+        },
+      ],
+    });
+  };
+
+  test('answers about the session in view, and widens on request', async () => {
+    render(
+      <PromptHistoryPanel
+        history={scoped()}
+        nowMs={NOW}
+        projectPath="/repo/alpha"
+        sessionId="s1"
+        onOpenPrompt={noop}
+      />,
+    );
+
+    expect(screen.getByText('in this session')).toBeDefined();
+    expect(screen.queryByText('elsewhere in this project')).toBeNull();
+
+    await userEvent.click(screen.getByRole('button', { name: 'This project' }));
+
+    expect(screen.getByText('elsewhere in this project')).toBeDefined();
+    expect(screen.queryByText('another project entirely')).toBeNull();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Everything' }));
+
+    expect(screen.getByText('another project entirely')).toBeDefined();
+  });
+
+  test('answers about the project when no session is open', () => {
+    render(
+      <PromptHistoryPanel
+        history={scoped()}
+        nowMs={NOW}
+        projectPath="/repo/alpha"
+        onOpenPrompt={noop}
+      />,
+    );
+
+    expect(screen.queryByRole('button', { name: 'This session' })).toBeNull();
+    expect(screen.getByText('elsewhere in this project')).toBeDefined();
+    expect(screen.queryByText('another project entirely')).toBeNull();
+  });
+
+  test('offers no session scope for an agent that records no prompts', () => {
+    render(
+      <PromptHistoryPanel
+        history={scoped()}
+        nowMs={NOW}
+        projectPath="/repo/alpha"
+        sessionId={undefined}
+        onOpenPrompt={noop}
+      />,
+    );
+
+    expect(screen.queryByRole('button', { name: 'This session' })).toBeNull();
+  });
+
+  test('answers about everything when nothing is selected', () => {
+    render(<PromptHistoryPanel history={scoped()} nowMs={NOW} onOpenPrompt={noop} />);
+
+    expect(screen.queryByRole('button', { name: 'Everything' })).toBeNull();
+    expect(screen.getByText('another project entirely')).toBeDefined();
+  });
+});

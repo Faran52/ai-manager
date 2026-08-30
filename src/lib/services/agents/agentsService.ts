@@ -286,6 +286,25 @@ export const listAgentProjects = async (roots: AgentRoots): Promise<readonly Pro
   return projects.flat().sort(compareProjects);
 };
 
+/*
+ * The newest sessions across every project on the machine. A cap is applied
+ * because this answers "what has been happening lately" rather than "list
+ * everything", and the answer is drawn as one square per session.
+ */
+export const listNewestSessions = async (
+  roots: AgentRoots,
+  limit: number,
+): Promise<readonly SessionSummary[]> => {
+  const projects = await listAgentProjects(roots);
+  const found = await Promise.all(projects.map(async (project) => {
+    return routesFor(project.agent).sessions(project.agent, roots[project.agent], project.id);
+  }));
+
+  return found.flat().sort((left, right) => {
+    return right.lastTimestampMs - left.lastTimestampMs;
+  }).slice(0, limit);
+};
+
 export const listAgentSessions = async (
   roots: AgentRoots,
   agent: AgentId,

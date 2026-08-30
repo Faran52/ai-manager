@@ -1,5 +1,7 @@
 export * from './ActivityHeatmap';
 export * from './AnalyticsPanel';
+export * from './AnalyticsReport';
+export * from './AnalyticsToolbar';
 export * from './BarList';
 export * from './BillingBreakdown';
 export * from './ModelDistribution';

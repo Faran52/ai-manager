@@ -6,7 +6,6 @@ import {
   BarChart3,
   HeartPulse,
   History,
-  LayoutGrid,
   RefreshCw,
   Search,
 } from 'lucide-react';
@@ -24,7 +23,7 @@ import {
 import type { ThemeMode } from '@features/theme';
 import type { FC } from 'react';
 
-export type AppView = 'sessions' | 'analytics' | 'health' | 'archive' | 'settings' | 'board';
+export type AppView = 'sessions' | 'analytics' | 'health' | 'archive' | 'settings';
 
 export interface AppHeaderProps {
   readonly view: AppView;
@@ -132,17 +131,6 @@ export const AppHeader: FC<AppHeaderProps> = ({
           >
             <Archive className="size-3.5" />
             {t('navArchive')}
-          </Button>
-          <Button
-            size="sm"
-            variant={view === 'board' ? 'primary' : 'ghost'}
-            onClick={() => {
-              onViewChange('board');
-            }}
-            pressed={view === 'board'}
-          >
-            <LayoutGrid className="size-3.5" />
-            {t('navBoard')}
           </Button>
         </nav>
 

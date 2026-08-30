@@ -53,14 +53,15 @@ describe('AppHeader', () => {
     await userEvent.click(screen.getByRole('button', { name: /Archive/ }));
     expect(props.onViewChange).toHaveBeenCalledWith('archive');
 
-    await userEvent.click(screen.getByRole('button', { name: /Board/ }));
-    expect(props.onViewChange).toHaveBeenCalledWith('board');
+    await userEvent.click(screen.getByRole('button', { name: /Sessions/ }));
+    expect(props.onViewChange).toHaveBeenCalledWith('sessions');
   });
 
-  test('leaves settings out of the row of views', () => {
+  test('leaves settings and the board out of the row of views', () => {
     mount({ view: 'sessions' });
 
     expect(screen.queryByRole('button', { name: /Settings/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Board/ })).toBeNull();
   });
 
   test('marks the active view as pressed', () => {

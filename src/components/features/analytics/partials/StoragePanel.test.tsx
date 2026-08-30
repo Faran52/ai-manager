@@ -203,3 +203,11 @@ test('offers nothing to free when everything held is worth keeping', () => {
 
   expect(screen.queryByRole('button', { name: 'Free it up' })).toBeNull();
 });
+
+test('narrows every figure to one agent when one is named', () => {
+  render(<StoragePanel storage={resource('ready', report)} agent="claude" />);
+
+  expect(screen.queryByText('Codex CLI')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Free it up' })).toBeNull();
+  expect(screen.getByText('No agent storage found')).toBeDefined();
+});

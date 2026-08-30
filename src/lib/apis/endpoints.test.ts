@@ -30,6 +30,7 @@ import {
   handleListProjects,
   handleListSessions,
   handleLoadSession,
+  handleNewestSessions,
   handleProjectStats,
   handlePromptHistory,
   handleReadArchive,
@@ -927,9 +928,41 @@ describe('recent edits endpoint', () => {
     });
   });
 
-  test('rejects a request with no project', async () => {
-    expect((await handleRecentEdits(post({}))).status).toBe(400);
+  test('answers for the whole machine when no project is named', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'edits-api-'));
+    const response = await handleRecentEdits(post({}), { home });
+
+    expect(response.status).toBe(200);
+    expect(await jsonOf(response)).toMatchObject({ files: [] });
+  });
+
+  test('rejects a request it cannot make sense of', async () => {
+    expect((await handleRecentEdits(post({ projectId: 4 }))).status).toBe(400);
+    expect((await handleRecentEdits(post({ agent: 'nope' }))).status).toBe(400);
     expect((await handleRecentEdits(post('nonsense'))).status).toBe(400);
+  });
+});
+
+describe('newest sessions endpoint', () => {
+  test('gathers the newest sessions across every project', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'newest-api-'));
+    const projectDir = join(home, '.claude', 'projects', 'proj');
+
+    await mkdir(projectDir, { recursive: true });
+    await writeFile(join(projectDir, 's.jsonl'), JSON.stringify({
+      type: 'user',
+      uuid: 'u',
+      timestamp: '2026-01-01T00:00:00Z',
+      message: {
+        role: 'user',
+        content: 'Hi',
+      },
+    }), 'utf8');
+
+    const response = await handleNewestSessions(post({}), { home });
+
+    expect(response.status).toBe(200);
+    expect(await jsonOf(response)).toMatchObject({ sessions: [{ projectId: 'proj' }] });
   });
 });
 

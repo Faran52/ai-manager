@@ -78,5 +78,9 @@
   "searchPrompts": "搜索提示词",
   "noPrompts": "没有匹配的提示词",
   "openPromptSession": "打开输入它的会话",
-  "promptSessionGone": "会话已删除"
+  "promptSessionGone": "会话已删除",
+  "promptScopeSession": "本次会话",
+  "promptScopeProject": "本项目",
+  "promptScopeAll": "全部",
+  "promptScopes": "提示词范围"
 }

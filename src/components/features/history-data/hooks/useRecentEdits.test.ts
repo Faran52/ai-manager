@@ -38,8 +38,26 @@ const file = {
 };
 
 describe('useRecentEdits', () => {
-  test('resolves empty without fetching when no project is selected', async () => {
+  test('resolves empty without fetching while the view is not asking', async () => {
     const fetchMock = vi.fn();
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { result } = renderHook(() => {
+      return useRecentEdits(null, false);
+    });
+
+    await waitFor(() => {
+      expect(result.current.status).toBe('ready');
+    });
+    expect(result.current.data).toEqual([]);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test('asks about the whole machine when no project is chosen', async () => {
+    const fetchMock = vi.fn(() => {
+      return Response.json({ files: [] });
+    });
 
     vi.stubGlobal('fetch', fetchMock);
 
@@ -50,8 +68,7 @@ describe('useRecentEdits', () => {
     await waitFor(() => {
       expect(result.current.status).toBe('ready');
     });
-    expect(result.current.data).toEqual([]);
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   test('loads a project and reloads on request', async () => {

@@ -229,3 +229,72 @@ describe('listRecentEdits', () => {
     expect(await listRecentEdits(rootsFor(home), 'claude', 'missing')).toEqual([]);
   });
 });
+
+describe('changes an agent reported after the fact', () => {
+  const writeCodexSession = async (home: string): Promise<void> => {
+    const dir = join(home, '.codex', 'sessions', '2026', '06', '01');
+
+    await mkdir(dir, { recursive: true });
+    await writeFile(join(dir, 'rollout-x.jsonl'), [
+      JSON.stringify({
+        type: 'session_meta',
+        timestamp: '2026-06-01T10:00:00Z',
+        payload: {
+          id: 'x',
+          cwd: '/repo',
+        },
+      }),
+      JSON.stringify({
+        type: 'event_msg',
+        timestamp: '2026-06-01T10:01:00Z',
+        payload: {
+          type: 'patch_apply_end',
+          call_id: 'exec-1',
+          changes: {
+            '/repo/src/made.ts': {
+              type: 'add',
+              content: 'new',
+            },
+            '/repo/src/changed.ts': {
+              type: 'update',
+              unified_diff: '@@ -1,1 +1,1 @@\n-a\n+b\n',
+            },
+          },
+        },
+      }),
+      JSON.stringify({
+        type: 'response_item',
+        timestamp: '2026-06-01T10:01:01Z',
+        payload: {
+          type: 'custom_tool_call_output',
+          call_id: 'call-1',
+          output: 'Success',
+        },
+      }),
+      // A result that changed nothing, so an outcome without a report is read too.
+      JSON.stringify({
+        type: 'response_item',
+        timestamp: '2026-06-01T10:02:00Z',
+        payload: {
+          type: 'custom_tool_call_output',
+          call_id: 'call-2',
+          output: 'listed the directory',
+        },
+      }),
+    ].join('\n'), 'utf8');
+  };
+
+  test('counts files named by the report rather than by the call', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'edits-codex-'));
+
+    await writeCodexSession(home);
+
+    const files = await listRecentEdits(rootsFor(home), 'codex', '/repo');
+    const byPath = new Map(files.map((file) => {
+      return [file.path, file];
+    }));
+
+    expect(byPath.get('/repo/src/made.ts')?.writes).toBe(1);
+    expect(byPath.get('/repo/src/changed.ts')?.edits).toBe(1);
+  });
+});

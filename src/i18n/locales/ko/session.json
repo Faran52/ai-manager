@@ -78,5 +78,9 @@
   "searchPrompts": "프롬프트 검색",
   "noPrompts": "일치하는 프롬프트가 없습니다",
   "openPromptSession": "입력했던 세션 열기",
-  "promptSessionGone": "세션 삭제됨"
+  "promptSessionGone": "세션 삭제됨",
+  "promptScopeSession": "이 세션",
+  "promptScopeProject": "이 프로젝트",
+  "promptScopeAll": "전체",
+  "promptScopes": "프롬프트 범위"
 }

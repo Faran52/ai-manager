@@ -30,13 +30,13 @@ import {
   Toast,
 } from '@ui/index';
 import { AgentSetupPanel } from '@features/agent-setup';
-import { AnalyticsView } from '@features/analytics';
+import { AnalyticsView, useAnalyticsScope } from '@features/analytics';
 import { AppHeader } from '@features/app-header';
 import { ArchiveView } from '@features/archive';
-import { BoardView } from '@features/board';
 import {
   useAgentSetup,
   useArchives,
+  useNewestSessions,
   useProjects,
   useProjectStats,
   usePrompts,
@@ -59,8 +59,10 @@ import { ShortcutsDialog } from './partials';
 
 import type { AgentId } from '@config/agents';
 import type { ShortcutSpec } from '@config/shortcuts';
+import type { AnalyticsPanelName } from '@features/analytics';
 import type { AppView } from '@features/app-header';
 import type { ArchivedSession } from '@services/archive/archiveService';
+import type { FileEdit } from '@services/edits/editsService';
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
 import type { SearchHit } from '@services/search/searchService';
 import type { SessionTokenTotals } from '@services/stats/statsService';
@@ -94,6 +96,11 @@ export const HistoryApp: FC = () => {
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const [view, setView] = useState<AppView>('analytics');
   const [sessionsPanel, setSessionsPanel] = useState<SessionsPanel>('sessions');
+  const [analyticsPanel, setAnalyticsPanel] = useState<AnalyticsPanelName>('report');
+  const projectKey = selectedProject == null
+    ? ''
+    : `${selectedProject.agent}:${selectedProject.id}`;
+  const { scope: analyticsScope, setScope: setAnalyticsScope } = useAnalyticsScope(projectKey);
   const [searchOpen, setSearchOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [retentionNotice, setRetentionNotice] = useState<string | null>(null);
@@ -111,7 +118,9 @@ export const HistoryApp: FC = () => {
   const retention = useRetention(view === 'archive');
   const storage = useStorage(view === 'analytics');
   const settings = useSettings(view === 'settings' ? (selectedProject?.actualPath ?? '') : null);
-  const edits = useRecentEdits(view === 'board' ? selectedProject : null);
+  const boardScope = view === 'analytics' && analyticsPanel !== 'report';
+  const edits = useRecentEdits(analyticsScope === 'project' ? selectedProject : null, boardScope);
+  const newestSessions = useNewestSessions(boardScope && analyticsScope === 'global');
   const sessionCounts = useMemo(() => {
     const path = selectedProject?.actualPath;
 
@@ -194,6 +203,7 @@ export const HistoryApp: FC = () => {
       }],
       [appShortcuts.viewAnalytics, () => {
         setView('analytics');
+        setAnalyticsPanel('report');
       }],
       [appShortcuts.viewHealth, () => {
         setView('health');
@@ -205,7 +215,8 @@ export const HistoryApp: FC = () => {
         setView('settings');
       }],
       [appShortcuts.viewBoard, () => {
-        setView('board');
+        setView('analytics');
+        setAnalyticsPanel('sessions');
       }],
       [appShortcuts.reload, reloadProjects],
     ];
@@ -326,6 +337,13 @@ export const HistoryApp: FC = () => {
     setHighlightTimestamp(new Date(timestampMs).toISOString());
   }, [showSession]);
 
+  const openEditedSession = useCallback((edit: FileEdit) => {
+    setSelectedFilePath(edit.sessionFilePath);
+    setArchivedSession(null);
+    setHighlightTimestamp(new Date(edit.timestampMs).toISOString());
+    showSession();
+  }, [showSession]);
+
   const openStatsSession = useCallback(
     (session: SessionTokenTotals) => {
       showSession();
@@ -368,6 +386,10 @@ export const HistoryApp: FC = () => {
                   <PromptHistoryPanel
                     history={prompts}
                     nowMs={nowMs}
+                    projectPath={selectedProject?.actualPath}
+                    sessionId={selectedSession?.agent === 'claude'
+                      ? selectedSession.actualSessionId
+                      : undefined}
                     onOpenPrompt={openPromptSession}
                   />
                 </div>
@@ -397,7 +419,18 @@ export const HistoryApp: FC = () => {
         storage={storage}
         status={stats.status}
         projectName={selectedProject?.name ?? t('noProject')}
-        projectKey={selectedProject == null ? '' : `${selectedProject.agent}:${selectedProject.id}`}
+        scope={analyticsScope}
+        onScopeChange={setAnalyticsScope}
+        projectAgent={selectedProject?.agent}
+        projectPath={selectedProject?.actualPath}
+        sessions={analyticsScope === 'global' ? newestSessions.data ?? [] : sessions.data ?? []}
+        sessionsStatus={analyticsScope === 'global' ? newestSessions.status : sessions.status}
+        edits={edits}
+        nowMs={nowMs}
+        panel={analyticsPanel}
+        onPanelChange={setAnalyticsPanel}
+        onOpenBoardSession={selectSession}
+        onOpenEdit={openEditedSession}
         onOpenSession={openStatsSession}
       />
     ),
@@ -411,22 +444,6 @@ export const HistoryApp: FC = () => {
     ),
     settings: (
       <SettingsView settings={settings} projectPath={selectedProject?.actualPath ?? null} />
-    ),
-    board: (
-      <BoardView
-        project={selectedProject}
-        sessions={sessions.data ?? []}
-        sessionsStatus={sessions.status}
-        edits={edits}
-        nowMs={nowMs}
-        onOpenSession={selectSession}
-        onOpenEdit={(edit) => {
-          setSelectedFilePath(edit.sessionFilePath);
-          setArchivedSession(null);
-          setHighlightTimestamp(new Date(edit.timestampMs).toISOString());
-          setView('sessions');
-        }}
-      />
     ),
     health: (
       <div className="h-full overflow-y-auto p-4">

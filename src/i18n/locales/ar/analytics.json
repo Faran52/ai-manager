@@ -97,5 +97,9 @@
   "reclaimFreed_few": "حُذفت {{count}} عناصر، وتحرّر {{size}}.",
   "reclaimFreed_many": "حُذف {{count}} عنصرًا، وتحرّر {{size}}.",
   "reclaimFreed_other": "حُذف {{count}} عنصر، وتحرّر {{size}}.",
-  "reclaimFailed": "لم يُحذف شيء: تعذّرت إزالة الملفات."
+  "reclaimFailed": "لم يُحذف شيء: تعذّرت إزالة الملفات.",
+  "panelReport": "التقرير",
+  "panelBoard": "اللوحة",
+  "panelEdits": "تعديلات الملفات",
+  "analyticsPanels": "لوحات التحليلات"
 }

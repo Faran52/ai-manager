@@ -78,5 +78,9 @@
   "searchPrompts": "プロンプトを検索",
   "noPrompts": "一致するプロンプトはありません",
   "openPromptSession": "入力元のセッションを開く",
-  "promptSessionGone": "セッション削除済み"
+  "promptSessionGone": "セッション削除済み",
+  "promptScopeSession": "このセッション",
+  "promptScopeProject": "このプロジェクト",
+  "promptScopeAll": "すべて",
+  "promptScopes": "プロンプトの範囲"
 }

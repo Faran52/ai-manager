@@ -207,6 +207,11 @@ const RECENT_EDITS: EndpointDefinition<RecentEditsResponse> = {
   accepts: hasFiles,
   label: 'recent edits',
 };
+const NEWEST_SESSIONS: EndpointDefinition<SessionsResponse> = {
+  path: '/api/newest-sessions',
+  accepts: hasSessions,
+  label: 'recent sessions',
+};
 const RECLAIM: EndpointDefinition<ReclaimResponse> = {
   path: '/api/storage-reclaim',
   accepts: hasReclaimResult,
@@ -343,6 +348,10 @@ export const fetchStorage = (): Promise<StorageResponse> => {
 
 export const fetchPrompts = (): Promise<PromptsResponse> => {
   return requestEndpoint(PROMPTS, {});
+};
+
+export const fetchNewestSessions = (): Promise<SessionsResponse> => {
+  return requestEndpoint(NEWEST_SESSIONS, {});
 };
 
 export const fetchRecentEdits = (body: RecentEditsBody): Promise<RecentEditsResponse> => {

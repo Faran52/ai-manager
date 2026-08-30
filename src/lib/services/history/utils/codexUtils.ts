@@ -14,6 +14,7 @@ import { conversationMessageCount } from './outcomeUtils';
 import type {
   AssistantBlock,
   AssistantTurnEntry,
+  ChangedFile,
   HistoryEntry,
   PatchHunk,
   ProjectSummary,
@@ -120,8 +121,9 @@ interface CodexScan {
   title: string | undefined;
   gitBranch: string | undefined;
   // Codex reports what a patch did as its own event, between the tool call and
-  // the call's output, so it waits here for the outcome it belongs to.
+  // the call's output, so these wait here for the outcome they belong to.
   pendingPatch: readonly PatchHunk[] | undefined;
+  pendingChanged: readonly ChangedFile[] | undefined;
   counter: number;
 }
 
@@ -198,7 +200,11 @@ const commandFrom = (payload: CodexPayload): ToolCall => {
   };
 };
 
-const outcomeFrom = (payload: CodexPayload, patch: readonly PatchHunk[] | undefined): ToolOutcome => {
+const outcomeFrom = (
+  payload: CodexPayload,
+  patch: readonly PatchHunk[] | undefined,
+  changed: readonly ChangedFile[] | undefined,
+): ToolOutcome => {
   const output = outputContent(payload);
   const parsed = output.length === 0 ? undefined : parsedJson(output);
   const text = isCommandOutput(parsed) ? parsed.output : (output || undefined);
@@ -209,6 +215,7 @@ const outcomeFrom = (payload: CodexPayload, patch: readonly PatchHunk[] | undefi
     text,
     images: [],
     ...patch == null ? {} : { patch },
+    ...changed == null ? {} : { changed },
   };
 };
 
@@ -229,9 +236,19 @@ const hunksOfChange = (change: CodexFileChange): readonly PatchHunk[] => {
 };
 
 const absorbPatchApply = (scan: CodexScan, payload: CodexPayload): void => {
-  const hunks = Object.values(payload.changes ?? {}).flatMap(hunksOfChange);
+  const changes = Object.entries(payload.changes ?? {});
+  const hunks = changes.flatMap(([, change]) => {
+    return hunksOfChange(change);
+  });
+  const changed = changes.map(([path, change]) => {
+    return {
+      path,
+      added: change.type === 'add',
+    };
+  });
 
   scan.pendingPatch = hunks.length > 0 ? hunks : undefined;
+  scan.pendingChanged = changed.length > 0 ? changed : undefined;
 };
 
 /**
@@ -408,9 +425,10 @@ const absorbResponseItem = (scan: CodexScan, payload: CodexPayload, timestamp: s
       sidechain: false,
       meta: true,
       text: '',
-      outcomes: [outcomeFrom(payload, scan.pendingPatch)],
+      outcomes: [outcomeFrom(payload, scan.pendingPatch, scan.pendingChanged)],
     });
     scan.pendingPatch = undefined;
+    scan.pendingChanged = undefined;
   }
   else if (payload.type === 'reasoning') {
     const thinking = (payload.summary ?? []).flatMap((part) => {
@@ -485,6 +503,7 @@ export const parseCodexHistory = (content: string): ParsedCodexSession => {
     title: undefined,
     gitBranch: undefined,
     pendingPatch: undefined,
+    pendingChanged: undefined,
     counter: 0,
   };
 

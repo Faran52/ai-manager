@@ -1,2 +1,2 @@
-export * from './BoardView';
+export * from './BoardPanels';
 export * from './utils/boardUtils';
