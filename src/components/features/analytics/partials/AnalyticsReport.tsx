@@ -107,16 +107,19 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
   const { t } = useTranslation('analytics');
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-6 p-4">
       {metricsFor(selectedStats, t)}
 
-      <BillingBreakdown totals={selectedStats.totals} />
-
+      {/*
+        * One grid rather than a full-width card above a half-empty row: the
+        * panels share the space they are given, however many of them there are.
+        */}
       <div className="
-        grid gap-4
+        grid items-start gap-4
         lg:grid-cols-2
       "
       >
+        <BillingBreakdown totals={selectedStats.totals} />
         <PricingCoverage totals={selectedStats.totals} />
         {wholeMachine && (
           <ProviderDistribution agents={globalAgents} />
@@ -129,7 +132,7 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
         * they get the full width to themselves below.
         */}
       <div className="
-        grid gap-4
+        grid items-start gap-4
         lg:grid-cols-2
       "
       >

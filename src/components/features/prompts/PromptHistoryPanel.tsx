@@ -7,6 +7,7 @@ import {
   MessageSquareText,
 } from 'lucide-react';
 
+import { cn } from '@utils/cnUtils';
 import { formatTimeAgo } from '@utils/formatUtils';
 
 import {
@@ -114,6 +115,9 @@ export const PromptHistoryPanel: FC<PromptHistoryPanelProps> = ({
 
     return filtered.slice(0, MAX_ROWS);
   }, [data, needle, projectPath, scope, sessionId]);
+  const inScopeCount = (data?.prompts ?? []).filter((prompt) => {
+    return inScope(prompt, scope, projectPath, sessionId);
+  }).length;
   const scopes: readonly PromptScope[] = [
     ...sessionId == null ? [] : ['session' as const],
     ...projectPath == null ? [] : ['project' as const],
@@ -166,23 +170,37 @@ export const PromptHistoryPanel: FC<PromptHistoryPanelProps> = ({
               })}
             </nav>
           )}
-          <div className="
-            grid gap-3
-            sm:grid-cols-3
-          "
+          <div className={cn('grid gap-3', scope === 'all'
+            ? 'sm:grid-cols-3'
+            : 'sm:grid-cols-2')}
           >
+            {/*
+              * The figures answer for whatever is in view. Counting every
+              * prompt ever typed while the list showed one session read as the
+              * panel ignoring the scope entirely. Only the widest scope uses
+              * the recorded total, which reaches past the page it was sent.
+              */}
             <MetricCard
               label={t('promptsRecorded')}
-              value={String(data.total)}
+              value={String(scope === 'all' ? data.total : inScopeCount)}
               icon={<MessageSquareText className="size-3.5" />}
             />
-            <MetricCard label={t('promptProjects')} value={String(data.projects.length)} />
-            <MetricCard
-              label={t('promptsOrphaned')}
-              value={String(orphanedProjects.length)}
-              hint={t('promptsOrphanedHint')}
-              icon={<GhostIcon className="size-3.5" />}
-            />
+            {scope === 'all'
+              ? <MetricCard label={t('promptProjects')} value={String(data.projects.length)} />
+              : (
+                  <MetricCard
+                    label={t('promptsOfEverything')}
+                    value={String(data.total)}
+                  />
+                )}
+            {scope === 'all' && (
+              <MetricCard
+                label={t('promptsOrphaned')}
+                value={String(orphanedProjects.length)}
+                hint={t('promptsOrphanedHint')}
+                icon={<GhostIcon className="size-3.5" />}
+              />
+            )}
           </div>
 
           <TextInput

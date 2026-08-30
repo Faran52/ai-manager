@@ -82,5 +82,6 @@
   "promptScopeSession": "本次工作階段",
   "promptScopeProject": "本專案",
   "promptScopeAll": "全部",
-  "promptScopes": "提示詞範圍"
+  "promptScopes": "提示詞範圍",
+  "promptsOfEverything": "全部記錄數"
 }

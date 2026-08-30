@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   CircleAlert,
   FileText,
+  GitBranch,
   ListFilter,
   ListTree,
   MessageSquare,
@@ -51,6 +52,8 @@ export interface SessionViewerProps {
   readonly agent?: AgentId | undefined;
   readonly projectLabel: string;
   readonly sessionTitle: string | undefined;
+  // Named beside the project, since it says which line of work this session is on.
+  readonly gitBranch?: string | undefined;
   readonly highlightTimestamp: string | undefined;
   readonly sourceModifiedMs?: number | undefined;
 }
@@ -72,6 +75,7 @@ export const SessionViewer: FC<SessionViewerProps> = ({
   agent = 'claude',
   projectLabel,
   sessionTitle,
+  gitBranch,
   highlightTimestamp,
   sourceModifiedMs = 0,
 }) => {
@@ -213,8 +217,17 @@ export const SessionViewer: FC<SessionViewerProps> = ({
           >
             {title}
           </h2>
-          <p className="truncate text-xs text-muted-foreground">
-            {projectLabel}
+          <p className="
+            flex items-center gap-2 truncate text-xs text-muted-foreground
+          "
+          >
+            <span className="truncate">{projectLabel}</span>
+            {gitBranch != null && (
+              <span className="flex min-w-0 items-center gap-1">
+                <GitBranch className="size-3 shrink-0" />
+                <span className="truncate" data-session-branch>{gitBranch}</span>
+              </span>
+            )}
           </p>
         </div>
         <div className="ms-auto flex shrink-0 items-center gap-1.5">

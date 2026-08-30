@@ -94,5 +94,6 @@
   "promptScopeSession": "هذه الجلسة",
   "promptScopeProject": "هذا المشروع",
   "promptScopeAll": "كل شيء",
-  "promptScopes": "نطاق الطلبات"
+  "promptScopes": "نطاق الطلبات",
+  "promptsOfEverything": "المسجَّل إجمالًا"
 }

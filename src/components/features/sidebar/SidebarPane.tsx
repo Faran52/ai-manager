@@ -9,7 +9,6 @@ import {
   CheckSquare2,
   ChevronDown,
   FolderClosed,
-  GitBranch,
   MessagesSquare,
   Search,
   Square,
@@ -576,13 +575,6 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                   "
                   >
                     <span>{formatTimeAgo(session.lastTimestampMs, nowMs, i18n.language)}</span>
-                    <span>{t('messageCount', { count: row.messageCount })}</span>
-                    {session.gitBranch != null && (
-                      <span className="flex min-w-0 items-center gap-1 truncate">
-                        <GitBranch className="size-3 shrink-0" />
-                        <span className="truncate" data-session-branch>{session.gitBranch}</span>
-                      </span>
-                    )}
                     {row.continuation && <span>{t('threadContinues')}</span>}
                   </span>
                 </button>

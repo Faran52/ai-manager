@@ -69,6 +69,22 @@ describe('SessionViewer', () => {
     expect(screen.getByText('No session selected')).toBeDefined();
   });
 
+  test('names the branch the session was working on beside its project', async () => {
+    stubPage();
+    render(
+      <SessionViewer
+        filePath="/sessions/s.jsonl"
+        projectLabel="webapp"
+        sessionTitle="Login fix"
+        gitBranch="feat/login"
+        highlightTimestamp={undefined}
+      />,
+    );
+
+    expect(await screen.findByText('feat/login')).toBeDefined();
+    expect(screen.getByText('webapp')).toBeDefined();
+  });
+
   test('loads a feed with toolbar metadata and load-more', async () => {
     stubPage();
     render(

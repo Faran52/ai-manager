@@ -227,6 +227,22 @@ describe('prompt scope', () => {
     expect(screen.queryByText('another project entirely')).toBeNull();
   });
 
+  test('counts what is in view rather than everything ever typed', () => {
+    render(
+      <PromptHistoryPanel
+        history={scoped()}
+        nowMs={NOW}
+        projectPath="/repo/alpha"
+        sessionId="s1"
+        onOpenPrompt={noop}
+      />,
+    );
+
+    expect(screen.getByText('1')).toBeDefined();
+    expect(screen.getByText('Recorded in all')).toBeDefined();
+    expect(screen.queryByText('Lost projects')).toBeNull();
+  });
+
   test('answers about the project when no session is open', () => {
     render(
       <PromptHistoryPanel

@@ -124,7 +124,6 @@ describe('SidebarPane', () => {
     await openProject('webapp');
     await userEvent.click(screen.getByText('Login fix'));
 
-    expect(screen.getByText('1 message')).toBeDefined();
     expect(onSelectSession).toHaveBeenCalledWith(expect.objectContaining({ filePath: '/r/a.jsonl' }));
   });
 
@@ -706,7 +705,6 @@ describe('SidebarPane session threads', () => {
 
     expect(screen.getByText('Part a')).toBeDefined();
     expect(screen.queryByText('Part b')).toBeNull();
-    expect(screen.getByText('10 messages')).toBeDefined();
 
     await userEvent.click(screen.getByRole('button', { name: '2 parts' }));
     expect(screen.getByText('Part b')).toBeDefined();
@@ -735,25 +733,14 @@ describe('SidebarPane session threads', () => {
 });
 
 describe('SidebarPane branches', () => {
+  // The branch itself is named in the viewer's header; here it only has to be
+  // findable, so that a filter can reach a session by the work it belongs to.
   const onBranch = (id: string, title: string, branch?: string): SessionSummary => {
     return {
       ...session(id, title),
       gitBranch: branch,
     };
   };
-
-  test('names the branch a session was working on', () => {
-    render(
-      <SidebarPane
-        {...base}
-        projects={[project('p', 'webapp')]}
-        sessions={[onBranch('a', 'Alpha', 'feat/login'), onBranch('b', 'Beta')]}
-      />,
-    );
-
-    expect(screen.getByText('feat/login')).toBeDefined();
-    expect(document.querySelectorAll('[data-session-branch]')).toHaveLength(1);
-  });
 
   test('finds sessions by the branch they were on', async () => {
     render(

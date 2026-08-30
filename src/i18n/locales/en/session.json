@@ -82,5 +82,6 @@
   "promptScopeSession": "This session",
   "promptScopeProject": "This project",
   "promptScopeAll": "Everything",
-  "promptScopes": "Prompt scope"
+  "promptScopes": "Prompt scope",
+  "promptsOfEverything": "Recorded in all"
 }

@@ -407,6 +407,7 @@ export const HistoryApp: FC = () => {
                   ?? selectedSession?.title
                   ?? selectedSession?.summary
                   ?? selectedSession?.preview}
+                gitBranch={selectedSession?.gitBranch}
                 highlightTimestamp={highlightTimestamp}
                 sourceModifiedMs={selectedSession?.modifiedMs ?? 0}
               />

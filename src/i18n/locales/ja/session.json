@@ -82,5 +82,6 @@
   "promptScopeSession": "このセッション",
   "promptScopeProject": "このプロジェクト",
   "promptScopeAll": "すべて",
-  "promptScopes": "プロンプトの範囲"
+  "promptScopes": "プロンプトの範囲",
+  "promptsOfEverything": "全体の記録数"
 }

@@ -82,5 +82,6 @@
   "promptScopeSession": "이 세션",
   "promptScopeProject": "이 프로젝트",
   "promptScopeAll": "전체",
-  "promptScopes": "프롬프트 범위"
+  "promptScopes": "프롬프트 범위",
+  "promptsOfEverything": "전체 기록 수"
 }
