@@ -13,6 +13,7 @@ import { containedIn } from '@utils/pathUtils';
 
 import { pathsFor } from '../../agents/agentsService';
 import { deleteOpenCodeSession } from '../../history/utils/openCodeUtils';
+import { forgetSessionPrompts } from '../../prompts/promptsService';
 
 import type { AgentId, AgentOption } from '@config/agents';
 import type { AgentRoots } from '../../agents/agentsService';
@@ -104,6 +105,7 @@ export const renameSession = async (
 export const deleteSession = async (
   roots: AgentRoots,
   target: SessionMutationTarget,
+  home?: string,
 ): Promise<void> => {
   const option = agentOption(target.agent);
 
@@ -118,6 +120,11 @@ export const deleteSession = async (
   const filePath = await safeSessionPath(roots, target);
 
   await rm(filePath);
+
+  // Only Claude Code keeps a prompt record, and only its own sessions appear in it.
+  if (target.agent === 'claude') {
+    await forgetSessionPrompts(target.actualSessionId, home);
+  }
 
   if (target.agent === 'codex') {
     const database = codexDatabase(roots);

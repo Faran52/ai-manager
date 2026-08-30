@@ -591,7 +591,7 @@ export const handleDeleteSession = async (request: Request, deps?: EndpointDeps)
       return jsonError(BAD_REQUEST, 'A valid session target is required.');
     }
 
-    await deleteSession(resolveEndpointRoots(deps), target);
+    await deleteSession(resolveEndpointRoots(deps), target, deps?.home);
 
     return jsonOk({ ok: true });
   });

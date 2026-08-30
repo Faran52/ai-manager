@@ -457,3 +457,47 @@ test('rejects mutations for read-only agents', async () => {
     actualSessionId: 's',
   })).rejects.toThrow('does not support');
 });
+
+describe('deleting a session and its prompts', () => {
+  test('takes the prompts of the session away with it', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'delete-prompts-'));
+    const projectDir = join(home, '.claude', 'projects', 'p');
+    const historyPath = join(home, '.claude', 'history.jsonl');
+    const filePath = join(projectDir, 'gone.jsonl');
+
+    await mkdir(projectDir, { recursive: true });
+    await writeFile(filePath, '{}', 'utf8');
+    await writeFile(historyPath, [
+      JSON.stringify({
+        display: 'asked here',
+        project: '/repo',
+        sessionId: 'gone',
+        timestamp: 2,
+      }),
+      JSON.stringify({
+        display: 'asked elsewhere',
+        project: '/repo',
+        sessionId: 'stays',
+        timestamp: 1,
+      }),
+    ].join('\n'), 'utf8');
+
+    await deleteSession(
+      resolveAgentPaths({
+        env: {},
+        home,
+      }),
+      {
+        agent: 'claude',
+        filePath,
+        actualSessionId: 'gone',
+      },
+      home,
+    );
+
+    const left = await readFile(historyPath, 'utf8');
+
+    expect(left).toContain('asked elsewhere');
+    expect(left).not.toContain('asked here');
+  });
+});
