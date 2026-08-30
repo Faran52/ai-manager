@@ -47,10 +47,9 @@ export const levelClass = (tokens: number, peak: number): string => {
 };
 
 /*
- * About two months. This answers what has been happening lately, which is a
- * question a small dense grid answers better than a wide one: a year of squares
- * either inflates them until they stop reading as a heatmap, or spreads a few
- * busy days across an expanse of empty ones.
+ * About two months. The grid stretches to whatever card it is given, in both
+ * directions, so the span decides how coarse the picture is rather than how
+ * much of the card goes unused.
  */
 export const WEEKS_SHOWN = 9;
 const DAYS_IN_WEEK = 7;

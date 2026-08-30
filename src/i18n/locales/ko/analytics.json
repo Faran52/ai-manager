@@ -32,7 +32,7 @@
   "billingShare": "청구 토큰의 {{share}}",
   "splitUnavailable": "이 제공자는 대화와 비대화 트래픽을 구분할 만큼 상세한 정보를 기록하지 않습니다.",
   "providerDistribution": "제공자 분포",
-  "providerLabel": "{{provider}} · 세션 {{sessions}}개 · 프로젝트 {{projects}}개",
+  "providerLabel": "{{provider}} · {{sessions}} · {{projects}}",
   "tokensWithShare": "{{tokens}} · {{share}}%",
   "noProviders": "기록된 제공자 사용량이 없습니다.",
   "modelDistribution": "모델 분포",
@@ -101,5 +101,9 @@
   "sectionCost": "비용",
   "sectionActivity": "활동과 작업량",
   "sectionStorage": "저장 공간",
-  "sectionSessions": "세션"
+  "sectionSessions": "세션",
+  "providerSessions_one": "세션 {{count}}개",
+  "providerSessions_other": "세션 {{count}}개",
+  "providerProjects_one": "프로젝트 {{count}}개",
+  "providerProjects_other": "프로젝트 {{count}}개"
 }

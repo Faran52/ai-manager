@@ -36,8 +36,8 @@ export const ProviderDistribution: FC<ProviderDistributionProps> = ({ agents }) 
               key={agent.agent}
               label={t('providerLabel', {
                 provider: agentOption(agent.agent).label,
-                sessions: agent.sessions,
-                projects: agent.projects,
+                sessions: t('providerSessions', { count: agent.sessions }),
+                projects: t('providerProjects', { count: agent.projects }),
               })}
               value={agent.tokens}
               max={max}

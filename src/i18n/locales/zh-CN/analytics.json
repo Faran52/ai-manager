@@ -32,7 +32,7 @@
   "billingShare": "占计费令牌的 {{share}}",
   "splitUnavailable": "该提供商未记录足够的明细，无法区分对话与非对话流量。",
   "providerDistribution": "提供商分布",
-  "providerLabel": "{{provider}} · {{sessions}} 个会话 · {{projects}} 个项目",
+  "providerLabel": "{{provider}} · {{sessions}} · {{projects}}",
   "tokensWithShare": "{{tokens}} · {{share}}%",
   "noProviders": "没有提供商用量记录。",
   "modelDistribution": "模型分布",
@@ -101,5 +101,9 @@
   "sectionCost": "费用",
   "sectionActivity": "活动与投入",
   "sectionStorage": "存储",
-  "sectionSessions": "会话"
+  "sectionSessions": "会话",
+  "providerSessions_one": "{{count}} 个会话",
+  "providerSessions_other": "{{count}} 个会话",
+  "providerProjects_one": "{{count}} 个项目",
+  "providerProjects_other": "{{count}} 个项目"
 }

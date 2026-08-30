@@ -36,7 +36,7 @@
   "billingShare": "{{share}} من الرموز المفوترة",
   "splitUnavailable": "لا يسجل هذا المزوّد تفاصيل كافية لفصل المحادثة عن حركة البيانات خارجها.",
   "providerDistribution": "توزيع المزوّدين",
-  "providerLabel": "{{provider}} · الجلسات {{sessions}} · المشاريع {{projects}}",
+  "providerLabel": "{{provider}} · {{sessions}} · {{projects}}",
   "tokensWithShare": "{{tokens}} · {{share}}٪",
   "noProviders": "لم يُسجَّل استخدام لأي مزوّد.",
   "modelDistribution": "توزيع النماذج",
@@ -117,5 +117,17 @@
   "sectionCost": "التكلفة",
   "sectionActivity": "النشاط والجهد",
   "sectionStorage": "التخزين",
-  "sectionSessions": "الجلسات"
+  "sectionSessions": "الجلسات",
+  "providerSessions_zero": "لا جلسات",
+  "providerSessions_one": "جلسة واحدة",
+  "providerSessions_two": "جلستان",
+  "providerSessions_few": "{{count}} جلسات",
+  "providerSessions_many": "{{count}} جلسة",
+  "providerSessions_other": "{{count}} جلسة",
+  "providerProjects_zero": "لا مشاريع",
+  "providerProjects_one": "مشروع واحد",
+  "providerProjects_two": "مشروعان",
+  "providerProjects_few": "{{count}} مشاريع",
+  "providerProjects_many": "{{count}} مشروعًا",
+  "providerProjects_other": "{{count}} مشروع"
 }

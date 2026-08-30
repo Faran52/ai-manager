@@ -32,7 +32,7 @@
   "billingShare": "請求トークンの {{share}}",
   "splitUnavailable": "このプロバイダーでは、会話と会話以外の通信を分けるための詳細が記録されていません。",
   "providerDistribution": "プロバイダー別分布",
-  "providerLabel": "{{provider}} · {{sessions}} セッション · {{projects}} プロジェクト",
+  "providerLabel": "{{provider}} · {{sessions}} · {{projects}}",
   "tokensWithShare": "{{tokens}} · {{share}}%",
   "noProviders": "プロバイダーの使用記録はありません。",
   "modelDistribution": "モデル別分布",
@@ -101,5 +101,9 @@
   "sectionCost": "コスト",
   "sectionActivity": "活動と作業量",
   "sectionStorage": "ストレージ",
-  "sectionSessions": "セッション"
+  "sectionSessions": "セッション",
+  "providerSessions_one": "{{count}} セッション",
+  "providerSessions_other": "{{count}} セッション",
+  "providerProjects_one": "{{count}} プロジェクト",
+  "providerProjects_other": "{{count}} プロジェクト"
 }

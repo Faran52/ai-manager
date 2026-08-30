@@ -33,6 +33,13 @@ const ROW_LABELS: readonly (string | undefined)[] = [
 
 const SCALE = [0, 1, 2, 3];
 
+/**
+ * The grid takes the whole card, in both directions.
+ *
+ * A day is a cell of whatever size that leaves, rather than a fixed square with
+ * the rest of the card empty around it. How coarse the picture is comes from
+ * how many weeks are shown, which is decided in one place.
+ */
 export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
   const { t } = useTranslation('analytics');
   const [todayMs] = useState(() => {
@@ -45,14 +52,14 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
 
   return (
     <AnalyticsPanel title={t('activity')}>
-      <div className="mt-3 flex gap-2" data-activity-heatmap>
-        <div className="grid shrink-0 gap-1 pt-4">
+      <div className="mt-3 flex min-h-0 flex-1 gap-2" data-activity-heatmap>
+        <div className="grid shrink-0 grid-rows-7 gap-1 pt-4">
           {ROW_LABELS.map((label, weekday) => {
             return (
               <span
                 key={String(weekday)}
                 className="
-                  flex h-3 items-center text-[10px] leading-none
+                  flex items-center text-[10px] leading-none
                   text-muted-foreground
                 "
               >
@@ -62,20 +69,29 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
           })}
         </div>
 
-        <div className="flex gap-3" role="img" aria-label={t('dailyHeatmap')}>
+        <div className="flex min-w-0 flex-1 gap-3" role="img" aria-label={t('dailyHeatmap')}>
           {months.map((month) => {
             return (
-              <div key={month.key} className="grid gap-1" data-heatmap-month={month.label}>
+              <div
+                key={month.key}
+                className="flex min-w-0 flex-col gap-1"
+                // In proportion to the weeks it holds, so a cell is one size throughout.
+                style={{ flex: `${String(month.weeks.length)} 1 0%` }}
+                data-heatmap-month={month.label}
+              >
                 <span className="
                   h-3 text-[10px] leading-none text-muted-foreground
                 "
                 >
                   {month.label}
                 </span>
-                <div className="grid grid-flow-col gap-1">
+                <div className="
+                  grid min-h-0 flex-1 auto-cols-fr grid-flow-col gap-1
+                "
+                >
                   {month.weeks.map((week) => {
                     return (
-                      <div key={week.key} className="grid gap-1">
+                      <div key={week.key} className="grid grid-rows-7 gap-1">
                         {week.days.map((day) => {
                           return (
                             <span
@@ -86,7 +102,7 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
                               })}
                               data-level={String(levelFor(day.tokens, peak))}
                               className={`
-                                size-3 rounded-sm
+                                size-full rounded-sm
                                 ${levelClass(day.tokens, peak)}
                               `}
                             />
@@ -103,7 +119,7 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
       </div>
 
       <div className="
-        mt-auto flex items-center justify-end gap-1 pt-3 text-[10px]
+        mt-3 flex items-center justify-end gap-1 text-[10px]
         text-muted-foreground
       "
       >

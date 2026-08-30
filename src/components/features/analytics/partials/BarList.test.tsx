@@ -26,7 +26,7 @@ describe('BarList', () => {
     );
 
     expect(screen.getByText('Bash')).toBeDefined();
-    const bars = document.querySelectorAll<HTMLElement>('[data-bar-list] span.block');
+    const bars = document.querySelectorAll<HTMLElement>('[data-bar-list] [data-bar-fill]');
     const widths = [...bars].map((bar) => {
       return bar.style.width;
     });
@@ -54,7 +54,7 @@ describe('BarList zero values', () => {
       />,
     );
 
-    const bar = document.querySelectorAll<HTMLElement>('[data-bar-list] span.block')[0];
+    const bar = document.querySelectorAll<HTMLElement>('[data-bar-list] [data-bar-fill]')[0];
 
     expect(bar?.style.width).toBe('0%');
   });

@@ -120,8 +120,9 @@ export const WorkRhythm: FC<WorkRhythmProps> = ({ rhythm, effort }) => {
             };
           })}
         />
+        {/* The charts are one thought and the figures another. */}
         <dl className="
-          grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs
+          grid grid-cols-2 gap-x-4 gap-y-1.5 border-t border-border pt-4 text-xs
           sm:grid-cols-4
         "
         >

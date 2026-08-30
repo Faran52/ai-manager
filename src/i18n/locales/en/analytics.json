@@ -32,7 +32,7 @@
   "billingShare": "{{share}} of billed tokens",
   "splitUnavailable": "This provider does not record enough detail to separate conversation from non-conversation traffic.",
   "providerDistribution": "Provider distribution",
-  "providerLabel": "{{provider}} · {{sessions}} sessions · {{projects}} projects",
+  "providerLabel": "{{provider}} · {{sessions}} · {{projects}}",
   "tokensWithShare": "{{tokens}} · {{share}}%",
   "noProviders": "No provider usage recorded.",
   "modelDistribution": "Model distribution",
@@ -101,5 +101,9 @@
   "sectionCost": "Cost",
   "sectionActivity": "Activity and effort",
   "sectionStorage": "Storage",
-  "sectionSessions": "Sessions"
+  "sectionSessions": "Sessions",
+  "providerSessions_one": "{{count}} session",
+  "providerSessions_other": "{{count}} sessions",
+  "providerProjects_one": "{{count}} project",
+  "providerProjects_other": "{{count}} projects"
 }

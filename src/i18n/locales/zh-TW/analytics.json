@@ -32,7 +32,7 @@
   "billingShare": "佔計費權杖的 {{share}}",
   "splitUnavailable": "此供應商未記錄足夠的明細，無法區分對話與非對話流量。",
   "providerDistribution": "供應商分布",
-  "providerLabel": "{{provider}} · {{sessions}} 個工作階段 · {{projects}} 個專案",
+  "providerLabel": "{{provider}} · {{sessions}} · {{projects}}",
   "tokensWithShare": "{{tokens}} · {{share}}%",
   "noProviders": "沒有供應商用量記錄。",
   "modelDistribution": "模型分布",
@@ -101,5 +101,9 @@
   "sectionCost": "費用",
   "sectionActivity": "活動與投入",
   "sectionStorage": "儲存空間",
-  "sectionSessions": "工作階段"
+  "sectionSessions": "工作階段",
+  "providerSessions_one": "{{count}} 個工作階段",
+  "providerSessions_other": "{{count}} 個工作階段",
+  "providerProjects_one": "{{count}} 個專案",
+  "providerProjects_other": "{{count}} 個專案"
 }
