@@ -158,9 +158,9 @@ export const AppHeader: FC<AppHeaderProps> = ({
           >
             <RefreshCw className={cn('size-3.5', refreshing && 'animate-spin')} />
           </Button>
-          <AccentPicker />
           <FontSizePicker />
           <LanguagePicker />
+          <AccentPicker />
           <ThemePicker mode={themeMode} onChange={onThemeChange} />
         </div>
       </header>

@@ -139,10 +139,13 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
         >
           <BillingBreakdown totals={selectedStats.totals} />
           <PricingCoverage totals={selectedStats.totals} />
-          {wholeMachine && (
-            <ProviderDistribution agents={globalAgents} />
-          )}
         </div>
+
+        {/*
+          * An agent's name, its session count and its share all sit on one
+          * line, so the row needs the width: shared, the names were cut short.
+          */}
+        {wholeMachine && <ProviderDistribution agents={globalAgents} />}
 
         <ModelDistribution models={selectedStats.models} />
       </Section>
