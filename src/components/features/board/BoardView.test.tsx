@@ -111,7 +111,7 @@ test('lays the sessions out with a timeline under them', () => {
 test('recolours the grid by another attribute', async () => {
   renderBoard();
 
-  await userEvent.click(screen.getByRole('button', { name: 'Size' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Transcript size' }));
 
   expect(screen.getByLabelText('Session a, 1KB')).toBeDefined();
 });

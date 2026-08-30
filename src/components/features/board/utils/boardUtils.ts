@@ -27,6 +27,15 @@ const durationOf = (session: SessionSummary): number => {
   return Math.max(0, session.lastTimestampMs - session.firstTimestampMs);
 };
 
+// One name per measure, shared by the control that picks it and the grid that
+// explains what it is showing.
+export const ATTRIBUTE_LABELS: Record<BoardAttribute, string> = {
+  messages: 'attributeMessages',
+  size: 'attributeSize',
+  duration: 'attributeDuration',
+  recency: 'attributeRecency',
+};
+
 export const attributeValue = (
   session: SessionSummary,
   attribute: BoardAttribute,

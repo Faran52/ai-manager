@@ -2,6 +2,8 @@ import { useTranslation } from 'react-i18next';
 
 import { formatTimeAgo, sizeLabel } from '@utils/formatUtils';
 
+import { ATTRIBUTE_LABELS } from '../utils/boardUtils';
+
 import type { SessionSummary } from '@services/history/historyService';
 import type { FC } from 'react';
 import type { BoardAttribute, BoardModel } from '../utils/boardUtils';
@@ -41,7 +43,7 @@ export const SessionGrid: FC<SessionGridProps> = ({
   return (
     <ul
       className="flex flex-wrap gap-1"
-      aria-label={t('sessionGrid')}
+      aria-label={t('sessionGrid', { measure: t(ATTRIBUTE_LABELS[attribute]).toLowerCase() })}
       data-session-grid
     >
       {model.cells.map((cell) => {

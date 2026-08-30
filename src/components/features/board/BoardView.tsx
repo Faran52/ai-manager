@@ -14,7 +14,11 @@ import {
   EditedFileList,
   SessionGrid,
 } from './partials';
-import { boardAttributes, buildBoardModel } from './utils/boardUtils';
+import {
+  ATTRIBUTE_LABELS,
+  boardAttributes,
+  buildBoardModel,
+} from './utils/boardUtils';
 
 import type { AsyncResource } from '@features/history-data';
 import type { EditedFile, FileEdit } from '@services/edits/editsService';
@@ -35,12 +39,6 @@ export interface BoardViewProps {
 }
 
 // Keys, not text, the map lives outside the component where t is unavailable.
-const ATTRIBUTE_LABELS: Record<BoardAttribute, string> = {
-  messages: 'attributeMessages',
-  size: 'attributeSize',
-  duration: 'attributeDuration',
-  recency: 'attributeRecency',
-};
 
 const PANELS: readonly BoardPanel[] = ['sessions', 'edits'];
 
