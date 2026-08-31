@@ -2,6 +2,7 @@ import {
   describe,
   expect,
   test,
+  vi,
 } from 'vitest';
 
 import {
@@ -95,12 +96,25 @@ describe('withJsonErrors', () => {
     expect(response.status).toBe(200);
   });
 
+  /**
+   * The log is half of what this does. A 500 the server could not explain is
+   * the one failure where the cause only survives if something wrote it down,
+   * so the trace is asserted rather than left to appear in the test output.
+   */
   test('converts unexpected throws into the JSON error shape', async () => {
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {
+      return undefined;
+    });
+    const cause = new Error('surprise');
+
     const response = await withJsonErrors((): Promise<Response> => {
-      return Promise.reject(new Error('surprise'));
+      return Promise.reject(cause);
     });
 
     expect(response.status).toBe(500);
     expect(await response.text()).toContain('Unexpected server error.');
+    expect(logged).toHaveBeenCalledWith('unhandled api error:', cause);
+
+    logged.mockRestore();
   });
 });
