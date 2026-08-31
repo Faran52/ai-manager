@@ -1,4 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import {
+  act,
+  render,
+  screen,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
   afterEach,
@@ -172,7 +176,7 @@ const renderView = (
   scope: 'global' | 'project' = 'project',
   onScopeChange: (next: 'global' | 'project') => void = noop,
 ) => {
-  return render(
+  const view = render(
     <AnalyticsView
       {...boardProps}
       stats={projectStats}
@@ -184,6 +188,22 @@ const renderView = (
       onOpenSession={onOpenSession}
     />,
   );
+
+  return view;
+};
+
+/**
+ * The view asks for the machine-wide report as it mounts, whichever scope it is
+ * showing. A test that renders it and asserts synchronously would otherwise end
+ * with that request still in flight, and its answer would land as a state
+ * update after the test that caused it had finished.
+ */
+const settled = async (view: ReturnType<typeof renderView>) => {
+  await act(async () => {
+    await Promise.resolve();
+  });
+
+  return view;
 };
 
 test('reports on the whole machine in the global scope', async () => {
@@ -206,8 +226,8 @@ test('asks for the scope the reader picked', async () => {
   expect(onScopeChange).toHaveBeenCalledWith('global');
 });
 
-test('shows project loading and empty states', () => {
-  const view = renderView(null, 'loading');
+test('shows project loading and empty states', async () => {
+  const view = await settled(renderView(null, 'loading'));
 
   expect(screen.getByRole('status')).toBeDefined();
 
@@ -245,17 +265,17 @@ test('renders project metrics, panels and opens a top session', async () => {
   expect(onOpenSession).toHaveBeenCalledWith(stats.topSessions[0]);
 });
 
-test('renders project analytics without ranked sessions', () => {
-  renderView({
+test('renders project analytics without ranked sessions', async () => {
+  await settled(renderView({
     ...stats,
     topSessions: [],
-  });
+  }));
 
   expect(document.querySelector('[data-top-sessions]')).not.toBeNull();
 });
 
-test('labels project metrics without recorded usage', () => {
-  renderView({
+test('labels project metrics without recorded usage', async () => {
+  await settled(renderView({
     ...stats,
     totals: {
       ...stats.totals,
@@ -269,27 +289,27 @@ test('labels project metrics without recorded usage', () => {
       costUsd: 0,
       durationMs: 0,
     },
-  });
+  }));
 
   expect(screen.getAllByText('Not recorded')).toHaveLength(2);
   expect(screen.getByText("Token activity isn't recorded for this agent.")).toBeDefined();
   expect(document.querySelector('[data-activity-heatmap]')).toBeNull();
 });
 
-test('derives a project billing total from a legacy payload', () => {
-  renderView({
+test('derives a project billing total from a legacy payload', async () => {
+  await settled(renderView({
     ...stats,
     totals: {
       ...stats.totals,
       billingTokens: undefined,
     },
-  });
+  }));
 
   expect(screen.getAllByText('3.5k').length).toBeGreaterThan(0);
 });
 
-test('shows the session id when a ranked session has no title', () => {
-  renderView({
+test('shows the session id when a ranked session has no title', async () => {
+  await settled(renderView({
     ...stats,
     topSessions: [{
       filePath: '/z.jsonl',
@@ -299,13 +319,13 @@ test('shows the session id when a ranked session has no title', () => {
       messages: 1,
       lastTimestampMs: 0,
     }],
-  });
+  }));
 
   expect(screen.getByText('zzz')).toBeDefined();
 });
 
-test('shows a project error state', () => {
-  renderView(null, 'error');
+test('shows a project error state', async () => {
+  await settled(renderView(null, 'error'));
 
   expect(screen.getByText("Couldn't load analytics for webapp")).toBeDefined();
   expect(screen.getByText('Try refreshing from the header.')).toBeDefined();

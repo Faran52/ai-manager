@@ -1,4 +1,8 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import {
+  act,
+  renderHook,
+  waitFor,
+} from '@testing-library/react';
 import {
   afterEach,
   describe,
@@ -99,7 +103,9 @@ describe('useSessions reload', () => {
       expect(result.current.data).toHaveLength(1);
     });
 
-    result.current.reload();
+    act(() => {
+      result.current.reload();
+    });
 
     await waitFor(() => {
       expect(fetchMock.mock.calls.length).toBeGreaterThanOrEqual(2);
@@ -151,7 +157,11 @@ describe('useSessions live polling', () => {
 
     const afterFirstLoad = fetchMock.mock.calls.length;
 
-    await vi.advanceTimersByTimeAsync(3_000);
+    // The interval fires a fetch, so the tick has to be flushed as the state
+    // update it is, not just advanced past.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3_000);
+    });
     await waitFor(() => {
       expect(fetchMock.mock.calls.length).toBeGreaterThan(afterFirstLoad);
     });
@@ -159,8 +169,10 @@ describe('useSessions live polling', () => {
     const afterTick = fetchMock.mock.calls.length;
 
     vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
-    await vi.advanceTimersByTimeAsync(3_000);
-    document.dispatchEvent(new Event('visibilitychange'));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3_000);
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
 
     expect(fetchMock.mock.calls).toHaveLength(afterTick);
 

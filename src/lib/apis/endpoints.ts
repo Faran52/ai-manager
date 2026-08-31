@@ -429,7 +429,9 @@ export const handleDeleteArchive = async (request: Request, deps?: EndpointDeps)
       return jsonError(BAD_REQUEST, 'An archive id is required.');
     }
 
-    await deleteArchive(body.id, deps?.home);
+    if (!await deleteArchive(body.id, deps?.home)) {
+      return jsonError(NOT_FOUND, 'No such archive.');
+    }
 
     return jsonOk({ ok: true });
   });
@@ -574,6 +576,16 @@ export const handleWriteSettings = async (request: Request, deps?: EndpointDeps)
 
     if (body == null || !isWriteSettingsBody(body)) {
       return jsonError(BAD_REQUEST, 'A scope and a complete settings patch are required.');
+    }
+
+    /**
+     * Every scope but the user's one is written inside a project, so a request
+     * without one is asking for a file that has no place to live. The service
+     * refuses it too; caught here, it is the bad request it always was rather
+     * than a thrown error reported as a server fault.
+     */
+    if (body.scope !== 'user' && body.projectPath.length === 0) {
+      return jsonError(BAD_REQUEST, 'Select a project before editing its settings.');
     }
 
     return jsonOk({

@@ -6,7 +6,7 @@ import {
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
-  afterEach,
+  beforeEach,
   describe,
   expect,
   test,
@@ -45,7 +45,10 @@ const base = {
   },
 } satisfies ComponentProps<typeof ProjectTree>;
 
-afterEach(async () => {
+// Before rather than after: switching the language notifies every mounted
+// component, and doing that on the way out re-renders a tree the test is done
+// with. Setting it on the way in gives the same guarantee with nothing mounted.
+beforeEach(async () => {
   await initI18n().changeLanguage('en');
 });
 

@@ -1,4 +1,8 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import {
+  act,
+  renderHook,
+  waitFor,
+} from '@testing-library/react';
 import {
   afterEach,
   describe,
@@ -111,7 +115,9 @@ describe('useProjectStats reload and errors', () => {
       return Promise.resolve(new Response(JSON.stringify({ stats })));
     });
 
-    result.current.reload();
+    act(() => {
+      result.current.reload();
+    });
 
     await waitFor(() => {
       expect(result.current.status).toBe('ready');

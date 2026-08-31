@@ -31,6 +31,12 @@ version is missing here rather than shipping empty notes.
 
 - The storage panel no longer nests a list item inside another, which React
   flagged as a hydration error
+- A tool call that made several edits at once shows all of them. Each edit is
+  diffed against its own fragment, so every patch claimed to start at line one
+  and they collided on the same key, which let React drop one
+- Deleting an archive that is already gone answers "no such archive" rather
+  than an unexpected server error, and so does saving project settings without
+  a project selected
 
 ## 0.1.0
 

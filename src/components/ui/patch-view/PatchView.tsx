@@ -28,7 +28,21 @@ export const PatchView: FC<PatchViewProps> = ({ hunks }) => {
       data-patch-view
     >
       {hunks.map((hunk) => {
-        const hunkKey = [hunk.oldStart, hunk.oldLines, hunk.newStart, hunk.newLines].join('-');
+        /*
+         * Coordinates alone do not identify a hunk here. A multi-edit call is
+         * shown as one patch per edit, and each is diffed against its own
+         * fragment rather than the file, so every one of them starts at line 1.
+         * Two edits in the same call collided on the key, and React drops or
+         * duplicates children when that happens. The content it renders is what
+         * tells them apart.
+         */
+        const hunkKey = [
+          hunk.oldStart,
+          hunk.oldLines,
+          hunk.newStart,
+          hunk.newLines,
+          ...hunk.lines,
+        ].join('-');
 
         return (
           <div key={hunkKey}>

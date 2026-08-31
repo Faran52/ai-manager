@@ -741,10 +741,10 @@ describe('archive endpoints', () => {
     expect(page != null && isMessagesPageShape(page) ? page.entries : []).toHaveLength(1);
   });
 
-  test('reports a failed deletion as an error', { timeout: 20_000 }, async () => {
+  test('reports a deletion of something absent as a miss', { timeout: 20_000 }, async () => {
     const home = await mkdtemp(join(tmpdir(), 'archive-api-missing-'));
 
-    expect((await handleDeleteArchive(post({ id: 'absent' }), { home })).status).toBe(500);
+    expect((await handleDeleteArchive(post({ id: 'absent' }), { home })).status).toBe(404);
   });
 });
 
@@ -836,14 +836,14 @@ describe('settings endpoints', () => {
     }), { home })).status).toBe(400);
   });
 
-  test('reports a write it cannot perform', async () => {
+  test('refuses a project write that names no project', async () => {
     const home = await mkdtemp(join(tmpdir(), 'settings-api-noproject-'));
 
     expect((await handleWriteSettings(post({
       projectPath: '',
       scope: 'project',
       patch: emptyPatch,
-    }), { home })).status).toBe(500);
+    }), { home })).status).toBe(400);
   });
 });
 

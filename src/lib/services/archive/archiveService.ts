@@ -281,13 +281,26 @@ export const listArchives = async (home?: string): Promise<readonly ArchiveSumma
     });
 };
 
-export const deleteArchive = async (id: string, home?: string): Promise<void> => {
+/**
+ * Reports whether there was an archive to remove. An id naming nothing is an
+ * ordinary answer rather than a failure, so the caller can say "no such
+ * archive" instead of raising a thrown error into an unexpected server error.
+ */
+export const deleteArchive = async (id: string, home?: string): Promise<boolean> => {
   if (!ID_PATTERN.test(id)) {
     throw new Error('Unknown archive.');
   }
 
   const target = join(archiveRoot(home), id);
 
-  await stat(target);
+  try {
+    await stat(target);
+  }
+  catch {
+    return false;
+  }
+
   await rm(target, { recursive: true });
+
+  return true;
 };

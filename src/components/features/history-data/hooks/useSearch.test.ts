@@ -150,6 +150,12 @@ describe('useSearch races', () => {
     });
 
     expect(result.current.error).toBeUndefined();
+
+    // The second run fails the same way. Waiting for it keeps its rejection
+    // inside the test rather than landing after the hook is torn down.
+    await waitFor(() => {
+      expect(result.current.phase).toBe('error');
+    });
   });
 });
 
