@@ -25,7 +25,7 @@
     "prepare": "astro sync && husky",
     "desktop": "pnpm build && deno desktop -E -R -S . --exclude ./node_modules",
     "desktop:dev": "deno desktop -E -R -S . --hmr",
-    "desktop:build": "pnpm build && deno desktop -E -R -S . --exclude ./node_modules --output ./dist/AIManager",
+    "desktop:build": "pnpm build && deno desktop -E -R -S . --exclude ./node_modules --output './dist/AI Manager'",
     "version:check": "node scripts/syncVersion.ts",
     "version:set": "node scripts/syncVersion.ts",
     "release:key": "node scripts/generateUpdateKey.ts",

@@ -7,7 +7,7 @@
     "preview": "astro preview",
     "desktop": "astro build && deno desktop . --exclude ./node_modules",
     "desktop:dev": "deno desktop . --hmr",
-    "desktop:build": "deno desktop . --exclude ./node_modules --output ./dist/AIManager"
+    "desktop:build": "deno desktop . --exclude ./node_modules --output './dist/AI Manager'"
   },
   "desktop": {
     "app": {
@@ -24,7 +24,7 @@
       "baseUrl": "https://github.com/Faran52/ai-manager/releases/latest/download"
     },
     "output": {
-      "macos": "./dist/AIManager",
+      "macos": "./dist/AI Manager",
       "windows": "./dist/AIManager.msi",
       "linux": "./dist/AIManager.AppImage"
     }

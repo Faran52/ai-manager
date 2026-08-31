@@ -126,8 +126,8 @@ Homebrew may lag; the workflow pins the version itself.
 Confirmed on this repo with Deno 2.9.5 and an icon configured:
 
 ```
-$ codesign --verify --deep --strict dist/AIManager.app
-dist/AIManager.app: a sealed resource is missing or invalid
+$ codesign --verify --deep --strict "dist/AI Manager.app"
+dist/AI Manager.app: a sealed resource is missing or invalid
 file added: .../Contents/Resources/AppIcon.icns
 ```
 
@@ -158,9 +158,9 @@ about never, which is why they are committed rather than generated.
 node -e "..."                                   # or just run the app against the feed
 
 # the macOS bundle is signed and notarized
-codesign --verify --deep --strict --verbose=2 AIManager.app
-spctl --assess --type execute --verbose AIManager.app
-xcrun stapler validate AIManager.app
+codesign --verify --deep --strict --verbose=2 "AI Manager.app"
+spctl --assess --type execute --verbose "AI Manager.app"
+xcrun stapler validate "AI Manager.app"
 ```
 
 `spctl` is the one that answers the question users actually hit: whether

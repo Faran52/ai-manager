@@ -135,20 +135,22 @@ jobs:
           PY
 
       # Deno appends `.app` itself on macOS, so the output path carries no
-      # extension: `--output ./dist/AIManager.app` lands on `.app.app`.
+      # extension. The bundle keeps the product's spaced name ("AI Manager.app"),
+      # which is what a user sees once it is in /Applications; the published zip
+      # keeps a space-free name for the download URL.
       - name: Build the app bundle
         run: |
           # --exclude ./node_modules: astro.config's ssr.noExternal bundles every
           # dep into dist/server, so the 1.35 GB node_modules tree (all of Sharp's
           # per-platform libvips builds, every rolldown binding, the devDeps) does
           # not belong in the binary. Drops the bundle from 1.4 GB to ~70 MB.
-          deno desktop -E -R -S . --exclude ./node_modules --output ./dist/AIManager
+          deno desktop -E -R -S . --exclude ./node_modules --output "./dist/AI Manager"
           # ditto keeps the bundle's symlinks and extended attributes; zip does not.
-          ditto -c -k --keepParent ./dist/AIManager.app ./AIManager-macos.zip
+          ditto -c -k --keepParent "./dist/AI Manager.app" ./AIManager-macos.zip
 
       - name: Verify the signature survived packaging
         if: env.MACOS_SIGN_IDENTITY != ''
-        run: codesign --verify --deep --strict --verbose=2 ./dist/AIManager.app
+        run: codesign --verify --deep --strict --verbose=2 "./dist/AI Manager.app"
 
       - name: Notarize and staple
         if: env.APPLE_ID != ''
@@ -158,10 +160,10 @@ jobs:
             --team-id "$APPLE_TEAM_ID" \
             --password "$APPLE_APP_PASSWORD" \
             --wait
-          xcrun stapler staple ./dist/AIManager.app
+          xcrun stapler staple "./dist/AI Manager.app"
           # Re-zip so the published archive carries the stapled ticket.
           rm -f ./AIManager-macos.zip
-          ditto -c -k --keepParent ./dist/AIManager.app ./AIManager-macos.zip
+          ditto -c -k --keepParent "./dist/AI Manager.app" ./AIManager-macos.zip
 
       - uses: actions/upload-artifact@v4
         with:
