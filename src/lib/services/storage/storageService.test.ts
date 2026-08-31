@@ -155,7 +155,9 @@ describe('readStorageReport', () => {
   test('measures a root that is a single file rather than a directory', async () => {
     const home = await newHome();
 
-    await fill(join(home, 'Library', 'Application Support', 'amazon-q', 'data.sqlite3'), 700);
+    // The XDG path, which is an amazon-q root on every platform. The macOS
+    // Application Support path is not one when the suite runs on Linux CI.
+    await fill(join(home, '.local', 'share', 'amazon-q', 'data.sqlite3'), 700);
 
     const report = await readStorageReport(options(home));
     const amazon = report.agents.find((agent) => {
