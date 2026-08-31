@@ -37,7 +37,7 @@ env:
   # First Deno release carrying the bundle-signature fix (#36574). Below this,
   # a built bundle fails `codesign --verify` before an update is ever applied.
   DENO_VERSION: v2.9.6
-  NODE_VERSION: 24.19.0
+  NODE_VERSION: 26.8.1
   # Inlined into the bundle by astro.config.mjs. Repository variables, not
   # secrets: both halves are public, and only the private key needs hiding.
   UPDATE_FEED_URL: ${{ vars.UPDATE_FEED_URL }}

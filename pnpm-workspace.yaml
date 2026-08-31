@@ -3,6 +3,9 @@ allowBuilds:
   'sharp': true
   'unrs-resolver': true
 
+# Refuse a version published less than two days ago, so a compromised or
+# broken release has time to be caught before it reaches the lockfile.
+minimumReleaseAge: 2880
 minimumReleaseAgeExclude:
   - '@linteljs/*'
 

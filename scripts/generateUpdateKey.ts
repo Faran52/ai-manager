@@ -33,7 +33,7 @@ const main = async (): Promise<void> => {
   const pem = privateKey.export({
     type: 'pkcs8',
     format: 'pem',
-  }).toString();
+  });
 
   await mkdir(KEY_DIR, { recursive: true });
   await writeFile(KEY_PATH, pem, 'utf8');
