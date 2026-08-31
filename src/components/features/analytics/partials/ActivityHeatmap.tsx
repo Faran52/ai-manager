@@ -20,16 +20,14 @@ export interface ActivityHeatmapProps {
   readonly activity: readonly DayActivity[];
 }
 
-// Monday, Wednesday and Friday only: naming every row leaves no room for the grid.
-const ROW_LABELS: readonly (string | undefined)[] = [
-  'weekdayMon',
-  undefined,
-  'weekdayWed',
-  undefined,
-  'weekdayFri',
-  undefined,
-  undefined,
-];
+// Seven rows, keyed by weekday so the grid never keys on an array index. Monday,
+// Wednesday and Friday carry a label; naming every row leaves no room for the grid.
+const ROW_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
+const ROW_LABEL: Partial<Record<(typeof ROW_KEYS)[number], string>> = {
+  mon: 'weekdayMon',
+  wed: 'weekdayWed',
+  fri: 'weekdayFri',
+};
 
 const SCALE = [0, 1, 2, 3];
 
@@ -54,10 +52,12 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
     <AnalyticsPanel title={t('activity')}>
       <div className="mt-3 flex min-h-0 flex-1 gap-2" data-activity-heatmap>
         <div className="grid shrink-0 grid-rows-7 gap-1 pt-4">
-          {ROW_LABELS.map((label, weekday) => {
+          {ROW_KEYS.map((weekday) => {
+            const label = ROW_LABEL[weekday];
+
             return (
               <span
-                key={String(weekday)}
+                key={weekday}
                 className="
                   flex items-center text-[10px] leading-none
                   text-muted-foreground

@@ -3,6 +3,7 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 
 import { useVirtualizer } from '@tanstack/react-virtual';
@@ -132,12 +133,18 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
   scrollElement,
   highlightTimestamp,
   navigation,
-  nowMs = Date.now(),
+  nowMs: nowMsProp,
 }) => {
   const listRef = useRef<HTMLDivElement>(null);
   const ownScrollRef = useRef<HTMLDivElement>(null);
   const scrollMarginRef = useRef(0);
   const scrolledForRef = useRef<string | null>(null);
+
+  // Frozen on mount so the day labels do not shift while the timeline is open.
+  const [mountedNowMs] = useState(() => {
+    return Date.now();
+  });
+  const nowMs = nowMsProp ?? mountedNowMs;
 
   const model = useMemo(() => {
     return buildTimelineModel(entries, filters);
@@ -158,7 +165,8 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
    * React Compiler cannot memoize a component holding a virtualizer, because the
    * hook hands back functions whose identity has to change as scroll state does.
    * Skipping compilation here is the trade: measured windowing beats memoizing a
-   * list that was rendering every row.
+   * list that was rendering every row. The lint rule that reports the skip is
+   * turned off for this file in eslint.config.js.
    */
   const virtualizer = useVirtualizer({
     count: model.rows.length,

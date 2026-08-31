@@ -350,7 +350,7 @@ export const HistoryApp: FC = () => {
       setSelectedFilePath(session.filePath);
       setHighlightTimestamp(new Date(session.lastTimestampMs).toISOString());
     },
-    [],
+    [showSession],
   );
 
   const VIEWS: Record<AppView, ReactNode> = {

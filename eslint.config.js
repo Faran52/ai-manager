@@ -61,6 +61,19 @@ const placement = {
   },
 };
 
-const rules = [...config, placement];
+/*
+ * The virtualized transcript. TanStack Virtual returns functions whose identity
+ * has to change as scroll state does, so React Compiler skips the component by
+ * design, and the rule reporting that skip has nothing the file can act on.
+ */
+const virtualizedTimeline = {
+  name: 'ai-manager/virtualized-timeline',
+  files: ['src/components/features/session-viewer/MessageTimeline.tsx'],
+  rules: {
+    'react-hooks/incompatible-library': 'off',
+  },
+};
+
+const rules = [...config, placement, virtualizedTimeline];
 
 export default rules;
