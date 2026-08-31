@@ -7,11 +7,11 @@
 [简体中文](docs/readme/README.zh-CN.md) ·
 [繁體中文](docs/readme/README.zh-TW.md)
 
-A fast, local-first viewer for AI coding-session history, built as an
-[Astro](https://astro.build) island app and shipped to the desktop with
-[Deno Desktop](https://docs.deno.com/runtime/desktop/) (Deno ≥ 2.9).
+A fast, local-first viewer for AI coding-session history. Reads transcripts
+straight off disk: no daemon, no account, no telemetry.
 
-Reads transcripts straight off disk. No daemon, no account, no telemetry.
+An [Astro](https://astro.build) island app, shipped to the desktop with
+[Deno Desktop](https://docs.deno.com/runtime/desktop/) (Deno ≥ 2.9).
 
 ![Session transcript with expandable tool cards](docs/screenshots/sessions.jpg)
 
@@ -38,130 +38,84 @@ whichever tool produced the session.
 |---|---|
 | ![Token and tool analytics](docs/screenshots/analytics.jpg) | ![Per-agent setup and spend](docs/screenshots/health.jpg) |
 
-Six locales, including right-to-left Arabic with a fully mirrored layout:
-
 ![Arabic right-to-left interface](docs/screenshots/rtl-arabic.jpg)
 
 ## Install
 
-Grab the build for your platform from the
+Download the build for your platform from the
 [latest release](https://github.com/Faran52/ai-manager/releases/latest).
 
-The app is not signed with a paid Developer ID, so the first launch needs one
-extra step. Nothing is wrong with the download; both systems simply distrust
-binaries whose publisher has not paid for a certificate.
+Builds are not signed with a paid Developer ID, so the OS quarantines the
+download until you clear it once. The file is fine; the OS just distrusts
+publishers who have not paid for a certificate.
 
-- **macOS.** Right-click the app and choose *Open*, then *Open* again in the
-  dialog. Double-clicking shows a refusal with no way past it, which is why the
-  first launch has to be a right-click. macOS remembers the choice afterwards.
-- **Windows.** SmartScreen shows *Windows protected your PC*. Choose *More info*
-  → *Run anyway*.
+- **macOS.** Clear the quarantine flag, then open the app normally:
+  ```bash
+  xattr -dr com.apple.quarantine "/Applications/AI Manager.app"
+  ```
+  Use `sudo` if the app is in `/Applications` and your account is not an
+  administrator, or move it to `~/Applications` first. The GUI route is
+  **System Settings → Privacy & Security → Open Anyway**, under the notice that
+  appears after the first blocked launch.
+- **Windows.** SmartScreen shows *Windows protected your PC* → *More info* →
+  *Run anyway*.
 - **Linux.** `chmod +x AIManager-linux.AppImage`, then run it.
 
-Building from source avoids the prompt entirely: the warning comes from the
-quarantine flag a browser attaches to a download, and a local build never
-carries one.
+A build you compiled yourself never carries the quarantine flag, so it skips
+all of this.
 
-## Quick start
+## Develop
 
 ```bash
 pnpm install
 
 pnpm dev            # web dev server
-pnpm check          # lint + stylelint + typecheck + tests(100%) + build
+pnpm check          # lint, stylelint, types, tests (100%), build
+pnpm desktop        # build once, then compile and launch the desktop app
+pnpm desktop:dev    # desktop shell around the dev server, hot reload
 ```
 
-### Desktop (Deno)
+The Node-adapter server also runs standalone: `node dist/server/entry.mjs`.
 
-```bash
-pnpm desktop        # build once, then compile & launch the desktop app
-pnpm desktop:dev    # desktop shell around the dev server (hot reload)
-pnpm desktop:build  # produce dist/AIManager.app
-```
-
-Deno auto-detects Astro, embeds `dist/`, and runs the Node-adapter server
-inside the Deno runtime; the UI renders in the OS webview. The same server
-also runs standalone: `node dist/server/entry.mjs`.
-
-## Features
-
-- Projects & sessions browsing with filters, previews, custom titles
-- Rich transcript rendering: markdown, syntax-highlighted code, collapsible
-  thinking, per-tool cards with unified diffs, todo lists, images, stdout/stderr
-- Agent-sidechain toggle, incremental "load more" paging
-- Cross-project full-text search with jump-to-message
-- Token/cost analytics: models, tools, activity heatmap, top sessions
-- Export sessions as Markdown or JSON
-- Six UI languages (English, العربية, 日本語, 한국어, 简体中文, 繁體中文) with
-  RTL support and correct plural rules per locale
-- Update checks against a signed release feed
-- Dark / light / system theme, keyboard search (`/`, ⌘K)
-
-## Internationalisation
-
-Locale files live in `src/i18n/locales/<lang>/<namespace>.json`. Adding a
-language is a new folder plus one entry in `src/i18n/config.ts`; set `dir: 'rtl'`
-and the layout mirrors itself, because the styles use logical properties
-(`ms`/`me`, `ps`/`pe`, `text-start`) rather than physical ones.
-
-A test asserts every language ships the same keys, that none are blank, and that
-no translation introduces a placeholder English never defined. Relative
-timestamps come from `Intl.RelativeTimeFormat`, so they need no keys at all.
-
-## Updates
-
-`Deno.autoUpdate()` patches binaries in place, which breaks a signed macOS
-bundle ([denoland/deno#36574](https://github.com/denoland/deno/pull/36574)), and
-Windows cannot apply patches at all. So updates ship as **full artifacts**: the
-app reads one `latest.json`, verifies the Ed25519 envelope and SHA-256, then
-hands off to an installer and exits.
-
-| Platform | Install path |
-|---|---|
-| macOS | helper waits for exit, `ditto` unpacks, relaunches |
-| Linux | helper swaps the AppImage, relaunches |
-| Windows | `msiexec` takes the `.msi` |
-
-The feed URL and its Ed25519 public key are inlined into the bundle at build
-time, so a release verifies the manifest against a key it already carries and
-refuses an unsigned feed. `UPDATE_FEED_URL` and `UPDATE_PUBLIC_KEY` override
-both; see [.env.example](.env.example).
-
-Cutting a release is one tag push; see [RELEASE.md](RELEASE.md).
-
-## Architecture
-
-LintelJS layout (`plugins/linteljs/skills/linteljs/SKILL.md` is the contract):
+Structure is the LintelJS layout, with
+`plugins/linteljs/skills/linteljs/SKILL.md` as the contract:
 
 ```
 src/
-  pages/
-    index.astro        mounts the single client island
-    api/*.ts           POST endpoints (kebab-case file = URL segment)
-  components/
-    ui/                primitives, motion tokens, ConfirmDialog, MarkdownText
-    features/          app-shell, sidebar, session-viewer, search, analytics,
-                       theme, language, updates, history-data hooks
-  i18n/                runtime, language config, locale namespaces
-  lib/
-    services/          one <domain>Service.ts entry per folder, plus
-                       constants.ts and utils/*Utils.ts supporting modules:
-                       agents, export, history, search, session, stats, updates
-    apis/              wire contracts, endpoint handlers, typed fetch client
-    utils/             formatting, diff pairing, clipboard/download helpers
-  config/              constants and CLAUDE_CONFIG_DIR resolution
+  pages/index.astro    the single client island
+  pages/api/*.ts        POST endpoints, kebab-case file name = URL segment
+  components/ui/        primitives
+  components/features/  app-shell, sidebar, session-viewer, analytics, ...
+  lib/services/         on-disk readers, one <domain>Service.ts per folder
+  lib/apis/             wire contracts, endpoint handlers, typed fetch client
+  i18n/                 runtime, config, locale namespaces
 ```
 
-Data flow: `island → apiClient (validated fetch) → /api route → endpoints →
-services → on-disk agent histories`. Services never touch HTTP; routes are thin;
-the client validates every response shape before use. Outside a service domain,
-imports go through its facade (`@services/<domain>`); lint enforces this.
+Data flows `island → apiClient → /api route → service → on-disk histories`.
+Services never touch HTTP; a domain is reached only through its
+`@services/<domain>` facade, which lint enforces.
 
-## Roadmap
+## Features
 
-- Archive manager, MCP server/preset managers
-- Subagent (sidechain) transcript drill-down, board/kanban view,
-  screenshot capture, WebUI remote-login mode
+- Projects and sessions browsing with filters, previews, custom titles
+- Rich transcript rendering: markdown, syntax-highlighted code, collapsible
+  thinking, per-tool cards with unified diffs, todo lists, images, stdout/stderr
+- Agent-sidechain toggle, incremental paging
+- Cross-project full-text search with jump-to-message
+- Token and cost analytics: models, tools, activity heatmap, top sessions
+- Agent health: hooks, plugins, MCP servers, and per-project spend
+- Archive manager with a retention policy that runs before agents prune
+- Export sessions as Markdown or JSON
+- Six UI languages including right-to-left Arabic with a mirrored layout
+- Dark / light / system theme, keyboard search (`/`, ⌘K)
+- Update checks against a signed release feed ([RELEASE.md](RELEASE.md))
+
+## Internationalisation
+
+A language is a folder under `src/i18n/locales/<lang>/` plus one line in
+`src/i18n/config.ts`. Set `dir: 'rtl'` and the layout mirrors itself, because
+the styles use logical properties (`ms`/`me`, `ps`/`pe`, `text-start`). A test
+asserts every language ships the same keys with nothing blank.
 
 ## License
 
