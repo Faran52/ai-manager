@@ -81,6 +81,25 @@ test('shows the scope, version and marketplace each plugin came from', () => {
   expect(screen.getByText('on')).toBeDefined();
 });
 
+test('exposes each plugin state as a labelled switch', () => {
+  render(
+    <PluginInventory
+      plugins={[
+        plugin(),
+        plugin({
+          id: 'sleeping@official',
+          enabled: false,
+        }),
+      ]}
+      projectPath={PROJECT}
+      onToggle={noToggle}
+    />,
+  );
+
+  expect(screen.getByRole('switch', { name: 'review' }).getAttribute('aria-checked')).toBe('true');
+  expect(screen.getByRole('switch', { name: 'sleeping' }).getAttribute('aria-checked')).toBe('false');
+});
+
 test('marks a plugin whose marketplace is unknown', () => {
   const orphan = plugin({
     id: 'orphan@vanished',
@@ -166,7 +185,7 @@ test('toggles a plugin through the provided handler', async () => {
       onToggle={onToggle}
     />,
   );
-  await user.click(screen.getByRole('button', { name: 'disable' }));
+  await user.click(screen.getByRole('switch', { name: 'review' }));
 
   expect(toggledId).toBe('review@official');
 });
@@ -184,7 +203,7 @@ test('shows a failure from the toggle handler', async () => {
       onToggle={onToggle}
     />,
   );
-  await user.click(screen.getByRole('button', { name: 'disable' }));
+  await user.click(screen.getByRole('switch', { name: 'review' }));
 
   expect(await screen.findByText('cli refused')).toBeDefined();
 });

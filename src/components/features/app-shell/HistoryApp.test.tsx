@@ -348,7 +348,7 @@ describe('HistoryApp', () => {
     await openProject('alpha');
 
     await userEvent.click(screen.getByRole('button', { name: /Health/ }));
-    await userEvent.click(await screen.findByRole('button', { name: 'disable' }));
+    await userEvent.click(await screen.findByRole('switch', { name: 'review' }));
 
     await waitFor(() => {
       expect(fetchMock.mock.calls.filter(([url]) => {
@@ -404,7 +404,7 @@ describe('HistoryApp', () => {
     await openProject('alpha');
 
     await userEvent.click(screen.getByRole('button', { name: /Health/ }));
-    await userEvent.click(await screen.findByRole('button', { name: 'enable' }));
+    await userEvent.click(await screen.findByRole('switch', { name: 'review' }));
 
     expect(await screen.findByText('the cli refused')).toBeDefined();
   });

@@ -20,10 +20,18 @@ export interface PluginInventoryProps {
 const CELL = 'truncate py-1 pe-4 text-start align-middle';
 
 /*
- * The action cell holds a button, not text: truncate would clip the wider
- * "disable" label and paint a stray ellipsis beside the control.
+ * The state cell holds a control, not text: truncate would clip the switch and
+ * paint a stray ellipsis beside it.
  */
-const ACTION_CELL = 'w-px py-1 pe-4 text-start align-middle whitespace-nowrap';
+const SWITCH_CELL = 'py-1 pe-4 text-start align-middle whitespace-nowrap';
+
+const SWITCH = `
+  flex items-center gap-1.5 text-[10px] transition-opacity hover:opacity-80
+  disabled:opacity-50
+`;
+const TRACK = 'relative inline-flex h-3 w-6 shrink-0 rounded-full transition-colors';
+// Logical inset plus an RTL-mirrored shift, so the thumb travels inward either way.
+const THUMB = 'absolute top-0.5 start-0.5 size-2 rounded-full transition-transform';
 const HEAD = cn(CELL, `
   sticky top-0 bg-card text-[10px] font-medium tracking-wider
   text-muted-foreground uppercase
@@ -111,8 +119,7 @@ export const PluginInventory: FC<PluginInventoryProps> = ({
                     <th scope="col" className={cn(HEAD, 'w-[26%]')}>{t('marketplace')}</th>
                     <th scope="col" className={cn(HEAD, 'w-[13%]')}>{t('scope')}</th>
                     <th scope="col" className={cn(HEAD, 'w-[15%]')}>{t('version')}</th>
-                    <th scope="col" className={cn(HEAD, 'w-[10%]')}>{t('state')}</th>
-                    <th scope="col" className={cn(HEAD, 'w-[10%]')}>{t('actions')}</th>
+                    <th scope="col" className={cn(HEAD, 'w-[20%]')}>{t('state')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -143,22 +150,36 @@ export const PluginInventory: FC<PluginInventoryProps> = ({
                         <td className={cn(CELL, 'text-muted-foreground/70')}>
                           {version.length > 0 ? version : '·'}
                         </td>
-                        <td className={cn(CELL, plugin.enabled
-                          ? 'text-ok'
-                          : 'text-muted-foreground')}
-                        >
-                          {plugin.enabled ? t('stateOn') : t('stateOff')}
-                        </td>
-                        <td className={ACTION_CELL}>
+                        <td className={SWITCH_CELL}>
                           <button
                             type="button"
+                            role="switch"
+                            aria-checked={plugin.enabled}
+                            aria-label={plugin.id.split('@')[0]}
                             disabled={busyId === plugin.id}
                             onClick={() => {
                               void toggle(plugin);
                             }}
-                            className={ACTION}
+                            className={SWITCH}
                           >
-                            {plugin.enabled ? t('actionDisable') : t('actionEnable')}
+                            <span className={cn(TRACK, plugin.enabled
+                              ? 'bg-ok/60'
+                              : 'bg-muted-foreground/30')}
+                            >
+                              <span className={cn(THUMB, plugin.enabled
+                                ? `
+                                  translate-x-3 bg-ok
+                                  rtl:-translate-x-3
+                                `
+                                : 'bg-muted-foreground')}
+                              />
+                            </span>
+                            <span className={plugin.enabled
+                              ? 'text-ok'
+                              : 'text-muted-foreground'}
+                            >
+                              {plugin.enabled ? t('stateOn') : t('stateOff')}
+                            </span>
                           </button>
                         </td>
                       </tr>
