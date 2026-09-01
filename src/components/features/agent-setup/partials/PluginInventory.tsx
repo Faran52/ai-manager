@@ -18,6 +18,12 @@ export interface PluginInventoryProps {
 }
 
 const CELL = 'truncate py-1 pe-4 text-start align-middle';
+
+/*
+ * The action cell holds a button, not text: truncate would clip the wider
+ * "disable" label and paint a stray ellipsis beside the control.
+ */
+const ACTION_CELL = 'w-px py-1 pe-4 text-start align-middle whitespace-nowrap';
 const HEAD = cn(CELL, `
   sticky top-0 bg-card text-[10px] font-medium tracking-wider
   text-muted-foreground uppercase
@@ -143,7 +149,7 @@ export const PluginInventory: FC<PluginInventoryProps> = ({
                         >
                           {plugin.enabled ? t('stateOn') : t('stateOff')}
                         </td>
-                        <td className={CELL}>
+                        <td className={ACTION_CELL}>
                           <button
                             type="button"
                             disabled={busyId === plugin.id}
