@@ -2,9 +2,39 @@
 
 import { initI18n } from '@i18n/index';
 
+interface AnimationCancel {
+  cancel: (this: Animation) => void;
+}
+
 // Components call useTranslation directly, so the runtime has to exist before
 // any of them render or they would only ever show raw keys.
 initI18n();
+
+/**
+ * happy-dom builds `Animation.finished` eagerly and rejects it from `cancel()`.
+ *
+ * Motion cancels every animation it owns on unmount and never reads that
+ * promise, so each cancel became an unhandled rejection and Vitest failed the
+ * run on stderr alone. A browser creates the promise lazily, so nothing
+ * surfaces there. Claiming the rejection restores that.
+ */
+const claim = async (finished: Promise<Animation>): Promise<void> => {
+  try {
+    await finished;
+  }
+  catch {
+    // The cancel is the point; only the unclaimed rejection was the problem.
+  }
+};
+
+const animationPrototype: AnimationCancel = Animation.prototype;
+const cancelAnimation = animationPrototype.cancel;
+
+animationPrototype.cancel = function cancel(this: Animation): void {
+  void claim(this.finished);
+
+  cancelAnimation.call(this);
+};
 
 /**
  * happy-dom performs no layout, so every element measures zero.

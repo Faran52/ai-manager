@@ -5,9 +5,9 @@
   "license": "MIT",
   "engines": {
     "node": ">=26.8.1",
-    "pnpm": ">=12.0.0"
+    "pnpm": ">=12.1.0"
   },
-  "packageManager": "pnpm@12.0.0",
+  "packageManager": "pnpm@12.1.0",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build && node scripts/stubMissingImports.ts",
@@ -23,9 +23,9 @@
     "test:coverage": "vitest run --coverage",
     "check": "pnpm lint && pnpm lint:types && pnpm lint:css && pnpm typecheck && pnpm version:check && pnpm test:coverage && pnpm build",
     "prepare": "astro sync && husky",
-    "desktop": "pnpm build && deno desktop -E -R -S . --exclude ./node_modules",
-    "desktop:dev": "deno desktop -E -R -S . --hmr",
-    "desktop:build": "pnpm build && deno desktop -E -R -S . --exclude ./node_modules --output './dist/AI Manager'",
+    "desktop": "pnpm build && deno desktop -E -R -S --allow-run=claude . --exclude ./node_modules",
+    "desktop:dev": "deno desktop -E -R -S --allow-run=claude . --hmr",
+    "desktop:build": "pnpm build && deno desktop -E -R -S --allow-run=claude . --exclude ./node_modules --output './dist/AI Manager'",
     "version:check": "node scripts/syncVersion.ts",
     "version:set": "node scripts/syncVersion.ts",
     "release:key": "node scripts/generateUpdateKey.ts",

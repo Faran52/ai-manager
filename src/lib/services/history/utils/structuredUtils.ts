@@ -42,6 +42,21 @@ interface WalkOptions {
 
 const supportedExtensions = new Set(['.json', '.jsonl', '.md', '.ndjson', '.txt']);
 
+/*
+ * A Cline task is a directory of three files: the Anthropic-format transcript,
+ * the UI event stream, and a metadata blob. Only the first is a conversation,
+ * so reading the folder generically turned one task into three sessions that
+ * all shared the id `api_conversation_history`.
+ */
+const CLINE_TRANSCRIPT = 'api_conversation_history.json';
+
+// The extension that wrote the task is the only grouping the store offers.
+const CLINE_FORKS: Readonly<Record<string, string>> = {
+  'kilocode.kilo-code': 'Kilo Code',
+  'rooveterinaryinc.roo-cline': 'Roo Code',
+  'saoudrizwan.claude-dev': 'Cline',
+};
+
 const isRecord = (value: JsonValue | undefined): value is JsonObject => {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 };
@@ -304,6 +319,10 @@ const isAgentFile = (agent: AgentId, filePath: string): boolean => {
     return name.startsWith('.aider') && (name.endsWith('.md') || name.endsWith('.jsonl'));
   }
 
+  if (agent === 'cline') {
+    return name === CLINE_TRANSCRIPT;
+  }
+
   return supportedExtensions.has(extname(name));
 };
 
@@ -317,6 +336,31 @@ const projectIdFor = (root: string, filePath: string): string => {
   const folder = relative(root, dirname(filePath)).replaceAll('\\', '/');
 
   return folder.length === 0 ? basename(root) : folder;
+};
+
+/**
+ * For Cline the task folder is the session and the extension folder above
+ * `tasks/` is the project, which keeps Cline, Roo and Kilo apart instead of
+ * turning every task id into its own single-session project.
+ */
+const identityFor = (agent: AgentId, root: string, filePath: string): {
+  readonly cwd: string;
+  readonly id: string;
+  readonly projectId: string;
+} => {
+  if (agent === 'cline') {
+    return {
+      cwd: dirname(root),
+      id: basename(dirname(filePath)),
+      projectId: basename(dirname(root)),
+    };
+  }
+
+  return {
+    cwd: dirname(filePath),
+    id: basename(filePath, extname(filePath)),
+    projectId: projectIdFor(root, filePath),
+  };
 };
 
 const structuredSession = async (
@@ -336,8 +380,11 @@ const structuredSession = async (
     const stamps = entries.map((entry) => {
       return Date.parse(entry.timestamp);
     }).filter(Number.isFinite);
-    const projectId = projectIdFor(root, filePath);
-    const id = basename(filePath, extname(filePath));
+    const {
+      cwd,
+      id,
+      projectId,
+    } = identityFor(agent, root, filePath);
     const preview = firstUserMessageText(entries);
 
     return {
@@ -354,7 +401,7 @@ const structuredSession = async (
         lastTimestampMs: Math.max(...stamps),
         modifiedMs: info.mtimeMs,
         sizeBytes: info.size,
-        cwd: dirname(filePath),
+        cwd,
       },
     };
   }
@@ -407,7 +454,7 @@ export const listStructuredProjects = async (
     return {
       agent,
       id,
-      name: basename(actualPath),
+      name: CLINE_FORKS[basename(actualPath)] ?? basename(actualPath),
       actualPath,
       sessionCount: values.length,
       messageCount: values.reduce((total, value) => {

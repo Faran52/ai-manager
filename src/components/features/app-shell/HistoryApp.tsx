@@ -29,7 +29,7 @@ import {
   PaneDivider,
   Toast,
 } from '@ui/index';
-import { AgentSetupPanel } from '@features/agent-setup';
+import { AgentSetupPanel, usePluginToggle } from '@features/agent-setup';
 import { AnalyticsView, useAnalyticsScope } from '@features/analytics';
 import { AppHeader } from '@features/app-header';
 import { ArchiveView } from '@features/archive';
@@ -112,12 +112,14 @@ export const HistoryApp: FC = () => {
   });
   const sessions = useSessions(selectedProject, view === 'sessions' && selectedFilePath != null);
   const stats = useProjectStats(view === 'analytics' ? selectedProject : null);
-  const agentSetup = useAgentSetup(view === 'health' ? (selectedProject?.actualPath ?? null) : null);
+  const projectPath = selectedProject?.actualPath ?? '';
+  const agentSetup = useAgentSetup(view === 'health' ? projectPath : '');
+  const togglePlugin = usePluginToggle(projectPath, agentSetup.reload);
   const archives = useArchives(view === 'archive');
   const prompts = usePrompts(view === 'sessions' && sessionsPanel === 'prompts');
   const retention = useRetention(view === 'archive');
   const storage = useStorage(view === 'analytics');
-  const settings = useSettings(view === 'settings' ? (selectedProject?.actualPath ?? '') : null);
+  const settings = useSettings(view === 'settings' ? projectPath : null);
   const boardScope = view === 'analytics' && analyticsPanel !== 'report';
   const edits = useRecentEdits(analyticsScope === 'project' ? selectedProject : null, boardScope);
   const newestSessions = useNewestSessions(boardScope && analyticsScope === 'global');
@@ -462,6 +464,7 @@ export const HistoryApp: FC = () => {
           }}
           sessionCounts={sessionCounts}
           nowMs={nowMs}
+          onPluginToggle={togglePlugin}
         />
       </div>
     ),

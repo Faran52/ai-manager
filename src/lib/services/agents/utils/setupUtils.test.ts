@@ -15,7 +15,12 @@ import {
 
 import { managedAgents } from '../constants';
 
-import { readAgentSetup } from './setupUtils';
+import { readModelAuth } from './modelAuthUtils';
+import {
+  readAgentMcp,
+  readAgentRules,
+  readAgentSetup,
+} from './setupUtils';
 
 const workspace = async (): Promise<{ home: string;
   project: string; }> => {
@@ -143,6 +148,7 @@ describe('readAgentSetup', () => {
         agent,
         mcpServers: [],
         rules: [],
+        modelAuth: await readModelAuth(agent, home),
       });
     }
   });
@@ -154,6 +160,7 @@ describe('readAgentSetup', () => {
       agent: 'aider',
       mcpServers: [],
       rules: [],
+      modelAuth: await readModelAuth('aider', home),
     });
   });
 
@@ -220,5 +227,132 @@ describe('readAgentSetup', () => {
     expect(codex.mcpServers.map((server) => {
       return server.name;
     })).toEqual(['good']);
+  });
+
+  test('lists nothing for an agent without a setup spec', async () => {
+    await expect(readAgentMcp('aider', '/projects/demo', '/home/x')).resolves.toEqual([]);
+    await expect(readAgentRules('aider', '/projects/demo', '/home/x')).resolves.toEqual([]);
+  });
+
+  test('reads antigravity MCP from user and project config files', async () => {
+    const { home, project } = await workspace();
+
+    await mkdir(join(home, '.gemini', 'config'), { recursive: true });
+    await mkdir(join(project, '.agents'), { recursive: true });
+    await writeFile(join(home, '.gemini', 'config', 'mcp_config.json'), JSON.stringify({
+      mcpServers: { context7: { command: 'npx' } },
+    }));
+    await writeFile(join(project, '.agents', 'mcp_config.json'), JSON.stringify({
+      mcpServers: { local: { command: 'node' } },
+    }));
+
+    const mcp = await readAgentMcp('antigravity', project, home);
+
+    expect(mcp.map((server) => {
+      return [server.name, server.scope];
+    })).toEqual([['context7', 'user'], ['local', 'project']]);
+  });
+
+  test('reads antigravity rules from project and user locations', async () => {
+    const { home, project } = await workspace();
+
+    await writeFile(join(project, 'AGENTS.md'), 'rules');
+    await mkdir(join(home, '.gemini'), { recursive: true });
+    await writeFile(join(home, '.gemini', 'GEMINI.md'), 'global rules');
+
+    const rules = await readAgentRules('antigravity', project, home);
+
+    expect(rules).toEqual([
+      expect.objectContaining({
+        path: join(project, 'AGENTS.md'),
+        scope: 'project',
+      }),
+      expect.objectContaining({
+        path: join(home, '.gemini', 'GEMINI.md'),
+        scope: 'user',
+      }),
+    ]);
+  });
+
+  test('reads grok MCP from TOML user and project configs', async () => {
+    const { home, project } = await workspace();
+
+    await mkdir(join(home, '.grok'), { recursive: true });
+    await mkdir(join(project, '.grok'), { recursive: true });
+    await writeFile(join(home, '.grok', 'config.toml'), [
+      '[mcp_servers.context7]',
+      'command = "npx"',
+    ].join('\n'));
+    await writeFile(join(project, '.grok', 'config.toml'), [
+      '[mcp_servers.local]',
+      'command = "node"',
+    ].join('\n'));
+
+    const mcp = await readAgentMcp('grok', project, home);
+
+    expect(mcp.map((server) => {
+      return [server.name, server.scope];
+    })).toEqual([['context7', 'user'], ['local', 'project']]);
+  });
+
+  test('reads grok rules from project AGENTS.md and user GEMINI.md-style file', async () => {
+    const { home, project } = await workspace();
+
+    await writeFile(join(project, 'AGENTS.md'), 'rules');
+    await mkdir(join(home, '.grok'), { recursive: true });
+    await writeFile(join(home, '.grok', 'AGENTS.md'), 'global rules');
+
+    const rules = await readAgentRules('grok', project, home);
+
+    expect(rules).toEqual([
+      expect.objectContaining({
+        path: join(project, 'AGENTS.md'),
+        scope: 'project',
+      }),
+      expect.objectContaining({
+        path: join(home, '.grok', 'AGENTS.md'),
+        scope: 'user',
+      }),
+    ]);
+  });
+
+  test('reads cursor-agent MCP from user and project mcp.json', async () => {
+    const { home, project } = await workspace();
+
+    await mkdir(join(home, '.cursor'), { recursive: true });
+    await writeFile(join(home, '.cursor', 'mcp.json'), JSON.stringify({
+      mcpServers: { context7: { command: 'npx' } },
+    }));
+    await mkdir(join(project, '.cursor'), { recursive: true });
+    await writeFile(join(project, '.cursor', 'mcp.json'), JSON.stringify({
+      mcpServers: { local: { command: 'node' } },
+    }));
+
+    const mcp = await readAgentMcp('cursor-agent', project, home);
+
+    expect(mcp.map((server) => {
+      return [server.name, server.scope];
+    })).toEqual([['context7', 'user'], ['local', 'project']]);
+  });
+
+  test('reads cursor-agent rules from project directory, AGENTS.md, and user rules', async () => {
+    const { home, project } = await workspace();
+
+    await mkdir(join(project, '.cursor', 'rules'), { recursive: true });
+    await writeFile(join(project, '.cursor', 'rules', 'style.mdc'), 'style');
+    await writeFile(join(project, 'AGENTS.md'), 'shared');
+    await mkdir(join(home, '.cursor', 'rules'), { recursive: true });
+    await writeFile(join(home, '.cursor', 'rules', 'global.mdc'), 'global');
+
+    const rules = await readAgentRules('cursor-agent', project, home);
+
+    const paths = rules.map((rule) => {
+      return rule.path.replace(`${project}/`, '');
+    });
+    expect(paths).toContain('.cursor/rules/style.mdc');
+    expect(paths).toContain('AGENTS.md');
+    expect(rules.find((rule) => {
+      return rule.path.endsWith('global.mdc');
+    })).toMatchObject({ scope: 'user' });
   });
 });

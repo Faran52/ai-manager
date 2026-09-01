@@ -1,6 +1,7 @@
 import { isAgentId } from '@config/agents';
 
 import {
+  attributePluginCosts,
   listAgentProjects,
   listAgentSessions,
   listNewestSessions,
@@ -8,9 +9,11 @@ import {
   pathsFor,
   readAgentSetup,
   readClaudePlugins,
+  readPluginCosts,
   readProjectTrust,
   readProjectUsage,
   resolveAgentPaths,
+  runPluginAction,
   validateAgentSetup,
 } from '@services/agents/agentsService';
 import {
@@ -55,7 +58,12 @@ import {
 } from './apiHandler';
 
 import type { AgentId } from '@config/agents';
-import type { AgentRoots } from '@services/agents/agentsService';
+import type {
+  AgentRoots,
+  PluginActionName,
+  PluginActionRequest,
+  SetupScope,
+} from '@services/agents/agentsService';
 import type { EnvEntry } from '@services/settings/settingsService';
 import type { UpdateConfig } from '@services/updates';
 import type {
@@ -79,6 +87,8 @@ export interface EndpointDeps {
   readonly claudeDir?: string;
   readonly codexDir?: string;
   readonly home?: string;
+  readonly pluginAction?: Parameters<typeof runPluginAction>[1];
+  readonly pluginDetails?: Parameters<typeof readPluginCosts>[1];
 }
 
 export interface UpdateEndpointDeps {
@@ -665,6 +675,74 @@ export const handleAgentSetup = async (request: Request, deps?: EndpointDeps): P
       plugins,
       trust,
     });
+  });
+};
+
+const isPluginActionName = (value: unknown): value is PluginActionName => {
+  return value === 'install' || value === 'enable' || value === 'disable';
+};
+
+const isSetupScope = (value: unknown): value is SetupScope => {
+  return value === 'user' || value === 'project';
+};
+
+const parsePluginActionBody = (body: object): PluginActionRequest | undefined => {
+  if (!('action' in body) || !isPluginActionName(body.action)
+    || !('plugin' in body) || typeof body.plugin !== 'string'
+    || body.plugin.length === 0 || /\s/u.test(body.plugin)
+    || !('scope' in body) || !isSetupScope(body.scope)
+    || !('projectPath' in body) || typeof body.projectPath !== 'string' || body.projectPath.length === 0) {
+    return undefined;
+  }
+
+  return {
+    action: body.action,
+    plugin: body.plugin,
+    scope: body.scope,
+    projectPath: body.projectPath,
+  };
+};
+
+export const handlePluginAction = async (request: Request, deps?: EndpointDeps): Promise<Response> => {
+  return withJsonErrors(async () => {
+    const body = await readJsonObject(request);
+    const target = body == null ? undefined : parsePluginActionBody(body);
+
+    if (target == null) {
+      return jsonError(BAD_REQUEST, 'A valid plugin action is required.');
+    }
+
+    const result = await runPluginAction({
+      ...target,
+      home: deps?.home,
+    }, deps?.pluginAction);
+
+    if (!result.ok) {
+      return jsonError(502, result.output.length > 0 ? result.output : 'The Claude CLI rejected the plugin action.');
+    }
+
+    return jsonOk({ ok: true });
+  });
+};
+
+export const handlePluginCosts = async (request: Request, deps?: EndpointDeps): Promise<Response> => {
+  return withJsonErrors(async () => {
+    const body = await readJsonObject(request);
+
+    if (body == null || !isAgentSetupBody(body)) {
+      return jsonError(BAD_REQUEST, 'A non-empty projectPath is required.');
+    }
+
+    const [plugins, usage] = await Promise.all([
+      readClaudePlugins(body.projectPath, deps?.home),
+      readProjectUsage(body.projectPath, deps?.home),
+    ]);
+    const estimates = await readPluginCosts({
+      plugins,
+      home: deps?.home,
+    }, deps?.pluginDetails);
+
+    return jsonOk({ costs: attributePluginCosts(usage, estimates) });
   });
 };
 

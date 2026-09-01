@@ -12,6 +12,9 @@ import type {
   LoadSessionBody,
   MessagesResponse,
   MutationResponse,
+  PluginActionBody,
+  PluginCostsBody,
+  PluginCostsResponse,
   ProjectMutationBody,
   ProjectsResponse,
   ProjectStatsBody,
@@ -49,6 +52,10 @@ const isObject = (value: unknown): value is object => {
 
 const isAgentSetupResponse = (value: object): value is AgentSetupResponse => {
   return 'setups' in value && Array.isArray(value.setups);
+};
+
+const hasCosts = (value: object): value is PluginCostsResponse => {
+  return 'costs' in value && Array.isArray(value.costs);
 };
 
 const hasProjects = (value: object): value is ProjectsResponse => {
@@ -171,6 +178,16 @@ const AGENT_SETUP: EndpointDefinition<AgentSetupResponse> = {
   path: '/api/agent-setup',
   accepts: isAgentSetupResponse,
   label: 'agent setup',
+};
+const PLUGIN_ACTION: EndpointDefinition<MutationResponse> = {
+  path: '/api/plugin-action',
+  accepts: isMutationResponse,
+  label: 'plugin action',
+};
+const PLUGIN_COSTS: EndpointDefinition<PluginCostsResponse> = {
+  path: '/api/plugin-costs',
+  accepts: hasCosts,
+  label: 'plugin cost attribution',
 };
 const ARCHIVES: EndpointDefinition<ArchivesResponse> = {
   path: '/api/archives',
@@ -412,4 +429,12 @@ export const renameSession = (body: RenameSessionBody): Promise<MutationResponse
 
 export const fetchAgentSetup = (body: AgentSetupBody): Promise<AgentSetupResponse> => {
   return requestEndpoint(AGENT_SETUP, body);
+};
+
+export const postPluginAction = (body: PluginActionBody): Promise<MutationResponse> => {
+  return requestEndpoint(PLUGIN_ACTION, body);
+};
+
+export const fetchPluginCosts = (body: PluginCostsBody): Promise<PluginCostsResponse> => {
+  return requestEndpoint(PLUGIN_COSTS, body);
 };

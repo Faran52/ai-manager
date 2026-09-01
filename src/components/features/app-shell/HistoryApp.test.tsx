@@ -304,6 +304,110 @@ describe('HistoryApp', () => {
 
     expect(await screen.findByText('context7')).toBeDefined();
   });
+
+  test('sends a plugin toggle for the open project and re-reads health after it', async () => {
+    let actionBody = '';
+    const fetchMock = vi.fn((url: RequestInfo | URL, init?: RequestInit) => {
+      const path = toPath(url);
+
+      if (path.endsWith('/projects')) {
+        return Response.json(projectPayload);
+      }
+      if (path.endsWith('/agent-setup')) {
+        return Response.json({
+          setups: [{
+            agent: 'claude',
+            mcpServers: [],
+            rules: [],
+          }],
+          plugins: [{
+            id: 'review@official',
+            marketplace: 'official',
+            scope: 'user',
+            enabled: true,
+            version: '1.0.0',
+            knownMarketplace: true,
+          }],
+        });
+      }
+      if (path.endsWith('/plugin-action')) {
+        actionBody = typeof init?.body === 'string' ? init.body : '';
+
+        return Response.json({ ok: true });
+      }
+      return Response.json({
+        sessions: [],
+        hits: [],
+        truncated: false,
+      });
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+    await openProject('alpha');
+
+    await userEvent.click(screen.getByRole('button', { name: /Health/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'disable' }));
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.filter(([url]) => {
+        return toPath(url).endsWith('/agent-setup');
+      })).toHaveLength(2);
+    });
+
+    expect(JSON.parse(actionBody)).toEqual({
+      projectPath: '/repo/alpha',
+      plugin: 'review@official',
+      scope: 'user',
+      action: 'disable',
+    });
+  });
+
+  test('surfaces a refused plugin toggle beside the plugin table', async () => {
+    const fetchMock = vi.fn((url: RequestInfo | URL) => {
+      const path = toPath(url);
+
+      if (path.endsWith('/projects')) {
+        return Response.json(projectPayload);
+      }
+      if (path.endsWith('/agent-setup')) {
+        return Response.json({
+          setups: [{
+            agent: 'claude',
+            mcpServers: [],
+            rules: [],
+          }],
+          plugins: [{
+            id: 'review@official',
+            marketplace: 'official',
+            scope: 'project',
+            enabled: false,
+            version: '1.0.0',
+            knownMarketplace: true,
+          }],
+        });
+      }
+      if (path.endsWith('/plugin-action')) {
+        return Response.json({ error: 'the cli refused' }, { status: 502 });
+      }
+      return Response.json({
+        sessions: [],
+        hits: [],
+        truncated: false,
+      });
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+    await openProject('alpha');
+
+    await userEvent.click(screen.getByRole('button', { name: /Health/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'enable' }));
+
+    expect(await screen.findByText('the cli refused')).toBeDefined();
+  });
 });
 
 describe('HistoryApp cross-view flows', () => {

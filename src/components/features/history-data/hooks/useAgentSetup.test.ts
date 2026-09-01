@@ -30,6 +30,11 @@ const SETUPS: readonly AgentSetup[] = [
       bytes: 12,
       modifiedMs: 0,
     }],
+    modelAuth: {
+      format: 'claude',
+      model: undefined,
+      authMethod: 'none',
+    },
   },
 ];
 
@@ -43,7 +48,7 @@ describe('useAgentSetup', () => {
     vi.stubGlobal('fetch', fetchSpy);
 
     const { result } = renderHook(() => {
-      return useAgentSetup(null);
+      return useAgentSetup('');
     });
 
     await waitFor(() => {

@@ -31,6 +31,8 @@ import {
   handleListSessions,
   handleLoadSession,
   handleNewestSessions,
+  handlePluginAction,
+  handlePluginCosts,
   handleProjectStats,
   handlePromptHistory,
   handleReadArchive,
@@ -490,11 +492,6 @@ describe('handleAgentSetup', () => {
           })],
         },
         {
-          agent: 'gemini',
-          mcpServers: [],
-          rules: [],
-        },
-        {
           agent: 'copilot',
           mcpServers: [],
           rules: [],
@@ -517,6 +514,38 @@ describe('handleAgentSetup', () => {
             bytes: 5,
           })],
         },
+        {
+          agent: 'gemini',
+          mcpServers: [],
+          rules: [],
+        },
+        {
+          agent: 'antigravity',
+          mcpServers: [],
+          rules: [expect.objectContaining({
+            path: join(project, 'AGENTS.md'),
+            scope: 'project',
+            bytes: 5,
+          })],
+        },
+        {
+          agent: 'cursor-agent',
+          mcpServers: [],
+          rules: [expect.objectContaining({
+            path: join(project, 'AGENTS.md'),
+            scope: 'project',
+            bytes: 5,
+          })],
+        },
+        {
+          agent: 'grok',
+          mcpServers: [],
+          rules: [expect.objectContaining({
+            path: join(project, 'AGENTS.md'),
+            scope: 'project',
+            bytes: 5,
+          })],
+        },
       ],
     });
   });
@@ -524,6 +553,173 @@ describe('handleAgentSetup', () => {
   test('rejects a request without a project path', async () => {
     expect((await handleAgentSetup(post({}))).status).toBe(400);
     expect((await handleAgentSetup(post({ projectPath: '' }))).status).toBe(400);
+  });
+});
+
+describe('handlePluginAction', () => {
+  test('rejects a body that names no runnable action', async () => {
+    expect((await handlePluginAction(post('"not an object"'))).status).toBe(400);
+    expect((await handlePluginAction(post({}))).status).toBe(400);
+    expect((await handlePluginAction(post({
+      projectPath: '/projects/demo',
+      plugin: 'a@b',
+      scope: 'user',
+      action: 'uninstall',
+    }))).status).toBe(400);
+  });
+
+  test('runs the requested action through the claude cli', async () => {
+    const run = vi.fn(() => {
+      return Promise.resolve({
+        ok: true,
+        output: 'done',
+      });
+    });
+
+    const response = await handlePluginAction(post({
+      projectPath: '/projects/demo',
+      plugin: 'code-review@claude-plugins-official',
+      scope: 'user',
+      action: 'disable',
+    }), {
+      home: '/home/x',
+      pluginAction: run,
+    });
+
+    expect(response.status).toBe(200);
+    expect(run).toHaveBeenCalledWith([
+      'plugin',
+      'disable',
+      'code-review@claude-plugins-official',
+      '-s',
+      'user',
+    ], { cwd: '/home/x' });
+  });
+
+  test('reports a refused action with the cli output', async () => {
+    const run = vi.fn(() => {
+      return Promise.resolve({
+        ok: false,
+        output: 'not installed',
+      });
+    });
+
+    const response = await handlePluginAction(post({
+      projectPath: '/projects/demo',
+      plugin: 'a@b',
+      scope: 'project',
+      action: 'enable',
+    }), { pluginAction: run });
+
+    expect(response.status).toBe(502);
+    expect(await response.text()).toContain('not installed');
+  });
+
+  test('falls back to a message when a refused action printed nothing', async () => {
+    const run = vi.fn(() => {
+      return Promise.resolve({
+        ok: false,
+        output: '',
+      });
+    });
+
+    const response = await handlePluginAction(post({
+      projectPath: '/projects/demo',
+      plugin: 'a@b',
+      scope: 'user',
+      action: 'install',
+    }), { pluginAction: run });
+
+    expect(response.status).toBe(502);
+    expect(await response.text()).toContain('The Claude CLI rejected the plugin action.');
+  });
+
+  test('rejects a malformed action body', async () => {
+    const run = vi.fn(() => {
+      return Promise.resolve({
+        ok: true,
+        output: '',
+      });
+    });
+
+    expect((await handlePluginAction(post({}))).status).toBe(400);
+    expect((await handlePluginAction(post({
+      action: 'enable',
+      plugin: 'a b',
+      scope: 'user',
+      projectPath: '/p',
+    }))).status).toBe(400);
+    expect((await handlePluginAction(post({
+      action: 'reinstall',
+      plugin: 'a@b',
+      scope: 'user',
+      projectPath: '/p',
+    }))).status).toBe(400);
+    expect((await handlePluginAction(post({
+      action: 'enable',
+      plugin: 'a@b',
+      scope: 'local',
+      projectPath: '/p',
+    }))).status).toBe(400);
+    expect((await handlePluginAction(post({
+      action: 'enable',
+      plugin: 'a@b',
+      scope: 'user',
+      projectPath: '',
+    }))).status).toBe(400);
+    expect(run).not.toHaveBeenCalled();
+  });
+});
+
+describe('handlePluginCosts', () => {
+  test('attributes projected context cost to enabled plugins', async () => {
+    const project = await mkdtemp(join(tmpdir(), 'plugin-cost-'));
+    const home = await mkdtemp(join(tmpdir(), 'plugin-cost-home-'));
+
+    await mkdir(join(home, '.claude', 'plugins'), { recursive: true });
+    await writeFile(join(home, '.claude', 'plugins', 'installed_plugins.json'), JSON.stringify({
+      version: 2,
+      plugins: {
+        'x@m': [{
+          scope: 'user',
+          version: '1',
+        }],
+      },
+    }));
+    await writeFile(join(home, '.claude', 'settings.json'), JSON.stringify({
+      enabledPlugins: {
+        'x@m': true,
+      },
+    }));
+
+    const run = vi.fn(() => {
+      return Promise.resolve({
+        ok: true,
+        output: 'Always-on:   ~449 tok   added to every session',
+      });
+    });
+
+    const response = await handlePluginCosts(post({ projectPath: project }), {
+      home,
+      pluginDetails: run,
+    });
+    const body = await jsonOf(response);
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({
+      costs: [{
+        plugin: 'x@m',
+        alwaysOnTokens: 449,
+        onInvokeTokens: 0,
+        estimatedCostUsd: 0,
+      }],
+    });
+    expect(run).toHaveBeenCalledWith(['plugin', 'details', 'x@m'], { cwd: home });
+  });
+
+  test('rejects a request without a project path', async () => {
+    expect((await handlePluginCosts(post({}))).status).toBe(400);
+    expect((await handlePluginCosts(post({ projectPath: '' }))).status).toBe(400);
   });
 });
 

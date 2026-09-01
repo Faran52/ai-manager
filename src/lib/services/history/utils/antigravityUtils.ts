@@ -12,6 +12,14 @@
  *
  * The store holds more than this (`conversations/<uuid>.db` protobuf SQLite,
  * `implicit/*.pb`, `scratch/`). None of it is read, deliberately.
+ *
+ * This covers the CLI only. Antigravity desktop keeps a separate store under
+ * `~/.gemini/antigravity/` whose `conversations/<uuid>.pb` is encrypted:
+ * claude-code-history-viewer measured 8.00/8.00 byte entropy with no container
+ * magic on a real install, so no parser can read it. Its one plaintext mirror
+ * is the editor's `state.vscdb`, key
+ * `antigravityUnifiedStateSync.trajectorySummaries`, which carries the title,
+ * step count and only the most recent steps. Not read here yet; see PLAN.md.
  */
 import {
   readdir,

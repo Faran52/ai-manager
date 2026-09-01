@@ -14,6 +14,7 @@ describe('agentIsConfigured', () => {
       agent,
       mcpServers: [],
       rules: [],
+      modelAuth: { format: 'files' as const },
     };
   };
   const plugin = (id: string): InstalledPlugin => {

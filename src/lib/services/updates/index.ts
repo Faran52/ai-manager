@@ -4,7 +4,6 @@ export type {
   UpdateStage,
   UpdateState,
 } from './types';
-export { updateConfigFromEnv } from './updateConfig';
 export {
   checkForUpdate,
   resetUpdateState,
@@ -14,3 +13,4 @@ export {
   helperScriptFor,
   installCommandFor,
 } from './utils/installUtils';
+export { updateConfigFromEnv } from './utils/updateConfigUtils';

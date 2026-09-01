@@ -8,8 +8,11 @@ import { join } from 'node:path';
 
 import { isJsonObject, parseJsonContainer } from '@utils/jsonUtils';
 
+import { readModelAuth } from './modelAuthUtils';
+
 import type { AgentId } from '@config/agents';
 import type { JsonObject, JsonValue } from '@utils/jsonUtils';
+import type { ModelAuthState } from './modelAuthUtils';
 
 export type SetupScope = 'user' | 'project';
 
@@ -31,6 +34,7 @@ export interface AgentSetup {
   readonly agent: AgentId;
   readonly mcpServers: readonly McpServerSummary[];
   readonly rules: readonly RulesFileSummary[];
+  readonly modelAuth: ModelAuthState;
 }
 
 interface SetupLocation {
@@ -122,7 +126,7 @@ const tomlMcpNames = async (file: string): Promise<readonly string[]> => {
 };
 
 const SPECS: Partial<Record<AgentId, AgentSetupSpec>> = {
-  claude: {
+  'claude': {
     mcp: [
       {
         scope: 'user',
@@ -161,7 +165,7 @@ const SPECS: Partial<Record<AgentId, AgentSetupSpec>> = {
       },
     ],
   },
-  codex: {
+  'codex': {
     mcp: [{
       scope: 'user',
       path: (home) => {
@@ -183,7 +187,7 @@ const SPECS: Partial<Record<AgentId, AgentSetupSpec>> = {
       },
     ],
   },
-  gemini: {
+  'gemini': {
     mcp: [
       {
         scope: 'user',
@@ -215,7 +219,7 @@ const SPECS: Partial<Record<AgentId, AgentSetupSpec>> = {
       },
     ],
   },
-  copilot: {
+  'copilot': {
     mcp: [{
       scope: 'project',
       path: (_home, project) => {
@@ -230,7 +234,7 @@ const SPECS: Partial<Record<AgentId, AgentSetupSpec>> = {
       },
     }],
   },
-  cursor: {
+  'cursor': {
     mcp: [
       {
         scope: 'user',
@@ -268,7 +272,7 @@ const SPECS: Partial<Record<AgentId, AgentSetupSpec>> = {
       },
     ],
   },
-  opencode: {
+  'opencode': {
     mcp: [{
       scope: 'user',
       path: (home) => {
@@ -282,6 +286,106 @@ const SPECS: Partial<Record<AgentId, AgentSetupSpec>> = {
         return join(project, 'AGENTS.md');
       },
     }],
+  },
+  'antigravity': {
+    mcp: [
+      {
+        scope: 'user',
+        path: (home) => {
+          return join(home, '.gemini', 'config', 'mcp_config.json');
+        },
+        read: topLevel('mcpServers'),
+      },
+      {
+        scope: 'project',
+        path: (_home, project) => {
+          return join(project, '.agents', 'mcp_config.json');
+        },
+        read: topLevel('mcpServers'),
+      },
+    ],
+    rules: [
+      {
+        scope: 'project',
+        path: (_home, project) => {
+          return join(project, 'AGENTS.md');
+        },
+      },
+      {
+        scope: 'user',
+        path: (home) => {
+          return join(home, '.gemini', 'GEMINI.md');
+        },
+      },
+    ],
+  },
+  'grok': {
+    mcp: [
+      {
+        scope: 'user',
+        path: (home) => {
+          return join(home, '.grok', 'config.toml');
+        },
+      },
+      {
+        scope: 'project',
+        path: (_home, project) => {
+          return join(project, '.grok', 'config.toml');
+        },
+      },
+    ],
+    rules: [
+      {
+        scope: 'project',
+        path: (_home, project) => {
+          return join(project, 'AGENTS.md');
+        },
+      },
+      {
+        scope: 'user',
+        path: (home) => {
+          return join(home, '.grok', 'AGENTS.md');
+        },
+      },
+    ],
+  },
+  'cursor-agent': {
+    mcp: [
+      {
+        scope: 'user',
+        path: (home) => {
+          return join(home, '.cursor', 'mcp.json');
+        },
+        read: topLevel('mcpServers'),
+      },
+      {
+        scope: 'project',
+        path: (_home, project) => {
+          return join(project, '.cursor', 'mcp.json');
+        },
+        read: topLevel('mcpServers'),
+      },
+    ],
+    rules: [
+      {
+        scope: 'project',
+        path: (_home, project) => {
+          return join(project, '.cursor', 'rules');
+        },
+      },
+      {
+        scope: 'project',
+        path: (_home, project) => {
+          return join(project, 'AGENTS.md');
+        },
+      },
+      {
+        scope: 'user',
+        path: (home) => {
+          return join(home, '.cursor', 'rules');
+        },
+      },
+    ],
   },
 };
 
@@ -350,34 +454,63 @@ const serversAt = async (
   });
 };
 
+// A config surface is readable exactly when SPECS names where its files live.
+export const hasAgentSetup = (agent: AgentId): boolean => {
+  return SPECS[agent] != null;
+};
+
 // Only files named in SPECS are opened; credential stores beside them are never read.
+export const readAgentMcp = async (
+  agent: AgentId,
+  projectPath: string,
+  home = homedir(),
+): Promise<readonly McpServerSummary[]> => {
+  const spec = SPECS[agent];
+
+  if (spec == null) {
+    return [];
+  }
+
+  const servers = await Promise.all(spec.mcp.map((location) => {
+    return serversAt(location, home, projectPath);
+  }));
+
+  return servers.flat();
+};
+
+export const readAgentRules = async (
+  agent: AgentId,
+  projectPath: string,
+  home = homedir(),
+): Promise<readonly RulesFileSummary[]> => {
+  const spec = SPECS[agent];
+
+  if (spec == null) {
+    return [];
+  }
+
+  const files = await Promise.all(spec.rules.map((location) => {
+    return rulesPresent(location, home, projectPath);
+  }));
+
+  return files.flat();
+};
+
 export const readAgentSetup = async (
   agent: AgentId,
   projectPath: string,
   home = homedir(),
 ): Promise<AgentSetup> => {
-  const spec = SPECS[agent];
-
-  if (spec == null) {
-    return {
-      agent,
-      mcpServers: [],
-      rules: [],
-    };
-  }
-
-  const [mcpServers, rules] = await Promise.all([
-    Promise.all(spec.mcp.map((location) => {
-      return serversAt(location, home, projectPath);
-    })),
-    Promise.all(spec.rules.map((location) => {
-      return rulesPresent(location, home, projectPath);
-    })),
+  const [mcpServers, rules, modelAuth] = await Promise.all([
+    readAgentMcp(agent, projectPath, home),
+    readAgentRules(agent, projectPath, home),
+    readModelAuth(agent, home),
   ]);
 
   return {
     agent,
-    mcpServers: mcpServers.flat(),
-    rules: rules.flat(),
+    mcpServers,
+    rules,
+    modelAuth,
   };
 };

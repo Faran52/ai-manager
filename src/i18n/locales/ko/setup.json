@@ -25,5 +25,13 @@
   "stateOn": "켜짐",
   "stateOff": "꺼짐",
   "scopeUser": "사용자",
-  "scopeProject": "프로젝트"
+  "scopeProject": "프로젝트",
+  "actions": "작업",
+  "actionEnable": "켜기",
+  "actionDisable": "끄기",
+  "costsEstimate": "컨텍스트 비용 추정",
+  "costsEstimating": "추정 중…",
+  "costsAlwaysOn": "상시",
+  "costsPerInvoke": "호출당",
+  "costsNone": "비용을 귀속할 활성 플러그인이 없습니다."
 }

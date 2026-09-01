@@ -16,11 +16,20 @@ const rule = (path: string, bytes = 4): AgentSetup['rules'][number] => {
   };
 };
 
+const noToggle = (): Promise<void> => {
+  return Promise.resolve();
+};
+
 const setup = (agent: AgentSetup['agent'], overrides: Partial<AgentSetup> = {}): AgentSetup => {
   return {
     agent,
     mcpServers: [],
     rules: [],
+    modelAuth: {
+      format: 'claude',
+      model: undefined,
+      authMethod: 'none',
+    },
     ...overrides,
   };
 };
@@ -40,6 +49,7 @@ test('lists every configured agent with its servers and rules', () => {
       usage={null}
       plugins={[]}
       nowMs={0}
+      onPluginToggle={noToggle}
       setups={[
         setup('claude', {
           mcpServers: [{
@@ -88,6 +98,7 @@ test('shows the scope a server comes from', () => {
       usage={null}
       plugins={[]}
       nowMs={0}
+      onPluginToggle={noToggle}
       setups={[
         setup('claude', {
           mcpServers: [
@@ -128,6 +139,7 @@ test('says when an agent has rules but no servers', () => {
       usage={null}
       plugins={[]}
       nowMs={0}
+      onPluginToggle={noToggle}
       setups={[setup('codex', { rules: [rule(`${PROJECT}/AGENTS.md`, 4)] })]}
     />,
   );
@@ -151,6 +163,7 @@ test('shortens a user-wide rules path to the home tilde', () => {
       usage={null}
       plugins={[]}
       nowMs={0}
+      onPluginToggle={noToggle}
       setups={[
         setup('codex', {
           rules: [
@@ -196,6 +209,7 @@ test('shows recorded spend alongside configured agents', () => {
       usage={USAGE}
       plugins={[]}
       nowMs={1000}
+      onPluginToggle={noToggle}
       setups={[setup('claude', { rules: [rule(`${PROJECT}/CLAUDE.md`, 3)] })]}
     />,
   );
@@ -219,6 +233,7 @@ test('shows recorded spend even when no agent is configured', () => {
       usage={USAGE}
       plugins={[]}
       nowMs={1000}
+      onPluginToggle={noToggle}
       setups={[setup('claude')]}
     />,
   );
@@ -243,6 +258,7 @@ test('asks for a project before anything else', () => {
       usage={null}
       plugins={[]}
       nowMs={0}
+      onPluginToggle={noToggle}
     />,
   );
 
@@ -266,6 +282,7 @@ test('says the location is unknown when the project has no folder', () => {
       usage={null}
       plugins={[]}
       nowMs={0}
+      onPluginToggle={noToggle}
     />,
   );
 
@@ -289,6 +306,7 @@ test('names every agent, set up or not', () => {
       usage={null}
       plugins={[]}
       nowMs={0}
+      onPluginToggle={noToggle}
     />,
   );
 
@@ -321,6 +339,7 @@ test('orders flagged agents first, then healthy, then unused', () => {
       usage={null}
       plugins={[]}
       nowMs={0}
+      onPluginToggle={noToggle}
     />,
   );
 
@@ -355,6 +374,7 @@ test('flags an agent that a setup finding names', () => {
       usage={null}
       plugins={[]}
       nowMs={0}
+      onPluginToggle={noToggle}
     />,
   );
 
@@ -375,6 +395,7 @@ test('leads with setup problems when there are any', () => {
       usage={null}
       plugins={[]}
       nowMs={0}
+      onPluginToggle={noToggle}
       findings={[{
         agent: 'claude',
         kind: 'hook',
@@ -404,6 +425,7 @@ test('counts multiple setup problems', () => {
       usage={null}
       plugins={[]}
       nowMs={0}
+      onPluginToggle={noToggle}
       findings={[
         {
           agent: 'claude',

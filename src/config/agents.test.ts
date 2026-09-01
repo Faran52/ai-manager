@@ -21,6 +21,18 @@ test('defines every reference agent and its capabilities', () => {
     popular: true,
     supportsSidechains: true,
   });
+  expect(agentOption('claude').capabilities).toEqual({
+    history: true,
+    manage: true,
+  });
+  expect(agentOption('goose').capabilities).toEqual({
+    history: true,
+    manage: true,
+  });
+  expect(agentOption('kimi').capabilities).toEqual({
+    history: true,
+    manage: false,
+  });
   expect(agentOptions.filter((agent) => {
     return agent.popular === true;
   }).map((agent) => {

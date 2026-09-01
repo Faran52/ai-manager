@@ -3,11 +3,19 @@ import {
   screen,
   within,
 } from '@testing-library/react';
-import { expect, test } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import {
+  afterEach,
+  expect,
+  test,
+  vi,
+} from 'vitest';
 
 import { PluginInventory } from './PluginInventory';
 
 import type { InstalledPlugin } from '@services/agents/agentsService';
+
+const PROJECT = '/Users/dev/Projects/app';
 
 const plugin = (overrides: Partial<InstalledPlugin> = {}): InstalledPlugin => {
   return {
@@ -21,11 +29,20 @@ const plugin = (overrides: Partial<InstalledPlugin> = {}): InstalledPlugin => {
   };
 };
 
+const noToggle = (): Promise<void> => {
+  return Promise.resolve();
+};
+
 const rowNames = (): readonly string[] => {
   return within(screen.getByRole('table')).getAllByRole('row').slice(1).map((row) => {
     return row.children[0]?.textContent ?? '';
   });
 };
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
+});
 
 test('counts how many of the installed plugins are switched on', () => {
   render(
@@ -37,6 +54,8 @@ test('counts how many of the installed plugins are switched on', () => {
           enabled: false,
         }),
       ]}
+      projectPath={PROJECT}
+      onToggle={noToggle}
     />,
   );
 
@@ -46,10 +65,13 @@ test('counts how many of the installed plugins are switched on', () => {
 
 test('shows the scope, version and marketplace each plugin came from', () => {
   render(
-    <PluginInventory plugins={[plugin({
-      scope: 'project',
-      version: '2.4.0',
-    })]}
+    <PluginInventory
+      plugins={[plugin({
+        scope: 'project',
+        version: '2.4.0',
+      })]}
+      projectPath={PROJECT}
+      onToggle={noToggle}
     />,
   );
 
@@ -66,13 +88,19 @@ test('marks a plugin whose marketplace is unknown', () => {
     knownMarketplace: false,
   });
 
-  render(<PluginInventory plugins={[orphan]} />);
+  render(<PluginInventory plugins={[orphan]} projectPath={PROJECT} onToggle={noToggle} />);
 
   expect(screen.getByText('vanished ?')).toBeDefined();
 });
 
 test('leaves a placeholder when the version was never recorded', () => {
-  render(<PluginInventory plugins={[plugin({ version: 'unknown' })]} />);
+  render(
+    <PluginInventory
+      plugins={[plugin({ version: 'unknown' })]}
+      projectPath={PROJECT}
+      onToggle={noToggle}
+    />,
+  );
 
   expect(screen.getByText('·')).toBeDefined();
   expect(screen.queryByText('unknown')).toBeNull();
@@ -94,6 +122,8 @@ test('orders disabled first, then unknown marketplaces, then the healthy rest', 
           enabled: false,
         }),
       ]}
+      projectPath={PROJECT}
+      onToggle={noToggle}
     />,
   );
 
@@ -105,7 +135,7 @@ test('lists every plugin of a long inventory inside a bounded scroller', () => {
     return plugin({ id: `plugin-${String(index).padStart(2, '0')}@official` });
   });
 
-  render(<PluginInventory plugins={many} />);
+  render(<PluginInventory plugins={many} projectPath={PROJECT} onToggle={noToggle} />);
 
   expect(screen.getByText('Plugins 40/40')).toBeDefined();
   expect(rowNames()).toHaveLength(40);
@@ -113,9 +143,114 @@ test('lists every plugin of a long inventory inside a bounded scroller', () => {
 });
 
 test('says none when no plugins are installed', () => {
-  render(<PluginInventory plugins={[]} />);
+  render(<PluginInventory plugins={[]} projectPath={PROJECT} onToggle={noToggle} />);
 
   expect(screen.getByText('Plugins 0/0')).toBeDefined();
   expect(screen.getByText('None')).toBeDefined();
   expect(screen.queryByRole('table')).toBeNull();
+});
+
+test('toggles a plugin through the provided handler', async () => {
+  const user = userEvent.setup();
+  let toggledId: string | undefined;
+  const onToggle = (received: InstalledPlugin): Promise<void> => {
+    toggledId = received.id;
+
+    return Promise.resolve();
+  };
+
+  render(
+    <PluginInventory
+      plugins={[plugin()]}
+      projectPath={PROJECT}
+      onToggle={onToggle}
+    />,
+  );
+  await user.click(screen.getByRole('button', { name: 'disable' }));
+
+  expect(toggledId).toBe('review@official');
+});
+
+test('shows a failure from the toggle handler', async () => {
+  const user = userEvent.setup();
+  const onToggle = vi.fn(() => {
+    return Promise.reject(new Error('cli refused'));
+  });
+
+  render(
+    <PluginInventory
+      plugins={[plugin()]}
+      projectPath={PROJECT}
+      onToggle={onToggle}
+    />,
+  );
+  await user.click(screen.getByRole('button', { name: 'disable' }));
+
+  expect(await screen.findByText('cli refused')).toBeDefined();
+});
+
+test('estimates context cost through the api', async () => {
+  const user = userEvent.setup();
+
+  vi.stubGlobal('fetch', vi.fn(() => {
+    return Promise.resolve(new Response(JSON.stringify({
+      costs: [{
+        plugin: 'review@official',
+        alwaysOnTokens: 449,
+        onInvokeTokens: 2500,
+        estimatedCostUsd: 0.0225,
+      }],
+    }), { status: 200 }));
+  }));
+
+  render(
+    <PluginInventory
+      plugins={[plugin()]}
+      projectPath={PROJECT}
+      onToggle={noToggle}
+    />,
+  );
+  await user.click(screen.getByRole('button', { name: 'Estimate context cost' }));
+
+  expect(await screen.findByText(
+    'review@official: ~449 tok always-on, ~2500 tok per invoke, $0.0225',
+  )).toBeDefined();
+});
+
+test('reports when no cost can be attributed', async () => {
+  const user = userEvent.setup();
+
+  vi.stubGlobal('fetch', vi.fn(() => {
+    return Promise.resolve(new Response(JSON.stringify({ costs: [] }), { status: 200 }));
+  }));
+
+  render(
+    <PluginInventory
+      plugins={[plugin()]}
+      projectPath={PROJECT}
+      onToggle={noToggle}
+    />,
+  );
+  await user.click(screen.getByRole('button', { name: 'Estimate context cost' }));
+
+  expect(await screen.findByText('No enabled plugins to attribute cost to.')).toBeDefined();
+});
+
+test('reports a failed estimate', async () => {
+  const user = userEvent.setup();
+
+  vi.stubGlobal('fetch', vi.fn(() => {
+    return Promise.reject(new Error('offline'));
+  }));
+
+  render(
+    <PluginInventory
+      plugins={[plugin()]}
+      projectPath={PROJECT}
+      onToggle={noToggle}
+    />,
+  );
+  await user.click(screen.getByRole('button', { name: 'Estimate context cost' }));
+
+  expect(await screen.findByText('plugin cost attribution unreachable')).toBeDefined();
 });

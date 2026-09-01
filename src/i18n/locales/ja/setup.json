@@ -25,5 +25,13 @@
   "stateOn": "オン",
   "stateOff": "オフ",
   "scopeUser": "ユーザー",
-  "scopeProject": "プロジェクト"
+  "scopeProject": "プロジェクト",
+  "actions": "操作",
+  "actionEnable": "有効化",
+  "actionDisable": "無効化",
+  "costsEstimate": "コンテキストコストを推定",
+  "costsEstimating": "推定中…",
+  "costsAlwaysOn": "常時",
+  "costsPerInvoke": "呼び出しごと",
+  "costsNone": "コストを帰属できる有効なプラグインがありません。"
 }

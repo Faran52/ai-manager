@@ -3,6 +3,10 @@ import { expect, test } from 'vitest';
 
 import { AgentCard } from './AgentCard';
 
+const noToggle = (): Promise<void> => {
+  return Promise.resolve();
+};
+
 const nowMs = Date.parse('2026-01-02T00:00:00Z');
 const modifiedMs = Date.parse('2026-01-01T00:00:00Z');
 
@@ -26,11 +30,17 @@ test('labels rules by size, marks empty ones, and shortens paths', () => {
             modifiedMs,
           },
         ],
+        modelAuth: {
+          format: 'gemini',
+          model: undefined,
+          authMethod: 'env',
+        },
       }}
       projectPath="/Users/dev/project"
       plugins={[]}
       sessionCount={0}
       nowMs={nowMs}
+      onPluginToggle={noToggle}
     />,
   );
 
@@ -47,11 +57,17 @@ test('renders an unconfigured agent as a compact card without detail rows', () =
         agent: 'gemini',
         mcpServers: [],
         rules: [],
+        modelAuth: {
+          format: 'gemini',
+          model: undefined,
+          authMethod: 'env',
+        },
       }}
       projectPath="/Users/dev/project"
       plugins={[]}
       sessionCount={3}
       nowMs={nowMs}
+      onPluginToggle={noToggle}
     />,
   );
 
@@ -74,11 +90,18 @@ test('marks a healthy configured agent as ready', () => {
           command: undefined,
         }],
         rules: [],
+        modelAuth: {
+          format: 'codex',
+          model: undefined,
+          provider: undefined,
+          authMethod: 'none',
+        },
       }}
       projectPath="/Users/dev/project"
       plugins={[]}
       sessionCount={0}
       nowMs={nowMs}
+      onPluginToggle={noToggle}
     />,
   );
 
@@ -93,6 +116,11 @@ test('flags a configured agent that a setup finding names', () => {
         agent: 'claude',
         mcpServers: [],
         rules: [],
+        modelAuth: {
+          format: 'claude',
+          model: undefined,
+          authMethod: 'none',
+        },
       }}
       projectPath="/Users/dev/project"
       plugins={[{
@@ -105,6 +133,7 @@ test('flags a configured agent that a setup finding names', () => {
       }]}
       sessionCount={0}
       nowMs={nowMs}
+      onPluginToggle={noToggle}
       flagged
     />,
   );

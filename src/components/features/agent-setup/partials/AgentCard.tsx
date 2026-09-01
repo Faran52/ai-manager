@@ -34,6 +34,7 @@ export interface AgentCardProps {
   readonly sessionCount: number;
   readonly nowMs: number;
   readonly flagged?: boolean | undefined;
+  readonly onPluginToggle: (plugin: InstalledPlugin) => Promise<void>;
 }
 
 const GUTTER = 'flex w-4 shrink-0 justify-center';
@@ -46,6 +47,7 @@ export const AgentCard: FC<AgentCardProps> = ({
   sessionCount,
   nowMs,
   flagged = false,
+  onPluginToggle,
 }) => {
   const { t, i18n } = useTranslation('setup');
   const isClaude = setup.agent === 'claude';
@@ -153,7 +155,13 @@ export const AgentCard: FC<AgentCardProps> = ({
                 })}
           </AgentDetailRow>
         </dl>
-        {isClaude && <PluginInventory plugins={plugins} />}
+        {isClaude && (
+          <PluginInventory
+            plugins={plugins}
+            projectPath={projectPath}
+            onToggle={onPluginToggle}
+          />
+        )}
       </div>
     </details>
   );

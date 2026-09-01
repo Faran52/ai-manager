@@ -2,9 +2,12 @@ import type { AgentId } from '@config/agents';
 import type {
   AgentSetup,
   InstalledPlugin,
+  PluginActionName,
+  PluginCostAttribution,
   ProjectTrust,
   ProjectUsage,
   SetupFinding,
+  SetupScope,
 } from '@services/agents/agentsService';
 import type { ArchiveManifest, ArchiveSummary } from '@services/archive/archiveService';
 import type { EditedFile } from '@services/edits/editsService';
@@ -179,6 +182,21 @@ export interface AgentSetupResponse {
   readonly usage: ProjectUsage | null;
   readonly plugins: readonly InstalledPlugin[];
   readonly trust: ProjectTrust;
+}
+
+export interface PluginActionBody {
+  readonly projectPath: string;
+  readonly plugin: string;
+  readonly scope: SetupScope;
+  readonly action: PluginActionName;
+}
+
+export interface PluginCostsBody {
+  readonly projectPath: string;
+}
+
+export interface PluginCostsResponse {
+  readonly costs: readonly PluginCostAttribution[];
 }
 
 export interface UpdateCheckResponse {

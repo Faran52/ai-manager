@@ -6,7 +6,7 @@ import {
 
 import { UPDATE_FEED_URL, UPDATE_PUBLIC_KEY } from '@config/envVars';
 
-import { updateConfigFromEnv } from './updateConfig';
+import { updateConfigFromEnv } from './updateConfigUtils';
 
 describe('updateConfigFromEnv', () => {
   test('builds a config from the feed url and optional key', () => {

@@ -33,6 +33,7 @@ export interface AgentSetupPanelProps {
   readonly trust: ProjectTrust;
   readonly sessionCounts: Readonly<Partial<Record<AgentId, number>>>;
   readonly nowMs: number;
+  readonly onPluginToggle: (plugin: InstalledPlugin) => Promise<void>;
 }
 
 interface GroupProps {
@@ -70,6 +71,7 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
   trust,
   sessionCounts,
   nowMs,
+  onPluginToggle,
 }) => {
   const { t } = useTranslation('setup');
   if (!projectSelected) {
@@ -120,6 +122,7 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
         sessionCount={sessionCounts[setup.agent] ?? 0}
         nowMs={nowMs}
         flagged={hasFinding(setup.agent)}
+        onPluginToggle={onPluginToggle}
       />
     );
   };

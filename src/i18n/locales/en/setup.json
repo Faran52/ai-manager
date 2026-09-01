@@ -25,5 +25,13 @@
   "stateOn": "on",
   "stateOff": "off",
   "scopeUser": "user",
-  "scopeProject": "project"
+  "scopeProject": "project",
+  "actions": "Actions",
+  "actionEnable": "enable",
+  "actionDisable": "disable",
+  "costsEstimate": "Estimate context cost",
+  "costsEstimating": "Estimating…",
+  "costsAlwaysOn": "always-on",
+  "costsPerInvoke": "per invoke",
+  "costsNone": "No enabled plugins to attribute cost to."
 }

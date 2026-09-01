@@ -30,6 +30,16 @@ const bakedEnv = (name) => {
   return JSON.stringify(process.env[name] ?? '');
 };
 
+/*
+ * Vite's dev module runner cannot inline CommonJS packages: forcing
+ * `ssr.noExternal` makes `astro dev` crash on React's CJS entry
+ * (`module is not defined`). Rollup has no such limit, so the desktop
+ * bundle only needs the inline pass during `astro build`. (brillout:
+ * vite-ssr-noExternal-cjs.)
+ */
+const command = process.argv[2];
+const isSSRBundling = command === 'build' || process.env.VITEST !== undefined;
+
 export default defineConfig({
   output: 'static',
   adapter: node({ mode: 'standalone' }),
@@ -51,7 +61,7 @@ export default defineConfig({
      * Vite externalises node_modules in SSR by default, which left `clsx`
      * unresolved at runtime and forced the whole 1.35 GB tree into the binary.
      */
-    ssr: { noExternal: true },
+    ssr: isSSRBundling ? { noExternal: true } : {},
     define: {
       'import.meta.env.UPDATE_FEED_URL': bakedEnv('UPDATE_FEED_URL'),
       'import.meta.env.UPDATE_PUBLIC_KEY': bakedEnv('UPDATE_PUBLIC_KEY'),

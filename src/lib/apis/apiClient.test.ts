@@ -14,6 +14,7 @@ import {
   fetchArchive,
   fetchArchives,
   fetchMessages,
+  fetchPluginCosts,
   fetchProjects,
   fetchPrompts,
   fetchRecentEdits,
@@ -23,6 +24,7 @@ import {
   fetchSettings,
   fetchStats,
   fetchStorage,
+  postPluginAction,
   renameSession,
   runRetention,
   writeRetention,
@@ -473,5 +475,42 @@ describe('storage endpoint', () => {
     }));
 
     await expect(fetchStorage()).rejects.toThrow('unexpected shape');
+  });
+});
+
+describe('plugin endpoints', () => {
+  test('posts a plugin action and reads the acknowledgement', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return jsonResponse({ ok: true });
+    }));
+
+    await expect(postPluginAction({
+      projectPath: '/repo',
+      plugin: 'review@official',
+      scope: 'user',
+      action: 'enable',
+    })).resolves.toEqual({ ok: true });
+  });
+
+  test('reads projected plugin context costs', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return jsonResponse({
+        costs: [{
+          plugin: 'review@official',
+          alwaysOnTokens: 449,
+          onInvokeTokens: 2500,
+          estimatedCostUsd: 0.02,
+        }],
+      });
+    }));
+
+    await expect(fetchPluginCosts({
+      projectPath: '/repo',
+    })).resolves.toMatchObject({
+      costs: [{
+        plugin: 'review@official',
+        alwaysOnTokens: 449,
+      }],
+    });
   });
 });

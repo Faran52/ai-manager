@@ -33,5 +33,13 @@
   "stateOn": "مفعّل",
   "stateOff": "معطّل",
   "scopeUser": "المستخدم",
-  "scopeProject": "المشروع"
+  "scopeProject": "المشروع",
+  "actions": "الإجراءات",
+  "actionEnable": "تفعيل",
+  "actionDisable": "تعطيل",
+  "costsEstimate": "تقدير تكلفة السياق",
+  "costsEstimating": "جارٍ التقدير…",
+  "costsAlwaysOn": "دائم",
+  "costsPerInvoke": "لكل استدعاء",
+  "costsNone": "لا توجد إضافات مفعّلة لتُنسب إليها التكلفة."
 }

@@ -221,4 +221,73 @@ describe('structured history discovery', () => {
     expect(await scanStructuredSessions('aider', [root])).toHaveLength(2);
     expect(await scanStructuredSessions('aider', [join(root, 'other.md')])).toEqual([]);
   });
+
+  test('reads one session per Cline task and names the extension that wrote it', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'cline-'));
+    const root = join(home, 'saoudrizwan.claude-dev', 'tasks');
+    const task = join(root, '1767225600000');
+
+    await mkdir(task, { recursive: true });
+    await writeFile(join(task, 'api_conversation_history.json'), JSON.stringify([
+      {
+        role: 'user',
+        content: [{
+          type: 'text',
+          text: 'Rename the module',
+        }],
+      },
+      {
+        role: 'assistant',
+        content: [{
+          type: 'text',
+          text: 'Renamed it',
+        }],
+      },
+    ]));
+    await writeFile(join(task, 'ui_messages.json'), JSON.stringify([
+      {
+        ts: 1_767_225_600_000,
+        type: 'say',
+        say: 'text',
+        text: 'Rename the module',
+      },
+    ]));
+    await writeFile(join(task, 'task_metadata.json'), JSON.stringify({ files_in_context: [] }));
+
+    const sessions = await listStructuredSessions('cline', [root], 'saoudrizwan.claude-dev');
+    const projects = await listStructuredProjects('cline', [root]);
+
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0]?.id).toBe('1767225600000');
+    expect(sessions[0]?.preview).toBe('Rename the module');
+    expect(projects).toHaveLength(1);
+    expect(projects[0]?.name).toBe('Cline');
+  });
+
+  test('keeps each Cline fork as its own project', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'forks-'));
+    const transcript = JSON.stringify([{
+      role: 'user',
+      content: 'Hello',
+    }]);
+
+    const roots: string[] = [];
+
+    for (const extension of ['rooveterinaryinc.roo-cline', 'kilocode.kilo-code']) {
+      const root = join(home, extension, 'tasks');
+      const task = join(root, '1767225600001');
+
+      await mkdir(task, { recursive: true });
+      await writeFile(join(task, 'api_conversation_history.json'), transcript);
+      roots.push(root);
+    }
+
+    const projects = await listStructuredProjects('cline', roots);
+
+    expect(projects.map((project) => {
+      return project.name;
+    }).sort((left, right) => {
+      return left.localeCompare(right);
+    })).toEqual(['Kilo Code', 'Roo Code']);
+  });
 });

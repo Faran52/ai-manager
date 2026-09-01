@@ -25,5 +25,13 @@
   "stateOn": "开",
   "stateOff": "关",
   "scopeUser": "用户",
-  "scopeProject": "项目"
+  "scopeProject": "项目",
+  "actions": "操作",
+  "actionEnable": "启用",
+  "actionDisable": "停用",
+  "costsEstimate": "估算上下文成本",
+  "costsEstimating": "估算中…",
+  "costsAlwaysOn": "常驻",
+  "costsPerInvoke": "每次调用",
+  "costsNone": "没有可归属成本的已启用插件。"
 }

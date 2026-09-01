@@ -1,14 +1,20 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Blocks } from 'lucide-react';
 
 import { cn } from '@utils/cnUtils';
+import { toErrorMessage } from '@utils/errorUtils';
+
+import { usePluginCosts } from '../hooks/usePluginCosts';
 
 import type { InstalledPlugin } from '@services/agents/agentsService';
 import type { FC } from 'react';
 
 export interface PluginInventoryProps {
   readonly plugins: readonly InstalledPlugin[];
+  readonly projectPath: string;
+  readonly onToggle: (plugin: InstalledPlugin) => Promise<void>;
 }
 
 const CELL = 'truncate py-1 pe-4 text-start align-middle';
@@ -16,6 +22,10 @@ const HEAD = cn(CELL, `
   sticky top-0 bg-card text-[10px] font-medium tracking-wider
   text-muted-foreground uppercase
 `);
+const ACTION = `
+  rounded-sm border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground
+  transition-colors hover:text-foreground disabled:opacity-50
+`;
 
 const rank = (plugin: InstalledPlugin): number => {
   if (!plugin.enabled) {
@@ -32,11 +42,38 @@ const ordered = (plugins: readonly InstalledPlugin[]): readonly InstalledPlugin[
   });
 };
 
-export const PluginInventory: FC<PluginInventoryProps> = ({ plugins }) => {
+export const PluginInventory: FC<PluginInventoryProps> = ({
+  plugins,
+  projectPath,
+  onToggle,
+}) => {
   const { t } = useTranslation('setup');
+  const {
+    costs,
+    estimating,
+    error,
+    estimate,
+  } = usePluginCosts(projectPath);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const active = plugins.filter((plugin) => {
     return plugin.enabled;
   });
+
+  const toggle = async (plugin: InstalledPlugin): Promise<void> => {
+    setBusyId(plugin.id);
+    setActionError(null);
+
+    try {
+      await onToggle(plugin);
+    }
+    catch (cause) {
+      setActionError(toErrorMessage(cause));
+    }
+    finally {
+      setBusyId(null);
+    }
+  };
 
   return (
     <section className="mt-2 border-t border-border pt-2">
@@ -64,11 +101,12 @@ export const PluginInventory: FC<PluginInventoryProps> = ({ plugins }) => {
               >
                 <thead>
                   <tr className="border-b border-border">
-                    <th scope="col" className={cn(HEAD, 'w-[30%] ps-2')}>{t('plugin')}</th>
-                    <th scope="col" className={cn(HEAD, 'w-[30%]')}>{t('marketplace')}</th>
-                    <th scope="col" className={cn(HEAD, 'w-[14%]')}>{t('scope')}</th>
-                    <th scope="col" className={cn(HEAD, 'w-[16%]')}>{t('version')}</th>
+                    <th scope="col" className={cn(HEAD, 'w-[26%] ps-2')}>{t('plugin')}</th>
+                    <th scope="col" className={cn(HEAD, 'w-[26%]')}>{t('marketplace')}</th>
+                    <th scope="col" className={cn(HEAD, 'w-[13%]')}>{t('scope')}</th>
+                    <th scope="col" className={cn(HEAD, 'w-[15%]')}>{t('version')}</th>
                     <th scope="col" className={cn(HEAD, 'w-[10%]')}>{t('state')}</th>
+                    <th scope="col" className={cn(HEAD, 'w-[10%]')}>{t('actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -105,6 +143,18 @@ export const PluginInventory: FC<PluginInventoryProps> = ({ plugins }) => {
                         >
                           {plugin.enabled ? t('stateOn') : t('stateOff')}
                         </td>
+                        <td className={CELL}>
+                          <button
+                            type="button"
+                            disabled={busyId === plugin.id}
+                            onClick={() => {
+                              void toggle(plugin);
+                            }}
+                            className={ACTION}
+                          >
+                            {plugin.enabled ? t('actionDisable') : t('actionEnable')}
+                          </button>
+                        </td>
                       </tr>
                     );
                   })}
@@ -112,6 +162,43 @@ export const PluginInventory: FC<PluginInventoryProps> = ({ plugins }) => {
               </table>
             </div>
           )}
+      {plugins.length > 0 && (
+        <div className="mt-2">
+          <button
+            type="button"
+            disabled={estimating}
+            onClick={() => {
+              void estimate();
+            }}
+            className={ACTION}
+          >
+            {estimating ? t('costsEstimating') : t('costsEstimate')}
+          </button>
+          {costs != null && (
+            costs.length === 0
+              ? <p className="mt-1 text-xs text-muted-foreground">{t('costsNone')}</p>
+              : (
+                  <ul className="
+                    mt-1 space-y-0.5 font-mono text-[11px] text-muted-foreground
+                  "
+                  >
+                    {costs.map((cost) => {
+                      return (
+                        <li key={cost.plugin}>
+                          {`${cost.plugin}: ~${String(cost.alwaysOnTokens)} tok ${t('costsAlwaysOn')}, `
+                            + `~${String(cost.onInvokeTokens)} tok ${t('costsPerInvoke')}, `
+                            + `$${cost.estimatedCostUsd.toFixed(4)}`}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )
+          )}
+        </div>
+      )}
+      {(actionError ?? error) != null && (
+        <p className="mt-1 text-xs text-warn">{actionError ?? error}</p>
+      )}
     </section>
   );
 };

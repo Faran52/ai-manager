@@ -71,6 +71,20 @@ interface FormatRoutes {
 }
 
 export { managedAgents } from './constants';
+export type { ModelAuthState } from './utils/modelAuthUtils';
+export type {
+  PluginActionName,
+  PluginActionRequest,
+} from './utils/pluginActionsUtils';
+export { runPluginAction } from './utils/pluginActionsUtils';
+export type {
+  PluginCostAttribution,
+  PluginCostEstimate,
+} from './utils/pluginCostUtils';
+export {
+  attributePluginCosts,
+  readPluginCosts,
+} from './utils/pluginCostUtils';
 export type { InstalledPlugin } from './utils/pluginsUtils';
 export { readClaudePlugins } from './utils/pluginsUtils';
 export type {
@@ -84,7 +98,10 @@ export type {
   RulesFileSummary,
   SetupScope,
 } from './utils/setupUtils';
-export { readAgentSetup } from './utils/setupUtils';
+export {
+  hasAgentSetup,
+  readAgentSetup,
+} from './utils/setupUtils';
 export type {
   ModelUsage,
   ProjectTrust,
@@ -271,6 +288,11 @@ const ROUTES_BY_FORMAT: Record<AgentOption['format'], FormatRoutes> = {
     projects: listOpenCodeProjects,
     sessions: listOpenCodeSessions,
     entries: loadOpenCodeEntries,
+  },
+  grok: {
+    projects: listStructuredProjects,
+    sessions: listStructuredSessions,
+    entries: structuredEntries,
   },
 };
 

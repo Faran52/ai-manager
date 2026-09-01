@@ -25,5 +25,13 @@
   "stateOn": "開",
   "stateOff": "關",
   "scopeUser": "使用者",
-  "scopeProject": "專案"
+  "scopeProject": "專案",
+  "actions": "操作",
+  "actionEnable": "啟用",
+  "actionDisable": "停用",
+  "costsEstimate": "估算上下文成本",
+  "costsEstimating": "估算中…",
+  "costsAlwaysOn": "常駐",
+  "costsPerInvoke": "每次呼叫",
+  "costsNone": "沒有可歸屬成本的已啟用外掛。"
 }

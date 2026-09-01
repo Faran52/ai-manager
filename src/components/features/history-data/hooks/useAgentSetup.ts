@@ -23,7 +23,8 @@ const NONE: AgentSetupResponse = {
   },
 };
 
-export const useAgentSetup = (projectPath: string | null): AsyncResource<AgentSetupResponse> => {
+// An empty path is the idle signal: no project is open, so there is nothing to read.
+export const useAgentSetup = (projectPath: string): AsyncResource<AgentSetupResponse> => {
   const [snapshot, setSnapshot] = useState<AsyncSnapshot<AgentSetupResponse>>({ status: 'loading' });
   const [nonce, setNonce] = useState(0);
 
@@ -32,7 +33,7 @@ export const useAgentSetup = (projectPath: string | null): AsyncResource<AgentSe
 
     void runLoad(
       async () => {
-        return projectPath == null ? NONE : await fetchAgentSetup({ projectPath });
+        return projectPath.length === 0 ? NONE : await fetchAgentSetup({ projectPath });
       },
       (next) => {
         if (active) {
