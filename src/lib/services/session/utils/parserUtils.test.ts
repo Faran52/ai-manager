@@ -130,6 +130,52 @@ describe('parseHistoryLine', () => {
     });
   });
 
+  test('shows a Cline task as the message and keeps its environment block aside', () => {
+    const entry = parseFields({
+      type: 'user',
+      uuid: 'u2',
+      timestamp: 't2',
+      message: {
+        role: 'user',
+        content: [
+          '<task>',
+          'Read the latest session from the compatlens project',
+          '</task>',
+          '<environment_details>',
+          '# Current Working Directory (/repo) Files',
+          '</environment_details>',
+        ].join('\n'),
+      },
+    });
+
+    expect(entry).toMatchObject({
+      kind: 'user',
+      meta: false,
+      text: 'Read the latest session from the compatlens project',
+      injectedText: [
+        '<environment_details>',
+        '# Current Working Directory (/repo) Files',
+        '</environment_details>',
+      ].join('\n'),
+    });
+  });
+
+  test('keeps a Cline task visible when nothing follows it', () => {
+    expect(parseFields({
+      type: 'user',
+      uuid: 'u3',
+      timestamp: 't3',
+      message: {
+        role: 'user',
+        content: '<task>\nRename the module\n</task>',
+      },
+    })).toMatchObject({
+      kind: 'user',
+      meta: false,
+      text: 'Rename the module',
+    });
+  });
+
   test('falls back to empty identity fields when absent', () => {
     const entry = parseFields({
       type: 'user',

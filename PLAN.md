@@ -53,6 +53,11 @@ stays; configuration management is where the work is. Each phase gates the next.
       became three sessions sharing the id `api_conversation_history` and its
       own numeric project. Only the transcript is read; the task folder is the
       session and the extension folder is the project.
+- [ ] Cline drives tools with XML inside assistant text (`<list_files>`,
+      `<execute_command>`, `<task_progress>`), which renders as raw markup in
+      the transcript. Parsing it into real `ToolCall` blocks would give Cline
+      the same tool rows every other agent gets. Verified against the one real
+      store on the dev machine.
 - [ ] Antigravity desktop is not read at all. Its `conversations/<uuid>.pb` is
       encrypted (8.00/8.00 entropy, verified upstream in
       claude-code-history-viewer), so the only source is

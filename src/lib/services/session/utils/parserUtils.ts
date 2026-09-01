@@ -1,4 +1,5 @@
 import {
+  AUTHORED_BLOCK,
   COMMAND_ARGS,
   COMMAND_NAME,
   INJECTED_CONTEXT_PREFIXES,
@@ -68,6 +69,18 @@ export const splitUserText = (text: string): SplitUserText => {
 
   const tag = WRAPPED_BLOCK.exec(text)?.[1];
   const wrapped = tag != null && text.includes(`</${tag}>`);
+
+  if (tag === AUTHORED_BLOCK && wrapped) {
+    const closer = `</${tag}>`;
+    const end = text.indexOf(closer);
+    const trailing = text.slice(end + closer.length).trim();
+
+    return {
+      text: text.slice(tag.length + 2, end).trim(),
+      ...(trailing.length === 0 ? {} : { injectedText: trailing }),
+      meta: false,
+    };
+  }
 
   return wrapped
     ? {

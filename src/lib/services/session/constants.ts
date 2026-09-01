@@ -14,3 +14,10 @@ export const INJECTED_CONTEXT_PREFIXES = [
   '# CLAUDE.md instructions for ',
 ];
 export const WRAPPED_BLOCK = /^<([a-z][a-z\d_-]*)>/u;
+
+/*
+ * Cline wraps the prompt the person actually typed in <task>, so unlike every
+ * other block WRAPPED_BLOCK catches, its content is the message rather than
+ * context. Hiding it left the session titled by a later tool result.
+ */
+export const AUTHORED_BLOCK = 'task';
