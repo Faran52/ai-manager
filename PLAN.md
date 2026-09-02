@@ -36,6 +36,21 @@ stays; configuration management is where the work is. Each phase gates the next.
   details` per enabled plugin, reports always-on and peak per-invoke token
   estimates, and prices the always-on slice at the project's blended input-token
   rate. On demand from the plugin table.
+- **Model pricing from what Claude Code billed.** Pricing was observation-only:
+  a model got a rate when a transcript entry carried a cost. Copilot and
+  OpenCode record one, Claude Code does not, so the four largest models, about
+  97% of billed tokens, priced at nothing and coverage sat at 2.2%. The open
+  weight models were never the problem; they were the only ones working.
+  `readModelCosts` pools `projects[*].lastModelUsage` from `~/.claude.json` per
+  model, and `summarizePricing` falls back to it. Only the ratio is wanted, so
+  a per-project sample of the history is enough. Claude Code names a model with
+  its context tier (`claude-opus-5[1m]`) where a transcript names it bare, and
+  `modelKey` folds the tier off to let the two meet. Coverage 2.2% to 97.8%.
+- **A plugin cost column that was reading zero.** `attributePluginCosts` priced
+  always-on context off one project's `lastCost`, which is a last-session
+  running total flushed at session end: an open session zeroes it, so the rate
+  collapsed exactly while the app was in use. It now falls back to the same
+  pooled rate, preferring the project's own figure when it has a real one.
 - **ui primitives** each live in their own kebab-case folder; `stats` utils moved
   under `stats/utils`; `updates/updateConfig.ts` folded into
   `updates/utils/updateConfigUtils.ts`.
@@ -89,9 +104,33 @@ stays; configuration management is where the work is. Each phase gates the next.
 - [x] Write only through the CLI (`claude plugin install <plugin@marketplace>
       -s <scope> -y`, `enable`, `disable`). Never hand-edit the registry files;
       the CLI owns that state.
-- [x] Spike: the desktop scripts now grant `--allow-run=claude` only, and
-      installs pass `-y` because the desktop shell is never a TTY. UI wires
-      enable and disable; install is available through the service layer.
+- [x] Spike: the desktop scripts grant `--allow-run=claude`, and installs pass
+      `-y` because the desktop shell is never a TTY. UI wires enable and
+      disable; install is available through the service layer.
+- [x] Verified against the packaged app, not just `astro dev`. `deno desktop`
+      compiles rather than runs, so the grants are baked into the binary and
+      readable back out of it. `--allow-run=claude` covers the PATH-resolved
+      absolute path `claudeCliUtils` spawns, and denies every other binary.
+      `--allow-write` and `--allow-net` were missing, which broke archives,
+      session mutation, settings writes, retention and update checks in the
+      packaged app while leaving them working under `astro dev`, where Node has
+      no permission model. Net is scoped to the release feed host and its
+      redirect target.
+- [x] The `standalone` listener is the app, not a stray. Recorded here as a
+      bind that fails into two unhandled rejections, to be dropped by switching
+      `@astrojs/node` to `middleware` mode. Both halves were wrong: it binds
+      cleanly on `127.0.0.1`, logs nothing, and `deno desktop` points the
+      webview at that port rather than calling the handler. Launched with
+      `ASTRO_NODE_AUTOSTART=disabled` the app has zero windows, so `middleware`
+      mode would have shipped a blank app.
+      The real defect was that the port answered anyone: a cross-origin `POST`
+      from `evil.example` to `/api/project-delete` returned 200, so any page
+      the user had open could delete projects and sessions, rewrite settings,
+      or drive `plugin-action` into the Claude CLI. `src/middleware.ts` now
+      refuses a request whose `Origin` names another site, which is a header
+      check rather than a token because the window and the server share one
+      process. Verified against the packaged app: window renders, same-origin
+      and origin-less requests pass, cross-origin ones get a 403.
 
 ## Phase 6: Plugin cost attribution
 
