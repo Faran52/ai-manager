@@ -8,7 +8,11 @@ import {
   test,
 } from 'vitest';
 
-import { readProjectUsage } from './usageUtils';
+import {
+  readBlendedRate,
+  readModelCosts,
+  readProjectUsage,
+} from './usageUtils';
 
 const PROJECT = '/repo/alpha';
 
@@ -121,5 +125,96 @@ describe('readProjectUsage', () => {
         costUsd: 1,
       })],
     });
+  });
+});
+
+describe('readModelCosts', () => {
+  test('sums what every project billed, per model as Claude Code names it', async () => {
+    const home = await homeWith({
+      projects: {
+        '/repo/alpha': {
+          lastModelUsage: {
+            'claude-opus-5[1m]': {
+              inputTokens: 10,
+              outputTokens: 5,
+              cacheReadInputTokens: 800,
+              cacheCreationInputTokens: 185,
+              costUSD: 2,
+            },
+          },
+        },
+        '/repo/beta': {
+          lastModelUsage: {
+            'claude-opus-5[1m]': {
+              inputTokens: 1000,
+              outputTokens: 0,
+              costUSD: 3,
+            },
+            'claude-sonnet-5': {
+              inputTokens: 500,
+              outputTokens: 0,
+              costUSD: 1,
+            },
+          },
+        },
+      },
+    });
+
+    expect(await readModelCosts(home)).toEqual(new Map([
+      ['claude-opus-5[1m]', {
+        costUsd: 5,
+        billedTokens: 2000,
+      }],
+      ['claude-sonnet-5', {
+        costUsd: 1,
+        billedTokens: 500,
+      }],
+    ]));
+  });
+
+  test('pools every project into one price per token', async () => {
+    const home = await homeWith({
+      projects: {
+        '/repo/alpha': {
+          lastModelUsage: {
+            'claude-opus-5[1m]': {
+              inputTokens: 1000,
+              outputTokens: 0,
+              costUSD: 2,
+            },
+          },
+        },
+        '/repo/beta': {
+          lastModelUsage: {
+            'claude-sonnet-5': {
+              inputTokens: 1000,
+              outputTokens: 0,
+              costUSD: 1,
+            },
+          },
+        },
+      },
+    });
+
+    expect(await readBlendedRate(home)).toBeCloseTo(0.0015);
+  });
+
+  test('has no rate to give when nothing was billed', async () => {
+    expect(await readBlendedRate(await homeWith({}))).toBe(0);
+  });
+
+  test('is empty when the config records no projects at all', async () => {
+    expect(await readModelCosts(await homeWith({}))).toEqual(new Map());
+  });
+
+  test('is empty when no project records model usage, entry-shaped or not', async () => {
+    const home = await homeWith({
+      projects: {
+        '/repo/alpha': {},
+        '/repo/gamma': 'not an entry',
+      },
+    });
+
+    expect(await readModelCosts(home)).toEqual(new Map());
   });
 });

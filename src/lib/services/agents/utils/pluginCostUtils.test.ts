@@ -156,4 +156,25 @@ describe('attributePluginCosts', () => {
       estimatedCostUsd: 0,
     }]);
   });
+
+  test('falls back to the pooled rate when the last session cost nothing', () => {
+    const estimates = [{
+      plugin: 'on@a',
+      alwaysOnTokens: 400,
+      onInvokeTokens: 2500,
+    }];
+
+    expect(attributePluginCosts(usage(0, 900, 100), estimates, 0.0001)[0]?.estimatedCostUsd)
+      .toBeCloseTo(0.04);
+    expect(attributePluginCosts(undefined, estimates, 0.0001)[0]?.estimatedCostUsd)
+      .toBeCloseTo(0.04);
+  });
+
+  test('prefers the project rate over the pooled one', () => {
+    expect(attributePluginCosts(usage(0.05, 900, 100), [{
+      plugin: 'on@a',
+      alwaysOnTokens: 400,
+      onInvokeTokens: 2500,
+    }], 999)[0]?.estimatedCostUsd).toBeCloseTo(0.02);
+  });
 });

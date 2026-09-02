@@ -103,11 +103,14 @@ export {
   readAgentSetup,
 } from './utils/setupUtils';
 export type {
+  ModelCost,
   ModelUsage,
   ProjectTrust,
   ProjectUsage,
 } from './utils/usageUtils';
 export {
+  readBlendedRate,
+  readModelCosts,
   readProjectTrust,
   readProjectUsage,
 } from './utils/usageUtils';

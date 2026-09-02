@@ -129,3 +129,75 @@ test('takes the midpoint for an even sample and ignores invalid values', () => {
   expect(median([Number.NaN, -1, 2, 4])).toBe(3);
   expect(median([])).toBeUndefined();
 });
+
+test('prices a model Claude Code billed but the transcript never costed', () => {
+  const summary = summarizePricing([
+    {
+      model: 'claude-opus-5',
+      inputTokens: 900,
+      outputTokens: 100,
+    },
+  ], new Map([['claude-opus-5[1m]', {
+    costUsd: 5,
+    billedTokens: 1000,
+  }]]));
+
+  expect(summary.models[0]?.basis).toBe('estimated');
+  expect(summary.models[0]?.costUsd).toBeCloseTo(5);
+  expect(summary.unpricedModelCount).toBe(0);
+  expect(summary.coveragePercent).toBe(100);
+});
+
+test('folds context tiers of one model into a single rate', () => {
+  const summary = summarizePricing([
+    {
+      model: 'claude-opus-5',
+      inputTokens: 100,
+      outputTokens: 0,
+    },
+  ], new Map([
+    ['claude-opus-5[1m]', {
+      costUsd: 30,
+      billedTokens: 100,
+    }],
+    ['claude-opus-5', {
+      costUsd: 10,
+      billedTokens: 100,
+    }],
+  ]));
+
+  expect(summary.models[0]?.costUsd).toBeCloseTo(20);
+});
+
+test('leaves a model unpriced when the billed record carries no cost', () => {
+  const summary = summarizePricing([
+    {
+      model: 'nemotron-free',
+      inputTokens: 100,
+      outputTokens: 0,
+    },
+  ], new Map([['nemotron-free', {
+    costUsd: 0,
+    billedTokens: 100,
+  }]]));
+
+  expect(summary.models[0]?.basis).toBe('unpriced');
+  expect(summary.unpricedModelCount).toBe(1);
+});
+
+test('prefers a cost the transcript reported over the billed record', () => {
+  const summary = summarizePricing([
+    {
+      model: 'claude-opus-5',
+      inputTokens: 100,
+      outputTokens: 0,
+      costUsd: 1,
+    },
+  ], new Map([['claude-opus-5[1m]', {
+    costUsd: 999,
+    billedTokens: 100,
+  }]]));
+
+  expect(summary.models[0]?.basis).toBe('exact');
+  expect(summary.models[0]?.costUsd).toBeCloseTo(1);
+});

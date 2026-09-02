@@ -1,6 +1,10 @@
 import { agentOption } from '@config/agents';
 
-import { listAgentProjects, pathsFor } from '../agents/agentsService';
+import {
+  listAgentProjects,
+  pathsFor,
+  readModelCosts,
+} from '../agents/agentsService';
 import { listSessions } from '../history/utils/claudeUtils';
 import { listCodexSessions } from '../history/utils/codexUtils';
 import { listCopilotSessions } from '../history/utils/copilotUtils';
@@ -19,7 +23,7 @@ import { summarizePricing } from './utils/pricingUtils';
 import { effortFrom, rhythmFrom } from './utils/rhythmUtils';
 
 import type { AgentId } from '@config/agents';
-import type { AgentRoots } from '../agents/agentsService';
+import type { AgentRoots, ModelCost } from '../agents/agentsService';
 import type { ProjectSummary, SessionSummary } from '../history/types';
 import type {
   Accumulator,
@@ -199,8 +203,12 @@ const countProject = async (
   return counted;
 };
 
-const projectStatsFrom = (projectId: string, accumulator: Accumulator): CompleteProjectStats => {
-  const pricing = summarizePricing(accumulator.pricingEntries);
+const projectStatsFrom = (
+  projectId: string,
+  accumulator: Accumulator,
+  costs: ReadonlyMap<string, ModelCost>,
+): CompleteProjectStats => {
+  const pricing = summarizePricing(accumulator.pricingEntries, costs);
   const topSessions = [...accumulator.perSession].sort((left, right) => {
     return right.tokens - left.tokens || right.messages - left.messages;
   }).slice(0, 5);
@@ -263,7 +271,7 @@ export const computeProjectStats = async (
     await addSession([accumulator], session, agent, agentDirs);
   }
 
-  return projectStatsFrom(projectId, accumulator);
+  return projectStatsFrom(projectId, accumulator, await readModelCosts());
 };
 
 export const computeGlobalStats = async (roots: AgentRoots): Promise<GlobalStats> => {
@@ -293,7 +301,7 @@ export const computeGlobalStats = async (roots: AgentRoots): Promise<GlobalStats
   }
 
   return {
-    ...projectStatsFrom('global', globalAccumulator),
+    ...projectStatsFrom('global', globalAccumulator, await readModelCosts()),
     agents: [...byAgent.entries()].map(([agent, value]) => {
       return {
         agent,

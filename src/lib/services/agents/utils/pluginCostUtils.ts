@@ -94,22 +94,21 @@ export const readPluginCosts = (
   }));
 };
 
-// The project's blended input-token price turns always-on context into dollars.
+/**
+ * A blended input-token price turns always-on context into dollars. The
+ * project's own last session is the sharper number when it has one; an open or
+ * free session leaves it at zero, and the pooled rate stands in.
+ */
 export const attributePluginCosts = (
   usage: ProjectUsage | undefined,
   estimates: readonly PluginCostEstimate[],
+  blendedUsdPerToken = 0,
 ): readonly PluginCostAttribution[] => {
-  if (usage == null) {
-    return estimates.map((estimate) => {
-      return {
-        ...estimate,
-        estimatedCostUsd: 0,
-      };
-    });
-  }
-
-  const inputTokens = usage.inputTokens + usage.cacheReadTokens;
-  const costPerToken = inputTokens > 0 ? usage.costUsd / inputTokens : 0;
+  const inputTokens = (usage?.inputTokens ?? 0) + (usage?.cacheReadTokens ?? 0);
+  const costUsd = usage?.costUsd ?? 0;
+  const costPerToken = inputTokens > 0 && costUsd > 0
+    ? costUsd / inputTokens
+    : blendedUsdPerToken;
 
   return estimates.map((estimate) => {
     return {

@@ -8,6 +8,7 @@ import {
   managedAgents,
   pathsFor,
   readAgentSetup,
+  readBlendedRate,
   readClaudePlugins,
   readPluginCosts,
   readProjectTrust,
@@ -733,16 +734,17 @@ export const handlePluginCosts = async (request: Request, deps?: EndpointDeps): 
       return jsonError(BAD_REQUEST, 'A non-empty projectPath is required.');
     }
 
-    const [plugins, usage] = await Promise.all([
+    const [plugins, usage, blendedRate] = await Promise.all([
       readClaudePlugins(body.projectPath, deps?.home),
       readProjectUsage(body.projectPath, deps?.home),
+      readBlendedRate(deps?.home),
     ]);
     const estimates = await readPluginCosts({
       plugins,
       home: deps?.home,
     }, deps?.pluginDetails);
 
-    return jsonOk({ costs: attributePluginCosts(usage, estimates) });
+    return jsonOk({ costs: attributePluginCosts(usage, estimates, blendedRate) });
   });
 };
 

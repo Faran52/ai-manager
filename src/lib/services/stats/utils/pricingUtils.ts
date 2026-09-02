@@ -1,3 +1,5 @@
+import type { ModelCost } from '../../agents/agentsService';
+
 export type PricingBasis = 'exact' | 'estimated' | 'unpriced';
 
 export interface PricingEntry {
@@ -34,6 +36,46 @@ const safeTokens = (tokens: number): number => {
 
 const safeCost = (costUsd: number | undefined): number | undefined => {
   return costUsd != null && Number.isFinite(costUsd) && costUsd >= 0 ? costUsd : undefined;
+};
+
+/*
+ * Claude Code records what it billed against a model name carrying the context
+ * tier (`claude-opus-5[1m]`); a transcript records the bare name. Folding the
+ * tier away is what lets the two meet. Tiers are priced apart, so folding two
+ * of them together blends their rates, which still beats no rate at all.
+ * ponytail: split the key by tier once a transcript records which one it used.
+ */
+const modelKey = (model: string): string => {
+  const tier = model.indexOf('[');
+
+  return tier === -1 || !model.endsWith(']') ? model : model.slice(0, tier);
+};
+
+const billedRates = (costs: ReadonlyMap<string, ModelCost>): ReadonlyMap<string, ModelRate> => {
+  const folded = new Map<string, ModelCost>();
+
+  for (const [model, cost] of costs) {
+    const key = modelKey(model);
+    const running = folded.get(key);
+
+    folded.set(key, {
+      costUsd: (running?.costUsd ?? 0) + cost.costUsd,
+      billedTokens: (running?.billedTokens ?? 0) + cost.billedTokens,
+    });
+  }
+
+  return new Map([...folded].flatMap(([model, cost]) => {
+    const rate = safeCost(cost.costUsd);
+
+    if (rate == null || rate === 0 || safeTokens(cost.billedTokens) === 0) {
+      return [];
+    }
+
+    return [[model, {
+      inputUsdPerToken: rate / cost.billedTokens,
+      outputUsdPerToken: rate / cost.billedTokens,
+    }] as const];
+  }));
 };
 
 export const median = (values: readonly number[]): number | undefined => {
@@ -80,8 +122,9 @@ const observedRate = (entries: readonly PricingEntry[]): ModelRate | undefined =
 const summarizeModel = (
   model: string,
   entries: readonly PricingEntry[],
+  billed: ReadonlyMap<string, ModelRate>,
 ): PricedModelUsage => {
-  const rate = observedRate(entries);
+  const rate = observedRate(entries) ?? billed.get(modelKey(model));
   const inputTokens = entries.reduce((total, entry) => {
     return total + safeTokens(entry.inputTokens);
   }, 0);
@@ -127,7 +170,11 @@ const summarizeModel = (
   };
 };
 
-export const summarizePricing = (entries: readonly PricingEntry[]): PricingSummary => {
+export const summarizePricing = (
+  entries: readonly PricingEntry[],
+  costs: ReadonlyMap<string, ModelCost> = new Map(),
+): PricingSummary => {
+  const billed = billedRates(costs);
   const byModel = new Map<string, PricingEntry[]>();
 
   for (const entry of entries) {
@@ -138,7 +185,7 @@ export const summarizePricing = (entries: readonly PricingEntry[]): PricingSumma
   }
 
   const models = [...byModel.entries()].map(([model, modelEntries]) => {
-    return summarizeModel(model, modelEntries);
+    return summarizeModel(model, modelEntries, billed);
   }).sort((left, right) => {
     return (right.costUsd ?? -1) - (left.costUsd ?? -1)
       || right.inputTokens + right.outputTokens - left.inputTokens - left.outputTokens;
