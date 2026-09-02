@@ -13,6 +13,7 @@ import { humanPreview } from '@utils/titleUtils';
 
 import { splitUserText } from '../../session/utils/parserUtils';
 
+import { parseClineBlocks } from './clineXmlUtils';
 import { conversationMessageCount, firstUserMessageText } from './outcomeUtils';
 import { listTree } from './treeUtils';
 
@@ -202,7 +203,12 @@ const recordsFromUnknownValues = (record: JsonObject): readonly JsonObject[] => 
   return [];
 };
 
-const entryFrom = (record: JsonObject, index: number, fallbackMs: number): StructuredEntry | undefined => {
+const entryFrom = (
+  agent: AgentId | undefined,
+  record: JsonObject,
+  index: number,
+  fallbackMs: number,
+): StructuredEntry | undefined => {
   const role = normalizedRole(roleFrom(record));
   const message = nestedRecord(record, 'message') ?? nestedRecord(record, 'data');
   const text = textFrom(record.content ?? record.text ?? record.parts ?? message?.content ?? message?.text);
@@ -221,10 +227,12 @@ const entryFrom = (record: JsonObject, index: number, fallbackMs: number): Struc
       timestamp,
       sidechain: false,
       model: stringAt(record, ['model', 'modelId']),
-      blocks: [{
-        blockType: 'text',
-        text,
-      }],
+      blocks: agent === 'cline'
+        ? parseClineBlocks(text, uuid)
+        : [{
+            blockType: 'text',
+            text,
+          }],
     };
   }
 
@@ -252,7 +260,11 @@ const entryFrom = (record: JsonObject, index: number, fallbackMs: number): Struc
   };
 };
 
-const markdownEntries = (content: string, fallbackMs: number): readonly StructuredEntry[] => {
+const markdownEntries = (
+  agent: AgentId | undefined,
+  content: string,
+  fallbackMs: number,
+): readonly StructuredEntry[] => {
   const sections = content.split(/^#{1,4}\s+(user|human|assistant|ai|system)\s*$/gimu);
 
   if (sections.length < 3) {
@@ -279,7 +291,7 @@ const markdownEntries = (content: string, fallbackMs: number): readonly Structur
   }
 
   return records.flatMap((record, index) => {
-    const entry = entryFrom(record, index, fallbackMs);
+    const entry = entryFrom(agent, record, index, fallbackMs);
 
     return entry == null ? [] : [entry];
   });
@@ -289,9 +301,10 @@ export const parseStructuredHistory = (
   content: string,
   extension: string,
   fallbackMs: number,
+  agent?: AgentId,
 ): readonly StructuredEntry[] => {
   if (extension === '.md' || extension === '.txt') {
-    return markdownEntries(content, fallbackMs);
+    return markdownEntries(agent, content, fallbackMs);
   }
 
   const values: JsonValue[] = [];
@@ -306,7 +319,7 @@ export const parseStructuredHistory = (
   }
 
   return values.flatMap(recordsFrom).flatMap((record, index) => {
-    const entry = entryFrom(record, index, fallbackMs);
+    const entry = entryFrom(agent, record, index, fallbackMs);
 
     return entry == null ? [] : [entry];
   });
@@ -371,7 +384,12 @@ const structuredSession = async (
   try {
     const info = await stat(filePath);
     const content = await readFile(filePath, 'utf8');
-    const entries = parseStructuredHistory(content, extname(filePath).toLowerCase(), info.mtimeMs);
+    const entries = parseStructuredHistory(
+      content,
+      extname(filePath).toLowerCase(),
+      info.mtimeMs,
+      agent,
+    );
 
     if (entries.length === 0) {
       return undefined;
@@ -488,7 +506,12 @@ export const loadStructuredEntries = async (filePath: string): Promise<readonly 
     const info = await stat(filePath);
     const content = await readFile(filePath, 'utf8');
 
-    return parseStructuredHistory(content, extname(filePath).toLowerCase(), info.mtimeMs);
+    return parseStructuredHistory(
+      content,
+      extname(filePath).toLowerCase(),
+      info.mtimeMs,
+      basename(filePath) === CLINE_TRANSCRIPT ? 'cline' : undefined,
+    );
   }
   catch {
     return undefined;
