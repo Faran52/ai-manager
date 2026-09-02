@@ -79,18 +79,19 @@ stays; configuration management is where the work is. Each phase gates the next.
       because Cline writes it both ways. Verified against the one real store on
       the dev machine: 29 tool blocks and 18 text blocks out of one session
       that previously had no tool calls at all.
-- [ ] Antigravity desktop is not read at all. Its `conversations/<uuid>.pb` is
-      encrypted (8.00/8.00 entropy, verified upstream in
-      claude-code-history-viewer), so the only source is
+- [ ] Blocked, no store to design against. Antigravity desktop is not read at
+      all. Its `conversations/<uuid>.pb` is encrypted (8.00/8.00 entropy,
+      verified upstream in claude-code-history-viewer), so the only source is
       `antigravityUnifiedStateSync.trajectorySummaries` in the editor's
       `state.vscdb`: base64 protobuf, no published `.proto`, carrying the title,
       step count, timestamps, workspace and the last few steps. It needs a
       hand-rolled defensive protobuf scanner and gives the session tail only,
       never a full transcript. No desktop store exists on the dev machine, so
       this can be written against synthetic fixtures but not verified.
-- [ ] Improve the generic SQLite reader's project model: `sqliteUtils` still
-      falls back to `dirname(databasePath)` for the table decoder and for Zed,
-      with no per-workspace split. This needs real Cursor/Zed/Goose stores to
+- [ ] Blocked, no store to design against. Improve the generic SQLite reader's
+      project model: `sqliteUtils` still falls back to `dirname(databasePath)`
+      for the table decoder and for Zed, with no per-workspace split. This
+      needs real Cursor/Zed/Goose stores to
       design against; none exist on the dev machine.
 
 ## Phase 3: Managed-agent registry
@@ -101,8 +102,9 @@ stays; configuration management is where the work is. Each phase gates the next.
       Cursor, OpenCode, Gemini, Antigravity, Cursor Agent, Grok.
 - [x] Model and auth configuration stays read-only and per-agent in
       `modelAuthUtils`, a switch over the format. Deliberately not abstracted.
-- [ ] Per-agent validators beyond Claude. `validateAgentSetup` is Claude-only
-      and called directly; give it an agent parameter when a second one exists,
+- [ ] Deferred by its own terms, no second validator exists yet. Per-agent
+      validators beyond Claude. `validateAgentSetup` is Claude-only and called
+      directly; give it an agent parameter when a second one exists,
       not before.
 
 ## Phase 5: Claude plugin write actions
@@ -144,11 +146,19 @@ stays; configuration management is where the work is. Each phase gates the next.
 
 ## Structure follow-ups
 
-- [ ] Extract components that are actually reused out of feature `partials` folders into `components/ui` or a shared feature.
+- [x] Extract components that are actually reused out of feature `partials`
+      folders. Nothing qualifies: 58 partials, and not one is imported outside
+      the feature that owns it. Revisit the first time a second feature reaches
+      for one, rather than moving files on the strength of the idea.
 - [x] `updates/updateConfig.ts` folded into the `*Service` / `*Utils` convention
       as `updates/utils/updateConfigUtils.ts`.
-- [ ] Decide where ambient `types.ts` lives across `lib/services`.
-- [ ] The lockfile carries a dependency refresh (zod, happy-dom, rolldown,
-      es-toolkit, pnpm 12.1.0) that no phase asked for. The one part worth
-      keeping is the `typescript-eslint` dedup, 8.67.0 and 8.68.0 down to one
-      copy. Split the rest into its own commit or drop it.
+- [x] Decide where ambient `types.ts` lives across `lib/services`. It stays at
+      the service root, which is where both of them already are: `history` and
+      `updates` each keep one, read as `'../types'` from inside the service and
+      by path from outside. A `types.ts` is not a utils module, so moving it
+      under `utils/` would bend the `*Utils` convention and rewrite 27 import
+      sites to leave the code exactly as readable.
+- [x] The lockfile carried a dependency refresh (zod, happy-dom, rolldown,
+      es-toolkit, pnpm 12.1.0) that no phase asked for. It now sits in its own
+      `chore` commit rather than riding along with feature work, and the part
+      worth keeping landed: `typescript-eslint` resolves to a single 8.68.0.
