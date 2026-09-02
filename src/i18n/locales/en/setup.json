@@ -30,5 +30,6 @@
   "costsEstimating": "Estimating…",
   "costsAlwaysOn": "always-on",
   "costsPerInvoke": "per invoke",
+  "costsCost": "cost",
   "costsNone": "No enabled plugins to attribute cost to."
 }

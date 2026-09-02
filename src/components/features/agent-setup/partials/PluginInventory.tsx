@@ -6,6 +6,8 @@ import { Blocks } from 'lucide-react';
 import { cn } from '@utils/cnUtils';
 import { toErrorMessage } from '@utils/errorUtils';
 
+import { Button } from '@ui/index';
+
 import { usePluginCosts } from '../hooks/usePluginCosts';
 
 import type { InstalledPlugin } from '@services/agents/agentsService';
@@ -36,10 +38,28 @@ const HEAD = cn(CELL, `
   sticky top-0 bg-card text-[10px] font-medium tracking-wider
   text-muted-foreground uppercase
 `);
-const ACTION = `
-  rounded-sm border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground
-  transition-colors hover:text-foreground disabled:opacity-50
-`;
+const NUMERIC = 'text-end';
+const SCROLLER = 'max-w-3xl rounded-sm border border-border/60';
+const TABLE = 'w-full table-fixed border-collapse font-mono text-[11px]';
+
+const TOKENS = new Intl.NumberFormat();
+
+const tokensIn = (value: number): string => {
+  return value === 0 ? '·' : TOKENS.format(value);
+};
+
+/*
+ * An always-on slice costs a fraction of a cent per turn, so four decimals
+ * round most plugins to $0.0000 and the column reads as though nothing costs
+ * anything. Naming the floor keeps a real number honest about being small.
+ */
+const moneyIn = (value: number): string => {
+  if (value <= 0) {
+    return '·';
+  }
+
+  return value < 0.0001 ? '<$0.0001' : `$${value.toFixed(4)}`;
+};
 
 const rank = (plugin: InstalledPlugin): number => {
   if (!plugin.enabled) {
@@ -104,15 +124,8 @@ export const PluginInventory: FC<PluginInventoryProps> = ({
       {plugins.length === 0
         ? <p className="text-xs text-muted-foreground">{t('none', { ns: 'common' })}</p>
         : (
-            <div className="
-              max-h-56 max-w-3xl overflow-y-auto rounded-sm border
-              border-border/60
-            "
-            >
-              <table className="
-                w-full table-fixed border-collapse font-mono text-[11px]
-              "
-              >
+            <div className={cn(SCROLLER, 'max-h-56 overflow-y-auto')}>
+              <table className={TABLE}>
                 <thead>
                   <tr className="border-b border-border">
                     <th scope="col" className={cn(HEAD, 'w-[26%] ps-2')}>{t('plugin')}</th>
@@ -191,34 +204,72 @@ export const PluginInventory: FC<PluginInventoryProps> = ({
           )}
       {plugins.length > 0 && (
         <div className="mt-2">
-          <button
-            type="button"
+          <Button
+            size="sm"
             disabled={estimating}
             onClick={() => {
               void estimate();
             }}
-            className={ACTION}
           >
             {estimating ? t('costsEstimating') : t('costsEstimate')}
-          </button>
+          </Button>
           {costs != null && (
             costs.length === 0
-              ? <p className="mt-1 text-xs text-muted-foreground">{t('costsNone')}</p>
+              ? <p className="mt-2 text-xs text-muted-foreground">{t('costsNone')}</p>
               : (
-                  <ul className="
-                    mt-1 space-y-0.5 font-mono text-[11px] text-muted-foreground
-                  "
-                  >
-                    {costs.map((cost) => {
-                      return (
-                        <li key={cost.plugin}>
-                          {`${cost.plugin}: ~${String(cost.alwaysOnTokens)} tok ${t('costsAlwaysOn')}, `
-                            + `~${String(cost.onInvokeTokens)} tok ${t('costsPerInvoke')}, `
-                            + `$${cost.estimatedCostUsd.toFixed(4)}`}
-                        </li>
-                      );
-                    })}
-                  </ul>
+                  <div className={cn(SCROLLER, 'mt-2')}>
+                    <table className={TABLE}>
+                      <thead>
+                        <tr className="border-b border-border">
+                          <th scope="col" className={cn(HEAD, 'w-[46%] ps-2')}>
+                            {t('plugin')}
+                          </th>
+                          <th scope="col" className={cn(HEAD, NUMERIC, 'w-[18%]')}>
+                            {t('costsAlwaysOn')}
+                          </th>
+                          <th scope="col" className={cn(HEAD, NUMERIC, 'w-[18%]')}>
+                            {t('costsPerInvoke')}
+                          </th>
+                          <th
+                            scope="col"
+                            className={cn(HEAD, NUMERIC, 'w-[18%] pe-2')}
+                          >
+                            {t('costsCost')}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {costs.map((cost) => {
+                          return (
+                            <tr
+                              key={cost.plugin}
+                              className="hover:bg-muted-foreground/5"
+                            >
+                              <td className={cn(CELL, 'ps-2')}>{cost.plugin.split('@')[0]}</td>
+                              <td className={cn(CELL, NUMERIC, `
+                                text-muted-foreground
+                              `)}
+                              >
+                                {tokensIn(cost.alwaysOnTokens)}
+                              </td>
+                              <td className={cn(CELL, NUMERIC, `
+                                text-muted-foreground
+                              `)}
+                              >
+                                {tokensIn(cost.onInvokeTokens)}
+                              </td>
+                              <td className={cn(CELL, NUMERIC, `
+                                pe-2 text-muted-foreground
+                              `)}
+                              >
+                                {moneyIn(cost.estimatedCostUsd)}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 )
           )}
         </div>

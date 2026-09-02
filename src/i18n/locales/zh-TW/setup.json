@@ -30,5 +30,6 @@
   "costsEstimating": "估算中…",
   "costsAlwaysOn": "常駐",
   "costsPerInvoke": "每次呼叫",
+  "costsCost": "成本",
   "costsNone": "沒有可歸屬成本的已啟用外掛。"
 }

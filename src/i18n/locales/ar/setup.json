@@ -38,5 +38,6 @@
   "costsEstimating": "جارٍ التقدير…",
   "costsAlwaysOn": "دائم",
   "costsPerInvoke": "لكل استدعاء",
+  "costsCost": "التكلفة",
   "costsNone": "لا توجد إضافات مفعّلة لتُنسب إليها التكلفة."
 }

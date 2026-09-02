@@ -30,5 +30,6 @@
   "costsEstimating": "估算中…",
   "costsAlwaysOn": "常驻",
   "costsPerInvoke": "每次调用",
+  "costsCost": "成本",
   "costsNone": "没有可归属成本的已启用插件。"
 }

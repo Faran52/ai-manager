@@ -30,5 +30,6 @@
   "costsEstimating": "추정 중…",
   "costsAlwaysOn": "상시",
   "costsPerInvoke": "호출당",
+  "costsCost": "비용",
   "costsNone": "비용을 귀속할 활성 플러그인이 없습니다."
 }

@@ -231,9 +231,64 @@ test('estimates context cost through the api', async () => {
   );
   await user.click(screen.getByRole('button', { name: 'Estimate context cost' }));
 
-  expect(await screen.findByText(
-    'review@official: ~449 tok always-on, ~2500 tok per invoke, $0.0225',
-  )).toBeDefined();
+  expect(await screen.findByText('449')).toBeDefined();
+  expect(screen.getByText('2,500')).toBeDefined();
+  expect(screen.getByText('$0.0225')).toBeDefined();
+});
+
+test('names the floor rather than rounding a small cost to nothing', async () => {
+  const user = userEvent.setup();
+
+  vi.stubGlobal('fetch', vi.fn(() => {
+    return Promise.resolve(new Response(JSON.stringify({
+      costs: [{
+        plugin: 'review@official',
+        alwaysOnTokens: 20,
+        onInvokeTokens: 0,
+        estimatedCostUsd: 0.0000144,
+      }],
+    }), { status: 200 }));
+  }));
+
+  render(
+    <PluginInventory
+      plugins={[plugin()]}
+      projectPath={PROJECT}
+      onToggle={noToggle}
+    />,
+  );
+  await user.click(screen.getByRole('button', { name: 'Estimate context cost' }));
+
+  expect(await screen.findByText('<$0.0001')).toBeDefined();
+  expect(screen.queryByText('$0.0000')).toBeNull();
+});
+
+test('claims no cost when the project has no usage to price against', async () => {
+  const user = userEvent.setup();
+
+  vi.stubGlobal('fetch', vi.fn(() => {
+    return Promise.resolve(new Response(JSON.stringify({
+      costs: [{
+        plugin: 'review@official',
+        alwaysOnTokens: 12,
+        onInvokeTokens: 30,
+        estimatedCostUsd: 0,
+      }],
+    }), { status: 200 }));
+  }));
+
+  render(
+    <PluginInventory
+      plugins={[plugin()]}
+      projectPath={PROJECT}
+      onToggle={noToggle}
+    />,
+  );
+  await user.click(screen.getByRole('button', { name: 'Estimate context cost' }));
+
+  expect(await screen.findByText('12')).toBeDefined();
+  expect(screen.getByText('·')).toBeDefined();
+  expect(screen.queryByText(/\$/u)).toBeNull();
 });
 
 test('reports when no cost can be attributed', async () => {

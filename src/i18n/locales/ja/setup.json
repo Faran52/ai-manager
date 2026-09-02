@@ -30,5 +30,6 @@
   "costsEstimating": "推定中…",
   "costsAlwaysOn": "常時",
   "costsPerInvoke": "呼び出しごと",
+  "costsCost": "コスト",
   "costsNone": "コストを帰属できる有効なプラグインがありません。"
 }
