@@ -25,6 +25,7 @@ export default getViteConfig({
         'src/typings/**',
         'src/{main,index}.{ts,tsx}',
         'src/pages/**',
+        'src/middleware.ts',
         'src/lib/services/history/utils/claudeRawUtils.ts',
         'src/lib/services/history/types.ts',
         'src/lib/apis/contracts.ts',
