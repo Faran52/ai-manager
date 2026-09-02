@@ -64,6 +64,19 @@ const appData = (home: string, platform: NodeJS.Platform): string => {
     : join(home, '.local', 'share');
 };
 
+/**
+ * A packaged desktop app is launched by the OS rather than from a shell, so its
+ * working directory is the filesystem root. Scanning from there walks the whole
+ * disk, which on macOS means a permission prompt for Desktop, Downloads, every
+ * cloud-sync folder and every mounted volume. The working directory is only a
+ * plausible project parent when it sits inside the home directory.
+ */
+const workingRoot = (home: string): readonly string[] => {
+  const cwd = process.cwd();
+
+  return cwd.startsWith(`${home}${sep}`) ? [cwd] : [];
+};
+
 export const resolveAgentPaths = ({
   env,
   home = homedir(),
@@ -75,7 +88,7 @@ export const resolveAgentPaths = ({
   const vscode = editorStorage(home, platform, 'Code');
   const cursor = editorStorage(home, platform, 'Cursor');
   const commonProjects = withoutNested([
-    process.cwd(),
+    ...workingRoot(home),
     join(home, 'Projects'),
     join(home, 'Developer'),
     join(home, 'src'),

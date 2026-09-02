@@ -7,7 +7,7 @@ import {
 import { resolveAgentPaths } from './rootsUtils';
 
 test('resolves every agent path on Linux with environment overrides', () => {
-  vi.spyOn(process, 'cwd').mockReturnValue('/work');
+  vi.spyOn(process, 'cwd').mockReturnValue('/home/me/work');
 
   const paths = resolveAgentPaths({
     home: '/home/me',
@@ -33,8 +33,21 @@ test('resolves every agent path on Linux with environment overrides', () => {
   expect(paths.openinterpreter).toEqual(['/interpreter']);
   expect(paths.qwen).toEqual(['/qwen']);
   expect(paths.vibe).toContain('/vibe');
-  expect(paths.aider).toContain('/work');
+  expect(paths.aider).toContain('/home/me/work');
   expect(paths.trae).toContain('/config/Trae/User/workspaceStorage');
+});
+
+test('ignores a working directory that sits outside the home directory', () => {
+  vi.spyOn(process, 'cwd').mockReturnValue('/');
+
+  const paths = resolveAgentPaths({
+    home: '/home/me',
+    platform: 'linux',
+    env: {},
+  });
+
+  expect(paths.aider).toEqual(['/home/me/src', '/home/me/Projects', '/home/me/Developer']);
+  expect(paths.aider).not.toContain('/');
 });
 
 test('uses platform-specific editor locations and default paths', () => {
