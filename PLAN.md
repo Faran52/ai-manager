@@ -79,15 +79,20 @@ stays; configuration management is where the work is. Each phase gates the next.
       because Cline writes it both ways. Verified against the one real store on
       the dev machine: 29 tool blocks and 18 text blocks out of one session
       that previously had no tool calls at all.
-- [ ] Blocked, no store to design against. Antigravity desktop is not read at
-      all. Its `conversations/<uuid>.pb` is encrypted (8.00/8.00 entropy,
-      verified upstream in claude-code-history-viewer), so the only source is
-      `antigravityUnifiedStateSync.trajectorySummaries` in the editor's
-      `state.vscdb`: base64 protobuf, no published `.proto`, carrying the title,
-      step count, timestamps, workspace and the last few steps. It needs a
-      hand-rolled defensive protobuf scanner and gives the session tail only,
-      never a full transcript. No desktop store exists on the dev machine, so
-      this can be written against synthetic fixtures but not verified.
+- [x] Antigravity desktop is read. The note this replaces was wrong twice over:
+      the `.pb` needs no decryption and no `.proto`, and `state.vscdb` /
+      `trajectorySummaries` is not the only plaintext mirror. A session's own
+      artifacts under `~/.gemini/antigravity/brain/<id>/` are markdown
+      (`task.md`, `implementation_plan.md`, `walkthrough.md`) and the first
+      heading is its label, while `conversations/<id>.pb` carries its tool
+      phrases as printable ASCII, so replacing every unprintable byte with a
+      space and matching the phrases reads them without a schema.
+      `antigravityDesktopUtils` merges into the existing three readers, so the
+      desktop store is one more entry in `rootsUtils`.
+      What it cannot give is a turn-by-turn transcript: the store keeps what a
+      session produced, not the conversation that produced it, so a session
+      reads as its task and its work. No desktop store exists on the dev
+      machine, so this is unverified against real data by agreement.
 - [ ] Blocked, no store to design against. Improve the generic SQLite reader's
       project model: `sqliteUtils` still falls back to `dirname(databasePath)`
       for the table decoder and for Zed, with no per-workspace split. This

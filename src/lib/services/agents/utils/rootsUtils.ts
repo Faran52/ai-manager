@@ -97,7 +97,10 @@ export const resolveAgentPaths = ({
   return {
     'aider': commonProjects,
     'amazonq': [join(apps, 'amazon-q', 'data.sqlite3'), join(data, 'amazon-q', 'data.sqlite3')],
-    'antigravity': [join(home, '.gemini', 'antigravity-cli')],
+    'antigravity': [
+      join(home, '.gemini', 'antigravity-cli'),
+      join(home, '.gemini', 'antigravity'),
+    ],
     'claude': [envPath(env, 'CLAUDE_CONFIG_DIR', join(home, '.claude'))],
     'cline': [
       join(vscode, 'globalStorage', 'saoudrizwan.claude-dev', 'tasks'),

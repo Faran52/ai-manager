@@ -14,12 +14,8 @@
  * `implicit/*.pb`, `scratch/`). None of it is read, deliberately.
  *
  * This covers the CLI only. Antigravity desktop keeps a separate store under
- * `~/.gemini/antigravity/` whose `conversations/<uuid>.pb` is encrypted:
- * claude-code-history-viewer measured 8.00/8.00 byte entropy with no container
- * magic on a real install, so no parser can read it. Its one plaintext mirror
- * is the editor's `state.vscdb`, key
- * `antigravityUnifiedStateSync.trajectorySummaries`, which carries the title,
- * step count and only the most recent steps. Not read here yet; see PLAN.md.
+ * `~/.gemini/antigravity/`, read by `antigravityDesktopUtils` and merged into
+ * the three readers below.
  */
 import {
   readdir,
@@ -35,6 +31,11 @@ import { humanPreview } from '@utils/titleUtils';
 
 import { splitUserText } from '../../session/utils/parserUtils';
 
+import {
+  listAntigravityDesktopProjects,
+  listAntigravityDesktopSessions,
+  loadAntigravityDesktopEntries,
+} from './antigravityDesktopUtils';
 import { conversationMessageCount, firstUserMessageText } from './outcomeUtils';
 
 import type { AgentId } from '@config/agents';
@@ -307,9 +308,12 @@ export const listAntigravitySessions = async (
   roots: readonly string[],
   projectId?: string,
 ): Promise<readonly SessionSummary[]> => {
-  const sessions = await scanSessions(roots);
+  const [sessions, desktop] = await Promise.all([
+    scanSessions(roots),
+    listAntigravityDesktopSessions(agent, roots, projectId),
+  ]);
 
-  return sessions.filter((session) => {
+  return [...desktop, ...sessions.filter((session) => {
     return projectId == null || projectIdOf(session) === projectId;
   }).map((session) => {
     return {
@@ -329,7 +333,7 @@ export const listAntigravitySessions = async (
       sizeBytes: session.sizeBytes,
       cwd: session.workspace,
     } satisfies SessionSummary;
-  }).sort((left, right) => {
+  })].sort((left, right) => {
     return right.lastTimestampMs - left.lastTimestampMs;
   });
 };
@@ -338,7 +342,10 @@ export const listAntigravityProjects = async (
   agent: AgentId,
   roots: readonly string[],
 ): Promise<readonly ProjectSummary[]> => {
-  const sessions = await scanSessions(roots);
+  const [sessions, desktop] = await Promise.all([
+    scanSessions(roots),
+    listAntigravityDesktopProjects(agent, roots),
+  ]);
   const byProject = new Map<string, AntigravitySession[]>();
 
   for (const session of sessions) {
@@ -349,7 +356,7 @@ export const listAntigravityProjects = async (
     byProject.set(id, bucket);
   }
 
-  return [...byProject.entries()].map(([id, values]) => {
+  return [...desktop, ...[...byProject.entries()].map(([id, values]) => {
     const workspace = values.find((value) => {
       return value.workspace != null;
     })?.workspace;
@@ -367,7 +374,7 @@ export const listAntigravityProjects = async (
         return Math.max(latest, value.lastTimestampMs);
       }, 0),
     } satisfies ProjectSummary;
-  }).sort((left, right) => {
+  })].sort((left, right) => {
     return right.lastActivityMs - left.lastActivityMs;
   });
 };
@@ -375,6 +382,12 @@ export const listAntigravityProjects = async (
 export const loadAntigravityEntries = async (
   filePath: string,
 ): Promise<readonly HistoryEntry[] | undefined> => {
+  const desktop = await loadAntigravityDesktopEntries(filePath);
+
+  if (desktop != null) {
+    return desktop;
+  }
+
   try {
     const [content, facts] = await Promise.all([readFile(filePath, 'utf8'), stat(filePath)]);
     const entries = parseAntigravityTranscript(content, basename(filePath), facts.mtimeMs);

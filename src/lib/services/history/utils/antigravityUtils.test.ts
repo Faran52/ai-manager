@@ -349,3 +349,36 @@ describe('antigravity remaining paths', () => {
     expect(session?.preview).toBeUndefined();
   });
 });
+
+describe('antigravity desktop', () => {
+  const desktopRoot = async (): Promise<string> => {
+    const root = await mkdtemp(join(tmpdir(), 'antigravity-desktop-'));
+    const dir = join(root, 'brain', 'desk-1');
+
+    await mkdir(dir, { recursive: true });
+    await writeFile(join(dir, 'task.md'), '# Desktop task\n\nDo the thing.');
+
+    return root;
+  };
+
+  test('surfaces a desktop session alongside the CLI ones', async () => {
+    const root = await desktopRoot();
+    const sessions = await listAntigravitySessions('antigravity', [root]);
+    const projects = await listAntigravityProjects('antigravity', [root]);
+
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0]?.title).toBe('Desktop task');
+    expect(projects[0]?.name).toBe('Unplaced conversations');
+  });
+
+  test('loads a desktop session from the directory that is its file path', async () => {
+    const root = await desktopRoot();
+    const [session] = await listAntigravitySessions('antigravity', [root]);
+    const entries = session == null ? undefined : await loadAntigravityEntries(session.filePath);
+
+    expect(entries?.[0]).toMatchObject({
+      kind: 'user',
+      text: '# Desktop task\n\nDo the thing.',
+    });
+  });
+});
