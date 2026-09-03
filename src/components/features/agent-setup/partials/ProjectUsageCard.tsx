@@ -39,10 +39,9 @@ export const ProjectUsageCard: FC<ProjectUsageCardProps> = ({ usage, nowMs }) =>
       </h3>
       <div className="
         mt-2 grid grid-cols-2 gap-2
-        sm:grid-cols-4
+        sm:grid-cols-3
       "
       >
-        <MetricCard label={t('spend')} value={formatCost(usage.costUsd)} />
         <MetricCard
           label={t('inOut')}
           value={`${formatTokens(usage.inputTokens)} / ${formatTokens(usage.outputTokens)}`}
@@ -52,9 +51,10 @@ export const ProjectUsageCard: FC<ProjectUsageCardProps> = ({ usage, nowMs }) =>
       </div>
       {usage.models.length > 0 && (
         <ul className="mt-2 grid gap-1 border-t border-border pt-2">
-          {usage.models.map((model) => {
+          {usage.models.map((model, index) => {
             return (
               <BarRow
+                index={index}
                 key={model.model}
                 label={model.model}
                 value={model.costUsd}

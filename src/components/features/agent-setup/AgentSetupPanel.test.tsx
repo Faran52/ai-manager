@@ -1,5 +1,15 @@
-import { render, screen } from '@testing-library/react';
-import { expect, test } from 'vitest';
+import {
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import {
+  afterEach,
+  expect,
+  test,
+  vi,
+} from 'vitest';
 
 import { AgentSetupPanel } from './AgentSetupPanel';
 
@@ -20,6 +30,16 @@ const noToggle = (): Promise<void> => {
   return Promise.resolve();
 };
 
+// A collapsed card no longer keeps its detail in the DOM, so a test that reads
+// one has to open that card first.
+const expand = async (label: RegExp): Promise<void> => {
+  await userEvent.click(screen.getByRole('button', { name: label }));
+};
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 const setup = (agent: AgentSetup['agent'], overrides: Partial<AgentSetup> = {}): AgentSetup => {
   return {
     agent,
@@ -34,7 +54,7 @@ const setup = (agent: AgentSetup['agent'], overrides: Partial<AgentSetup> = {}):
   };
 };
 
-test('lists every configured agent with its servers and rules', () => {
+test('lists every configured agent with its servers and rules', async () => {
   render(
     <AgentSetupPanel
       projectSelected
@@ -73,6 +93,8 @@ test('lists every configured agent with its servers and rules', () => {
     />,
   );
 
+  await expand(/Claude Code/u);
+
   expect(screen.getByText('2 of 3 agents set up for this project')).toBeDefined();
   expect(screen.getByRole('heading', { name: 'Configured agents look healthy' })).toBeDefined();
   expect(screen.getByText('Claude Code')).toBeDefined();
@@ -83,7 +105,7 @@ test('lists every configured agent with its servers and rules', () => {
   expect(screen.getByText('CLAUDE.md')).toBeDefined();
 });
 
-test('shows the scope a server comes from', () => {
+test('shows the scope a server comes from', async () => {
   render(
     <AgentSetupPanel
       projectSelected
@@ -120,11 +142,13 @@ test('shows the scope a server comes from', () => {
     />,
   );
 
+  await expand(/Claude Code/u);
+
   expect(screen.getByText('user')).toBeDefined();
   expect(screen.getByText('project')).toBeDefined();
 });
 
-test('says when an agent has rules but no servers', () => {
+test('says when an agent has rules but no servers', async () => {
   render(
     <AgentSetupPanel
       projectSelected
@@ -144,11 +168,13 @@ test('says when an agent has rules but no servers', () => {
     />,
   );
 
+  await expand(/Codex CLI/u);
+
   expect(screen.getByText('None')).toBeDefined();
   expect(screen.getByText('AGENTS.md')).toBeDefined();
 });
 
-test('shortens a user-wide rules path to the home tilde', () => {
+test('shortens a user-wide rules path to the home tilde', async () => {
   render(
     <AgentSetupPanel
       projectSelected
@@ -179,6 +205,8 @@ test('shortens a user-wide rules path to the home tilde', () => {
       ]}
     />,
   );
+
+  await expand(/Codex CLI/u);
 
   expect(screen.getByText('AGENTS.md')).toBeDefined();
   expect(screen.getByText('~/.codex/AGENTS.md')).toBeDefined();
@@ -343,14 +371,13 @@ test('orders flagged agents first, then healthy, then unused', () => {
     />,
   );
 
-  const flagged = screen.getByText('Codex CLI');
-  const healthy = screen.getByText('Claude Code');
-  const unused = screen.getByText('Gemini CLI');
+  const order = [...document.querySelectorAll('[data-agent]')].map((card) => {
+    return card.getAttribute('data-agent');
+  });
 
   expect(screen.getByText('Needs attention')).toBeDefined();
   expect(screen.getByText('Not set up here')).toBeDefined();
-  expect(flagged.compareDocumentPosition(healthy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  expect(healthy.compareDocumentPosition(unused) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(order).toEqual(['codex', 'claude', 'gemini']);
 });
 
 test('flags an agent that a setup finding names', () => {
@@ -445,4 +472,81 @@ test('counts multiple setup problems', () => {
   );
 
   expect(screen.getByText('2 setup problems')).toBeDefined();
+});
+
+test('opens the plugin table in a dialog and closes it again', async () => {
+  // The table reads its cost figures on mount and waits on a spinner until they land.
+  vi.stubGlobal('fetch', vi.fn(() => {
+    return Promise.resolve(new Response(JSON.stringify({ costs: [] }), { status: 200 }));
+  }));
+  render(
+    <AgentSetupPanel
+      projectSelected
+      trust={{
+        known: true,
+        trusted: true,
+        onboarded: true,
+      }}
+      sessionCounts={{}}
+      projectPath={PROJECT}
+      findings={[]}
+      usage={null}
+      plugins={[{
+        id: 'review@official',
+        marketplace: 'official',
+        scope: 'user',
+        enabled: true,
+        version: '1.0.0',
+        knownMarketplace: true,
+      }]}
+      nowMs={0}
+      onPluginToggle={noToggle}
+      setups={[setup('claude')]}
+    />,
+  );
+
+  await expand(/Claude Code/u);
+  await userEvent.click(screen.getByRole('button', { name: 'View plugins' }));
+
+  expect(await screen.findByRole('table')).toBeDefined();
+
+  await userEvent.click(screen.getByRole('button', { name: 'Close dialog' }));
+
+  await waitFor(() => {
+    expect(screen.queryByRole('table')).toBeNull();
+  });
+});
+
+test('shuts a card that is already open instead of leaving it stuck', async () => {
+  render(
+    <AgentSetupPanel
+      projectSelected
+      trust={{
+        known: true,
+        trusted: true,
+        onboarded: true,
+      }}
+      sessionCounts={{}}
+      projectPath={PROJECT}
+      findings={[]}
+      usage={null}
+      plugins={[]}
+      nowMs={0}
+      onPluginToggle={noToggle}
+      setups={[setup('codex', { rules: [rule(`${PROJECT}/AGENTS.md`, 4)] })]}
+    />,
+  );
+
+  await expand(/Codex CLI/u);
+
+  expect(screen.getByText('AGENTS.md')).toBeDefined();
+
+  await userEvent.click(screen.getByRole('button', {
+    name: /Codex CLI/u,
+    expanded: true,
+  }));
+
+  await waitFor(() => {
+    expect(screen.queryByText('AGENTS.md')).toBeNull();
+  });
 });

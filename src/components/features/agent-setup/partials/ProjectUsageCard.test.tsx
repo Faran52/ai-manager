@@ -39,7 +39,7 @@ test('shows spend, tokens and how current the figures are', () => {
 
   expect(screen.getByText('Recorded usage')).toBeDefined();
   expect(screen.getByText(/last active/u)).toBeDefined();
-  expect(screen.getByText('Spend')).toBeDefined();
+  expect(screen.queryByText('Spend')).toBeNull();
   expect(screen.getByText('Cache reads')).toBeDefined();
 });
 

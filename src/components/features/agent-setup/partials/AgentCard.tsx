@@ -1,12 +1,14 @@
 import { useTranslation } from 'react-i18next';
 
 import {
+  Blocks,
   Check,
   ChevronRight,
   FileText,
   Plug,
   TriangleAlert,
 } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 
 import { agentOption } from '@config/agents';
 
@@ -17,12 +19,15 @@ import {
   sizeLabel,
 } from '@utils/formatUtils';
 
-import { Badge } from '@ui/index';
+import {
+  Badge,
+  Button,
+  collapseTransition,
+} from '@ui/index';
 
 import { agentIsConfigured } from '../utils/agentSetupUtils';
 
 import { AgentDetailRow } from './AgentDetailRow';
-import { PluginInventory } from './PluginInventory';
 
 import type { AgentSetup, InstalledPlugin } from '@services/agents/agentsService';
 import type { FC } from 'react';
@@ -34,7 +39,9 @@ export interface AgentCardProps {
   readonly sessionCount: number;
   readonly nowMs: number;
   readonly flagged?: boolean | undefined;
-  readonly onPluginToggle: (plugin: InstalledPlugin) => Promise<void>;
+  readonly open: boolean;
+  readonly onToggle: () => void;
+  readonly onOpenPlugins: () => void;
 }
 
 const GUTTER = 'flex w-4 shrink-0 justify-center';
@@ -47,7 +54,9 @@ export const AgentCard: FC<AgentCardProps> = ({
   sessionCount,
   nowMs,
   flagged = false,
-  onPluginToggle,
+  open,
+  onToggle,
+  onOpenPlugins,
 }) => {
   const { t, i18n } = useTranslation('setup');
   const isClaude = setup.agent === 'claude';
@@ -65,6 +74,7 @@ export const AgentCard: FC<AgentCardProps> = ({
     return (
       <div
         data-configured="false"
+        data-agent={setup.agent}
         className="flex items-center gap-2 py-1 ps-1 pe-2"
       >
         <span className={GUTTER} aria-hidden="true">
@@ -78,20 +88,28 @@ export const AgentCard: FC<AgentCardProps> = ({
   }
 
   return (
-    <details
+    <div
       data-configured="true"
-      open={flagged}
-      className={cn('group rounded-md border bg-card', flagged
+      data-agent={setup.agent}
+      className={cn('rounded-md border bg-card', flagged
         ? 'border-warn/50'
         : 'border-border')}
     >
-      <summary className="
-        flex cursor-default list-none items-center gap-2 rounded-md py-1.5 ps-1
-        pe-2
-        hover:bg-muted-foreground/5
-        focus-visible:outline-2 focus-visible:outline-offset-2
-        focus-visible:outline-primary
-      "
+      {/*
+        * <details> cannot animate its own disclosure, and its open state lives
+        * in the DOM where the panel cannot keep the other cards shut.
+        */}
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={onToggle}
+        className="
+          flex w-full cursor-default items-center gap-2 rounded-md py-1.5 ps-1
+          pe-2 text-start
+          hover:bg-muted-foreground/5
+          focus-visible:outline-2 focus-visible:outline-offset-2
+          focus-visible:outline-primary
+        "
       >
         <span className={GUTTER} aria-hidden="true">
           {flagged
@@ -115,54 +133,78 @@ export const AgentCard: FC<AgentCardProps> = ({
         <span className="ms-auto flex items-center gap-2">
           {flagged && <Badge tone="warn">{t('checkSetup')}</Badge>}
           {sessions}
-          <ChevronRight className="
+          <ChevronRight className={cn(`
             size-3.5 text-muted-foreground transition-transform
-            group-open:rotate-90
-          "
+          `, open && 'rotate-90')}
           />
         </span>
-      </summary>
-      <div className="border-t border-border p-2">
-        <dl className="grid gap-1.5 text-xs">
-          <AgentDetailRow icon={<Plug className="size-3" />} label={t('mcp')}>
-            {setup.mcpServers.length === 0
-              ? <span className="text-muted-foreground">{t('none', { ns: 'common' })}</span>
-              : setup.mcpServers.map((server) => {
-                  return (
-                    <Badge key={`${server.scope}-${server.name}`} title={server.source}>
-                      {server.name}
-                      <span className="ms-1 opacity-70">{server.scope}</span>
-                    </Badge>
-                  );
-                })}
-          </AgentDetailRow>
-          <AgentDetailRow icon={<FileText className="size-3" />} label={t('rules')}>
-            {setup.rules.length === 0
-              ? <span className="text-muted-foreground">{t('none', { ns: 'common' })}</span>
-              : setup.rules.map((rule) => {
-                  return (
-                    <Badge
-                      key={rule.path}
-                      tone={rule.bytes === 0 ? 'warn' : 'neutral'}
-                      title={rule.bytes === 0 ? `${rule.path} · ${rule.scope} · empty` : `${rule.path} · ${rule.scope}`}
-                    >
-                      {shortPath(rule.path, projectPath)}
-                      <span className="ms-1 opacity-70">
-                        {`${sizeLabel(rule.bytes)} · ${formatTimeAgo(rule.modifiedMs, nowMs, i18n.language)}`}
-                      </span>
-                    </Badge>
-                  );
-                })}
-          </AgentDetailRow>
-        </dl>
-        {isClaude && (
-          <PluginInventory
-            plugins={plugins}
-            projectPath={projectPath}
-            onToggle={onPluginToggle}
-          />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="detail"
+            className="overflow-hidden"
+            initial={{
+              height: 0,
+              opacity: 0,
+            }}
+            animate={{
+              height: 'auto',
+              opacity: 1,
+            }}
+            exit={{
+              height: 0,
+              opacity: 0,
+            }}
+            transition={collapseTransition}
+          >
+            <div className="border-t border-border p-2">
+              <dl className="grid gap-1.5 text-xs">
+                <AgentDetailRow icon={<Plug className="size-3" />} label={t('mcp')}>
+                  {setup.mcpServers.length === 0
+                    ? <span className="text-muted-foreground">{t('none', { ns: 'common' })}</span>
+                    : setup.mcpServers.map((server) => {
+                        return (
+                          <Badge key={`${server.scope}-${server.name}`} title={server.source}>
+                            {server.name}
+                            <span className="ms-1 opacity-70">{server.scope}</span>
+                          </Badge>
+                        );
+                      })}
+                </AgentDetailRow>
+                <AgentDetailRow icon={<FileText className="size-3" />} label={t('rules')}>
+                  {setup.rules.length === 0
+                    ? <span className="text-muted-foreground">{t('none', { ns: 'common' })}</span>
+                    : setup.rules.map((rule) => {
+                        const where = `${rule.path} · ${rule.scope}`;
+
+                        return (
+                          <Badge
+                            key={rule.path}
+                            tone={rule.bytes === 0 ? 'warn' : 'neutral'}
+                            title={rule.bytes === 0 ? `${where} · empty` : where}
+                          >
+                            {shortPath(rule.path, projectPath)}
+                            <span className="ms-1 opacity-70">
+                              {`${sizeLabel(rule.bytes)} · ${formatTimeAgo(rule.modifiedMs, nowMs, i18n.language)}`}
+                            </span>
+                          </Badge>
+                        );
+                      })}
+                </AgentDetailRow>
+              </dl>
+              {isClaude && (
+                <div className="mt-2 border-t border-border pt-2">
+                  <Button size="sm" onClick={onOpenPlugins}>
+                    <Blocks className="size-3" />
+                    {t('viewPlugins')}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </motion.div>
         )}
-      </div>
-    </details>
+      </AnimatePresence>
+    </div>
   );
 };

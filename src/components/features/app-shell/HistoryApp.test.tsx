@@ -302,6 +302,11 @@ describe('HistoryApp', () => {
       })).toBe(true);
     });
 
+    await userEvent.click(await screen.findByRole('button', {
+      name: /Claude Code/u,
+      expanded: false,
+    }));
+
     expect(await screen.findByText('context7')).toBeDefined();
   });
 
@@ -348,6 +353,11 @@ describe('HistoryApp', () => {
     await openProject('alpha');
 
     await userEvent.click(screen.getByRole('button', { name: /Health/ }));
+    await userEvent.click(await screen.findByRole('button', {
+      name: /Claude Code/u,
+      expanded: false,
+    }));
+    await userEvent.click(await screen.findByRole('button', { name: 'View plugins' }));
     await userEvent.click(await screen.findByRole('switch', { name: 'review' }));
 
     await waitFor(() => {
@@ -404,6 +414,11 @@ describe('HistoryApp', () => {
     await openProject('alpha');
 
     await userEvent.click(screen.getByRole('button', { name: /Health/ }));
+    await userEvent.click(await screen.findByRole('button', {
+      name: /Claude Code/u,
+      expanded: false,
+    }));
+    await userEvent.click(await screen.findByRole('button', { name: 'View plugins' }));
     await userEvent.click(await screen.findByRole('switch', { name: 'review' }));
 
     expect(await screen.findByText('the cli refused')).toBeDefined();

@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import { ShieldAlert, ShieldCheck } from 'lucide-react';
 
 import type { ProjectTrust } from '@services/agents/agentsService';
@@ -9,13 +11,11 @@ export interface ProjectTrustCardProps {
 
 // Only worth a card when something is off; a trusted, known project needs no announcement.
 export const ProjectTrustCard: FC<ProjectTrustCardProps> = ({ trust }) => {
+  const { t } = useTranslation('setup');
+
   if (trust.known && trust.trusted) {
     return null;
   }
-
-  const message = trust.known
-    ? 'Claude Code has seen this project but its folder was never trusted, so it starts with tools restricted.'
-    : 'Claude Code has no record of this project, so nothing has been configured or trusted yet.';
 
   return (
     <section className="
@@ -26,7 +26,7 @@ export const ProjectTrustCard: FC<ProjectTrustCardProps> = ({ trust }) => {
       {trust.known
         ? <ShieldAlert className="mt-0.5 size-4 shrink-0 text-warn" />
         : <ShieldCheck className="mt-0.5 size-4 shrink-0 text-muted-foreground" />}
-      <p>{message}</p>
+      <p>{trust.known ? t('trustNeverTrusted') : t('trustNoRecord')}</p>
     </section>
   );
 };

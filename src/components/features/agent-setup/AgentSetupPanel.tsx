@@ -1,12 +1,19 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { HeartPulse } from 'lucide-react';
 import { motion } from 'motion/react';
 
-import { EmptyState, fadeTransition } from '@ui/index';
+import {
+  EmptyState,
+  fadeTransition,
+  Modal,
+} from '@ui/index';
 
 import {
   AgentCard,
+  HealthSummary,
+  PluginInventory,
   ProjectTrustCard,
   ProjectUsageCard,
   SetupFindings,
@@ -42,6 +49,8 @@ interface GroupProps {
   readonly children: ReactNode;
 }
 
+const PLUGINS_TITLE_ID = 'health-plugins-title';
+
 const Group: FC<GroupProps> = ({
   name,
   label,
@@ -74,6 +83,15 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
   onPluginToggle,
 }) => {
   const { t } = useTranslation('setup');
+  /*
+   * undefined is nobody having chosen yet, which is when the first flagged
+   * agent opens itself. null is a card the reader shut, and it has to outrank
+   * that default or the flagged card could never be closed. Findings arrive
+   * after mount, so seeding the state at first render would miss them.
+   */
+  const [picked, setPicked] = useState<AgentId | null | undefined>(undefined);
+  const [pluginsOpen, setPluginsOpen] = useState(false);
+
   if (!projectSelected) {
     return (
       <EmptyState
@@ -111,6 +129,10 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
   const unconfigured = setups.filter((setup) => {
     return !agentIsConfigured(setup, plugins);
   });
+  const expanded = picked === undefined ? flagged[0]?.agent ?? null : picked;
+  const enabledPlugins = plugins.filter((plugin) => {
+    return plugin.enabled;
+  }).length;
 
   const card = (setup: AgentSetup): ReactNode => {
     return (
@@ -122,7 +144,13 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
         sessionCount={sessionCounts[setup.agent] ?? 0}
         nowMs={nowMs}
         flagged={hasFinding(setup.agent)}
-        onPluginToggle={onPluginToggle}
+        open={expanded === setup.agent}
+        onToggle={() => {
+          setPicked(expanded === setup.agent ? null : setup.agent);
+        }}
+        onOpenPlugins={() => {
+          setPluginsOpen(true);
+        }}
       />
     );
   };
@@ -152,6 +180,13 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
           })}
         </p>
       </header>
+      <HealthSummary
+        configured={configured.length}
+        total={setups.length}
+        findingCount={findings.length}
+        trust={trust}
+        usage={usage}
+      />
       <SetupFindings findings={findings} />
       <ProjectTrustCard trust={trust} />
       {usage != null && <ProjectUsageCard usage={usage} nowMs={nowMs} />}
@@ -170,6 +205,45 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
           {unconfigured.map(card)}
         </Group>
       )}
+      <Modal
+        open={pluginsOpen}
+        onClose={() => {
+          setPluginsOpen(false);
+        }}
+        labelledBy={PLUGINS_TITLE_ID}
+        widthClass="max-w-3xl"
+      >
+        <div className="flex max-h-[70vh] flex-col">
+          <h3
+            id={PLUGINS_TITLE_ID}
+            className="
+              flex items-baseline gap-2 border-b border-border px-3 py-2 text-sm
+              font-semibold
+            "
+          >
+            {t('pluginsTitle')}
+            <span className="
+              font-mono text-xs font-normal text-muted-foreground
+            "
+            >
+              {`${String(enabledPlugins)}/${String(plugins.length)}`}
+            </span>
+          </h3>
+          {/*
+            * The body is the one scroller, so both tables share it and the
+            * sticky heads have a scrolling ancestor to stick to. It carries no
+            * top padding: a gap above the head is a strip of scrolled row that
+            * stays visible over it.
+            */}
+          <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
+            <PluginInventory
+              plugins={plugins}
+              projectPath={projectPath}
+              onToggle={onPluginToggle}
+            />
+          </div>
+        </div>
+      </Modal>
     </motion.div>
   );
 };

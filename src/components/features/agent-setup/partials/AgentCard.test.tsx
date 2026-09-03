@@ -1,10 +1,15 @@
 import { render, screen } from '@testing-library/react';
-import { expect, test } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import {
+  expect,
+  test,
+  vi,
+} from 'vitest';
 
 import { AgentCard } from './AgentCard';
 
-const noToggle = (): Promise<void> => {
-  return Promise.resolve();
+const noop = (): void => {
+  // The card only reports the intent; the panel owns what happens next.
 };
 
 const nowMs = Date.parse('2026-01-02T00:00:00Z');
@@ -40,7 +45,9 @@ test('labels rules by size, marks empty ones, and shortens paths', () => {
       plugins={[]}
       sessionCount={0}
       nowMs={nowMs}
-      onPluginToggle={noToggle}
+      open
+      onToggle={noop}
+      onOpenPlugins={noop}
     />,
   );
 
@@ -67,7 +74,9 @@ test('renders an unconfigured agent as a compact card without detail rows', () =
       plugins={[]}
       sessionCount={3}
       nowMs={nowMs}
-      onPluginToggle={noToggle}
+      open={false}
+      onToggle={noop}
+      onOpenPlugins={noop}
     />,
   );
 
@@ -101,7 +110,9 @@ test('marks a healthy configured agent as ready', () => {
       plugins={[]}
       sessionCount={0}
       nowMs={nowMs}
-      onPluginToggle={noToggle}
+      open
+      onToggle={noop}
+      onOpenPlugins={noop}
     />,
   );
 
@@ -133,10 +144,85 @@ test('flags a configured agent that a setup finding names', () => {
       }]}
       sessionCount={0}
       nowMs={nowMs}
-      onPluginToggle={noToggle}
+      open={false}
+      onToggle={noop}
+      onOpenPlugins={noop}
       flagged
     />,
   );
 
   expect(screen.getByText('Check setup')).toBeDefined();
+});
+
+test('reports the click and leaves the open state to the panel', async () => {
+  const onToggle = vi.fn();
+  render(
+    <AgentCard
+      setup={{
+        agent: 'codex',
+        mcpServers: [{
+          name: 'webstorm',
+          scope: 'user',
+          source: '/home/.codex/config.toml',
+          command: undefined,
+        }],
+        rules: [],
+        modelAuth: {
+          format: 'codex',
+          model: undefined,
+          provider: undefined,
+          authMethod: 'none',
+        },
+      }}
+      projectPath="/Users/dev/project"
+      plugins={[]}
+      sessionCount={0}
+      nowMs={nowMs}
+      open={false}
+      onToggle={onToggle}
+      onOpenPlugins={noop}
+    />,
+  );
+
+  await userEvent.click(screen.getByRole('button', { expanded: false }));
+
+  expect(onToggle).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole('button', { expanded: false })).toBeDefined();
+});
+
+test('hands the plugin table to the panel instead of nesting it in the row', async () => {
+  const onOpenPlugins = vi.fn();
+  render(
+    <AgentCard
+      setup={{
+        agent: 'claude',
+        mcpServers: [],
+        rules: [],
+        modelAuth: {
+          format: 'claude',
+          model: undefined,
+          authMethod: 'none',
+        },
+      }}
+      projectPath="/Users/dev/project"
+      plugins={[{
+        id: 'review@official',
+        marketplace: 'official',
+        scope: 'user',
+        enabled: true,
+        version: '1.0.0',
+        knownMarketplace: true,
+      }]}
+      sessionCount={0}
+      nowMs={nowMs}
+      open
+      onToggle={noop}
+      onOpenPlugins={onOpenPlugins}
+    />,
+  );
+
+  expect(screen.queryByRole('table')).toBeNull();
+  await userEvent.click(screen.getByText('View plugins'));
+
+  expect(onOpenPlugins).toHaveBeenCalledTimes(1);
 });
