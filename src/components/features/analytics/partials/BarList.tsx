@@ -23,9 +23,10 @@ export const BarList: FC<BarListProps> = ({ title, items }) => {
   return (
     <AnalyticsPanel title={title}>
       <ul className="mt-3 space-y-2" data-bar-list>
-        {items.map((item) => {
+        {items.map((item, index) => {
           return (
             <BarRow
+              index={index}
               key={item.label}
               label={item.label}
               value={item.value}

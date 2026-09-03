@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { motion } from 'motion/react';
+
 import { formatTokens } from '@utils/formatUtils';
+
+import { MOTION_STAGGER, riseTransition } from '@ui/index';
 
 import {
   IDLE_CLASS,
@@ -70,14 +74,30 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
         </div>
 
         <div className="flex min-w-0 flex-1 gap-3" role="img" aria-label={t('dailyHeatmap')}>
-          {months.map((month) => {
+          {months.map((month, index) => {
             return (
-              <div
+              <motion.div
                 key={month.key}
                 className="flex min-w-0 flex-col gap-1"
                 // In proportion to the weeks it holds, so a cell is one size throughout.
                 style={{ flex: `${String(month.weeks.length)} 1 0%` }}
                 data-heatmap-month={month.label}
+                /*
+                 * A month at a time, not a day: staggering 365 cells would
+                 * mount 365 animations to sweep a grid that reads as columns.
+                 */
+                initial={{
+                  opacity: 0,
+                  y: 4,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                transition={{
+                  ...riseTransition,
+                  delay: index * MOTION_STAGGER,
+                }}
               >
                 <span className="
                   h-3 text-[10px] leading-none text-muted-foreground
@@ -112,7 +132,7 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
                     );
                   })}
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>

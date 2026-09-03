@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 
-import { riseTransition } from '../constants';
+import { fillTransition, MOTION_STAGGER } from '../constants';
 
 import type { FC } from 'react';
 
@@ -9,6 +9,8 @@ export interface BarRowProps {
   readonly max: number;
   readonly value: number;
   readonly formatValue: (value: number) => string;
+  // Position in its list, so a list fills top to bottom rather than all at once.
+  readonly index?: number | undefined;
 }
 
 /**
@@ -23,6 +25,7 @@ export const BarRow: FC<BarRowProps> = ({
   value,
   max,
   formatValue,
+  index = 0,
 }) => {
   // The bar animates from empty, so its width mid-flight is not the proportion.
   // data-bar-fill carries the settled figure for tests and for reading the DOM.
@@ -48,7 +51,10 @@ export const BarRow: FC<BarRowProps> = ({
           className="block h-full rounded-full bg-primary"
           data-bar-fill={percent}
           initial={{ width: '0%' }}
-          transition={riseTransition}
+          transition={{
+            ...fillTransition,
+            delay: index * MOTION_STAGGER,
+          }}
         />
       </span>
     </li>

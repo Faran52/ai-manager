@@ -50,8 +50,8 @@ test('scales the busiest hour to the full height of the strip', () => {
   const busiest = document.querySelector('[data-rhythm-bar="14"]');
   const quiet = document.querySelector('[data-rhythm-bar="0"]');
 
-  expect(busiest?.getAttribute('style')).toContain('height: 100%');
-  expect(quiet?.getAttribute('style')).toContain('height: 0%');
+  expect(busiest?.getAttribute('data-rhythm-height')).toBe('100');
+  expect(quiet?.getAttribute('data-rhythm-height')).toBe('0');
 });
 
 test('says nothing about a peak hour before anything has been recorded', () => {
@@ -71,6 +71,6 @@ test('says nothing about a peak hour before anything has been recorded', () => {
   );
 
   expect(screen.getByText('Not recorded')).toBeDefined();
-  expect(document.querySelector('[data-rhythm-bar="weekdayMon"]')?.getAttribute('style'))
-    .toContain('height: 0%');
+  expect(document.querySelector('[data-rhythm-bar="weekdayMon"]')
+    ?.getAttribute('data-rhythm-height')).toBe('0');
 });

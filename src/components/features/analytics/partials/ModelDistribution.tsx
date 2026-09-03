@@ -26,13 +26,14 @@ export const ModelDistribution: FC<ModelDistributionProps> = ({ models }) => {
   return (
     <AnalyticsPanel title={t('modelDistribution')}>
       <div className="mt-3 space-y-3" data-model-distribution>
-        {ordered.map((model) => {
+        {ordered.map((model, index) => {
           const tokens = model.inputTokens + model.outputTokens;
 
           return (
             <div key={model.model}>
               <ul>
                 <BarRow
+                  index={index}
                   label={model.model}
                   value={tokens}
                   max={max}

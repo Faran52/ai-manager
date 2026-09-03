@@ -5,6 +5,17 @@ export const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1]
 
 export const MOTION_DURATION_FAST = 0.16;
 export const MOTION_DURATION_BASE = 0.3;
+export const MOTION_DURATION_SLOW = 0.7;
+
+/*
+ * Expo-out covers most of its distance in the first tenth of the tween, which
+ * suits a surface arriving but makes a bar look like it was always full. A
+ * figure growing to its value wants the slower curve and the longer duration.
+ */
+export const EASE_OUT_CUBIC: [number, number, number, number] = [0.33, 1, 0.68, 1];
+
+// Marks in one list fill in sequence, so the eye reads an order rather than a flash.
+export const MOTION_STAGGER = 0.05;
 
 // Wheel easing. The factor is the share of the remaining distance covered in a
 // 60Hz frame, and the epsilon is where a glide is close enough to call landed.
@@ -34,4 +45,9 @@ export const popoverTransition: Transition = {
 export const collapseTransition: Transition = {
   duration: MOTION_DURATION_BASE,
   ease: EASE_OUT_EXPO,
+};
+
+export const fillTransition: Transition = {
+  duration: MOTION_DURATION_SLOW,
+  ease: EASE_OUT_CUBIC,
 };

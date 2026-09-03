@@ -28,11 +28,12 @@ export const ProviderDistribution: FC<ProviderDistributionProps> = ({ agents }) 
   return (
     <AnalyticsPanel title={t('providerDistribution')}>
       <ul className="mt-3 space-y-3" data-provider-distribution>
-        {ordered.map((agent) => {
+        {ordered.map((agent, index) => {
           const share = total === 0 ? 0 : Math.round((agent.tokens / total) * 100);
 
           return (
             <BarRow
+              index={index}
               key={agent.agent}
               label={t('providerLabel', {
                 provider: agentOption(agent.agent).label,

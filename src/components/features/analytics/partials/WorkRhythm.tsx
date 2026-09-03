@@ -1,6 +1,10 @@
 import { useTranslation } from 'react-i18next';
 
+import { motion } from 'motion/react';
+
 import { formatTokens } from '@utils/formatUtils';
+
+import { fillTransition, MOTION_STAGGER } from '@ui/index';
 
 import { AnalyticsPanel } from './AnalyticsPanel';
 
@@ -19,6 +23,9 @@ interface Slot {
   readonly tick: string;
   readonly count: number;
 }
+
+// Total time for a whole strip to fill, shared out across however many bars it has.
+const SWEEP = 0.4;
 
 const WEEKDAY_KEYS = [
   'weekdayMon',
@@ -56,20 +63,34 @@ const Strip: FC<{ readonly slots: readonly Slot[];
   const peak = slots.reduce((best, slot) => {
     return Math.max(best, slot.count);
   }, 0);
+  /*
+   * The sweep is shared rather than per bar, so 24 hours and 7 weekdays take
+   * the same time to fill instead of the hours running three times longer.
+   */
+  const step = Math.min(MOTION_STAGGER, SWEEP / Math.max(1, slots.length));
 
   return (
     <div className="grid gap-1">
       <p className="text-[11px] text-muted-foreground">{caption}</p>
       <div className="flex items-end gap-0.5" role="img" aria-label={caption}>
-        {slots.map((slot) => {
+        {slots.map((slot, index) => {
+          const percent = peak === 0 ? 0 : (slot.count / peak) * 100;
+
           return (
             <div key={slot.key} className="grid min-w-0 flex-1 gap-1">
               <div className="flex h-16 items-end">
-                <div
+                <motion.div
                   title={`${slot.label}: ${formatTokens(slot.count)}`}
                   data-rhythm-bar={slot.key}
+                  // The live height is mid-tween, so the settled figure is its own attribute.
+                  data-rhythm-height={percent}
                   className="w-full rounded-t-sm bg-primary/70"
-                  style={{ height: `${String(peak === 0 ? 0 : (slot.count / peak) * 100)}%` }}
+                  initial={{ height: '0%' }}
+                  animate={{ height: `${String(percent)}%` }}
+                  transition={{
+                    ...fillTransition,
+                    delay: index * step,
+                  }}
                 />
               </div>
               <span className="

@@ -190,7 +190,7 @@ export const StoragePanel: FC<StoragePanelProps> = ({
             ? <EmptyState icon={<HardDrive className="size-8" />} title={t('storageNone')} />
             : (
                 <ul className="grid gap-3">
-                  {shown.map((held) => {
+                  {shown.map((held, index) => {
                     return (
                       <li
                         key={held.agent}
@@ -201,6 +201,7 @@ export const StoragePanel: FC<StoragePanelProps> = ({
                       >
                         <ul>
                           <BarRow
+                            index={index}
                             label={held.label}
                             max={totalBytes}
                             value={held.bytes}
