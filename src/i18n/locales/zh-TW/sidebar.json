@@ -66,6 +66,5 @@
   "sessions": "工作階段",
   "bulkArchiveNote": "所選工作階段",
   "threadParts_one": "{{count}} 個片段",
-  "threadParts_other": "{{count}} 個片段",
-  "threadContinues": "續接"
+  "threadParts_other": "{{count}} 個片段"
 }

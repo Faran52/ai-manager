@@ -64,7 +64,7 @@ const editsResource = (
 };
 
 const renderBoard = (overrides: {
-  readonly panel?: 'sessions' | 'edits';
+  readonly panel?: 'grid' | 'edits';
   readonly project?: string | undefined;
   readonly sessions?: readonly SessionSummary[];
   readonly sessionsStatus?: 'loading' | 'ready' | 'error';
@@ -74,7 +74,7 @@ const renderBoard = (overrides: {
 } = {}): void => {
   render(
     <BoardPanels
-      panel={overrides.panel ?? 'sessions'}
+      panel={overrides.panel ?? 'grid'}
       project={'project' in overrides ? overrides.project : '/repo'}
       sessions={overrides.sessions ?? [session('a', 10), session('b', 5)]}
       sessionsStatus={overrides.sessionsStatus ?? 'ready'}
@@ -113,7 +113,7 @@ test('opens a session from the grid', async () => {
 test('waits for sessions and says when there are none', () => {
   const { unmount } = render(
     <BoardPanels
-      panel="sessions"
+      panel="grid"
       project="/repo"
       sessions={[]}
       sessionsStatus="loading"

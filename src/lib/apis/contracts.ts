@@ -13,7 +13,6 @@ import type { ArchiveManifest, ArchiveSummary } from '@services/archive/archiveS
 import type { EditedFile } from '@services/edits/editsService';
 import type { FileHistory, FileVersionDiff } from '@services/file-history/fileHistoryService';
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
-import type { PromptHistory } from '@services/prompts/promptsService';
 import type {
   RetentionDue,
   RetentionPolicy,
@@ -150,8 +149,6 @@ export interface FileHistoryResponse {
   readonly history: FileHistory;
   readonly diff: FileVersionDiff | null;
 }
-
-export type PromptsResponse = PromptHistory;
 
 export type StorageResponse = StorageReport;
 

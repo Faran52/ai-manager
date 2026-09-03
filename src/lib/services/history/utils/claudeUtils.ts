@@ -21,6 +21,7 @@ import {
   TIMESTAMP_PREFIX,
   TITLE_MARKER,
   USER_MARKER,
+  UUID_PREFIX,
 } from '../constants';
 
 import { isConversationMessage } from './outcomeUtils';
@@ -38,6 +39,7 @@ interface SessionMeta {
   readonly lastTimestampMs: number;
   readonly cwd?: string | undefined;
   readonly gitBranch?: string | undefined;
+  readonly rootUuid?: string | undefined;
 }
 
 interface FileFacts {
@@ -64,6 +66,7 @@ interface MetaScan {
   preview?: string | undefined;
   cwd?: string | undefined;
   gitBranch?: string | undefined;
+  rootUuid?: string | undefined;
 }
 
 const isRawLine = (value: unknown): value is RawTitleLine => {
@@ -158,6 +161,7 @@ const absorbLine = (scan: MetaScan, rawLine: string): void => {
 
   updateStamps(scan, rawLine);
   scan.cwd ??= quotedValue(rawLine, CWD_PREFIX);
+  scan.rootUuid ??= quotedValue(rawLine, UUID_PREFIX);
   /**
    * The last branch named is the one the session ended on, which is the one
    * worth showing: a session that started on main and moved onto a feature
@@ -214,6 +218,7 @@ const extractSessionMeta = (content: string): SessionMeta => {
     lastTimestampMs: scan.lastTimestampMs,
     cwd: nonEmpty(scan.cwd),
     gitBranch: scan.gitBranch,
+    rootUuid: scan.rootUuid,
   };
 };
 
@@ -310,6 +315,7 @@ export const listSessions = async (
       sizeBytes: facts.sizeBytes,
       cwd: meta.cwd,
       gitBranch: meta.gitBranch,
+      rootUuid: meta.rootUuid,
     });
   }
 

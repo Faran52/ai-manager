@@ -4,13 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { BarChart3, CircleAlert } from 'lucide-react';
 
 import { EmptyState, Spinner } from '@ui/index';
-import { BoardPanels } from '@features/board';
 
 import { AnalyticsReport, AnalyticsToolbar } from './partials';
 
 import type { AgentId } from '@config/agents';
 import type { AsyncResource } from '@features/history-data';
-import type { EditedFile, FileEdit } from '@services/edits/editsService';
 import type { SessionSummary } from '@services/history/historyService';
 import type {
   GlobalStats,
@@ -20,8 +18,6 @@ import type {
 import type { StorageReport } from '@services/storage/storageService';
 import type { FC } from 'react';
 import type { Scope } from './hooks/useAnalyticsScope';
-
-export type AnalyticsPanelName = 'report' | 'sessions' | 'edits';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -37,17 +33,9 @@ export interface AnalyticsViewProps {
   readonly scope: Scope;
   readonly onScopeChange: (scope: Scope) => void;
   readonly projectAgent?: AgentId | undefined;
-  readonly projectPath?: string | undefined;
   readonly onOpenSession: (session: SessionTokenTotals) => void;
-  // The board, now that it is one of these panels rather than a view of its own.
+  // Named in the report's own panels, so it stays even now the board has left.
   readonly sessions: readonly SessionSummary[];
-  readonly sessionsStatus: LoadState;
-  readonly edits: AsyncResource<readonly EditedFile[]>;
-  readonly nowMs: number;
-  readonly panel: AnalyticsPanelName;
-  readonly onPanelChange: (panel: AnalyticsPanelName) => void;
-  readonly onOpenBoardSession: (session: SessionSummary) => void;
-  readonly onOpenEdit: (edit: FileEdit) => void;
 }
 
 interface GlobalStatsResponse {
@@ -114,16 +102,8 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
   scope,
   onScopeChange,
   projectAgent,
-  projectPath,
   onOpenSession,
   sessions,
-  sessionsStatus,
-  edits,
-  nowMs,
-  panel,
-  onPanelChange,
-  onOpenBoardSession,
-  onOpenEdit,
 }) => {
   const global = useGlobalStats();
   const { t } = useTranslation('analytics');
@@ -134,31 +114,11 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
 
   const scopeSwitch = (
     <AnalyticsToolbar
-      panel={panel}
-      onPanelChange={onPanelChange}
       scope={effectiveScope}
       onScopeChange={onScopeChange}
       projectName={projectName}
     />
   );
-
-  if (panel !== 'report') {
-    return (
-      <div className="min-h-0 flex-1 overflow-y-auto" data-analytics-view>
-        {scopeSwitch}
-        <BoardPanels
-          panel={panel}
-          project={effectiveScope === 'project' ? projectPath : undefined}
-          sessions={sessions}
-          sessionsStatus={sessionsStatus}
-          edits={edits}
-          nowMs={nowMs}
-          onOpenSession={onOpenBoardSession}
-          onOpenEdit={onOpenEdit}
-        />
-      </div>
-    );
-  }
 
   if (selectedStatus === 'loading') {
     return (

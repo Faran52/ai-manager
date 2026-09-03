@@ -66,6 +66,5 @@
   "sessions": "会话",
   "bulkArchiveNote": "所选会话",
   "threadParts_one": "{{count}} 个片段",
-  "threadParts_other": "{{count}} 个片段",
-  "threadContinues": "续接"
+  "threadParts_other": "{{count}} 个片段"
 }

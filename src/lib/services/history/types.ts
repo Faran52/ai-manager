@@ -225,4 +225,10 @@ export interface SessionSummary {
   readonly sizeBytes: number;
   readonly cwd?: string | undefined;
   readonly gitBranch?: string | undefined;
+  /*
+   * The uuid of the transcript's first message. Rewinding a session records the
+   * messages up to that point again in a fresh file, so two transcripts sharing
+   * a root are two recordings of one conversation rather than two conversations.
+   */
+  readonly rootUuid?: string | undefined;
 }

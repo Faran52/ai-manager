@@ -7,6 +7,8 @@ export const ASSISTANT_MARKER = '"type":"assistant"';
 export const SIDECHAIN_MARKER = '"isSidechain":true';
 export const CWD_PREFIX = '"cwd":"';
 export const BRANCH_PREFIX = '"gitBranch":"';
+// The leading quote keeps this off `"parentUuid":"` and `"leafUuid":"`.
+export const UUID_PREFIX = '"uuid":"';
 export const JSONL_SUFFIX = '.jsonl';
 
 /**

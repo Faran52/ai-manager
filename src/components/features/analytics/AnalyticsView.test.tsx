@@ -15,10 +15,8 @@ import {
 import { AnalyticsView } from './AnalyticsView';
 
 import type { AsyncResource } from '@features/history-data';
-import type { EditedFile } from '@services/edits/editsService';
 import type { GlobalStats, ProjectStats } from '@services/stats/statsService';
 import type { StorageReport } from '@services/storage/storageService';
-import type { AnalyticsViewProps } from './AnalyticsView';
 
 const stats: ProjectStats = {
   projectId: 'p',
@@ -142,33 +140,6 @@ const noop = (): void => {
   return undefined;
 };
 
-const editsResource = {
-  status: 'ready',
-  data: [],
-  reload: noop,
-} satisfies AsyncResource<readonly EditedFile[]>;
-
-const boardProps = {
-  sessions: [],
-  sessionsStatus: 'ready',
-  edits: editsResource,
-  nowMs: Date.UTC(2026, 0, 3),
-  panel: 'report',
-  onPanelChange: noop,
-  onOpenBoardSession: noop,
-  onOpenEdit: noop,
-} satisfies Pick<
-  AnalyticsViewProps,
-  'sessions'
-  | 'sessionsStatus'
-  | 'edits'
-  | 'nowMs'
-  | 'panel'
-  | 'onPanelChange'
-  | 'onOpenBoardSession'
-  | 'onOpenEdit'
->;
-
 const renderView = (
   projectStats: ProjectStats | null = stats,
   status: 'loading' | 'ready' | 'error' = 'ready',
@@ -178,7 +149,7 @@ const renderView = (
 ) => {
   const view = render(
     <AnalyticsView
-      {...boardProps}
+      sessions={[]}
       stats={projectStats}
       storage={storageResource}
       status={status}
@@ -233,7 +204,7 @@ test('shows project loading and empty states', async () => {
 
   view.rerender(
     <AnalyticsView
-      {...boardProps}
+      sessions={[]}
       stats={null}
       storage={storageResource}
       status="ready"

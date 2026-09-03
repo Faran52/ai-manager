@@ -26,7 +26,6 @@ import {
 } from '@services/archive/archiveService';
 import { listRecentEdits } from '@services/edits/editsService';
 import { readFileHistory, readVersionDiff } from '@services/file-history/fileHistoryService';
-import { readPromptHistory } from '@services/prompts/promptsService';
 import {
   dueForArchive,
   readRetentionPolicy,
@@ -549,12 +548,6 @@ export const handleFileHistory = async (
         ? null
         : await readVersionDiff(body.sessionId, body.path, wanted, deps?.home) ?? null,
     });
-  });
-};
-
-export const handlePromptHistory = (deps?: EndpointDeps): Promise<Response> => {
-  return withJsonErrors(async () => {
-    return jsonOk(await readPromptHistory(deps?.home));
   });
 };
 

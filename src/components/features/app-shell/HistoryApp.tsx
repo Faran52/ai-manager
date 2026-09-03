@@ -33,13 +33,13 @@ import { AgentSetupPanel, usePluginToggle } from '@features/agent-setup';
 import { AnalyticsView, useAnalyticsScope } from '@features/analytics';
 import { AppHeader } from '@features/app-header';
 import { ArchiveView } from '@features/archive';
+import { BoardPanels } from '@features/board';
 import {
   useAgentSetup,
   useArchives,
   useNewestSessions,
   useProjects,
   useProjectStats,
-  usePrompts,
   useRecentEdits,
   useRetention,
   useSearch,
@@ -47,7 +47,6 @@ import {
   useSettings,
   useStorage,
 } from '@features/history-data';
-import { PromptHistoryPanel } from '@features/prompts';
 import { SearchDialog } from '@features/search';
 import { SessionViewer } from '@features/session-viewer';
 import { SettingsView } from '@features/settings';
@@ -59,7 +58,6 @@ import { ShortcutsDialog } from './partials';
 
 import type { AgentId } from '@config/agents';
 import type { ShortcutSpec } from '@config/shortcuts';
-import type { AnalyticsPanelName } from '@features/analytics';
 import type { AppView } from '@features/app-header';
 import type { ArchivedSession } from '@services/archive/archiveService';
 import type { FileEdit } from '@services/edits/editsService';
@@ -68,7 +66,12 @@ import type { SearchHit } from '@services/search/searchService';
 import type { SessionTokenTotals } from '@services/stats/statsService';
 import type { FC, ReactNode } from 'react';
 
-type SessionsPanel = 'sessions' | 'prompts';
+/*
+ * A session browser, a transcript and that session's file edits are three
+ * readings of one thing, so they live together here rather than half of them
+ * under Analytics, which only reports.
+ */
+type SessionsPanel = 'transcript' | 'grid' | 'edits';
 
 const EMPTY_PROJECTS: readonly ProjectSummary[] = [];
 const MIN_SIDEBAR_WIDTH = 280;
@@ -85,7 +88,13 @@ const initialSidebarWidth = (): number => {
 
 initI18n();
 
-const SESSION_PANELS: readonly SessionsPanel[] = ['sessions', 'prompts'];
+const SESSION_PANELS: readonly SessionsPanel[] = ['transcript', 'grid', 'edits'];
+
+const SESSION_PANEL_LABELS: Record<SessionsPanel, string> = {
+  transcript: 'navTranscript',
+  grid: 'navBoard',
+  edits: 'navEdits',
+};
 
 export const HistoryApp: FC = () => {
   const { t } = useTranslation('sidebar');
@@ -95,8 +104,7 @@ export const HistoryApp: FC = () => {
   const [selectedProject, setSelectedProject] = useState<ProjectSummary | null>(null);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const [view, setView] = useState<AppView>('analytics');
-  const [sessionsPanel, setSessionsPanel] = useState<SessionsPanel>('sessions');
-  const [analyticsPanel, setAnalyticsPanel] = useState<AnalyticsPanelName>('report');
+  const [sessionsPanel, setSessionsPanel] = useState<SessionsPanel>('transcript');
   const projectKey = selectedProject == null
     ? ''
     : `${selectedProject.agent}:${selectedProject.id}`;
@@ -110,19 +118,18 @@ export const HistoryApp: FC = () => {
   const [nowMs] = useState(() => {
     return Date.now();
   });
-  const sessions = useSessions(selectedProject, view === 'sessions' && selectedFilePath != null);
+  const sessions = useSessions(selectedProject, view === 'sessions');
   const stats = useProjectStats(view === 'analytics' ? selectedProject : null);
   const projectPath = selectedProject?.actualPath ?? '';
   const agentSetup = useAgentSetup(view === 'health' ? projectPath : '');
   const togglePlugin = usePluginToggle(projectPath, agentSetup.reload);
   const archives = useArchives(view === 'archive');
-  const prompts = usePrompts(view === 'sessions' && sessionsPanel === 'prompts');
   const retention = useRetention(view === 'archive');
   const storage = useStorage(view === 'analytics');
   const settings = useSettings(view === 'settings' ? projectPath : null);
-  const boardScope = view === 'analytics' && analyticsPanel !== 'report';
-  const edits = useRecentEdits(analyticsScope === 'project' ? selectedProject : null, boardScope);
-  const newestSessions = useNewestSessions(boardScope && analyticsScope === 'global');
+  const boardScope = view === 'sessions' && sessionsPanel !== 'transcript';
+  const edits = useRecentEdits(selectedProject, boardScope);
+  const newestSessions = useNewestSessions(boardScope && selectedProject == null);
   const sessionCounts = useMemo(() => {
     const path = selectedProject?.actualPath;
 
@@ -136,6 +143,7 @@ export const HistoryApp: FC = () => {
     }, {});
   }, [projects.data, selectedProject]);
   const search = useSearch();
+  const sessionList = sessions.data ?? [];
   const theme = useTheme();
   const visibleProjects = projects.data ?? EMPTY_PROJECTS;
   const reloadProjects = projects.reload;
@@ -205,7 +213,6 @@ export const HistoryApp: FC = () => {
       }],
       [appShortcuts.viewAnalytics, () => {
         setView('analytics');
-        setAnalyticsPanel('report');
       }],
       [appShortcuts.viewHealth, () => {
         setView('health');
@@ -217,8 +224,8 @@ export const HistoryApp: FC = () => {
         setView('settings');
       }],
       [appShortcuts.viewBoard, () => {
-        setView('analytics');
-        setAnalyticsPanel('sessions');
+        setView('sessions');
+        setSessionsPanel('grid');
       }],
       [appShortcuts.reload, reloadProjects],
     ];
@@ -258,7 +265,7 @@ export const HistoryApp: FC = () => {
    */
   const showSession = useCallback(() => {
     setView('sessions');
-    setSessionsPanel('sessions');
+    setSessionsPanel('transcript');
   }, []);
 
   const selectSession = useCallback((session: SessionSummary) => {
@@ -330,15 +337,6 @@ export const HistoryApp: FC = () => {
     setHighlightTimestamp(undefined);
   }, [showSession]);
 
-  // The panel only offers a prompt whose transcript survives, so the path resolves.
-  const openPromptSession = useCallback((filePath: string, timestampMs: number) => {
-    showSession();
-    setSelectedProject(null);
-    setArchivedSession(null);
-    setSelectedFilePath(filePath);
-    setHighlightTimestamp(new Date(timestampMs).toISOString());
-  }, [showSession]);
-
   const openEditedSession = useCallback((edit: FileEdit) => {
     setSelectedFilePath(edit.sessionFilePath);
     setArchivedSession(null);
@@ -375,29 +373,14 @@ export const HistoryApp: FC = () => {
                   setSessionsPanel(name);
                 }}
               >
-                {tCommon(name === 'sessions' ? 'navSessions' : 'navPrompts')}
+                {tCommon(SESSION_PANEL_LABELS[name])}
               </Button>
             );
           })}
         </nav>
 
-        {sessionsPanel === 'prompts'
+        {sessionsPanel === 'transcript'
           ? (
-              <div className="min-h-0 flex-1 overflow-y-auto p-4">
-                <div className="mx-auto max-w-4xl">
-                  <PromptHistoryPanel
-                    history={prompts}
-                    nowMs={nowMs}
-                    projectPath={selectedProject?.actualPath}
-                    sessionId={selectedSession?.agent === 'claude'
-                      ? selectedSession.actualSessionId
-                      : undefined}
-                    onOpenPrompt={openPromptSession}
-                  />
-                </div>
-              </div>
-            )
-          : (
               <SessionViewer
                 filePath={selectedFilePath}
                 agent={archivedSession?.agent
@@ -413,6 +396,27 @@ export const HistoryApp: FC = () => {
                 highlightTimestamp={highlightTimestamp}
                 sourceModifiedMs={selectedSession?.modifiedMs ?? 0}
               />
+            )
+          : (
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <BoardPanels
+                  panel={sessionsPanel}
+                  project={selectedProject?.actualPath}
+                  sessionFilePath={sessionsPanel === 'edits'
+                    ? selectedFilePath ?? undefined
+                    : undefined}
+                  sessions={selectedProject == null
+                    ? newestSessions.data ?? []
+                    : sessionList}
+                  sessionsStatus={selectedProject == null
+                    ? newestSessions.status
+                    : sessions.status}
+                  edits={edits}
+                  nowMs={nowMs}
+                  onOpenSession={selectSession}
+                  onOpenEdit={openEditedSession}
+                />
+              </div>
             )}
       </div>
     ),
@@ -425,15 +429,7 @@ export const HistoryApp: FC = () => {
         scope={analyticsScope}
         onScopeChange={setAnalyticsScope}
         projectAgent={selectedProject?.agent}
-        projectPath={selectedProject?.actualPath}
-        sessions={analyticsScope === 'global' ? newestSessions.data ?? [] : sessions.data ?? []}
-        sessionsStatus={analyticsScope === 'global' ? newestSessions.status : sessions.status}
-        edits={edits}
-        nowMs={nowMs}
-        panel={analyticsPanel}
-        onPanelChange={setAnalyticsPanel}
-        onOpenBoardSession={selectSession}
-        onOpenEdit={openEditedSession}
+        sessions={analyticsScope === 'global' ? newestSessions.data ?? [] : sessionList}
         onOpenSession={openStatsSession}
       />
     ),
@@ -494,7 +490,7 @@ export const HistoryApp: FC = () => {
               projects={visibleProjects}
               projectsStatus={projects.status}
               selectedProject={selectedProject}
-              sessions={sessions.data ?? []}
+              sessions={sessionList}
               sessionsStatus={sessions.status}
               selectedFilePath={selectedFilePath}
               nowMs={nowMs}

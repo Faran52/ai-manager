@@ -253,6 +253,41 @@ describe('SearchDialog grouping and phases', () => {
     expect(screen.getAllByText('system').length).toBeGreaterThan(0);
   });
 
+  test('narrows the results to what the person typed', async () => {
+    const search: SearchController = {
+      phase: 'ready',
+      query: 'needle',
+      outcome: {
+        hits: [hit(), hit({ role: 'assistant' })],
+        truncated: false,
+      },
+      error: undefined,
+      run: vi.fn(),
+    };
+
+    render(
+      <SearchDialog
+        open
+        onClose={() => {
+          return undefined;
+        }}
+        search={search}
+        projectNames={names}
+        onJump={() => {
+          return undefined;
+        }}
+      />,
+    );
+    await userEvent.type(screen.getByLabelText('Search history'), 'ne');
+
+    expect(await screen.findAllByText('needle')).toHaveLength(2);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Prompts only' }));
+
+    expect(screen.getAllByText('needle')).toHaveLength(1);
+    expect(screen.queryByText('assistant')).toBeNull();
+  });
+
   test('shows the searching state while a query is pending', async () => {
     const search: SearchController = {
       phase: 'loading',

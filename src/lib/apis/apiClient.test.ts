@@ -16,7 +16,6 @@ import {
   fetchMessages,
   fetchPluginCosts,
   fetchProjects,
-  fetchPrompts,
   fetchRecentEdits,
   fetchRetentionStatus,
   fetchSearch,
@@ -431,28 +430,6 @@ describe('recent edits endpoint', () => {
       agent: 'claude',
       projectId: 'p',
     })).rejects.toThrow('unexpected shape');
-  });
-});
-
-describe('prompt history endpoint', () => {
-  test('returns the recorded prompts', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => {
-      return jsonResponse({
-        prompts: [{ text: 'q' }],
-        projects: [],
-        total: 1,
-      });
-    }));
-
-    await expect(fetchPrompts()).resolves.toMatchObject({ total: 1 });
-  });
-
-  test('rejects a response of the wrong shape', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => {
-      return jsonResponse({ prompts: 'many' });
-    }));
-
-    await expect(fetchPrompts()).rejects.toThrow('unexpected shape');
   });
 });
 

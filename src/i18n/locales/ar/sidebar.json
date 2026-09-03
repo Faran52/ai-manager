@@ -94,6 +94,5 @@
   "threadParts_two": "جزآن",
   "threadParts_few": "{{count}} أجزاء",
   "threadParts_many": "{{count}} جزءًا",
-  "threadParts_other": "{{count}} جزء",
-  "threadContinues": "تكملة"
+  "threadParts_other": "{{count}} جزء"
 }

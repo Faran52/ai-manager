@@ -68,6 +68,8 @@
   "typeTwoCharacters": "اكتب حرفين على الأقل.",
   "languageSystem": "لغة النظام",
   "languageSystemNamed": "لغة النظام ({{language}})",
-  "navPrompts": "الطلبات",
-  "sessionsPanels": "لوحات الجلسة"
+  "sessionsPanels": "لوحات الجلسة",
+  "promptsOnly": "المطالبات فقط",
+  "navTranscript": "النص",
+  "navEdits": "تعديلات الملفات"
 }

@@ -18,6 +18,7 @@ import {
   ATTRIBUTE_LABELS,
   boardAttributes,
   buildBoardModel,
+  editsInSession,
 } from './utils/boardUtils';
 
 import type { AsyncResource } from '@features/history-data';
@@ -27,9 +28,11 @@ import type { FC } from 'react';
 import type { BoardAttribute } from './utils/boardUtils';
 
 export interface BoardPanelsProps {
-  readonly panel: 'sessions' | 'edits';
+  readonly panel: 'grid' | 'edits';
   // Absent means every project at once, which is what the whole-machine scope asks for.
   readonly project?: string | undefined;
+  // Set while a transcript is open, which narrows the edits to that one session.
+  readonly sessionFilePath?: string | undefined;
   readonly sessions: readonly SessionSummary[];
   readonly sessionsStatus: 'loading' | 'ready' | 'error';
   readonly edits: AsyncResource<readonly EditedFile[]>;
@@ -41,6 +44,7 @@ export interface BoardPanelsProps {
 export const BoardPanels: FC<BoardPanelsProps> = ({
   panel,
   project,
+  sessionFilePath,
   sessions,
   sessionsStatus,
   edits,
@@ -53,14 +57,13 @@ export const BoardPanels: FC<BoardPanelsProps> = ({
   const model = useMemo(() => {
     return buildBoardModel(sessions, attribute, nowMs);
   }, [attribute, nowMs, sessions]);
-  const files = edits.data ?? [];
+  const files = editsInSession(edits.data ?? [], sessionFilePath);
 
   return (
     <div className="grid gap-4 p-4" data-board-view>
-      <p className="text-sm text-muted-foreground">{t('intro')}</p>
-
-      {panel === 'sessions' && (
+      {panel === 'grid' && (
         <div className="grid gap-4 rounded-xl border border-border bg-card p-4">
+          <p className="text-sm text-muted-foreground">{t('intro')}</p>
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="me-1 text-xs text-muted-foreground">{t('colourBy')}</span>
             {boardAttributes.map((name) => {

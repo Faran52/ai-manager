@@ -42,63 +42,40 @@ const shapeOf = (sessions: readonly SessionSummary[]): readonly (readonly string
 };
 
 describe('buildSessionThreads', () => {
-  test('joins a session that picks up where the last one stopped', () => {
+  test('joins the transcripts that recorded one rewound conversation', () => {
     expect(shapeOf([
-      session('a', START, START + 30 * MINUTE),
-      session('b', START + 31 * MINUTE, START + 60 * MINUTE),
-    ])).toEqual([['a', 'b']]);
+      session('full', START, START + 30 * MINUTE, {
+        rootUuid: 'root-1',
+        messageCount: 40,
+      }),
+      session('rewound', START, START + 10 * MINUTE, {
+        rootUuid: 'root-1',
+        messageCount: 12,
+      }),
+    ])).toEqual([['full', 'rewound']]);
   });
 
-  test('chains a run of resumed sessions into one thread', () => {
+  test('leaves apart work that merely followed on the clock', () => {
+    expect(shapeOf([
+      session('a', START, START + 10 * MINUTE, { rootUuid: 'root-1' }),
+      session('b', START + 11 * MINUTE, START + 20 * MINUTE, { rootUuid: 'root-2' }),
+    ])).toEqual([['b'], ['a']]);
+  });
+
+  test('stands a transcript that records no root on its own', () => {
     expect(shapeOf([
       session('a', START, START + 10 * MINUTE),
       session('b', START + 11 * MINUTE, START + 20 * MINUTE),
-      session('c', START + 21 * MINUTE, START + 30 * MINUTE),
-    ])).toEqual([['a', 'b', 'c']]);
-  });
-
-  test('leaves apart work that merely happened later', () => {
-    expect(shapeOf([
-      session('a', START, START + 10 * MINUTE),
-      session('b', START + 90 * MINUTE, START + 100 * MINUTE),
     ])).toEqual([['b'], ['a']]);
   });
 
-  test('refuses to join sessions from different directories', () => {
+  test('refuses to join transcripts that different agents rooted alike', () => {
     expect(shapeOf([
-      session('a', START, START + 10 * MINUTE),
-      session('b', START + 11 * MINUTE, START + 20 * MINUTE, { cwd: '/repo/other' }),
-    ])).toEqual([['b'], ['a']]);
-  });
-
-  test('treats a missing directory as no evidence rather than agreement', () => {
-    expect(shapeOf([
-      session('a', START, START + 10 * MINUTE, { cwd: undefined }),
-      session('b', START + 11 * MINUTE, START + 20 * MINUTE, { cwd: undefined }),
-    ])).toEqual([['b'], ['a']]);
-
-    expect(shapeOf([
-      session('a', START, START + 10 * MINUTE),
-      session('b', START + 11 * MINUTE, START + 20 * MINUTE, { cwd: undefined }),
-    ])).toEqual([['b'], ['a']]);
-  });
-
-  test('refuses to join sessions from different agents or projects', () => {
-    expect(shapeOf([
-      session('a', START, START + 10 * MINUTE),
-      session('b', START + 11 * MINUTE, START + 20 * MINUTE, { agent: 'codex' }),
-    ])).toEqual([['b'], ['a']]);
-
-    expect(shapeOf([
-      session('a', START, START + 10 * MINUTE),
-      session('b', START + 11 * MINUTE, START + 20 * MINUTE, { projectId: 'other' }),
-    ])).toEqual([['b'], ['a']]);
-  });
-
-  test('refuses to join a session that started before the last one ended', () => {
-    expect(shapeOf([
-      session('a', START, START + 30 * MINUTE),
-      session('b', START + 5 * MINUTE, START + 40 * MINUTE),
+      session('a', START, START + 10 * MINUTE, { rootUuid: 'root-1' }),
+      session('b', START + 11 * MINUTE, START + 20 * MINUTE, {
+        rootUuid: 'root-1',
+        agent: 'codex',
+      }),
     ])).toEqual([['b'], ['a']]);
   });
 
@@ -113,17 +90,23 @@ describe('buildSessionThreads', () => {
     })).toEqual(['recent', 'old']);
   });
 
-  test('totals the messages and the span of a joined thread', () => {
+  test('counts the fullest part rather than the sum, and spans them all', () => {
     const [thread] = buildSessionThreads([
-      session('a', START, START + 10 * MINUTE, { messageCount: 12 }),
-      session('b', START + 11 * MINUTE, START + 20 * MINUTE, { messageCount: 30 }),
+      session('rewound', START, START + 10 * MINUTE, {
+        rootUuid: 'root-1',
+        messageCount: 12,
+      }),
+      session('full', START, START + 20 * MINUTE, {
+        rootUuid: 'root-1',
+        messageCount: 30,
+      }),
     ]);
 
-    expect(thread?.messageCount).toBe(42);
-    expect(thread?.head.id).toBe('a');
+    expect(thread?.messageCount).toBe(30);
+    expect(thread?.head.id).toBe('full');
     expect(thread?.firstTimestampMs).toBe(START);
     expect(thread?.lastTimestampMs).toBe(START + 20 * MINUTE);
-    expect(thread?.key).toBe('/sessions/a.jsonl');
+    expect(thread?.key).toBe('claude:root-1');
   });
 
   test('returns nothing for a project with no sessions', () => {

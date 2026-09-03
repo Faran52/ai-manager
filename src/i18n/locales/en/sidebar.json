@@ -66,6 +66,5 @@
   "sessions": "Sessions",
   "bulkArchiveNote": "Selected sessions",
   "threadParts_one": "{{count}} part",
-  "threadParts_other": "{{count}} parts",
-  "threadContinues": "continued"
+  "threadParts_other": "{{count}} parts"
 }

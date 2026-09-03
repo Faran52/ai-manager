@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Search as SearchIcon } from 'lucide-react';
 
-import { Modal } from '@ui/index';
+import { Button, Modal } from '@ui/index';
 
 import { groupBySession } from './utils/hitGroupUtils';
 
@@ -32,6 +32,7 @@ export const SearchDialog: FC<SearchDialogProps> = ({
 }) => {
   const { t } = useTranslation('common');
   const [term, setTerm] = useState('');
+  const [promptsOnly, setPromptsOnly] = useState(false);
   const [prevOpen, setPrevOpen] = useState(open);
   const debounceRef = useRef<number | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -69,7 +70,14 @@ export const SearchDialog: FC<SearchDialogProps> = ({
     };
   }, [runSearch, term]);
 
-  const groups = search.phase === 'ready' ? groupBySession(search.outcome?.hits ?? []) : [];
+  /*
+   * A prompt history is a search over what the person typed, so it is this
+   * filter rather than a panel of its own listing every prompt ever sent.
+   */
+  const hits = (search.outcome?.hits ?? []).filter((hit) => {
+    return !promptsOnly || hit.role === 'user';
+  });
+  const groups = search.phase === 'ready' ? groupBySession(hits) : [];
   const hasQuery = term.trim().length >= 2;
 
   return (
@@ -94,6 +102,18 @@ export const SearchDialog: FC<SearchDialogProps> = ({
               placeholder:text-muted-foreground
             "
           />
+          <Button
+            size="sm"
+            variant={promptsOnly ? 'primary' : 'ghost'}
+            pressed={promptsOnly}
+            onClick={() => {
+              setPromptsOnly((value) => {
+                return !value;
+              });
+            }}
+          >
+            {t('promptsOnly')}
+          </Button>
         </div>
       </div>
 

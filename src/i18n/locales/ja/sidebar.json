@@ -66,6 +66,5 @@
   "sessions": "セッション",
   "bulkArchiveNote": "選択したセッション",
   "threadParts_one": "{{count}} 個のパート",
-  "threadParts_other": "{{count}} 個のパート",
-  "threadContinues": "続き"
+  "threadParts_other": "{{count}} 個のパート"
 }

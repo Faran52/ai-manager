@@ -68,6 +68,8 @@
   "typeTwoCharacters": "請至少輸入兩個字元。",
   "languageSystem": "跟隨系統",
   "languageSystemNamed": "跟隨系統（{{language}}）",
-  "navPrompts": "提示詞",
-  "sessionsPanels": "工作階段面板"
+  "sessionsPanels": "工作階段面板",
+  "promptsOnly": "僅提示詞",
+  "navTranscript": "對話記錄",
+  "navEdits": "檔案修改"
 }

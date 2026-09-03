@@ -68,6 +68,8 @@
   "typeTwoCharacters": "Type at least two characters.",
   "languageSystem": "System",
   "languageSystemNamed": "System ({{language}})",
-  "navPrompts": "Prompts",
-  "sessionsPanels": "Session panels"
+  "sessionsPanels": "Session panels",
+  "promptsOnly": "Prompts only",
+  "navTranscript": "Transcript",
+  "navEdits": "File edits"
 }

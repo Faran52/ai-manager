@@ -2,7 +2,7 @@ import type { SessionSummary } from '@services/history/historyService';
 
 export interface SessionThread {
   readonly key: string;
-  // Oldest first, so the parts read in the order they were written.
+  // Fullest first, because a shorter part is a prefix of a longer one.
   readonly parts: readonly SessionSummary[];
   readonly head: SessionSummary;
   readonly messageCount: number;
@@ -11,72 +11,72 @@ export interface SessionThread {
 }
 
 interface Run {
-  readonly head: SessionSummary;
+  head: SessionSummary;
   readonly parts: SessionSummary[];
 }
 
 /**
- * Resuming a session, and compacting one, both start a fresh transcript that
- * carries on where the last stopped. The tell is the seam: the next file begins
- * within a couple of minutes of the previous one ending, in the same working
- * directory. A wider window would start roping in genuinely separate work that
- * happened to follow, which reads worse than leaving the parts apart.
+ * Rewinding a session writes the messages up to that point into a fresh file,
+ * so one conversation ends up as several transcripts that all begin with the
+ * same first message. That shared root is the only recorded link between them:
+ * no transcript on disk carries a parent pointer into another file, and the
+ * `leafUuid` on a `last-prompt` record bookmarks a prompt rather than a file.
+ *
+ * A transcript that records no root stands alone. Grouping by a clock gap
+ * instead fired on seven pairs in one project here and was wrong on every one
+ * of them, so there is no fallback guess.
  */
-const CONTINUATION_GAP_MS = 2 * 60 * 1000;
-
-const continues = (previous: SessionSummary, next: SessionSummary): boolean => {
-  if (previous.agent !== next.agent || previous.projectId !== next.projectId) {
-    return false;
-  }
-
-  // A missing cwd on either side is no evidence, so it cannot be used as agreement.
-  if (previous.cwd == null || next.cwd == null || previous.cwd !== next.cwd) {
-    return false;
-  }
-
-  const gap = next.firstTimestampMs - previous.lastTimestampMs;
-
-  return gap >= 0 && gap <= CONTINUATION_GAP_MS;
+const groupKey = (session: SessionSummary): string => {
+  return session.rootUuid == null
+    ? `file:${session.filePath}`
+    : `${session.agent}:${session.rootUuid}`;
 };
 
-const threadFrom = ({ head, parts }: Run): SessionThread => {
+// Parts overlap, so the fullest part is the thread's message count, not their sum.
+const threadFrom = (key: string, run: Run): SessionThread => {
   return {
-    key: head.filePath,
-    parts,
-    head,
-    messageCount: parts.reduce((total, part) => {
-      return total + part.messageCount;
-    }, 0),
-    firstTimestampMs: head.firstTimestampMs,
-    lastTimestampMs: parts.reduce((latest, part) => {
-      return Math.max(latest, part.lastTimestampMs);
-    }, 0),
+    key,
+    parts: [...run.parts].sort((left, right) => {
+      return right.messageCount - left.messageCount;
+    }),
+    head: run.head,
+    messageCount: run.head.messageCount,
+    firstTimestampMs: Math.min(...run.parts.map((part) => {
+      return part.firstTimestampMs;
+    })),
+    lastTimestampMs: Math.max(...run.parts.map((part) => {
+      return part.lastTimestampMs;
+    })),
   };
 };
 
 // Groups a project's sessions into the conversations they actually were, then
 // orders the threads the way the flat list was ordered: most recent first.
 export const buildSessionThreads = (sessions: readonly SessionSummary[]): readonly SessionThread[] => {
-  const chronological = [...sessions].sort((left, right) => {
-    return left.firstTimestampMs - right.firstTimestampMs;
-  });
-  const runs: Run[] = [];
+  const runs = new Map<string, Run>();
 
-  for (const session of chronological) {
-    const previous = runs.at(-1)?.parts.at(-1);
+  for (const session of sessions) {
+    const key = groupKey(session);
+    const run = runs.get(key);
 
-    if (previous == null || !continues(previous, session)) {
-      runs.push({
+    if (run == null) {
+      runs.set(key, {
         head: session,
         parts: [session],
       });
       continue;
     }
 
-    runs.at(-1)?.parts.push(session);
+    run.parts.push(session);
+
+    if (session.messageCount > run.head.messageCount) {
+      run.head = session;
+    }
   }
 
-  return runs.map(threadFrom).sort((left, right) => {
+  return [...runs].map(([key, run]) => {
+    return threadFrom(key, run);
+  }).sort((left, right) => {
     return right.lastTimestampMs - left.lastTimestampMs;
   });
 };

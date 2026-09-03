@@ -68,6 +68,8 @@
   "typeTwoCharacters": "두 글자 이상 입력하세요.",
   "languageSystem": "시스템 설정",
   "languageSystemNamed": "시스템({{language}})",
-  "navPrompts": "프롬프트",
-  "sessionsPanels": "세션 패널"
+  "sessionsPanels": "세션 패널",
+  "promptsOnly": "프롬프트만",
+  "navTranscript": "기록",
+  "navEdits": "파일 편집"
 }

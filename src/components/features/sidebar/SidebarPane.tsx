@@ -575,7 +575,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                   "
                   >
                     <span>{formatTimeAgo(session.lastTimestampMs, nowMs, i18n.language)}</span>
-                    {row.continuation && <span>{t('threadContinues')}</span>}
+                    <span>{t('messageCount', { count: row.messageCount })}</span>
                   </span>
                 </button>
               </li>

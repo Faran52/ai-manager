@@ -68,6 +68,8 @@
   "typeTwoCharacters": "2 文字以上入力してください。",
   "languageSystem": "システムに合わせる",
   "languageSystemNamed": "システム（{{language}}）",
-  "navPrompts": "プロンプト",
-  "sessionsPanels": "セッションのパネル"
+  "sessionsPanels": "セッションのパネル",
+  "promptsOnly": "プロンプトのみ",
+  "navTranscript": "トランスクリプト",
+  "navEdits": "ファイル編集"
 }
