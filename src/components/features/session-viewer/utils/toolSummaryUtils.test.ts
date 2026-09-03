@@ -199,6 +199,14 @@ test('prefers an agent type over a description, and falls back to neither', () =
   expect(toolSummary(call('Task', { kind: 'task' })).detail).toBe('');
 });
 
+test('details a skill by the name it ran under', () => {
+  expect(toolSummary(call('Skill', {
+    kind: 'skill',
+    skill: 'code-review',
+  })).detail).toBe('code-review');
+  expect(toolSummary(call('Skill', { kind: 'skill' })).detail).toBe('');
+});
+
 test('counts todos and leaves a generic tool undetailed', () => {
   expect(toolSummary(call('TodoWrite', {
     kind: 'todo-write',

@@ -58,6 +58,14 @@ const stats: ProjectStats = {
     tool: 'Bash',
     count: 9,
   }],
+  skills: [{
+    tool: 'code-review',
+    count: 4,
+  }],
+  subagents: [{
+    tool: 'Explore',
+    count: 2,
+  }],
   activity: [],
   topSessions: [{
     filePath: '/a.jsonl',

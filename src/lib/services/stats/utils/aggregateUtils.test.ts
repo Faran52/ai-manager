@@ -16,6 +16,7 @@ import type {
   HistoryEntry,
   SessionSummary,
   TokenUsage,
+  ToolCall,
 } from '../../history/types';
 import type { SessionAggregate } from './aggregateUtils';
 
@@ -51,6 +52,34 @@ const user = (timestamp = '2026-07-01T09:00:00.000Z'): HistoryEntry => {
     text: 'hello',
     outcomes: [],
   };
+};
+
+const namedBlock = (
+  name: string,
+  input: ToolCall['input'],
+): AssistantTurnEntry['blocks'][number] => {
+  return {
+    blockType: 'tool-use',
+    call: {
+      id: `t-${name}-${JSON.stringify(input)}`,
+      name,
+      input,
+    },
+  };
+};
+
+const skillBlock = (skill?: string): AssistantTurnEntry['blocks'][number] => {
+  return namedBlock('Skill', {
+    kind: 'skill',
+    skill,
+  });
+};
+
+const taskBlock = (agentType?: string): AssistantTurnEntry['blocks'][number] => {
+  return namedBlock('Task', {
+    kind: 'task',
+    agentType,
+  });
 };
 
 const toolBlock = (name: string): AssistantTurnEntry['blocks'][number] => {
@@ -113,6 +142,45 @@ describe('aggregateSession', () => {
       outputTokens: 20,
       costUsd: 0.5,
     }]);
+  });
+
+  test('breaks skills and subagents out by the name each ran under', () => {
+    const aggregate = aggregateSession([assistant({
+      blocks: [
+        skillBlock('code-review'),
+        skillBlock('code-review'),
+        skillBlock('ponytail'),
+        taskBlock('Explore'),
+        taskBlock('general-purpose'),
+      ],
+    })], true);
+
+    // The tool list still counts the calls; the names are what it cannot say.
+    expect(aggregate.tools).toEqual({
+      Skill: 3,
+      Task: 2,
+    });
+    expect(aggregate.skills).toEqual({
+      'code-review': 2,
+      'ponytail': 1,
+    });
+    expect(aggregate.subagents).toEqual({
+      'Explore': 1,
+      'general-purpose': 1,
+    });
+  });
+
+  test('counts a nameless skill or subagent as a call and nothing more', () => {
+    const aggregate = aggregateSession([assistant({
+      blocks: [skillBlock(), taskBlock()],
+    })], true);
+
+    expect(aggregate.tools).toEqual({
+      Skill: 1,
+      Task: 1,
+    });
+    expect(aggregate.skills).toEqual({});
+    expect(aggregate.subagents).toEqual({});
   });
 
   test('bills the whole turn as conversation when the split is unknown', () => {
@@ -234,6 +302,19 @@ describe('foldAggregate', () => {
     );
 
     expect(accumulator.splitUnavailable).toBe(true);
+  });
+
+  test('sums skills and subagents across the sessions it folds in', () => {
+    const accumulator = createAccumulator();
+    const aggregate = aggregateSession([assistant({
+      blocks: [skillBlock('code-review'), taskBlock('Explore')],
+    })], true);
+
+    foldAggregate(accumulator, aggregate, session());
+    foldAggregate(accumulator, aggregate, session({ filePath: '/sessions/s2.jsonl' }));
+
+    expect([...accumulator.skills.entries()]).toEqual([['code-review', 2]]);
+    expect([...accumulator.subagents.entries()]).toEqual([['Explore', 2]]);
   });
 });
 

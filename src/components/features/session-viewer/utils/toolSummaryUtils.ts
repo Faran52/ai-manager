@@ -148,6 +148,12 @@ export const toolSummary = (call: ToolCall, outcome?: ToolOutcome): ToolSummary 
         detail: detailOf(input.agentType ?? input.description ?? ''),
         tone: 'plain',
       };
+    case 'skill':
+      return {
+        label: call.name,
+        detail: detailOf(input.skill ?? ''),
+        tone: 'plain',
+      };
     case 'todo-write':
       return {
         label: call.name,

@@ -67,6 +67,15 @@ describe('inputRows', () => {
     expect(full[2]?.value).toHaveLength(300);
   });
 
+  test('rows a skill by its name and the prompt it was handed', () => {
+    expect(rowsOf({
+      kind: 'skill',
+      skill: 'code-review',
+      prompt: 'look at the diff',
+    })).toEqual(['skill: code-review', 'prompt: look at the diff']);
+    expect(rowsOf({ kind: 'skill' })).toEqual([]);
+  });
+
   test('passes generic rows through', () => {
     expect(rowsOf({
       kind: 'generic',

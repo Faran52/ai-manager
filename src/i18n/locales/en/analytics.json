@@ -101,5 +101,7 @@
   "providerSessions_one": "{{count}} session",
   "providerSessions_other": "{{count}} sessions",
   "providerProjects_one": "{{count}} project",
-  "providerProjects_other": "{{count}} projects"
+  "providerProjects_other": "{{count}} projects",
+  "skillCalls": "Skills used",
+  "subagentCalls": "Subagents used"
 }

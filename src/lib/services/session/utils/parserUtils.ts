@@ -324,6 +324,12 @@ export const parseToolInput = (name: string, input: RawToolInput): ToolCallInput
         description: input.description,
         prompt: input.prompt,
       };
+    case 'Skill':
+      return {
+        kind: 'skill',
+        skill: input.skill,
+        prompt: input.prompt,
+      };
     default:
       return {
         kind: 'generic',

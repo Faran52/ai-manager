@@ -79,6 +79,11 @@ export type ToolCallInput
     prompt?: string | undefined;
   }
   | {
+    readonly kind: 'skill';
+    skill?: string | undefined;
+    prompt?: string | undefined;
+  }
+  | {
     readonly kind: 'generic';
     title: string;
     rows: readonly ToolInputRow[];

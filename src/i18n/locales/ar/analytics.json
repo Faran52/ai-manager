@@ -125,5 +125,7 @@
   "providerProjects_two": "مشروعان",
   "providerProjects_few": "{{count}} مشاريع",
   "providerProjects_many": "{{count}} مشروعًا",
-  "providerProjects_other": "{{count}} مشروع"
+  "providerProjects_other": "{{count}} مشروع",
+  "skillCalls": "المهارات المستخدمة",
+  "subagentCalls": "الوكلاء الفرعيون المستخدمون"
 }

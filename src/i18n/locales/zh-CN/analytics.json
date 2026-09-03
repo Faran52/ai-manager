@@ -101,5 +101,7 @@
   "providerSessions_one": "{{count}} 个会话",
   "providerSessions_other": "{{count}} 个会话",
   "providerProjects_one": "{{count}} 个项目",
-  "providerProjects_other": "{{count}} 个项目"
+  "providerProjects_other": "{{count}} 个项目",
+  "skillCalls": "使用的技能",
+  "subagentCalls": "使用的子智能体"
 }

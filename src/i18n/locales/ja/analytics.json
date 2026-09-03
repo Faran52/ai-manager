@@ -101,5 +101,7 @@
   "providerSessions_one": "{{count}} セッション",
   "providerSessions_other": "{{count}} セッション",
   "providerProjects_one": "{{count}} プロジェクト",
-  "providerProjects_other": "{{count}} プロジェクト"
+  "providerProjects_other": "{{count}} プロジェクト",
+  "skillCalls": "使用したスキル",
+  "subagentCalls": "使用したサブエージェント"
 }

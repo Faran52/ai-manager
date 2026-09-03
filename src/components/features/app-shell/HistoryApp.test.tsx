@@ -465,6 +465,8 @@ describe('HistoryApp cross-view flows', () => {
             },
             models: [],
             tools: [],
+            skills: [],
+            subagents: [],
             activity: [],
             topSessions: [{
               filePath: '/r/b/s9.jsonl',

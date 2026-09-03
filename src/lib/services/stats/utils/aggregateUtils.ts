@@ -51,6 +51,13 @@ export interface SessionAggregate {
   readonly durationMs: number;
   readonly pricing: readonly PricingEntry[];
   readonly tools: Readonly<Record<string, number>>;
+  /*
+   * Skill and Task are one bucket each in `tools`, which says a skill ran but
+   * never which one. Both carry the name in their own input, so they are
+   * counted by it as well.
+   */
+  readonly skills: Readonly<Record<string, number>>;
+  readonly subagents: Readonly<Record<string, number>>;
   readonly days: Readonly<Record<string, DayCount>>;
   // Turns per local hour of day, and per weekday with Monday first.
   readonly hours: Readonly<Record<string, number>>;
@@ -75,6 +82,8 @@ export interface Accumulator {
   durationMs: number;
   pricingEntries: PricingEntry[];
   tools: Map<string, number>;
+  skills: Map<string, number>;
+  subagents: Map<string, number>;
   days: Map<string, DayActivity>;
   perSession: SessionTokenTotals[];
   hours: Map<number, number>;
@@ -132,6 +141,8 @@ export const createAccumulator = (): Accumulator => {
     durationMs: 0,
     pricingEntries: [],
     tools: new Map(),
+    skills: new Map(),
+    subagents: new Map(),
     days: new Map(),
     perSession: [],
     hours: new Map(),
@@ -163,6 +174,8 @@ const addAssistant = (
   splitAvailable: boolean,
   pricing: PricingEntry[],
   tools: Record<string, number>,
+  skills: Record<string, number>,
+  subagents: Record<string, number>,
 ): void => {
   const usage = entry.usage ?? EMPTY_USAGE;
   const conversationTokens = usage.inputTokens + usage.outputTokens;
@@ -188,8 +201,20 @@ const addAssistant = (
   });
 
   for (const block of entry.blocks) {
-    if (block.blockType === 'tool-use') {
-      tools[block.call.name] = (tools[block.call.name] ?? 0) + 1;
+    if (block.blockType !== 'tool-use') {
+      continue;
+    }
+
+    const { call } = block;
+
+    tools[call.name] = (tools[call.name] ?? 0) + 1;
+
+    if (call.input.kind === 'skill' && call.input.skill != null) {
+      skills[call.input.skill] = (skills[call.input.skill] ?? 0) + 1;
+    }
+
+    if (call.input.kind === 'task' && call.input.agentType != null) {
+      subagents[call.input.agentType] = (subagents[call.input.agentType] ?? 0) + 1;
     }
   }
 };
@@ -234,6 +259,8 @@ export const aggregateSession = (
   const draft = createDraft();
   const pricing: PricingEntry[] = [];
   const tools: Record<string, number> = {};
+  const skills: Record<string, number> = {};
+  const subagents: Record<string, number> = {};
   const days: Record<string, DayCount> = {};
   const hours: Record<string, number> = {};
   const weekdays: Record<string, number> = {};
@@ -249,7 +276,7 @@ export const aggregateSession = (
     const day = entry.timestamp.slice(0, 10);
 
     if (entry.kind === 'assistant') {
-      addAssistant(draft, entry, splitAvailable, pricing, tools);
+      addAssistant(draft, entry, splitAvailable, pricing, tools, skills, subagents);
     }
 
     if (entry.kind === 'user' && !entry.meta) {
@@ -268,6 +295,8 @@ export const aggregateSession = (
     ...draft,
     pricing,
     tools,
+    skills,
+    subagents,
     days,
     hours,
     weekdays,
@@ -307,6 +336,14 @@ export const foldAggregate = (
 
   for (const [tool, count] of Object.entries(aggregate.tools)) {
     accumulator.tools.set(tool, (accumulator.tools.get(tool) ?? 0) + count);
+  }
+
+  for (const [skill, count] of Object.entries(aggregate.skills)) {
+    accumulator.skills.set(skill, (accumulator.skills.get(skill) ?? 0) + count);
+  }
+
+  for (const [agent, count] of Object.entries(aggregate.subagents)) {
+    accumulator.subagents.set(agent, (accumulator.subagents.get(agent) ?? 0) + count);
   }
 
   for (const [date, day] of Object.entries(aggregate.days)) {

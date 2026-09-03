@@ -55,6 +55,60 @@ stays; configuration management is where the work is. Each phase gates the next.
   under `stats/utils`; `updates/updateConfig.ts` folded into
   `updates/utils/updateConfigUtils.ts`.
 
+- **Cline tool results pair back to their calls.** Cline returns a result as
+  the next user message, as text like `[<tool> for '<arg>'] Result:` followed
+  by the output, and nothing linked the two, so every row read "Pending".
+  `clineOutcomeUtils` parses those sections and pairs them, in order, with the
+  calls of the assistant turn above, because Cline emits one call per result
+  and carries no ids. Cline's own regex stops at the first quote, which breaks
+  on an argument containing one; matching to the last `'] Result:` on the line
+  recovered the rest of the session. Status strings come from the installed
+  extension's `formatResponse` output rather than a guess.
+  `<environment_details>` joined `INJECTED_CONTEXT_PREFIXES`, and because Cline
+  appends that block to the very message holding the typed prompt,
+  `splitUserText` now reads an authored block before splitting on a marker or
+  the prompt would sit behind its own raw markup. A `todo-write` card no longer
+  shows "Pending" either: a checklist is the whole content of its own call.
+- **Session things live under Sessions.** Five complaints were one problem.
+  Threads group on `rootUuid`, the uuid of a transcript's first message, since
+  rewinding records the messages up to that point again in a fresh file; the
+  2-minute-gap heuristic it replaces measured 0/7 precision and is deleted
+  rather than kept as a fallback. `PromptHistoryPanel` became a "Prompts only"
+  toggle in Search, which already searched every agent, and its sole dependents
+  went with it (`usePrompts`, `/api/prompts`, `handlePromptHistory`,
+  `fetchPrompts`, `PromptsResponse`, `readPromptHistory`). Sessions owns
+  Transcript, Board and File edits; Analytics is only the report.
+- **Data marks grow into place.** The bar fill sat on the shared expo-out
+  curve, which covers most of its distance in the first tenth of the tween, so
+  at 0.3s a bar read as though it had always been full. Marks have their own
+  slower cubic curve and a stagger. `WorkRhythm`'s hour and weekday bars had no
+  animation at all and now grow from nothing, sharing one sweep so 24 hours and
+  7 weekdays take the same time to fill. `ActivityHeatmap` fades in a month at a
+  time, because staggering days would mount 365 animations to sweep a grid that
+  already reads as columns. `data-bar-fill` and `data-rhythm-height` carry the
+  settled percentage, since a size read mid-tween is not the proportion.
+- **The Health tab is a table whose rows explain themselves.** The agent list
+  was pseudo-columns with no header, so every figure carried its own label and
+  read as a debug dump. One header row governs them and the labels are gone.
+  Opening a row used to name the things it had just counted; it now holds what
+  a count cannot: which server at what scope, out of which file, how stale a
+  rules file has gone, and why the row is flagged. A group the agent records
+  nothing for prints no line, so a rules-only agent opens to one line. Each
+  artefact is a chip on the shared `Badge`, which is why twelve MCP servers
+  wrap within their own line rather than scrolling or truncating.
+  Findings moved into the agent they name, and the first flagged row opens
+  itself, so a summary list above the table was a second copy of them.
+  The MODEL column is gone: `modelAuth.model` is the default configured in
+  settings, not what the sessions used, and a project's sessions routinely span
+  several models, which Analytics already reports. Credentials are named only
+  when one exists, because Claude reports none whenever `settings.json` holds no
+  key, the ordinary subscription case, so "No credentials" was untrue.
+  The plugin inventory and its cost estimate moved out of the inline row into a
+  dialog, and the two tables became one: the cost table repeated every plugin
+  name to add three numbers about it. Cost is priced per thousand turns, since
+  always-on context is re-sent every turn and a per-turn figure floored at
+  "<$0.0001" for most plugins and said nothing.
+
 ## Phase 2: Agent tiers
 
 - [x] Tier 1, history + management: Claude Code, Codex, GitHub Copilot, Cursor

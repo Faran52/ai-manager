@@ -785,6 +785,15 @@ describe('every dedicated tool input kind through full lines', () => {
       description: 'd',
       prompt: undefined,
     });
+    // Skill carries the name of what ran, the way Task carries the subagent's.
+    expect(callInput('Skill', {
+      skill: 'code-review',
+      prompt: 'look at the diff',
+    })).toEqual({
+      kind: 'skill',
+      skill: 'code-review',
+      prompt: 'look at the diff',
+    });
   });
 
   test('generic rows cover every candidate slot and skip empties', () => {

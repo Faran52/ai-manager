@@ -101,5 +101,7 @@
   "providerSessions_one": "{{count}} 個工作階段",
   "providerSessions_other": "{{count}} 個工作階段",
   "providerProjects_one": "{{count}} 個專案",
-  "providerProjects_other": "{{count}} 個專案"
+  "providerProjects_other": "{{count}} 個專案",
+  "skillCalls": "使用的技能",
+  "subagentCalls": "使用的子代理"
 }

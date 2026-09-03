@@ -60,6 +60,8 @@ export interface ProjectStats {
   readonly totals: StatsTotals;
   readonly models: readonly StatsModelUsage[];
   readonly tools: readonly ToolUsage[];
+  readonly skills: readonly ToolUsage[];
+  readonly subagents: readonly ToolUsage[];
   readonly activity: readonly DayActivity[];
   readonly topSessions: readonly SessionTokenTotals[];
   readonly rhythm: StatsRhythm;
@@ -110,6 +112,21 @@ export type {
   StatsEffort,
   StatsRhythm,
 } from './utils/rhythmUtils';
+
+// Counters keyed by name, heaviest first, which is the shape every usage list
+// in the report reads from.
+const rankedUsage = (counts: ReadonlyMap<string, number>): readonly ToolUsage[] => {
+  return [...counts.entries()]
+    .map(([tool, count]) => {
+      return {
+        tool,
+        count,
+      };
+    })
+    .sort((left, right) => {
+      return right.count - left.count;
+    });
+};
 
 const sessionsForStats = async (
   agentDirs: readonly string[],
@@ -236,16 +253,9 @@ const projectStatsFrom = (
       durationMs: accumulator.durationMs,
     },
     models: pricing.models,
-    tools: [...accumulator.tools.entries()]
-      .map(([tool, count]) => {
-        return {
-          tool,
-          count,
-        };
-      })
-      .sort((left, right) => {
-        return right.count - left.count;
-      }),
+    tools: rankedUsage(accumulator.tools),
+    skills: rankedUsage(accumulator.skills),
+    subagents: rankedUsage(accumulator.subagents),
     activity,
     topSessions,
     rhythm: rhythmFrom(activity, accumulator.hours, accumulator.weekdays, Date.now()),

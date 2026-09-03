@@ -40,6 +40,8 @@ const stats: ProjectStats = {
   },
   models: [],
   tools: [],
+  skills: [],
+  subagents: [],
   activity: [],
   topSessions: [],
   rhythm: {

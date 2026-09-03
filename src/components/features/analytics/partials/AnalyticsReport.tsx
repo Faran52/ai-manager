@@ -32,9 +32,11 @@ import type {
   AgentStatsUsage,
   ProjectStats,
   SessionTokenTotals,
+  ToolUsage,
 } from '@services/stats/statsService';
 import type { StorageReport } from '@services/storage/storageService';
 import type { FC, ReactNode } from 'react';
+import type { BarListProps } from './BarList';
 
 export interface AnalyticsReportProps {
   readonly stats: ProjectStats;
@@ -45,6 +47,17 @@ export interface AnalyticsReportProps {
   readonly sessions: readonly SessionSummary[];
   readonly onOpenSession: (session: SessionTokenTotals) => void;
 }
+
+// The three usage lists read from the same ranked shape, and ten bars is as
+// deep as a card of them stays legible.
+const usageItems = (usage: readonly ToolUsage[]): BarListProps['items'] => {
+  return usage.slice(0, 10).map((entry) => {
+    return {
+      label: entry.tool,
+      value: entry.count,
+    };
+  });
+};
 
 const metricsFor = (
   stats: ProjectStats,
@@ -171,13 +184,20 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
               )}
           <BarList
             title={t('toolCalls')}
-            items={selectedStats.tools.slice(0, 10).map((tool) => {
-              return {
-                label: tool.tool,
-                value: tool.count,
-              };
-            })}
+            items={usageItems(selectedStats.tools)}
           />
+          {selectedStats.skills.length > 0 && (
+            <BarList
+              title={t('skillCalls')}
+              items={usageItems(selectedStats.skills)}
+            />
+          )}
+          {selectedStats.subagents.length > 0 && (
+            <BarList
+              title={t('subagentCalls')}
+              items={usageItems(selectedStats.subagents)}
+            />
+          )}
         </div>
 
         <WorkRhythm rhythm={selectedStats.rhythm} effort={selectedStats.effort} />

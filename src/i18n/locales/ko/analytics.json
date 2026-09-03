@@ -101,5 +101,7 @@
   "providerSessions_one": "세션 {{count}}개",
   "providerSessions_other": "세션 {{count}}개",
   "providerProjects_one": "프로젝트 {{count}}개",
-  "providerProjects_other": "프로젝트 {{count}}개"
+  "providerProjects_other": "프로젝트 {{count}}개",
+  "skillCalls": "사용한 스킬",
+  "subagentCalls": "사용한 서브에이전트"
 }

@@ -41,6 +41,7 @@ export const ToolInputBody: FC<ToolInputBodyProps> = ({ call, changeRecorded = f
     case 'file-read':
     case 'search-files':
     case 'task':
+    case 'skill':
       return <RowsList rows={inputRows(call.input)} />;
   }
 };

@@ -1,7 +1,8 @@
 import type { ToolCall, ToolInputRow } from '@services/history/historyService';
 
 interface RowedInputDiscriminator {
-  readonly kind: 'file-read' | 'search-files' | 'web-search' | 'web-fetch' | 'task' | 'generic';
+  readonly kind: 'file-read' | 'search-files' | 'web-search'
+    | 'web-fetch' | 'task' | 'skill' | 'generic';
 }
 
 export type RowedInput = Extract<ToolCall['input'], RowedInputDiscriminator>;
@@ -49,6 +50,21 @@ export const inputRows = (input: RowedInput): readonly ToolInputRow[] => {
           ? [{
               label: 'task',
               value: input.description,
+            }]
+          : []),
+        ...(input.prompt != null
+          ? [{
+              label: 'prompt',
+              value: input.prompt.slice(0, 300),
+            }]
+          : []),
+      ];
+    case 'skill':
+      return [
+        ...(input.skill != null
+          ? [{
+              label: 'skill',
+              value: input.skill,
             }]
           : []),
         ...(input.prompt != null
