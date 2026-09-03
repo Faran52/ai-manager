@@ -61,7 +61,7 @@ describe('validateAgentSetup', () => {
     await chmod(script, 0o755);
     await userSettings(home, hook(`'${script}' --flag`));
 
-    expect(await validateAgentSetup(project, home)).toEqual([]);
+    expect(await validateAgentSetup('claude', project, home)).toEqual([]);
   });
 
   test('reports a hook script that is missing', async () => {
@@ -69,7 +69,7 @@ describe('validateAgentSetup', () => {
 
     await userSettings(home, hook(`${join(project, 'gone.sh')} --flag`));
 
-    expect(await validateAgentSetup(project, home)).toEqual([
+    expect(await validateAgentSetup('claude', project, home)).toEqual([
       expect.objectContaining({
         kind: 'hook',
         detail: join(project, 'gone.sh'),
@@ -85,7 +85,7 @@ describe('validateAgentSetup', () => {
     await chmod(script, 0o644);
     await userSettings(home, hook(`"${script}"`));
 
-    expect(await validateAgentSetup(project, home)).toEqual([
+    expect(await validateAgentSetup('claude', project, home)).toEqual([
       expect.objectContaining({
         kind: 'hook',
         detail: script,
@@ -98,7 +98,7 @@ describe('validateAgentSetup', () => {
 
     await userSettings(home, hook('echo hello'));
 
-    expect(await validateAgentSetup(project, home)).toEqual([]);
+    expect(await validateAgentSetup('claude', project, home)).toEqual([]);
   });
 
   test('reports a plugin enabled from an unknown marketplace', async () => {
@@ -115,7 +115,7 @@ describe('validateAgentSetup', () => {
       },
     });
 
-    expect(await validateAgentSetup(project, home)).toEqual([
+    expect(await validateAgentSetup('claude', project, home)).toEqual([
       expect.objectContaining({
         kind: 'plugin',
         detail: 'orphan@vanished',
@@ -138,7 +138,7 @@ describe('validateAgentSetup', () => {
       },
     });
 
-    expect(await validateAgentSetup(project, home)).toEqual([]);
+    expect(await validateAgentSetup('claude', project, home)).toEqual([]);
   });
 
   test('reports a marketplace folder that no longer resolves', async () => {
@@ -168,7 +168,7 @@ describe('validateAgentSetup', () => {
       },
     });
 
-    expect(await validateAgentSetup(project, home)).toEqual([
+    expect(await validateAgentSetup('claude', project, home)).toEqual([
       expect.objectContaining({
         kind: 'marketplace',
         detail: `local → ${join(project, 'plugins', 'local')}`,
@@ -195,7 +195,7 @@ describe('validateAgentSetup', () => {
       },
     }));
 
-    expect(await validateAgentSetup(project, home)).toEqual([
+    expect(await validateAgentSetup('claude', project, home)).toEqual([
       expect.objectContaining({
         kind: 'mcp',
         detail: 'pending',
@@ -208,7 +208,7 @@ describe('validateAgentSetup', () => {
 
     await writeFile(join(project, '.mcp.json'), JSON.stringify({ other: {} }));
 
-    expect(await validateAgentSetup(project, home)).toEqual([]);
+    expect(await validateAgentSetup('claude', project, home)).toEqual([]);
   });
 
   test('reads past every shape a hand-edited settings file can take', async () => {
@@ -230,7 +230,7 @@ describe('validateAgentSetup', () => {
       },
     });
 
-    expect(await validateAgentSetup(project, home)).toEqual([]);
+    expect(await validateAgentSetup('claude', project, home)).toEqual([]);
   });
 
   test('resolves an absolute marketplace path as given', async () => {
@@ -247,7 +247,7 @@ describe('validateAgentSetup', () => {
       },
     });
 
-    expect(await validateAgentSetup(project, home)).toEqual([
+    expect(await validateAgentSetup('claude', project, home)).toEqual([
       expect.objectContaining({
         kind: 'marketplace',
         detail: 'gone → /absolutely/not/here',
@@ -268,11 +268,155 @@ describe('validateAgentSetup', () => {
       },
     }));
 
-    expect(await validateAgentSetup(project, home)).toEqual([
+    expect(await validateAgentSetup('claude', project, home)).toEqual([
       expect.objectContaining({
         kind: 'mcp',
         detail: 'pending',
       }),
     ]);
+  });
+});
+
+describe('codex', () => {
+  const codexHome = async (config: string): Promise<string> => {
+    const root = await mkdtemp(join(tmpdir(), 'validate-codex-'));
+
+    await mkdir(join(root, '.codex'), { recursive: true });
+    await writeFile(join(root, '.codex', 'config.toml'), config);
+
+    return root;
+  };
+
+  test('reports a server whose command is not there', async () => {
+    const home = await codexHome([
+      '[mcp_servers.ghost]',
+      'command = "/nowhere/ghost-server"',
+      'args = []',
+    ].join('\n'));
+
+    expect(await validateAgentSetup('codex', '/repo', home)).toEqual([{
+      agent: 'codex',
+      kind: 'mcp',
+      summary: 'MCP server command is missing or not executable',
+      detail: 'ghost → /nowhere/ghost-server',
+    }]);
+  });
+
+  test('accepts a server whose command is there and runnable', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'validate-codex-bin-'));
+    const binary = join(root, 'real-server');
+
+    await writeFile(binary, '#!/bin/sh\n');
+    await chmod(binary, 0o755);
+
+    const home = await codexHome(`[mcp_servers.real]\ncommand = "${binary}"\n`);
+
+    expect(await validateAgentSetup('codex', '/repo', home)).toEqual([]);
+  });
+
+  test('reports a command that exists but cannot be run', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'validate-codex-noexec-'));
+    const binary = join(root, 'not-runnable');
+
+    await writeFile(binary, 'text');
+    await chmod(binary, 0o644);
+
+    const home = await codexHome(`[mcp_servers.blocked]\ncommand = "${binary}"\n`);
+
+    expect(await validateAgentSetup('codex', '/repo', home)).toHaveLength(1);
+  });
+
+  test('leaves a server the config turned off alone', async () => {
+    const home = await codexHome([
+      '[mcp_servers.off]',
+      'command = "/nowhere/off-server"',
+      'enabled = false',
+    ].join('\n'));
+
+    expect(await validateAgentSetup('codex', '/repo', home)).toEqual([]);
+  });
+
+  test('leaves a server with no local command to check', async () => {
+    const home = await codexHome([
+      '[mcp_servers.remote]',
+      'url = "http://127.0.0.1:1234/stream"',
+      '',
+      '[mcp_servers.on_path]',
+      'command = "uvx"',
+      '',
+      '[mcp_servers.relative]',
+      'command = "./Some App/bin/server"',
+      'cwd = "."',
+    ].join('\n'));
+
+    expect(await validateAgentSetup('codex', '/repo', home)).toEqual([]);
+  });
+
+  test('never reads an env block as though it were the server', async () => {
+    const home = await codexHome([
+      '[mcp_servers.node_repl]',
+      'command = "/nowhere/node_repl"',
+      '',
+      '[mcp_servers.node_repl.env]',
+      'NODE_REPL_NODE_PATH = "/nowhere/also-missing"',
+      'command = "/nowhere/not-the-command"',
+    ].join('\n'));
+    const findings = await validateAgentSetup('codex', '/repo', home);
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.detail).toBe('node_repl → /nowhere/node_repl');
+  });
+
+  test('reads a server whose name the config quoted', async () => {
+    const home = await codexHome([
+      '[mcp_servers."my server"]',
+      'command = "/nowhere/quoted"',
+    ].join('\n'));
+
+    expect((await validateAgentSetup('codex', '/repo', home))[0]?.detail)
+      .toBe('my server → /nowhere/quoted');
+  });
+
+  test('reports nothing when there is no codex config at all', async () => {
+    const empty = await mkdtemp(join(tmpdir(), 'validate-codex-none-'));
+
+    expect(await validateAgentSetup('codex', '/repo', empty)).toEqual([]);
+  });
+
+  test('reports nothing for an agent with no validator', async () => {
+    expect(await validateAgentSetup('cursor', '/repo', await codexHome(''))).toEqual([]);
+  });
+
+  test('keeps other sections of the config out of the servers', async () => {
+    const home = await codexHome([
+      '[model]',
+      'command = "/nowhere/not-a-server"',
+      '',
+      '[mcp_servers.real]',
+      'command = "/nowhere/real-server"',
+      '',
+      '[shell_environment_policy.set]',
+      'command = "/nowhere/also-not-a-server"',
+    ].join('\n'));
+    const findings = await validateAgentSetup('codex', '/repo', home);
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.detail).toBe('real → /nowhere/real-server');
+  });
+
+  test('says nothing about a command whose quoting never closed', async () => {
+    const home = await codexHome('[mcp_servers.odd]\ncommand = "/nowhere/unclosed\n');
+
+    expect(await validateAgentSetup('codex', '/repo', home)).toEqual([]);
+  });
+
+  test('treats any enabled value other than false as on', async () => {
+    const home = await codexHome([
+      '[mcp_servers.on]',
+      'command = "/nowhere/on-server"',
+      'enabled = true',
+    ].join('\n'));
+
+    expect(await validateAgentSetup('codex', '/repo', home)).toHaveLength(1);
   });
 });

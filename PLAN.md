@@ -107,10 +107,20 @@ stays; configuration management is where the work is. Each phase gates the next.
       Cursor, OpenCode, Gemini, Antigravity, Cursor Agent, Grok.
 - [x] Model and auth configuration stays read-only and per-agent in
       `modelAuthUtils`, a switch over the format. Deliberately not abstracted.
-- [ ] Deferred by its own terms, no second validator exists yet. Per-agent
-      validators beyond Claude. `validateAgentSetup` is Claude-only and called
-      directly; give it an agent parameter when a second one exists,
-      not before.
+- [x] Per-agent validators beyond Claude. A second one now exists, so
+      `validateAgentSetup` takes the agent and the Health endpoint walks
+      `managedAgents` for findings the same way it already walks them for
+      setups. Codex earned it: `~/.codex/config.toml` declares MCP servers by
+      command, and a command that is gone or not executable is the same shape
+      of defect as a missing Claude hook.
+      Only an absolute command is checked. A bare name resolves through PATH
+      and a relative one against a working directory Codex picks, so reporting
+      either would be a finding nobody can act on. A server the config
+      disabled, and one declared by `url` with no local binary, are both left
+      alone. `[mcp_servers.<name>.env]` ends the server's own fields, so an
+      env var is never read as though it were the command.
+      Agents without a validator return nothing, which keeps the switch honest
+      rather than inventing checks per agent.
 
 ## Phase 5: Claude plugin write actions
 

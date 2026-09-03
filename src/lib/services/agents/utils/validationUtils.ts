@@ -23,6 +23,23 @@ export interface SetupFinding {
   readonly detail: string;
 }
 
+interface CodexMcpServer {
+  readonly name: string;
+  readonly command: string | undefined;
+  readonly enabled: boolean;
+}
+
+/*
+ * `[mcp_servers.<name>]` declares a server and `[mcp_servers.<name>.env]`
+ * declares its environment, so a nested table ends the server's own fields.
+ * Reading `NODE_REPL_NODE_PATH` out of an env block as though it were the
+ * server's command is the mistake this guards against.
+ */
+interface CodexMcpFields {
+  command: string | undefined;
+  enabled: boolean;
+}
+
 const readJson = async (file: string): Promise<JsonValue> => {
   try {
     return parseJsonContainer(await readFile(file, 'utf8'));
@@ -187,10 +204,122 @@ const unapprovedMcp = (projectMcp: JsonValue, userConfig: JsonValue, projectPath
   });
 };
 
-// Every finding names a file or entry the reader can fix; nothing here changes anything.
-export const validateAgentSetup = async (
+const TABLE = 'mcp_servers.';
+
+const unquoted = (value: string): string => {
+  const trimmed = value.trim();
+  const quote = QUOTES.find((candidate) => {
+    return trimmed.startsWith(candidate);
+  });
+
+  if (quote == null) {
+    return trimmed;
+  }
+
+  const close = trimmed.indexOf(quote, 1);
+
+  return close > 1 ? trimmed.slice(1, close) : trimmed;
+};
+
+const serverName = (header: string): string | undefined => {
+  const inner = header.slice(1, -1);
+
+  if (!inner.startsWith(TABLE)) {
+    return undefined;
+  }
+
+  const rest = unquoted(inner.slice(TABLE.length));
+
+  return rest.includes('.') ? undefined : rest;
+};
+
+const assign = (fields: CodexMcpFields, key: string, value: string): void => {
+  if (key === 'command') {
+    fields.command = unquoted(value);
+  }
+
+  if (key === 'enabled') {
+    fields.enabled = unquoted(value) !== 'false';
+  }
+};
+
+const codexMcpServers = async (file: string): Promise<readonly CodexMcpServer[]> => {
+  let content = '';
+
+  try {
+    content = await readFile(file, 'utf8');
+  }
+  catch {
+    return [];
+  }
+
+  const servers = new Map<string, CodexMcpFields>();
+  let current: CodexMcpFields | undefined;
+
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim();
+    const split = trimmed.indexOf('=');
+
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+      const name = serverName(trimmed);
+
+      if (name == null) {
+        current = undefined;
+      }
+      else {
+        current = {
+          command: undefined,
+          enabled: true,
+        };
+        servers.set(name, current);
+      }
+    }
+    else if (current != null && split > 0) {
+      assign(current, trimmed.slice(0, split).trim(), trimmed.slice(split + 1));
+    }
+  }
+
+  return [...servers.entries()].map(([name, fields]) => {
+    return {
+      name,
+      ...fields,
+    };
+  });
+};
+
+/*
+ * Only an absolute command names a file this can look for. A bare name resolves
+ * through PATH and a relative one against a working directory Codex picks, and
+ * reporting either as missing would be a finding the reader cannot act on.
+ */
+const brokenCodexMcp = async (file: string): Promise<readonly SetupFinding[]> => {
+  const servers = await codexMcpServers(file);
+  const checked = await Promise.all(servers.map(async (server) => {
+    if (!server.enabled || server.command == null || !isAbsolute(server.command)) {
+      return [];
+    }
+
+    try {
+      await access(server.command, constants.X_OK);
+
+      return [];
+    }
+    catch {
+      return [{
+        agent: 'codex' as const,
+        kind: 'mcp' as const,
+        summary: 'MCP server command is missing or not executable',
+        detail: `${server.name} \u2192 ${server.command}`,
+      }];
+    }
+  }));
+
+  return checked.flat();
+};
+
+const validateClaudeSetup = async (
   projectPath: string,
-  home = homedir(),
+  home: string,
 ): Promise<readonly SetupFinding[]> => {
   const [userSettings, projectSettings, known, userConfig, projectMcp] = await Promise.all([
     readJson(join(home, '.claude', 'settings.json')),
@@ -216,4 +345,17 @@ export const validateAgentSetup = async (
     ...unknownMarketplaces(projectSettings, known),
     ...unapprovedMcp(projectMcp, userConfig, projectPath),
   ];
+};
+
+// Every finding names a file or entry the reader can fix; nothing here changes anything.
+export const validateAgentSetup = async (
+  agent: AgentId,
+  projectPath: string,
+  home = homedir(),
+): Promise<readonly SetupFinding[]> => {
+  if (agent === 'claude') {
+    return validateClaudeSetup(projectPath, home);
+  }
+
+  return agent === 'codex' ? brokenCodexMcp(join(home, '.codex', 'config.toml')) : [];
 };

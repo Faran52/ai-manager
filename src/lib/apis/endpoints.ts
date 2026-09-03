@@ -663,7 +663,9 @@ export const handleAgentSetup = async (request: Request, deps?: EndpointDeps): P
       Promise.all(managedAgents.map((agent) => {
         return readAgentSetup(agent, body.projectPath, deps?.home);
       })),
-      validateAgentSetup(body.projectPath, deps?.home),
+      Promise.all(managedAgents.map((agent) => {
+        return validateAgentSetup(agent, body.projectPath, deps?.home);
+      })),
       readProjectUsage(body.projectPath, deps?.home),
       readClaudePlugins(body.projectPath, deps?.home),
       readProjectTrust(body.projectPath, deps?.home),
@@ -671,7 +673,7 @@ export const handleAgentSetup = async (request: Request, deps?: EndpointDeps): P
 
     return jsonOk({
       setups,
-      findings,
+      findings: findings.flat(),
       usage: usage ?? null,
       plugins,
       trust,
