@@ -4,7 +4,6 @@
 @import "@fontsource/ibm-plex-mono/latin-500.css";
 @import "@fontsource/ibm-plex-mono/latin-600.css";
 @import "./tokens.css";
-@import "../components/features/analytics/Analytics.css";
 @import "../components/features/app-header/AppHeader.css";
 @import "../components/features/agent-tag/AgentTag.css";
 @import "../components/features/sidebar/Sidebar.css";

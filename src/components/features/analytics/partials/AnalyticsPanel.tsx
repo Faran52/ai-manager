@@ -7,8 +7,17 @@ export interface AnalyticsPanelProps {
 
 export const AnalyticsPanel: FC<AnalyticsPanelProps> = ({ children, title }) => {
   return (
-    <section className="analytics-panel">
-      <h4 className="analytics-title">{title}</h4>
+    // Full height so panels sharing a row end level with each other.
+    <section className="
+      flex h-full flex-col rounded-xl border border-border bg-card p-4 shadow-sm
+    "
+    >
+      <h4 className="
+        text-[11px] font-semibold tracking-wider text-muted-foreground uppercase
+      "
+      >
+        {title}
+      </h4>
       {children}
     </section>
   );
