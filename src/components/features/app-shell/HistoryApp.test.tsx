@@ -278,6 +278,11 @@ describe('HistoryApp', () => {
                 command: null,
               }],
               rules: [],
+              modelAuth: {
+                format: 'claude',
+                model: 'claude-opus-5',
+                authMethod: 'oauth',
+              },
             },
           ],
         });
@@ -324,6 +329,11 @@ describe('HistoryApp', () => {
             agent: 'claude',
             mcpServers: [],
             rules: [],
+            modelAuth: {
+              format: 'claude',
+              model: 'claude-opus-5',
+              authMethod: 'oauth',
+            },
           }],
           plugins: [{
             id: 'review@official',
@@ -387,6 +397,11 @@ describe('HistoryApp', () => {
             agent: 'claude',
             mcpServers: [],
             rules: [],
+            modelAuth: {
+              format: 'claude',
+              model: 'claude-opus-5',
+              authMethod: 'oauth',
+            },
           }],
           plugins: [{
             id: 'review@official',

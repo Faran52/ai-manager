@@ -95,7 +95,7 @@ test('lists every configured agent with its servers and rules', async () => {
 
   await expand(/Claude Code/u);
 
-  expect(screen.getByText('2 of 3 agents set up for this project')).toBeDefined();
+  expect(screen.getByText(/2 of 3 set up/u)).toBeDefined();
   expect(screen.getByRole('heading', { name: 'Configured agents look healthy' })).toBeDefined();
   expect(screen.getByText('Claude Code')).toBeDefined();
   expect(screen.getByText('Codex CLI')).toBeDefined();
@@ -170,8 +170,9 @@ test('says when an agent has rules but no servers', async () => {
 
   await expand(/Codex CLI/u);
 
-  expect(screen.getByText('None')).toBeDefined();
   expect(screen.getByText('AGENTS.md')).toBeDefined();
+  expect(screen.queryByText('None')).toBeNull();
+  expect(document.querySelectorAll('[data-agent-detail] dt')).toHaveLength(1);
 });
 
 test('shortens a user-wide rules path to the home tilde', async () => {
@@ -243,7 +244,7 @@ test('shows recorded spend alongside configured agents', () => {
   );
 
   expect(screen.getByText('Recorded usage')).toBeDefined();
-  expect(screen.getByText('1 of 1 agents set up for this project')).toBeDefined();
+  expect(screen.getByText(/1 of 1 set up/u)).toBeDefined();
 });
 
 test('shows recorded spend even when no agent is configured', () => {
@@ -267,7 +268,7 @@ test('shows recorded spend even when no agent is configured', () => {
   );
 
   expect(screen.getByText('Recorded usage')).toBeDefined();
-  expect(screen.getByText('0 of 1 agents set up for this project')).toBeDefined();
+  expect(screen.getByText(/0 of 1 set up/u)).toBeDefined();
 });
 
 test('asks for a project before anything else', () => {
@@ -338,7 +339,7 @@ test('names every agent, set up or not', () => {
     />,
   );
 
-  expect(screen.getByText('0 of 2 agents set up for this project')).toBeDefined();
+  expect(screen.getByText(/0 of 2 set up/u)).toBeDefined();
   expect(screen.getAllByText('Not set up')).toHaveLength(2);
 });
 
@@ -375,8 +376,8 @@ test('orders flagged agents first, then healthy, then unused', () => {
     return card.getAttribute('data-agent');
   });
 
-  expect(screen.getByText('Needs attention')).toBeDefined();
   expect(screen.getByText('Not set up here')).toBeDefined();
+  expect(screen.getByText('1 agent needs attention')).toBeDefined();
   expect(order).toEqual(['codex', 'claude', 'gemini']);
 });
 
@@ -508,12 +509,12 @@ test('opens the plugin table in a dialog and closes it again', async () => {
   await expand(/Claude Code/u);
   await userEvent.click(screen.getByRole('button', { name: 'View plugins' }));
 
-  expect(await screen.findByRole('table')).toBeDefined();
+  expect(await screen.findByRole('switch', { name: 'review' })).toBeDefined();
 
   await userEvent.click(screen.getByRole('button', { name: 'Close dialog' }));
 
   await waitFor(() => {
-    expect(screen.queryByRole('table')).toBeNull();
+    expect(screen.queryByRole('switch', { name: 'review' })).toBeNull();
   });
 });
 

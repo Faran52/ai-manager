@@ -1,63 +1,72 @@
-import {
-  describe,
-  expect,
-  it,
-} from 'vitest';
+import { expect, test } from 'vitest';
 
-import { agentIsConfigured } from './agentSetupUtils';
+import { agentIsConfigured, modelSummaryOf } from './agentSetupUtils';
 
-import type { AgentSetup, InstalledPlugin } from '@services/agents/agentsService';
+import type { AgentSetup } from '@services/agents/agentsService';
 
-describe('agentIsConfigured', () => {
-  const baseSetup = (agent: AgentSetup['agent']): AgentSetup => {
-    return {
-      agent,
-      mcpServers: [],
-      rules: [],
-      modelAuth: { format: 'files' as const },
-    };
+const setup = (overrides: Partial<AgentSetup> = {}): AgentSetup => {
+  return {
+    agent: 'claude',
+    mcpServers: [],
+    rules: [],
+    modelAuth: {
+      format: 'claude',
+      model: undefined,
+      authMethod: 'none',
+    },
+    ...overrides,
   };
-  const plugin = (id: string): InstalledPlugin => {
-    return {
-      id,
-      marketplace: 'marketplace',
-      scope: 'user',
-      enabled: true,
-      version: '1.0.0',
-      knownMarketplace: true,
-    };
-  };
+};
 
-  it('is false for a bare setup without plugins', () => {
-    expect(agentIsConfigured(baseSetup('codex'), [])).toBe(false);
+test('counts an agent as set up once it has servers, rules or claude plugins', () => {
+  expect(agentIsConfigured(setup(), [])).toBe(false);
+  expect(agentIsConfigured(setup({
+    rules: [{
+      path: '/CLAUDE.md',
+      scope: 'project',
+      bytes: 4,
+      modifiedMs: 0,
+    }],
+  }), [])).toBe(true);
+  expect(agentIsConfigured(setup(), [{
+    id: 'review@official',
+    marketplace: 'official',
+    scope: 'user',
+    enabled: true,
+    version: '1.0.0',
+    knownMarketplace: true,
+  }])).toBe(true);
+});
+
+test('reads the model and credentials a claude setup records', () => {
+  expect(modelSummaryOf({
+    format: 'claude',
+    model: 'claude-opus-5',
+    authMethod: 'oauth',
+  })).toEqual({
+    model: 'claude-opus-5',
+    authMethod: 'oauth',
+    provider: undefined,
   });
+});
 
-  it('counts MCP servers or rules files as setup', () => {
-    const withServer = baseSetup('gemini');
-
-    expect(agentIsConfigured({
-      ...withServer,
-      mcpServers: [{
-        name: 'search',
-        scope: 'user',
-        source: '/s',
-        command: undefined,
-      }],
-    }, [])).toBe(true);
-
-    expect(agentIsConfigured({
-      ...withServer,
-      rules: [{
-        path: '/r',
-        scope: 'project',
-        bytes: 3,
-        modifiedMs: 1,
-      }],
-    }, [])).toBe(true);
+test('carries the provider a codex setup adds', () => {
+  expect(modelSummaryOf({
+    format: 'codex',
+    model: 'gpt-5.4',
+    provider: 'openai',
+    authMethod: 'api-key',
+  })).toEqual({
+    model: 'gpt-5.4',
+    authMethod: 'api-key',
+    provider: 'openai',
   });
+});
 
-  it('counts plugins only for Claude', () => {
-    expect(agentIsConfigured(baseSetup('codex'), [plugin('x')])).toBe(false);
-    expect(agentIsConfigured(baseSetup('claude'), [plugin('x')])).toBe(true);
+test('leaves every field unset for a reader that records neither', () => {
+  expect(modelSummaryOf({ format: 'sqlite' })).toEqual({
+    model: undefined,
+    authMethod: undefined,
+    provider: undefined,
   });
 });

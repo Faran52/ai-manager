@@ -78,5 +78,13 @@
   "ruleFilesCount_many": "{{count}} قاعدة",
   "ruleFilesCount_other": "{{count}} قاعدة",
   "costsPerTurns": "$/ألف دورة",
-  "costsExplainer": "يُعاد إرسال السياق الدائم في كل دورة. أما رموز الاستدعاء فتُضاف فقط عند تشغيل الإضافة فعلياً."
+  "costsExplainer": "يُعاد إرسال السياق الدائم في كل دورة. أما رموز الاستدعاء فتُضاف فقط عند تشغيل الإضافة فعلياً.",
+  "colAgent": "الوكيل",
+  "setUpCount": "{{configured}} من {{total}} مُعد",
+  "spendNotRecorded": "الإنفاق غير مُسجَّل",
+  "spendRecorded": "{{cost}} مُسجَّل",
+  "auth": "المصادقة",
+  "from": "من",
+  "modelConfigured": "النموذج المُهيَّأ",
+  "colProblem": "مشكلة"
 }

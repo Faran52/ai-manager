@@ -58,5 +58,13 @@
   "ruleFilesCount_one": "{{count}} 条规则",
   "ruleFilesCount_other": "{{count}} 条规则",
   "costsPerTurns": "$/千轮",
-  "costsExplainer": "常驻上下文每轮都会重新发送。按调用计的 token 只在插件真正运行时才计入。"
+  "costsExplainer": "常驻上下文每轮都会重新发送。按调用计的 token 只在插件真正运行时才计入。",
+  "colAgent": "智能体",
+  "setUpCount": "已配置 {{total}} 个中的 {{configured}} 个",
+  "spendNotRecorded": "未记录花费",
+  "spendRecorded": "已记录 {{cost}}",
+  "auth": "认证",
+  "from": "来自",
+  "modelConfigured": "已配置的模型",
+  "colProblem": "问题"
 }

@@ -4,19 +4,23 @@ import { useTranslation } from 'react-i18next';
 import { HeartPulse } from 'lucide-react';
 import { motion } from 'motion/react';
 
+import { agentOption } from '@config/agents';
+
+import { cn } from '@utils/cnUtils';
+
 import {
+  Badge,
   EmptyState,
   fadeTransition,
   Modal,
 } from '@ui/index';
 
 import {
-  AgentCard,
-  HealthSummary,
+  AgentRow,
+  HealthHeader,
   PluginInventory,
   ProjectTrustCard,
   ProjectUsageCard,
-  SetupFindings,
 } from './partials';
 import { agentIsConfigured } from './utils/agentSetupUtils';
 
@@ -28,7 +32,7 @@ import type {
   ProjectUsage,
   SetupFinding,
 } from '@services/agents/agentsService';
-import type { FC, ReactNode } from 'react';
+import type { FC } from 'react';
 
 export interface AgentSetupPanelProps {
   readonly projectSelected: boolean;
@@ -43,32 +47,14 @@ export interface AgentSetupPanelProps {
   readonly onPluginToggle: (plugin: InstalledPlugin) => Promise<void>;
 }
 
-interface GroupProps {
-  readonly name: string;
-  readonly label: string;
-  readonly children: ReactNode;
-}
-
 const PLUGINS_TITLE_ID = 'health-plugins-title';
+const COLUMNS = 5;
 
-const Group: FC<GroupProps> = ({
-  name,
-  label,
-  children,
-}) => {
-  return (
-    <section data-health-group={name}>
-      <h3 className="
-        px-1 pb-1 text-[11px] font-semibold tracking-wider text-muted-foreground
-        uppercase
-      "
-      >
-        {label}
-      </h3>
-      <div className="grid gap-1">{children}</div>
-    </section>
-  );
-};
+const HEAD = `
+  py-1.5 pe-4 text-[10px] font-medium tracking-wider text-muted-foreground
+  uppercase
+`;
+const HEAD_NUMERIC = 'text-end';
 
 export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
   projectSelected,
@@ -85,8 +71,8 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
   const { t } = useTranslation('setup');
   /*
    * undefined is nobody having chosen yet, which is when the first flagged
-   * agent opens itself. null is a card the reader shut, and it has to outrank
-   * that default or the flagged card could never be closed. Findings arrive
+   * agent opens itself. null is a row the reader shut, and it has to outrank
+   * that default or the flagged row could never be closed. Findings arrive
    * after mount, so seeding the state at first render would miss them.
    */
   const [picked, setPicked] = useState<AgentId | null | undefined>(undefined);
@@ -112,52 +98,40 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
     );
   }
 
-  const hasFinding = (agent: AgentId): boolean => {
-    return findings.some((finding) => {
+  /*
+   * Findings render inside the agent they name rather than in a list of their
+   * own above the table, where the reader had to carry a summary back down to
+   * the row wearing the warning marker.
+   */
+  const findingsFor = (agent: AgentId): readonly SetupFinding[] => {
+    return findings.filter((finding) => {
       return finding.agent === agent;
     });
+  };
+  const hasFinding = (agent: AgentId): boolean => {
+    return findingsFor(agent).length > 0;
   };
   const configured = setups.filter((setup) => {
     return agentIsConfigured(setup, plugins);
   });
+  const unconfigured = setups.filter((setup) => {
+    return !agentIsConfigured(setup, plugins);
+  });
   const flagged = configured.filter((setup) => {
     return hasFinding(setup.agent);
   });
-  const healthy = configured.filter((setup) => {
-    return !hasFinding(setup.agent);
-  });
-  const unconfigured = setups.filter((setup) => {
-    return !agentIsConfigured(setup, plugins);
+  /*
+   * A flagged row leads and its warning marker says why, which is what the
+   * separate "needs attention" heading used to do. One header row cannot
+   * introduce three separately headed groups.
+   */
+  const listed = [...configured].sort((left, right) => {
+    return Number(hasFinding(right.agent)) - Number(hasFinding(left.agent));
   });
   const expanded = picked === undefined ? flagged[0]?.agent ?? null : picked;
   const enabledPlugins = plugins.filter((plugin) => {
     return plugin.enabled;
   }).length;
-
-  const card = (setup: AgentSetup): ReactNode => {
-    return (
-      <AgentCard
-        key={setup.agent}
-        setup={setup}
-        projectPath={projectPath}
-        plugins={plugins}
-        sessionCount={sessionCounts[setup.agent] ?? 0}
-        nowMs={nowMs}
-        flagged={hasFinding(setup.agent)}
-        open={expanded === setup.agent}
-        onToggle={() => {
-          setPicked(expanded === setup.agent ? null : setup.agent);
-        }}
-        onOpenPlugins={() => {
-          setPluginsOpen(true);
-        }}
-      />
-    );
-  };
-
-  const verdict = flagged.length === 0
-    ? t('healthy')
-    : t('needsAttentionCount', { count: flagged.length });
 
   return (
     <motion.div
@@ -166,45 +140,85 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
       animate={{ opacity: 1 }}
       transition={fadeTransition}
     >
-      <header className="px-1">
-        <h2 className={flagged.length === 0
-          ? 'text-lg font-semibold'
-          : 'text-lg font-semibold text-warn'}
-        >
-          {verdict}
-        </h2>
-        <p className="mt-0.5 font-mono text-xs text-muted-foreground">
-          {t('agentsSetUp', {
-            configured: configured.length,
-            total: setups.length,
-          })}
-        </p>
-      </header>
-      <HealthSummary
+      <HealthHeader
         configured={configured.length}
         total={setups.length}
+        flagged={flagged.length}
         findingCount={findings.length}
         trust={trust}
         usage={usage}
       />
-      <SetupFindings findings={findings} />
       <ProjectTrustCard trust={trust} />
-      {usage != null && <ProjectUsageCard usage={usage} nowMs={nowMs} />}
-      {flagged.length > 0 && (
-        <Group name="needs-attention" label={t('needsAttention')}>
-          {flagged.map(card)}
-        </Group>
-      )}
-      {healthy.length > 0 && (
-        <Group name="set-up" label={t('setUp')}>
-          {healthy.map(card)}
-        </Group>
+      {listed.length > 0 && (
+        <table className="w-full table-fixed border-collapse" data-agent-table>
+          <thead>
+            <tr className="border-b border-border">
+              <th scope="col" className={cn(HEAD, 'w-[40%] ps-1 text-start')}>
+                {t('colAgent')}
+              </th>
+              <th scope="col" className={cn(HEAD, HEAD_NUMERIC, 'w-[14%]')}>{t('mcp')}</th>
+              <th scope="col" className={cn(HEAD, HEAD_NUMERIC, 'w-[14%]')}>{t('rules')}</th>
+              <th scope="col" className={cn(HEAD, HEAD_NUMERIC, 'w-[16%]')}>
+                {t('pluginsTitle')}
+              </th>
+              <th scope="col" className={cn(HEAD, HEAD_NUMERIC, 'w-[16%] pe-1')}>
+                {t('sessions', { ns: 'sidebar' })}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {listed.map((setup) => {
+              return (
+                <AgentRow
+                  key={setup.agent}
+                  setup={setup}
+                  projectPath={projectPath}
+                  plugins={plugins}
+                  sessionCount={sessionCounts[setup.agent] ?? 0}
+                  findings={findingsFor(setup.agent)}
+                  nowMs={nowMs}
+                  columns={COLUMNS}
+                  open={expanded === setup.agent}
+                  onToggle={() => {
+                    setPicked(expanded === setup.agent ? null : setup.agent);
+                  }}
+                  onOpenPlugins={() => {
+                    setPluginsOpen(true);
+                  }}
+                />
+              );
+            })}
+          </tbody>
+        </table>
       )}
       {unconfigured.length > 0 && (
-        <Group name="not-set-up" label={t('notSetUpHere')}>
-          {unconfigured.map(card)}
-        </Group>
+        <section data-health-group="not-set-up">
+          <h3 className="
+            px-1 pb-1 text-[11px] font-semibold tracking-wider
+            text-muted-foreground uppercase
+          "
+          >
+            {t('notSetUpHere')}
+          </h3>
+          <ul className="grid gap-1 px-1">
+            {unconfigured.map((setup) => {
+              return (
+                <li
+                  key={setup.agent}
+                  data-agent={setup.agent}
+                  className="
+                    flex items-center gap-2 text-sm text-muted-foreground
+                  "
+                >
+                  {agentOption(setup.agent).label}
+                  <Badge>{t('notSetUp')}</Badge>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       )}
+      {usage != null && <ProjectUsageCard usage={usage} nowMs={nowMs} />}
       <Modal
         open={pluginsOpen}
         onClose={() => {
@@ -222,6 +236,7 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
             "
           >
             {t('pluginsTitle')}
+            {/* The dialog is already titled Plugins, so the count is only the ratio. */}
             <span className="
               font-mono text-xs font-normal text-muted-foreground
             "

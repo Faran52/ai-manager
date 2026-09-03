@@ -58,5 +58,13 @@
   "ruleFilesCount_one": "규칙 {{count}}개",
   "ruleFilesCount_other": "규칙 {{count}}개",
   "costsPerTurns": "$/1천 턴",
-  "costsExplainer": "상시 컨텍스트는 매 턴 다시 전송됩니다. 호출당 토큰은 플러그인이 실제로 실행될 때만 추가됩니다."
+  "costsExplainer": "상시 컨텍스트는 매 턴 다시 전송됩니다. 호출당 토큰은 플러그인이 실제로 실행될 때만 추가됩니다.",
+  "colAgent": "에이전트",
+  "setUpCount": "{{total}}개 중 {{configured}}개 설정됨",
+  "spendNotRecorded": "비용 기록 없음",
+  "spendRecorded": "{{cost}} 기록됨",
+  "auth": "인증",
+  "from": "출처",
+  "modelConfigured": "설정된 모델",
+  "colProblem": "문제"
 }

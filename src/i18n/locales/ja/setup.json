@@ -58,5 +58,13 @@
   "ruleFilesCount_one": "ルール {{count}} 件",
   "ruleFilesCount_other": "ルール {{count}} 件",
   "costsPerTurns": "$/1千ターン",
-  "costsExplainer": "常時読み込みのコンテキストは毎ターン再送されます。呼び出しごとのトークンは、プラグインが実際に動いたときだけ加算されます。"
+  "costsExplainer": "常時読み込みのコンテキストは毎ターン再送されます。呼び出しごとのトークンは、プラグインが実際に動いたときだけ加算されます。",
+  "colAgent": "エージェント",
+  "setUpCount": "{{total}} 個中 {{configured}} 個が設定済み",
+  "spendNotRecorded": "コストの記録なし",
+  "spendRecorded": "{{cost}} を記録",
+  "auth": "認証",
+  "from": "取得元",
+  "modelConfigured": "設定されたモデル",
+  "colProblem": "問題"
 }

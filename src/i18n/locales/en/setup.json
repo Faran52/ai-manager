@@ -58,5 +58,13 @@
   "ruleFilesCount_one": "{{count}} rule",
   "ruleFilesCount_other": "{{count}} rules",
   "costsPerTurns": "$/1k turns",
-  "costsExplainer": "Always-on context is re-sent every turn. Per-invoke tokens are added only when the plugin actually runs."
+  "costsExplainer": "Always-on context is re-sent every turn. Per-invoke tokens are added only when the plugin actually runs.",
+  "colAgent": "Agent",
+  "setUpCount": "{{configured}} of {{total}} set up",
+  "spendNotRecorded": "spend not recorded",
+  "spendRecorded": "{{cost}} recorded",
+  "auth": "Auth",
+  "from": "From",
+  "modelConfigured": "Configured model",
+  "colProblem": "Problem"
 }

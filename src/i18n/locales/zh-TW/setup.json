@@ -58,5 +58,13 @@
   "ruleFilesCount_one": "{{count}} 條規則",
   "ruleFilesCount_other": "{{count}} 條規則",
   "costsPerTurns": "$/千輪",
-  "costsExplainer": "常駐上下文每輪都會重新傳送。按呼叫計的 token 只在外掛真正執行時才計入。"
+  "costsExplainer": "常駐上下文每輪都會重新傳送。按呼叫計的 token 只在外掛真正執行時才計入。",
+  "colAgent": "代理",
+  "setUpCount": "已設定 {{total}} 個中的 {{configured}} 個",
+  "spendNotRecorded": "未記錄花費",
+  "spendRecorded": "已記錄 {{cost}}",
+  "auth": "驗證",
+  "from": "來自",
+  "modelConfigured": "已設定的模型",
+  "colProblem": "問題"
 }
