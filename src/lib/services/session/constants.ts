@@ -6,6 +6,7 @@ export const INJECTED_CONTEXT_PREFIXES = [
   ...META_PREFIXES,
   '<recommended_plugins>',
   '<environment_context>',
+  '<environment_details>',
   '<app-context>',
   '<permissions',
   '<skills_instructions>',

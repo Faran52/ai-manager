@@ -45,7 +45,7 @@ const PARSER_NAMES = new Map([
 
 const PATH_TOOLS = new Set(['read_file', 'replace_in_file', 'write_to_file']);
 
-const PROGRESS = 'task_progress';
+export const TASK_PROGRESS = 'task_progress';
 
 const NAME = /^[a-z_][a-z0-9_]*$/;
 
@@ -126,7 +126,7 @@ const todoBlock = (body: string, id: string): readonly AssistantBlock[] => {
         blockType: 'tool-use',
         call: {
           id,
-          name: PROGRESS,
+          name: TASK_PROGRESS,
           input: parseToolInput('TodoWrite', { todos }),
         },
       }];
@@ -156,14 +156,14 @@ export const parseClineBlocks = (text: string, uuid: string): readonly Assistant
   for (let tag = tagAt(text, cursor); tag != null; tag = tagAt(text, cursor)) {
     cursor = tag.end;
 
-    if (!TOOLS.has(tag.name) && tag.name !== PROGRESS) {
+    if (!TOOLS.has(tag.name) && tag.name !== TASK_PROGRESS) {
       continue;
     }
 
     blocks.push(...textBlock(text.slice(spoken, tag.start)));
     spoken = tag.end;
 
-    if (tag.name === PROGRESS) {
+    if (tag.name === TASK_PROGRESS) {
       blocks.push(...todoBlock(tag.body, `${uuid}-${String(blocks.length)}`));
       continue;
     }
@@ -179,7 +179,7 @@ export const parseClineBlocks = (text: string, uuid: string): readonly Assistant
       },
     });
 
-    const progress = params.get(PROGRESS);
+    const progress = params.get(TASK_PROGRESS);
 
     if (progress != null) {
       blocks.push(...todoBlock(progress, `${uuid}-${String(blocks.length)}`));

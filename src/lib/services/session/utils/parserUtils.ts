@@ -53,20 +53,13 @@ const injectionBoundary = (text: string): number | undefined => {
   return Number.isFinite(boundary) ? boundary : undefined;
 };
 
-// Context injectors append their payload, so the first marker is the safe display boundary.
+/*
+ * Context injectors append their payload, so the first marker is the safe
+ * display boundary. An authored block is read first because Cline appends
+ * <environment_details> to the very <task> that holds the typed prompt, and
+ * splitting on the marker would leave the prompt behind its own raw markup.
+ */
 export const splitUserText = (text: string): SplitUserText => {
-  const boundary = injectionBoundary(text);
-
-  if (boundary != null) {
-    const visible = text.slice(0, boundary).trimEnd();
-
-    return {
-      text: visible,
-      injectedText: text.slice(boundary).trim(),
-      meta: visible.length === 0,
-    };
-  }
-
   const tag = WRAPPED_BLOCK.exec(text)?.[1];
   const wrapped = tag != null && text.includes(`</${tag}>`);
 
@@ -79,6 +72,18 @@ export const splitUserText = (text: string): SplitUserText => {
       text: text.slice(tag.length + 2, end).trim(),
       ...(trailing.length === 0 ? {} : { injectedText: trailing }),
       meta: false,
+    };
+  }
+
+  const boundary = injectionBoundary(text);
+
+  if (boundary != null) {
+    const visible = text.slice(0, boundary).trimEnd();
+
+    return {
+      text: visible,
+      injectedText: text.slice(boundary).trim(),
+      meta: visible.length === 0,
     };
   }
 

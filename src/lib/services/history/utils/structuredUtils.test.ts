@@ -22,6 +22,7 @@ import {
 } from './structuredUtils';
 
 const stamp = Date.parse('2026-01-01T00:00:00Z');
+const CLINE_CONTEXT = '<environment_details>\n# Current Mode\nACT MODE\n</environment_details>';
 
 describe('parseStructuredHistory', () => {
   test('parses nested JSON roles, content shapes, ids, models, and timestamps', () => {
@@ -220,6 +221,53 @@ describe('structured history discovery', () => {
     expect(await scanStructuredSessions('aider', [accepted])).toHaveLength(1);
     expect(await scanStructuredSessions('aider', [root])).toHaveLength(2);
     expect(await scanStructuredSessions('aider', [join(root, 'other.md')])).toEqual([]);
+  });
+
+  test('lands a Cline result on the call above it and leaves the checklist alone', () => {
+    const entries = parseStructuredHistory(JSON.stringify([
+      {
+        role: 'user',
+        content: [{
+          type: 'text',
+          text: `<task>\nRename it\n</task>\n${CLINE_CONTEXT}`,
+        }],
+      },
+      {
+        role: 'system',
+        content: 'Session resumed',
+      },
+      {
+        role: 'assistant',
+        content: [{
+          type: 'text',
+          text: '<list_files>\n<path>/tmp</path>\n<task_progress>\n- [ ] look\n</task_progress>\n</list_files>',
+        }],
+      },
+      {
+        role: 'user',
+        content: [{
+          type: 'text',
+          text: `[list_files for '/tmp'] Result:\nsrc/\n${CLINE_CONTEXT}`,
+        }],
+      },
+    ]), '.json', stamp, 'cline');
+    const [asked, resumed, , answered] = entries;
+
+    expect(asked).toMatchObject({
+      text: 'Rename it',
+      meta: false,
+      outcomes: [],
+    });
+    expect(resumed?.kind).toBe('system');
+    expect(answered).toMatchObject({
+      text: '',
+      meta: true,
+      outcomes: [{
+        toolUseId: 'entry-2-0',
+        status: 'ok',
+        text: 'src/',
+      }],
+    });
   });
 
   test('reads one session per Cline task and names the extension that wrote it', async () => {

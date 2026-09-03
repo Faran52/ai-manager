@@ -54,6 +54,8 @@ export const ToolExecutionCard: FC<ToolExecutionCardProps> = ({ call, outcome })
     || call.input.kind === 'multi-edit'
     || call.input.kind === 'file-write';
   const showOutcome = outcome != null;
+  // A checklist is the whole content of its own call, so there is no result to be waiting on.
+  const isChecklist = call.input.kind === 'todo-write';
   const mcpIdentity = mcpToolIdentity(call);
   const summary = toolSummary(call, outcome);
   let outcomeKind: 'default' | 'mcp' | 'web-fetch' | 'web-search' = 'default';
@@ -105,7 +107,7 @@ export const ToolExecutionCard: FC<ToolExecutionCardProps> = ({ call, outcome })
           </span>
         )}
         <span className={cn('shrink-0', summary.detail.length === 0 && 'ms-auto')}>
-          <StatusBadge status={status} pending={outcome == null} />
+          <StatusBadge status={status} pending={outcome == null && !isChecklist} />
         </span>
         <ChevronDown className={cn(`
           size-3.5 shrink-0 text-muted-foreground transition-transform

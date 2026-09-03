@@ -13,7 +13,8 @@ import { humanPreview } from '@utils/titleUtils';
 
 import { splitUserText } from '../../session/utils/parserUtils';
 
-import { parseClineBlocks } from './clineXmlUtils';
+import { clineOutcomes } from './clineOutcomeUtils';
+import { parseClineBlocks, TASK_PROGRESS } from './clineXmlUtils';
 import { conversationMessageCount, firstUserMessageText } from './outcomeUtils';
 import { listTree } from './treeUtils';
 
@@ -297,6 +298,40 @@ const markdownEntries = (
   });
 };
 
+/**
+ * Cline returns a tool result as the next user message rather than as a block
+ * carrying the call's id, so the results in a message pair with the calls of
+ * the assistant turn above it. A checklist gets no result, so it is not a call
+ * a result can land on.
+ */
+const withClineOutcomes = (entries: readonly StructuredEntry[]): readonly StructuredEntry[] => {
+  let callIds: readonly string[] = [];
+
+  return entries.map((entry) => {
+    if (entry.kind === 'assistant') {
+      callIds = entry.blocks.flatMap((block) => {
+        return block.blockType === 'tool-use' && block.call.name !== TASK_PROGRESS
+          ? [block.call.id]
+          : [];
+      });
+
+      return entry;
+    }
+
+    if (entry.kind !== 'user') {
+      return entry;
+    }
+
+    const results = clineOutcomes(entry.text, callIds);
+
+    return {
+      ...entry,
+      ...results,
+      meta: results.text.length === 0,
+    };
+  });
+};
+
 export const parseStructuredHistory = (
   content: string,
   extension: string,
@@ -318,11 +353,13 @@ export const parseStructuredHistory = (
     values.push(parseJsonContainer(content));
   }
 
-  return values.flatMap(recordsFrom).flatMap((record, index) => {
+  const entries = values.flatMap(recordsFrom).flatMap((record, index) => {
     const entry = entryFrom(agent, record, index, fallbackMs);
 
     return entry == null ? [] : [entry];
   });
+
+  return agent === 'cline' ? withClineOutcomes(entries) : entries;
 };
 
 const isAgentFile = (agent: AgentId, filePath: string): boolean => {

@@ -478,8 +478,8 @@ describe('bash descriptions and pending todos', () => {
     expect(screen.getByText('build it')).toBeDefined();
   });
 
-  test('styles pending todos with the neutral tone', async () => {
-    render(
+  test('styles pending todos with the neutral tone and waits on no result of its own', async () => {
+    const { container } = render(
       <ToolExecutionCard
         call={{
           id: 'p1',
@@ -502,6 +502,7 @@ describe('bash descriptions and pending todos', () => {
     }
 
     expect(screen.getByText('later step')).toBeDefined();
+    expect(container.querySelector('[data-status-badge="pending"]')).toBeNull();
   });
 });
 
