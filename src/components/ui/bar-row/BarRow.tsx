@@ -1,3 +1,7 @@
+import { motion } from 'motion/react';
+
+import { riseTransition } from '../constants';
+
 import type { FC } from 'react';
 
 export interface BarRowProps {
@@ -20,6 +24,10 @@ export const BarRow: FC<BarRowProps> = ({
   max,
   formatValue,
 }) => {
+  // The bar animates from empty, so its width mid-flight is not the proportion.
+  // data-bar-fill carries the settled figure for tests and for reading the DOM.
+  const percent = Math.min(100, Math.max(0, max === 0 ? 0 : Math.round((value / max) * 100)));
+
   return (
     <li className="grid gap-1.5" data-bar-row={label}>
       <span className="flex items-baseline justify-between gap-3">
@@ -35,10 +43,12 @@ export const BarRow: FC<BarRowProps> = ({
         </span>
       </span>
       <span className="block h-1.5 overflow-hidden rounded-full bg-muted">
-        <span
+        <motion.span
+          animate={{ width: `${String(percent)}%` }}
           className="block h-full rounded-full bg-primary"
-          data-bar-fill
-          style={{ width: `${String(Math.min(100, Math.max(0, max === 0 ? 0 : Math.round((value / max) * 100))))}%` }}
+          data-bar-fill={percent}
+          initial={{ width: '0%' }}
+          transition={riseTransition}
         />
       </span>
     </li>

@@ -28,11 +28,11 @@ describe('BarList', () => {
     expect(screen.getByText('Bash')).toBeDefined();
     const bars = document.querySelectorAll<HTMLElement>('[data-bar-list] [data-bar-fill]');
     const widths = [...bars].map((bar) => {
-      return bar.style.width;
+      return bar.dataset.barFill;
     });
 
-    expect(widths.at(0)).toBe('100%');
-    expect(widths.at(1)).toBe('50%');
+    expect(widths.at(0)).toBe('100');
+    expect(widths.at(1)).toBe('50');
   });
 
   test('explains itself when empty', () => {
@@ -56,6 +56,6 @@ describe('BarList zero values', () => {
 
     const bar = document.querySelectorAll<HTMLElement>('[data-bar-list] [data-bar-fill]')[0];
 
-    expect(bar?.style.width).toBe('0%');
+    expect(bar?.dataset.barFill).toBe('0');
   });
 });
