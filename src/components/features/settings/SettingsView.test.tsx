@@ -99,6 +99,31 @@ test('switches to another scope and shows its own file', async () => {
   expect(screen.queryByText('Bash(ls:*)')).toBeNull();
 });
 
+test('parks an unsaved edit when the scope changes rather than discarding it', async () => {
+  render(
+    <SettingsView
+      settings={resource('ready', [scope('user'), scope('project')])}
+      projectPath="/repo"
+      agent="claude"
+      onSelectAgent={noop}
+    />,
+  );
+
+  await userEvent.click(screen.getByTitle('Add a rule to Denied'));
+  await userEvent.type(screen.getByLabelText('Add a rule to Denied'), 'Read(./.env){Enter}');
+  expect(screen.getByText('Unsaved changes')).toBeDefined();
+  // The tab counts the parked edit, not the file it has not been written to yet.
+  expect(screen.getByText('User').closest('button')?.textContent).toContain('2');
+
+  await userEvent.click(screen.getByText('Project'));
+  expect(screen.queryByText('Read(./.env)')).toBeNull();
+  expect(screen.queryByText('Unsaved changes')).toBeNull();
+
+  await userEvent.click(screen.getByText('User'));
+  expect(screen.getByText('Read(./.env)')).toBeDefined();
+  expect(screen.getByText('Unsaved changes')).toBeDefined();
+});
+
 test('nudges towards a project when only the user scope is available', () => {
   render(
     <SettingsView
@@ -126,7 +151,8 @@ test('names a file that does not exist yet and the keys it will keep', () => {
   );
 
   expect(screen.getByText(/will be created on save/)).toBeDefined();
-  expect(screen.getByText(/hooks, statusLine/)).toBeDefined();
+  expect(screen.getByText('hooks')).toBeDefined();
+  expect(screen.getByText('statusLine')).toBeDefined();
 });
 
 test('refuses to save over a file it could not parse', () => {
@@ -199,8 +225,8 @@ test('saves an edited rule list and reloads', async () => {
     />,
   );
 
-  await userEvent.type(screen.getByLabelText('Add a rule to Denied'), 'Read(./.env)');
-  await userEvent.click(screen.getAllByText('Add')[1] ?? document.body);
+  await userEvent.click(screen.getByTitle('Add a rule to Denied'));
+  await userEvent.type(screen.getByLabelText('Add a rule to Denied'), 'Read(./.env){Enter}');
   await userEvent.click(screen.getByText('Save settings'));
 
   await waitFor(() => {
@@ -241,13 +267,16 @@ test('edits directories and environment variables before saving', async () => {
     />,
   );
 
-  await userEvent.type(screen.getByLabelText('Add a rule to Additional directories'), '../shared');
-  await userEvent.click(screen.getAllByText('Add')[3] ?? document.body);
+  await userEvent.click(screen.getByTitle('Add a rule to Additional directories'));
+  await userEvent.type(
+    screen.getByLabelText('Add a rule to Additional directories'),
+    '../shared{Enter}',
+  );
   expect(screen.getByText('../shared')).toBeDefined();
 
+  await userEvent.click(screen.getByTitle('Add an environment variable'));
   await userEvent.type(screen.getByLabelText('Variable name'), 'A');
-  await userEvent.type(screen.getByLabelText('Value'), 'b');
-  await userEvent.click(screen.getAllByText('Add').at(-1) ?? document.body);
+  await userEvent.type(screen.getByLabelText('Value'), 'b{Enter}');
 
   expect(screen.getByText('A')).toBeDefined();
 });
@@ -290,14 +319,32 @@ test('reads a surface it may not write instead of offering the editors', () => {
 
   expect(screen.getByText('/home/.codex/config.toml')).toBeDefined();
   expect(screen.getByText('Read-only here')).toBeDefined();
-  expect(screen.getByText(/model, mcp_servers.webstorm/u)).toBeDefined();
+  expect(screen.getByText('model')).toBeDefined();
+  expect(screen.getByText('mcp_servers.webstorm')).toBeDefined();
   // None of the Claude-shaped editors, and nothing to press that would write.
   expect(screen.queryByText('Allowed')).toBeNull();
   expect(screen.queryByText('Environment variables')).toBeNull();
   expect(screen.queryByText('Save settings')).toBeNull();
 });
 
-test('says a read-only file holds nothing yet when it is empty', () => {
+test('says a read-only file that exists holds nothing yet', () => {
+  render(
+    <SettingsView
+      settings={resource('ready', [scope('user', {
+        format: 'toml',
+        editable: false,
+      })])}
+      projectPath="/repo"
+      agent="codex"
+      onSelectAgent={noop}
+    />,
+  );
+
+  expect(screen.getByText(/no settings in it yet/u)).toBeDefined();
+  expect(screen.queryByText('not on disk')).toBeNull();
+});
+
+test('never promises to create a file it has no way to write', () => {
   render(
     <SettingsView
       settings={resource('ready', [scope('user', {
@@ -311,8 +358,12 @@ test('says a read-only file holds nothing yet when it is empty', () => {
     />,
   );
 
-  expect(screen.getByText(/no settings in it yet/u)).toBeDefined();
-  expect(screen.getByText(/will be created on save/u)).toBeDefined();
+  // The read-only branch has no Save button, so the two together were a
+  // contradiction: three of the five agents opened on one.
+  expect(screen.getByText('not on disk')).toBeDefined();
+  expect(screen.queryByText(/will be created on save/u)).toBeNull();
+  expect(screen.queryByText('Save settings')).toBeNull();
+  expect(screen.getByText(/does not exist yet/u)).toBeDefined();
 });
 
 test('says an agent has no settings file of its own', () => {

@@ -9,6 +9,9 @@ export interface TextInputProps {
   readonly label: string;
   readonly className?: string;
   readonly disabled?: boolean;
+  // A field opened to add one thing is finished with the keyboard, not a click.
+  readonly onEnter?: (() => void)
+    | undefined;
 }
 
 export const TextInput: FC<TextInputProps> = ({
@@ -18,6 +21,7 @@ export const TextInput: FC<TextInputProps> = ({
   label,
   className,
   disabled = false,
+  onEnter,
 }) => {
   return (
     <input
@@ -25,6 +29,12 @@ export const TextInput: FC<TextInputProps> = ({
       value={value}
       onInput={(event) => {
         onInput(event.currentTarget.value);
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' && onEnter != null) {
+          event.preventDefault();
+          onEnter();
+        }
       }}
       placeholder={placeholder}
       aria-label={label}

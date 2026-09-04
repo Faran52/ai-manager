@@ -29,18 +29,32 @@ test('lists the rules it was given with their heading', () => {
   expect(screen.getByText('Bash(ls:*)')).toBeDefined();
 });
 
-test('adds a trimmed rule and clears the field', async () => {
+test('keeps the field behind Add and closes it again on cancel', async () => {
+  renderEditor([]);
+
+  expect(screen.queryByLabelText('Add a rule to Allowed')).toBeNull();
+
+  await userEvent.click(screen.getByTitle('Add a rule to Allowed'));
+  expect(screen.getByLabelText('Add a rule to Allowed')).toBeDefined();
+
+  await userEvent.click(screen.getByText('Cancel'));
+  expect(screen.queryByLabelText('Add a rule to Allowed')).toBeNull();
+});
+
+test('adds a trimmed rule on Enter and closes the field', async () => {
   const onChange = renderEditor([]);
 
-  await userEvent.type(screen.getByLabelText('Add a rule to Allowed'), '  Bash(ls:*)  ');
-  await userEvent.click(screen.getByText('Add'));
+  await userEvent.click(screen.getByTitle('Add a rule to Allowed'));
+  await userEvent.type(screen.getByLabelText('Add a rule to Allowed'), '  Bash(ls:*)  {Enter}');
 
   expect(onChange).toHaveBeenCalledWith(['Bash(ls:*)']);
-  expect(screen.getByLabelText<HTMLInputElement>('Add a rule to Allowed').value).toBe('');
+  expect(screen.queryByLabelText('Add a rule to Allowed')).toBeNull();
 });
 
 test('refuses a blank and a duplicate rule', async () => {
   const onChange = renderEditor(['Bash(ls:*)']);
+
+  await userEvent.click(screen.getByTitle('Add a rule to Allowed'));
   const field = screen.getByLabelText('Add a rule to Allowed');
 
   expect(screen.getByText('Add').closest('button')?.disabled).toBe(true);
@@ -48,6 +62,8 @@ test('refuses a blank and a duplicate rule', async () => {
   await userEvent.type(field, 'Bash(ls:*)');
   expect(screen.getByText('Add').closest('button')?.disabled).toBe(true);
 
+  // Enter routes through the same guard, so it cannot bypass the disabled button.
+  await userEvent.type(field, '{Enter}');
   expect(onChange).not.toHaveBeenCalled();
 });
 
