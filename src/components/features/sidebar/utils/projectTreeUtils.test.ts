@@ -97,3 +97,81 @@ describe('buildProjectTree', () => {
     })[0]?.matchesFilter).toBe(false);
   });
 });
+
+describe('worktrees', () => {
+  const worktree = (
+    agent: AgentId,
+    id: string,
+    path: string,
+    repoPath: string,
+  ): ProjectSummary => {
+    return {
+      ...project(agent, id, path.split('/').at(-1) ?? id, path, 5),
+      repoPath,
+    };
+  };
+
+  test('gathers a worktree under the repository it belongs to', () => {
+    const groups = buildProjectTree([
+      project('claude', 'main', 'app', '/repo/app', 9),
+      worktree('claude', 'wt', '/repo/app-feature-x', '/repo/app'),
+    ], {
+      agentFilter: [],
+      textFilter: '',
+    });
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0]?.name).toBe('app');
+    expect(groups[0]?.actualPath).toBe('/repo/app');
+    expect(groups[0]?.sessionCount).toBe(4);
+    // The main tree is unnamed; only the worktree says which branch it is.
+    expect(groups[0]?.agents.map((branch) => {
+      return branch.worktree;
+    })).toEqual([undefined, 'app-feature-x']);
+  });
+
+  test('names the group after the repository even with no main tree present', () => {
+    const groups = buildProjectTree([
+      worktree('claude', 'wt', '/checkouts/app-feature-x', '/repo/app'),
+    ], {
+      agentFilter: [],
+      textFilter: '',
+    });
+
+    expect(groups[0]?.name).toBe('app');
+    expect(groups[0]?.actualPath).toBe('/repo/app');
+  });
+
+  test('finds a group by the branch folder as well as the repository', () => {
+    const projects = [
+      project('claude', 'main', 'app', '/repo/app', 9),
+      worktree('claude', 'wt', '/repo/app-feature-x', '/repo/app'),
+    ];
+
+    expect(buildProjectTree(projects, {
+      agentFilter: [],
+      textFilter: 'feature-x',
+    })[0]?.matchesFilter).toBe(true);
+  });
+
+  test('falls back to the whole path when it has no last segment', () => {
+    const groups = buildProjectTree([
+      worktree('claude', 'wt', '/checkouts/one', '/'),
+    ], {
+      agentFilter: [],
+      textFilter: '',
+    });
+
+    expect(groups[0]?.name).toBe('/');
+  });
+
+  test('leaves two unrelated repositories apart', () => {
+    expect(buildProjectTree([
+      worktree('claude', 'a', '/checkouts/one', '/repo/alpha'),
+      worktree('claude', 'b', '/checkouts/two', '/repo/beta'),
+    ], {
+      agentFilter: [],
+      textFilter: '',
+    })).toHaveLength(2);
+  });
+});

@@ -209,6 +209,11 @@ export interface ProjectSummary {
   readonly id: string;
   readonly name: string;
   readonly actualPath?: string | undefined;
+  /*
+   * The repository this folder is a linked worktree of. Set only when the two
+   * differ, so a main tree carries nothing and groups under its own path.
+   */
+  readonly repoPath?: string | undefined;
   readonly sessionCount: number;
   readonly messageCount: number;
   readonly lastActivityMs: number;

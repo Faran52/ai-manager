@@ -7,6 +7,8 @@ export interface TreeAgentBranch {
   readonly sessionCount: number;
   readonly lastActivityMs: number;
   readonly source: ProjectSummary;
+  // The folder name, when this branch is a worktree rather than the main tree.
+  readonly worktree?: string | undefined;
 }
 
 export interface TreeProjectGroup {
@@ -29,9 +31,18 @@ export interface BuildProjectTreeOptions {
  * One folder opened in three agents is one project, not three. The on-disk path
  * is what makes them the same thing; the name alone would merge two unrelated
  * folders that happen to share a basename.
+ *
+ * A linked worktree keys on the repository it belongs to, so a branch checked
+ * out beside the main tree joins it instead of standing alone.
  */
 const groupKeyOf = (project: ProjectSummary): string => {
-  return project.actualPath ?? `name:${project.name}`;
+  return project.repoPath ?? project.actualPath ?? `name:${project.name}`;
+};
+
+const baseNameOf = (path: string): string => {
+  return path.split('/').filter((segment) => {
+    return segment.length > 0;
+  }).at(-1) ?? path;
 };
 
 export const buildProjectTree = (
@@ -61,6 +72,9 @@ export const buildProjectTree = (
         sessionCount: project.sessionCount,
         lastActivityMs: project.lastActivityMs,
         source: project,
+        worktree: project.repoPath == null || project.actualPath == null
+          ? undefined
+          : baseNameOf(project.actualPath),
       });
     }
 
@@ -75,14 +89,19 @@ export const buildProjectTree = (
       continue;
     }
 
-    const haystack = `${first.name} ${first.actualPath ?? ''} ${branches.map((branch) => {
-      return branch.agent;
+    const repoPath = members.find((project) => {
+      return project.repoPath != null;
+    })?.repoPath;
+    const groupPath = repoPath ?? first.actualPath;
+    const groupName = repoPath == null ? first.name : baseNameOf(repoPath);
+    const haystack = `${groupName} ${groupPath ?? ''} ${branches.map((branch) => {
+      return `${branch.agent} ${branch.worktree ?? ''}`;
     }).join(' ')}`.toLowerCase();
 
     groups.push({
       key,
-      name: first.name,
-      actualPath: first.actualPath,
+      name: groupName,
+      actualPath: groupPath,
       agentCount: branches.length,
       sessionCount: groupSessions,
       lastActivityMs: groupLastActivityMs,

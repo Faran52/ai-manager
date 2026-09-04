@@ -113,4 +113,34 @@ describe('ProjectTree', () => {
 
     expect(screen.getByText('No project selected')).toBeDefined();
   });
+
+  test('names the branch beside the agent that read a worktree', async () => {
+    const onSelectProject = vi.fn();
+    const worktree: ProjectSummary = {
+      ...PROJECT,
+      id: 'worktree',
+      name: 'workspace-feature-x',
+      actualPath: '/repo/workspace-feature-x',
+      repoPath: '/repo/workspace',
+      sessionCount: 2,
+    };
+
+    render(
+      <ProjectTree
+        {...base}
+        projects={[PROJECT, worktree]}
+        onSelectProject={onSelectProject}
+      />,
+    );
+
+    // One group, and the same agent twice: the main tree and the branch.
+    expect(screen.getByText('workspace-feature-x')).toBeDefined();
+    expect(screen.getAllByRole('button', { name: /Claude Code/u })).toHaveLength(2);
+
+    await userEvent.click(screen.getByRole('button', {
+      name: /Claude Code · workspace-feature-x/u,
+    }));
+
+    expect(onSelectProject).toHaveBeenLastCalledWith(worktree);
+  });
 });

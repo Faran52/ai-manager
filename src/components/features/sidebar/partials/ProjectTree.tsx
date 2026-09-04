@@ -110,6 +110,11 @@ export const ProjectTree: FC<ProjectTreeProps> = ({
                 const selected = selectedProject?.agent === branch.agent
                   && selectedProject.id === branch.projectId;
                 const label = agentOption(branch.agent).label;
+                // A worktree makes the same agent appear twice in one group, so
+                // the row is named and keyed by the project it reads, not the agent.
+                const branchName = branch.worktree == null
+                  ? label
+                  : `${label} · ${branch.worktree}`;
 
                 return (
                   <button
@@ -118,13 +123,13 @@ export const ProjectTree: FC<ProjectTreeProps> = ({
                     data-agent={branch.agent}
                     data-selected={selected}
                     aria-pressed={selected}
-                    aria-label={`${group.name}, ${label}, ${t('sessionCount', { count: branch.sessionCount })}`}
-                    title={`${label} · ${t('sessionCount', { count: branch.sessionCount })} · ${formatTimeAgo(
+                    aria-label={`${group.name}, ${branchName}, ${t('sessionCount', { count: branch.sessionCount })}`}
+                    title={`${branchName} · ${t('sessionCount', { count: branch.sessionCount })} · ${formatTimeAgo(
                       branch.lastActivityMs,
                       nowMs,
                       i18n.language,
                     )}`}
-                    key={`${group.key}:${branch.agent}`}
+                    key={`${group.key}:${branch.agent}:${branch.projectId}`}
                     onClick={() => {
                       onSelectProject(branch.source);
                     }}
@@ -134,6 +139,9 @@ export const ProjectTree: FC<ProjectTreeProps> = ({
                   >
                     <span className="project-provider-dot" aria-hidden />
                     <span className="project-provider-name">{label}</span>
+                    {branch.worktree != null && (
+                      <span className="project-provider-worktree">{branch.worktree}</span>
+                    )}
                     <span className="project-provider-count">{branch.sessionCount}</span>
                   </button>
                 );

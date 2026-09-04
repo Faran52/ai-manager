@@ -353,6 +353,17 @@
     white-space: nowrap;
   }
 
+  /* Names the branch a worktree row belongs to, beside the agent that read it. */
+  .project-provider-worktree {
+    flex: 0 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    color: var(--muted-foreground);
+    white-space: nowrap;
+  }
+
   .project-provider-count {
     flex: none;
     min-width: 1.125rem;

@@ -40,6 +40,7 @@ import {
   listStructuredSessions,
   loadStructuredEntries,
 } from '../history/utils/structuredUtils';
+import { withRepoRoots } from '../history/utils/worktreeUtils';
 import { parseHistoryLine } from '../session/utils/parserUtils';
 
 import { compareProjects } from './utils/orderUtils';
@@ -308,7 +309,11 @@ export const listAgentProjects = async (roots: AgentRoots): Promise<readonly Pro
     return routesFor(option.id).projects(option.id, roots[option.id]);
   }));
 
-  return projects.flat().sort(compareProjects);
+  // Worktrees are resolved once over the merged list rather than in each of the
+  // readers, which all report a folder without knowing what owns it.
+  const tagged = await withRepoRoots(projects.flat());
+
+  return [...tagged].sort(compareProjects);
 };
 
 /*
