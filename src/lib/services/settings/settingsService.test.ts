@@ -13,9 +13,14 @@ import {
   test,
 } from 'vitest';
 
-import { projectScopedSettingsAgents, settingsAgents } from '@config/agents';
+import {
+  editableSettingsAgents,
+  projectScopedSettingsAgents,
+  settingsAgents,
+} from '@config/agents';
 
 import {
+  editableAgents,
   hasAgentSettings,
   isSettingsScope,
   projectScopedAgents,
@@ -65,6 +70,14 @@ test('the project prompt is offered to exactly the agents that read one', () => 
   expect([...projectScopedAgents].sort((left, right) => {
     return left.localeCompare(right);
   })).toEqual([...projectScopedSettingsAgents].sort((left, right) => {
+    return left.localeCompare(right);
+  }));
+});
+
+test('the picker marks as writable exactly the agents SURFACES lets it write', () => {
+  expect([...editableAgents].sort((left, right) => {
+    return left.localeCompare(right);
+  })).toEqual([...editableSettingsAgents].sort((left, right) => {
     return left.localeCompare(right);
   }));
 });
@@ -240,14 +253,16 @@ describe('readAgentSettings across agents', () => {
     expect(scope?.exists).toBe(true);
     expect(scope?.format).toBe('toml');
     expect(scope?.editable).toBe(false);
-    // Only the outermost section name, so a table per provider or per server
-    // does not list one key each.
+    /*
+     * Only the outermost section name and the root keys above the first header,
+     * so a table per provider or per server does not list one key each. A real
+     * config listed sixty keys, most of them env vars nested inside
+     * `[mcp_servers.<name>.env]`, for a file configuring thirteen areas.
+     */
     expect(scope?.preservedKeys).toEqual([
       'model',
       'model_providers',
-      'name',
       'mcp_servers',
-      'command',
     ]);
   });
 
@@ -255,16 +270,19 @@ describe('readAgentSettings across agents', () => {
     const { home, project } = await newProject();
 
     await mkdir(join(home, '.codex'), { recursive: true });
+    // The orphan sits above the first header, where root keys are read, so the
+    // line without a name on its left is the one being skipped.
     await writeFile(join(home, '.codex', 'config.toml'), [
-      '[]',
       '= orphaned',
+      '[]',
       '[[profiles]]',
       'name = "one"',
     ].join('\n'), 'utf8');
 
     const [scope] = await readAgentSettings('codex', project, home);
 
-    expect(scope?.preservedKeys).toEqual(['profiles', 'name']);
+    // `name` belongs to the `[[profiles]]` table, which is already named.
+    expect(scope?.preservedKeys).toEqual(['profiles']);
   });
 
   test('reports a toml config that has never been written', async () => {

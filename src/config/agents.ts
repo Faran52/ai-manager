@@ -201,6 +201,18 @@ export const settingsAgents: readonly AgentId[] = agentOptions.flatMap((option) 
 });
 
 /*
+ * Of those, the ones this app writes rather than only reads. Named here for the
+ * same reason as settingsAgents, and shown in the picker so that four of the
+ * five tabs do not have to be opened to discover they are read-only. A settings
+ * test asserts this matches the service's editable surfaces.
+ */
+const EDITABLE_SETTINGS = new Set<AgentId>(['claude']);
+
+export const editableSettingsAgents: readonly AgentId[] = agentOptions.flatMap((option) => {
+  return EDITABLE_SETTINGS.has(option.id) ? [option.id] : [];
+});
+
+/*
  * Of those, the ones that also read a file inside the project, so the prompt to
  * pick one is shown only where it would actually reveal another scope.
  */

@@ -193,6 +193,14 @@ export const projectScopedAgents: readonly AgentId[] = surfacedAgentsWith((specs
   });
 });
 
+// The agents this app writes rather than only reads, so the picker can say so
+// before a tab is opened.
+export const editableAgents: readonly AgentId[] = surfacedAgentsWith((specs) => {
+  return specs.some((spec) => {
+    return spec.editable;
+  });
+});
+
 export const hasAgentSettings = (agent: AgentId): boolean => {
   return SURFACES[agent] != null;
 };
@@ -325,6 +333,7 @@ const readJsonSurface = async (surface: AgentSettingsSurface): Promise<ScopeSett
  */
 const tomlKeys = (text: string): readonly string[] => {
   const keys: string[] = [];
+  let inTable = false;
 
   for (const line of text.split('\n')) {
     const trimmed = line.trim();
@@ -334,6 +343,8 @@ const tomlKeys = (text: string): readonly string[] => {
     }
 
     if (trimmed.startsWith('[')) {
+      inTable = true;
+
       const header = trimmed.slice(1, trimmed.indexOf(']'));
 
       const named = header.replace(/^\[/u, '').trim();
@@ -347,6 +358,17 @@ const tomlKeys = (text: string): readonly string[] => {
         keys.push(named.split('.', 1).join(''));
       }
 
+      continue;
+    }
+
+    /*
+     * A key under a table belongs to that table, which the header above already
+     * named. Collecting these too defeated the outermost-name rule from the
+     * other side: a real config listed sixty keys, most of them env vars nested
+     * four deep inside `[mcp_servers.<name>.env]`, for a file configuring
+     * thirteen areas. Only the keys above the first header are root keys.
+     */
+    if (inTable) {
       continue;
     }
 
