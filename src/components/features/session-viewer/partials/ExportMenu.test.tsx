@@ -14,6 +14,7 @@ test('opens the available export actions', async () => {
 
   expect(screen.getByRole('menuitem', { name: 'Copy markdown' })).toBeDefined();
   expect(screen.getByRole('menuitem', { name: 'Markdown file' })).toBeDefined();
+  expect(screen.getByRole('menuitem', { name: 'HTML file' })).toBeDefined();
   expect(screen.getByRole('menuitem', { name: 'JSON file' })).toBeDefined();
 });
 

@@ -6,16 +6,22 @@ import {
   ChevronDown,
   Clipboard,
   Download,
+  FileCode,
   FileJson,
   FileText,
 } from 'lucide-react';
 
-import { entriesToJson, entriesToMarkdown } from '@services/export/exportService';
+import {
+  entriesToHtml,
+  entriesToJson,
+  entriesToMarkdown,
+} from '@services/export/exportService';
 import { copyTextToClipboard, saveTextFile } from '@utils/browserFilesUtils';
 import { slugOf } from '@utils/slugUtils';
 
 import { MenuItem, PopupMenu } from '@ui/index';
 
+import type { ExportMeta } from '@services/export/exportService';
 import type { HistoryEntry } from '@services/history/historyService';
 import type { FC } from 'react';
 
@@ -33,12 +39,16 @@ export const ExportMenu: FC<ExportMenuProps> = ({
   const { t } = useTranslation('session');
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const markdown = (): string => {
-    return entriesToMarkdown({
+  // Both writers take the same header, so the meta is built once.
+  const meta = (): ExportMeta => {
+    return {
       title,
       project,
       exportedAtMs: Date.now(),
-    }, entries);
+    };
+  };
+  const markdown = (): string => {
+    return entriesToMarkdown(meta(), entries);
   };
   const close = (): void => {
     setOpen(false);
@@ -91,6 +101,20 @@ export const ExportMenu: FC<ExportMenuProps> = ({
           }}
         >
           {t('exportMarkdown')}
+        </MenuItem>
+        <MenuItem
+          icon={<FileCode className="size-3.5" />}
+          onClick={() => {
+            run(() => {
+              saveTextFile(
+                `${slugOf(title)}.html`,
+                entriesToHtml(meta(), entries),
+                'text/html',
+              );
+            });
+          }}
+        >
+          {t('exportHtml')}
         </MenuItem>
         <MenuItem
           icon={<FileJson className="size-3.5" />}

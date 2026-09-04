@@ -4,7 +4,11 @@ import {
   test,
 } from 'vitest';
 
-import { entriesToJson, entriesToMarkdown } from './exportService';
+import {
+  entriesToHtml,
+  entriesToJson,
+  entriesToMarkdown,
+} from './exportService';
 
 import type { HistoryEntry, ToolOutcome } from '../history/types';
 
@@ -238,5 +242,95 @@ describe('fence collisions and combined content', () => {
     expect(markdown).toContain('```bash\n/compact\n```');
     expect(markdown).toContain('### 🧑 User');
     expect(markdown).toContain('fix the login bug');
+  });
+});
+
+describe('entriesToHtml', () => {
+  const meta = {
+    title: 'Login fixes',
+    project: '/repo/app',
+    exportedAtMs: Date.parse('2026-08-01T12:00:00Z'),
+  };
+  const everyKind: readonly HistoryEntry[] = [
+    user,
+    command,
+    assistant,
+    redacted,
+    system,
+    summary,
+  ];
+
+  test('writes one file that stands on its own', () => {
+    const html = entriesToHtml(meta, everyKind);
+
+    expect(html.startsWith('<!doctype html>')).toBe(true);
+    expect(html).toContain('<title>Login fixes</title>');
+    expect(html).toContain('<dt>Project</dt><dd>/repo/app</dd>');
+    expect(html).toContain('<dd>2026-08-01T12:00:00.000Z</dd>');
+    expect(html).toContain('<dt>Entries</dt><dd>6</dd>');
+    // Nothing to fetch beside it, so the file opens anywhere it is sent.
+    expect(html).toContain('<style>');
+    expect(html).not.toContain('<link');
+  });
+
+  test('carries every kind of turn across', () => {
+    const html = entriesToHtml(meta, everyKind);
+
+    expect(html).toContain('fix the login bug');
+    expect(html).toContain('stack trace body');
+    expect(html).toContain('npm err!');
+    expect(html).toContain('/compact');
+    expect(html).toContain('considering auth flow');
+    expect(html).toContain('Fixed the guard clause.');
+    expect(html).toContain('redacted thinking');
+    expect(html).toContain('hooks finished');
+    expect(html).toContain('Session about login fixes');
+    expect(html).toContain('Tool result<span class="status"> (error)</span>');
+  });
+
+  test('escapes what the transcript discussed so none of it becomes markup', () => {
+    const opener = '<b>';
+    const closer = '</b>';
+    const html = entriesToHtml({
+      ...meta,
+      project: 'a & b',
+    }, [
+      {
+        kind: 'user',
+        uuid: 'u9',
+        timestamp: '2026-08-01T10:00:00Z',
+        sidechain: false,
+        meta: false,
+        text: `${opener}live${closer}`,
+        outcomes: [],
+      },
+      {
+        kind: 'summary',
+        text: "it's fine",
+      },
+    ]);
+
+    expect(html).not.toContain(opener);
+    expect(html).toContain('&lt;b&gt;live&lt;/b&gt;');
+    expect(html).toContain('it&#39;s fine');
+    // The ampersand pass runs first, so an entity is never encoded twice.
+    expect(html).toContain('a &amp; b');
+    expect(html).not.toContain('&amp;amp;');
+  });
+
+  test('leaves out a command, a body and a stderr the turn never had', () => {
+    const html = entriesToHtml(meta, [{
+      kind: 'user',
+      uuid: 'u8',
+      timestamp: '2026-08-01T10:00:00Z',
+      sidechain: false,
+      meta: false,
+      text: '',
+      outcomes: [outcomeWith({ toolUseId: 'tu8' })],
+    }]);
+
+    expect(html).toContain('Tool result');
+    expect(html).not.toContain('<pre>');
+    expect(html).not.toContain('stderr');
   });
 });

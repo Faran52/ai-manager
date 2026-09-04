@@ -83,5 +83,6 @@
   "promptScopeProject": "このプロジェクト",
   "promptScopeAll": "すべて",
   "promptScopes": "プロンプトの範囲",
-  "promptsOfEverything": "全体の記録数"
+  "promptsOfEverything": "全体の記録数",
+  "exportHtml": "HTML ファイル"
 }

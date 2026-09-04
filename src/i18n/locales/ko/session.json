@@ -83,5 +83,6 @@
   "promptScopeProject": "이 프로젝트",
   "promptScopeAll": "전체",
   "promptScopes": "프롬프트 범위",
-  "promptsOfEverything": "전체 기록 수"
+  "promptsOfEverything": "전체 기록 수",
+  "exportHtml": "HTML 파일"
 }

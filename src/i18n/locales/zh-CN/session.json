@@ -83,5 +83,6 @@
   "promptScopeProject": "本项目",
   "promptScopeAll": "全部",
   "promptScopes": "提示词范围",
-  "promptsOfEverything": "全部记录数"
+  "promptsOfEverything": "全部记录数",
+  "exportHtml": "HTML 文件"
 }

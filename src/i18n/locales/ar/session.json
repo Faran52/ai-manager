@@ -95,5 +95,6 @@
   "promptScopeProject": "هذا المشروع",
   "promptScopeAll": "كل شيء",
   "promptScopes": "نطاق الطلبات",
-  "promptsOfEverything": "المسجَّل إجمالًا"
+  "promptsOfEverything": "المسجَّل إجمالًا",
+  "exportHtml": "ملف HTML"
 }

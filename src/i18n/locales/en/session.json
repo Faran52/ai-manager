@@ -83,5 +83,6 @@
   "promptScopeProject": "This project",
   "promptScopeAll": "Everything",
   "promptScopes": "Prompt scope",
-  "promptsOfEverything": "Recorded in all"
+  "promptsOfEverything": "Recorded in all",
+  "exportHtml": "HTML file"
 }

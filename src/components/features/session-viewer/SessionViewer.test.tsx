@@ -389,6 +389,30 @@ describe('SessionViewer remaining states', () => {
     expect(revokeObjectURLSpy).toHaveBeenCalledOnce();
     clickSpy.mockRestore();
   });
+
+  test('downloads an html export via the menu', async () => {
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockImplementation(() => {
+      return 'blob:h';
+    });
+
+    const revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {
+      return undefined;
+    });
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {
+      return undefined;
+    });
+    stubPage();
+
+    render(<SessionViewer filePath="/f.jsonl" projectLabel="proj" sessionTitle="Doc" highlightTimestamp={undefined} />);
+    await screen.findByText('the question');
+
+    await userEvent.click(screen.getByText('Export'));
+    await userEvent.click(screen.getByText('HTML file'));
+
+    expect(createObjectURL).toHaveBeenCalledOnce();
+    expect(revokeObjectURLSpy).toHaveBeenCalledOnce();
+    clickSpy.mockRestore();
+  });
 });
 
 describe('SessionViewer feedback', () => {
