@@ -278,3 +278,23 @@ stays; configuration management is where the work is. Each phase gates the next.
       es-toolkit, pnpm 12.1.0) that no phase asked for. It now sits in its own
       `chore` commit rather than riding along with feature work, and the part
       worth keeping landed: `typescript-eslint` resolves to a single 8.68.0.
+
+## Phase 7: Preferences and the desktop shell
+
+- [ ] Four appearance controls collapse into one gear. `FontSizePicker`,
+      `LanguagePicker`, `AccentPicker` and `ThemePicker` are four separate icon
+      buttons crowding the end of the header, beside Search and Refresh, which
+      are actions rather than preferences. One gear opening a popover that holds
+      all four separates the two kinds of control and gives the three appearance
+      pickers somewhere to grow. `PopupMenu` already exists and each picker is
+      self-contained, so this is a container, not a rewrite. Not the Settings
+      view: that manages the agents' files on disk, and these are this app's own
+      display preferences.
+- [ ] Give the desktop window a native feel through `deno.json`, not CSS. The
+      `desktop` block configures the app's name, identifier, icons, backend and
+      release feed, and nothing about the window itself, so it opens at whatever
+      default the webview picks. What is actually settable there needs reading
+      out of the deno desktop docs before this is scoped: an initial and a
+      minimum size are the parts worth having, and a macOS title bar style only
+      if it is offered as configuration rather than something to fake in the
+      page.
