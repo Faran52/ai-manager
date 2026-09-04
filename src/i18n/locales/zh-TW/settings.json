@@ -1,6 +1,6 @@
 {
   "heading": "設定管理器",
-  "intro": "Claude Code 會依序合併三個設定檔：你的、專案的，以及從不提交的本機設定。可在此分別編輯。",
+  "intro": "每個代理依各自的順序合併自己的設定檔。Claude Code 的可在此編輯，其餘按原樣讀取。",
   "scopes": "設定範圍",
   "scopeUser": "使用者",
   "scopeProject": "專案",
@@ -30,5 +30,11 @@
   "removeEnv": "移除 {{name}}",
   "preserved": "儲存時原樣保留：{{keys}}",
   "save": "儲存設定",
-  "saved": "已儲存"
+  "saved": "已儲存",
+  "agents": "代理",
+  "readOnly": "此處唯讀",
+  "readOnlyHint": "此代理使用自己的設定結構，因此只按原樣讀取而不編輯。請直接在檔案中修改。",
+  "holds": "包含：{{keys}}",
+  "holdsNothing": "此檔案中還沒有任何設定。",
+  "noSettingsFile": "此代理沒有自己的設定檔。其 MCP 伺服器與規則在健康頁讀取。"
 }

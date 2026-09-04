@@ -1,6 +1,6 @@
 {
   "heading": "设置管理器",
-  "intro": "Claude Code 会依次合并三个设置文件：你的、项目的，以及从不提交的本地设置。可在此分别编辑。",
+  "intro": "每个智能体按各自的顺序合并自己的设置文件。Claude Code 的可在此编辑，其余按原样读取。",
   "scopes": "设置作用域",
   "scopeUser": "用户",
   "scopeProject": "项目",
@@ -30,5 +30,11 @@
   "removeEnv": "移除 {{name}}",
   "preserved": "保存时原样保留：{{keys}}",
   "save": "保存设置",
-  "saved": "已保存"
+  "saved": "已保存",
+  "agents": "智能体",
+  "readOnly": "此处只读",
+  "readOnlyHint": "该智能体使用自己的设置结构，因此只按原样读取而不编辑。请直接在文件中修改。",
+  "holds": "包含：{{keys}}",
+  "holdsNothing": "此文件中还没有任何设置。",
+  "noSettingsFile": "该智能体没有自己的设置文件。其 MCP 服务器和规则在健康页读取。"
 }

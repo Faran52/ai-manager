@@ -41,7 +41,7 @@ import {
 } from '@services/session/sessionService';
 import {
   isSettingsScope,
-  readSettings,
+  readAgentSettings,
   writeScopeSettings,
 } from '@services/settings/settingsService';
 import { computeGlobalStats, computeProjectStats } from '@services/stats/statsService';
@@ -186,7 +186,13 @@ const isCreateArchiveBody = (body: object): body is CreateArchiveBody => {
 };
 
 const isSettingsBody = (body: object): body is SettingsBody => {
-  return 'projectPath' in body && typeof body.projectPath === 'string';
+  if (!('projectPath' in body) || typeof body.projectPath !== 'string') {
+    return false;
+  }
+
+  // Absent means Claude, which is what every caller meant before the picker.
+  // Parsed JSON never yields undefined, so a present key must name an agent.
+  return !('agent' in body) || isAgent(body.agent);
 };
 
 const isRuleList = (value: unknown): value is readonly string[] => {
@@ -570,7 +576,9 @@ export const handleReadSettings = async (request: Request, deps?: EndpointDeps):
       return jsonError(BAD_REQUEST, 'A project path is required.');
     }
 
-    return jsonOk({ scopes: await readSettings(body.projectPath, deps?.home) });
+    return jsonOk({
+      scopes: await readAgentSettings(body.agent ?? 'claude', body.projectPath, deps?.home),
+    });
   });
 };
 
@@ -593,7 +601,13 @@ export const handleWriteSettings = async (request: Request, deps?: EndpointDeps)
     }
 
     return jsonOk({
-      scope: await writeScopeSettings(body.scope, body.projectPath, body.patch, deps?.home),
+      scope: await writeScopeSettings(
+        body.scope,
+        body.projectPath,
+        body.patch,
+        deps?.home,
+        body.agent ?? 'claude',
+      ),
     });
   });
 };

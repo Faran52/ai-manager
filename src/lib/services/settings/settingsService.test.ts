@@ -13,15 +13,19 @@ import {
   test,
 } from 'vitest';
 
+import { projectScopedSettingsAgents, settingsAgents } from '@config/agents';
+
 import {
+  hasAgentSettings,
   isSettingsScope,
-  readScopeSettings,
-  readSettings,
-  settingsPathFor,
+  projectScopedAgents,
+  readAgentSettings,
+  settingsSurfacesFor,
+  surfacedAgents,
   writeScopeSettings,
 } from './settingsService';
 
-import type { SettingsPatch } from './settingsService';
+import type { ScopeSettings, SettingsPatch } from './settingsService';
 
 const EMPTY_PATCH: SettingsPatch = {
   permissions: {
@@ -31,6 +35,17 @@ const EMPTY_PATCH: SettingsPatch = {
     additionalDirectories: [],
   },
   env: [],
+};
+
+const claudeUser = async (project: string, home: string): Promise<ScopeSettings> => {
+  const [scope] = await readAgentSettings('claude', project, home);
+
+  // v8 ignore next -- Claude always has a user scope.
+  if (scope == null) {
+    throw new Error('no user scope');
+  }
+
+  return scope;
 };
 
 const newProject = async (): Promise<{
@@ -46,11 +61,72 @@ const newProject = async (): Promise<{
   };
 };
 
-describe('settingsPathFor', () => {
+test('the project prompt is offered to exactly the agents that read one', () => {
+  expect([...projectScopedAgents].sort((left, right) => {
+    return left.localeCompare(right);
+  })).toEqual([...projectScopedSettingsAgents].sort((left, right) => {
+    return left.localeCompare(right);
+  }));
+});
+
+test('the picker offers exactly the agents SURFACES covers', () => {
+  // Two lists because the picker is client code and this module reads the
+  // filesystem. They must name the same agents, or an agent gains a settings
+  // page with no files behind it, or files with no way to reach them.
+  expect([...surfacedAgents].sort((left, right) => {
+    return left.localeCompare(right);
+  })).toEqual([...settingsAgents].sort((left, right) => {
+    return left.localeCompare(right);
+  }));
+});
+
+describe('settingsSurfacesFor', () => {
   test('names the three files Claude Code merges', () => {
-    expect(settingsPathFor('user', '/repo', '/home')).toBe('/home/.claude/settings.json');
-    expect(settingsPathFor('project', '/repo', '/home')).toBe('/repo/.claude/settings.json');
-    expect(settingsPathFor('local', '/repo', '/home')).toBe('/repo/.claude/settings.local.json');
+    expect(settingsSurfacesFor('claude', '/repo', '/home').map((surface) => {
+      return surface.path;
+    })).toEqual([
+      '/home/.claude/settings.json',
+      '/repo/.claude/settings.json',
+      '/repo/.claude/settings.local.json',
+    ]);
+  });
+
+  test('drops the project scopes when no project is open', () => {
+    expect(settingsSurfacesFor('claude', '', '/home').map((surface) => {
+      return surface.scope;
+    })).toEqual(['user']);
+  });
+
+  test('marks every agent but Claude read-only, and names its format', () => {
+    expect(settingsSurfacesFor('claude', '/repo', '/home').every((surface) => {
+      return surface.editable && surface.format === 'json';
+    })).toBe(true);
+    expect(settingsSurfacesFor('codex', '/repo', '/home')).toEqual([{
+      scope: 'user',
+      format: 'toml',
+      editable: false,
+      path: '/home/.codex/config.toml',
+    }]);
+    expect(settingsSurfacesFor('gemini', '/repo', '/home').map((surface) => {
+      return surface.editable;
+    })).toEqual([false, false]);
+  });
+
+  test('names the file each remaining agent keeps', () => {
+    expect(settingsSurfacesFor('opencode', '/repo', '/home').map((surface) => {
+      return surface.path;
+    })).toEqual(['/home/.config/opencode/opencode.json']);
+    expect(settingsSurfacesFor('grok', '/repo', '/home').map((surface) => {
+      return surface.path;
+    })).toEqual(['/home/.grok/config.toml', '/repo/.grok/config.toml']);
+  });
+
+  test('offers nothing for an agent with no settings file of its own', () => {
+    expect(hasAgentSettings('claude')).toBe(true);
+    expect(hasAgentSettings('copilot')).toBe(false);
+    expect(settingsSurfacesFor('copilot', '/repo', '/home')).toEqual([]);
+    expect(surfacedAgents).toContain('claude');
+    expect(surfacedAgents).not.toContain('copilot');
   });
 
   test('recognises only the three scopes', () => {
@@ -59,10 +135,10 @@ describe('settingsPathFor', () => {
   });
 });
 
-describe('readScopeSettings', () => {
+describe('readAgentSettings', () => {
   test('reports a file that has never been written', async () => {
     const { home, project } = await newProject();
-    const scope = await readScopeSettings('user', project, home);
+    const scope = await claudeUser(project, home);
 
     expect(scope.exists).toBe(false);
     expect(scope.readable).toBe(true);
@@ -90,7 +166,7 @@ describe('readScopeSettings', () => {
       statusLine: { type: 'command' },
     }), 'utf8');
 
-    const scope = await readScopeSettings('user', project, home);
+    const scope = await claudeUser(project, home);
 
     expect(scope.permissions.allow).toEqual(['Bash(ls:*)']);
     expect(scope.permissions.deny).toEqual(['Read(./secrets/**)']);
@@ -108,7 +184,7 @@ describe('readScopeSettings', () => {
     await mkdir(join(home, '.claude'), { recursive: true });
     await writeFile(join(home, '.claude', 'settings.json'), '{ not json', 'utf8');
 
-    const scope = await readScopeSettings('user', project, home);
+    const scope = await claudeUser(project, home);
 
     expect(scope.exists).toBe(true);
     expect(scope.readable).toBe(false);
@@ -119,30 +195,110 @@ describe('readScopeSettings', () => {
 
     await mkdir(join(home, '.claude'), { recursive: true });
     await writeFile(join(home, '.claude', 'settings.json'), '[1, 2]', 'utf8');
-    expect((await readScopeSettings('user', project, home)).readable).toBe(false);
+    expect((await claudeUser(project, home)).readable).toBe(false);
 
     await writeFile(join(home, '.claude', 'settings.json'), JSON.stringify({
       permissions: 'none',
       env: 'none',
     }), 'utf8');
 
-    const scope = await readScopeSettings('user', project, home);
+    const scope = await claudeUser(project, home);
 
     expect(scope.permissions.allow).toEqual([]);
     expect(scope.env).toEqual([]);
   });
 });
 
-describe('readSettings', () => {
+describe('readAgentSettings across agents', () => {
   test('returns three scopes with a project and one without', async () => {
     const { home, project } = await newProject();
 
-    expect((await readSettings(project, home)).map((scope) => {
+    expect((await readAgentSettings('claude', project, home)).map((scope) => {
       return scope.scope;
     })).toEqual(['user', 'project', 'local']);
-    expect((await readSettings('', home)).map((scope) => {
+    expect((await readAgentSettings('claude', '', home)).map((scope) => {
       return scope.scope;
     })).toEqual(['user']);
+  });
+
+  test('names the sections and root keys a toml config holds', async () => {
+    const { home, project } = await newProject();
+
+    await mkdir(join(home, '.codex'), { recursive: true });
+    await writeFile(join(home, '.codex', 'config.toml'), [
+      '# a comment',
+      '',
+      'model = "gpt-5.4"',
+      '[model_providers.openai]',
+      'name = "OpenAI"',
+      '[mcp_servers.webstorm]',
+      'command = "/usr/local/bin/mcp"',
+    ].join('\n'), 'utf8');
+
+    const [scope] = await readAgentSettings('codex', project, home);
+
+    expect(scope?.exists).toBe(true);
+    expect(scope?.format).toBe('toml');
+    expect(scope?.editable).toBe(false);
+    // Only the outermost section name, so a table per provider or per server
+    // does not list one key each.
+    expect(scope?.preservedKeys).toEqual([
+      'model',
+      'model_providers',
+      'name',
+      'mcp_servers',
+      'command',
+    ]);
+  });
+
+  test('skips a malformed toml line and unwraps an array of tables', async () => {
+    const { home, project } = await newProject();
+
+    await mkdir(join(home, '.codex'), { recursive: true });
+    await writeFile(join(home, '.codex', 'config.toml'), [
+      '[]',
+      '= orphaned',
+      '[[profiles]]',
+      'name = "one"',
+    ].join('\n'), 'utf8');
+
+    const [scope] = await readAgentSettings('codex', project, home);
+
+    expect(scope?.preservedKeys).toEqual(['profiles', 'name']);
+  });
+
+  test('reports a toml config that has never been written', async () => {
+    const { home, project } = await newProject();
+    const [scope] = await readAgentSettings('codex', project, home);
+
+    expect(scope?.exists).toBe(false);
+    expect(scope?.readable).toBe(true);
+    expect(scope?.preservedKeys).toEqual([]);
+  });
+
+  test('reads a json config it may not write', async () => {
+    const { home, project } = await newProject();
+
+    await mkdir(join(home, '.gemini'), { recursive: true });
+    await writeFile(join(home, '.gemini', 'settings.json'), JSON.stringify({
+      theme: 'dark',
+      selectedAuthType: 'oauth',
+    }), 'utf8');
+
+    const [scope] = await readAgentSettings('gemini', project, home);
+
+    expect(scope?.exists).toBe(true);
+    expect(scope?.editable).toBe(false);
+    expect(scope?.preservedKeys).toEqual(['theme', 'selectedAuthType']);
+  });
+
+  test('refuses to write a surface whose schema is not Claude\'s', async () => {
+    const { home, project } = await newProject();
+
+    await expect(writeScopeSettings('user', project, EMPTY_PATCH, home, 'gemini'))
+      .rejects.toThrow('read-only');
+    await expect(writeScopeSettings('local', project, EMPTY_PATCH, home, 'codex'))
+      .rejects.toThrow('no settings file for that scope');
   });
 });
 

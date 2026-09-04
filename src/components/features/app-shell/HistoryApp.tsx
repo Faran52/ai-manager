@@ -126,7 +126,8 @@ export const HistoryApp: FC = () => {
   const archives = useArchives(view === 'archive');
   const retention = useRetention(view === 'archive');
   const storage = useStorage(view === 'analytics');
-  const settings = useSettings(view === 'settings' ? projectPath : null);
+  const [settingsAgent, setSettingsAgent] = useState<AgentId>('claude');
+  const settings = useSettings(view === 'settings' ? projectPath : null, settingsAgent);
   const boardScope = view === 'sessions' && sessionsPanel !== 'transcript';
   const edits = useRecentEdits(selectedProject, boardScope);
   const newestSessions = useNewestSessions(boardScope && selectedProject == null);
@@ -442,7 +443,12 @@ export const HistoryApp: FC = () => {
       />
     ),
     settings: (
-      <SettingsView settings={settings} projectPath={selectedProject?.actualPath ?? null} />
+      <SettingsView
+        settings={settings}
+        projectPath={selectedProject?.actualPath ?? null}
+        agent={settingsAgent}
+        onSelectAgent={setSettingsAgent}
+      />
     ),
     health: (
       <div className="h-full overflow-y-auto p-4">

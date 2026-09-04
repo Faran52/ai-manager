@@ -38,6 +38,8 @@ const scope = (name: SettingsScope, overrides: Partial<ScopeSettings> = {}): Sco
     },
     env: [],
     preservedKeys: [],
+    format: 'json',
+    editable: true,
     ...overrides,
   };
 };
@@ -58,6 +60,8 @@ test('shows the active scope with its path and rules', () => {
   render(
     <SettingsView
       settings={resource('ready', [scope('user'), scope('project'), scope('local')])}
+      agent="claude"
+      onSelectAgent={noop}
       projectPath="/repo"
     />,
   );
@@ -71,6 +75,8 @@ test('shows the active scope with its path and rules', () => {
 test('switches to another scope and shows its own file', async () => {
   render(
     <SettingsView
+      agent="claude"
+      onSelectAgent={noop}
       settings={resource('ready', [
         scope('user'),
         scope('project', {
@@ -94,7 +100,14 @@ test('switches to another scope and shows its own file', async () => {
 });
 
 test('nudges towards a project when only the user scope is available', () => {
-  render(<SettingsView settings={resource('ready', [scope('user')])} projectPath={null} />);
+  render(
+    <SettingsView
+      settings={resource('ready', [scope('user')])}
+      projectPath={null}
+      agent="claude"
+      onSelectAgent={noop}
+    />,
+  );
 
   expect(screen.getByText(/Pick a project in the sidebar/)).toBeDefined();
 });
@@ -102,6 +115,8 @@ test('nudges towards a project when only the user scope is available', () => {
 test('names a file that does not exist yet and the keys it will keep', () => {
   render(
     <SettingsView
+      agent="claude"
+      onSelectAgent={noop}
       settings={resource('ready', [scope('user', {
         exists: false,
         preservedKeys: ['hooks', 'statusLine'],
@@ -118,6 +133,8 @@ test('refuses to save over a file it could not parse', () => {
   render(
     <SettingsView
       settings={resource('ready', [scope('user', { readable: false })])}
+      agent="claude"
+      onSelectAgent={noop}
       projectPath="/repo"
     />,
   );
@@ -128,7 +145,12 @@ test('refuses to save over a file it could not parse', () => {
 
 test('waits while loading and reports a read failure', () => {
   const { rerender } = render(
-    <SettingsView settings={resource('loading', undefined)} projectPath="/repo" />,
+    <SettingsView
+      settings={resource('loading', undefined)}
+      projectPath="/repo"
+      agent="claude"
+      onSelectAgent={noop}
+    />,
   );
 
   expect(screen.queryByText('Save settings')).toBeNull();
@@ -141,13 +163,22 @@ test('waits while loading and reports a read failure', () => {
         reload: noop,
       }}
       projectPath="/repo"
+      agent="claude"
+      onSelectAgent={noop}
     />,
   );
   expect(screen.getByText('denied')).toBeDefined();
 });
 
 test('says so when the chosen scope is not among the loaded ones', () => {
-  render(<SettingsView settings={resource('ready', [scope('project')])} projectPath="/repo" />);
+  render(
+    <SettingsView
+      settings={resource('ready', [scope('project')])}
+      projectPath="/repo"
+      agent="claude"
+      onSelectAgent={noop}
+    />,
+  );
 
   expect(screen.getByText('No settings file for this scope')).toBeDefined();
 });
@@ -160,7 +191,12 @@ test('saves an edited rule list and reloads', async () => {
   }));
 
   render(
-    <SettingsView settings={resource('ready', [scope('user')], reload)} projectPath="/repo" />,
+    <SettingsView
+      settings={resource('ready', [scope('user')], reload)}
+      projectPath="/repo"
+      agent="claude"
+      onSelectAgent={noop}
+    />,
   );
 
   await userEvent.type(screen.getByLabelText('Add a rule to Denied'), 'Read(./.env)');
@@ -178,7 +214,14 @@ test('reports a failed save', async () => {
     return new Response('{"error":"read-only file system"}', { status: 500 });
   }));
 
-  render(<SettingsView settings={resource('ready', [scope('user')])} projectPath={null} />);
+  render(
+    <SettingsView
+      settings={resource('ready', [scope('user')])}
+      projectPath={null}
+      agent="claude"
+      onSelectAgent={noop}
+    />,
+  );
   await userEvent.click(screen.getByText('Save settings'));
 
   expect(await screen.findByText('read-only file system')).toBeDefined();
@@ -189,7 +232,14 @@ test('edits directories and environment variables before saving', async () => {
     return Response.json({ scope: scope('user') });
   }));
 
-  render(<SettingsView settings={resource('ready', [scope('user')])} projectPath="/repo" />);
+  render(
+    <SettingsView
+      settings={resource('ready', [scope('user')])}
+      projectPath="/repo"
+      agent="claude"
+      onSelectAgent={noop}
+    />,
+  );
 
   await userEvent.type(screen.getByLabelText('Add a rule to Additional directories'), '../shared');
   await userEvent.click(screen.getAllByText('Add')[3] ?? document.body);
@@ -200,4 +250,80 @@ test('edits directories and environment variables before saving', async () => {
   await userEvent.click(screen.getAllByText('Add').at(-1) ?? document.body);
 
   expect(screen.getByText('A')).toBeDefined();
+});
+
+test('offers only the agents that keep a settings file, and reports the pick', async () => {
+  const onSelectAgent = vi.fn();
+
+  render(
+    <SettingsView
+      settings={resource('ready', [scope('user')])}
+      projectPath="/repo"
+      agent="claude"
+      onSelectAgent={onSelectAgent}
+    />,
+  );
+
+  expect(screen.getByRole('button', { name: 'Codex CLI' })).toBeDefined();
+  // Copilot configures MCP servers and rules, but keeps no settings file.
+  expect(screen.queryByRole('button', { name: 'GitHub Copilot' })).toBeNull();
+
+  await userEvent.click(screen.getByRole('button', { name: 'Codex CLI' }));
+
+  expect(onSelectAgent).toHaveBeenCalledWith('codex');
+});
+
+test('reads a surface it may not write instead of offering the editors', () => {
+  render(
+    <SettingsView
+      settings={resource('ready', [scope('user', {
+        path: '/home/.codex/config.toml',
+        format: 'toml',
+        editable: false,
+        preservedKeys: ['model', 'mcp_servers.webstorm'],
+      })])}
+      projectPath="/repo"
+      agent="codex"
+      onSelectAgent={noop}
+    />,
+  );
+
+  expect(screen.getByText('/home/.codex/config.toml')).toBeDefined();
+  expect(screen.getByText('Read-only here')).toBeDefined();
+  expect(screen.getByText(/model, mcp_servers.webstorm/u)).toBeDefined();
+  // None of the Claude-shaped editors, and nothing to press that would write.
+  expect(screen.queryByText('Allowed')).toBeNull();
+  expect(screen.queryByText('Environment variables')).toBeNull();
+  expect(screen.queryByText('Save settings')).toBeNull();
+});
+
+test('says a read-only file holds nothing yet when it is empty', () => {
+  render(
+    <SettingsView
+      settings={resource('ready', [scope('user', {
+        exists: false,
+        format: 'toml',
+        editable: false,
+      })])}
+      projectPath="/repo"
+      agent="codex"
+      onSelectAgent={noop}
+    />,
+  );
+
+  expect(screen.getByText(/no settings in it yet/u)).toBeDefined();
+  expect(screen.getByText(/will be created on save/u)).toBeDefined();
+});
+
+test('says an agent has no settings file of its own', () => {
+  render(
+    <SettingsView
+      settings={resource('ready', [])}
+      projectPath="/repo"
+      agent="copilot"
+      onSelectAgent={noop}
+    />,
+  );
+
+  expect(screen.getByText(/no settings file of its own/u)).toBeDefined();
 });

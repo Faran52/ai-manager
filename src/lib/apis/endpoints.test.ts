@@ -961,6 +961,16 @@ describe('settings endpoints', () => {
     expect(await jsonOf(await handleReadSettings(post({ projectPath: project }), { home })))
       .toMatchObject({ scopes: [{ scope: 'user' }, { scope: 'project' }, { scope: 'local' }] });
 
+    // A named agent reads its own files; an unnamed one still means Claude.
+    expect(await jsonOf(await handleReadSettings(post({
+      projectPath: project,
+      agent: 'codex',
+    }), { home }))).toMatchObject({ scopes: [{ editable: false }] });
+    expect((await handleReadSettings(post({
+      projectPath: project,
+      agent: 'nonsense',
+    }), { home })).status).toBe(400);
+
     const written = await handleWriteSettings(post({
       projectPath: project,
       scope: 'project',

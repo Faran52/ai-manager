@@ -9,6 +9,12 @@ import {
   SlidersHorizontal,
 } from 'lucide-react';
 
+import {
+  agentOption,
+  projectScopedSettingsAgents,
+  settingsAgents,
+} from '@config/agents';
+
 import { writeSettings } from '@lib/apis/apiClient';
 import { toErrorMessage } from '@utils/errorUtils';
 
@@ -20,6 +26,7 @@ import {
 
 import { EnvEditor, RuleListEditor } from './partials';
 
+import type { AgentId } from '@config/agents';
 import type { AsyncResource } from '@features/history-data';
 import type {
   EnvEntry,
@@ -32,6 +39,8 @@ import type { FC } from 'react';
 export interface SettingsViewProps {
   readonly settings: AsyncResource<readonly ScopeSettings[]>;
   readonly projectPath: string | null;
+  readonly agent: AgentId;
+  readonly onSelectAgent: (agent: AgentId) => void;
 }
 
 interface Draft {
@@ -55,7 +64,12 @@ const draftOf = (scope: ScopeSettings): Draft => {
   };
 };
 
-export const SettingsView: FC<SettingsViewProps> = ({ settings, projectPath }) => {
+export const SettingsView: FC<SettingsViewProps> = ({
+  settings,
+  projectPath,
+  agent,
+  onSelectAgent,
+}) => {
   const { t } = useTranslation('settings');
   const scopes = settings.data ?? [];
   const [active, setActive] = useState<SettingsScope>('user');
@@ -99,6 +113,7 @@ export const SettingsView: FC<SettingsViewProps> = ({ settings, projectPath }) =
           projectPath: projectPath ?? '',
           scope: active,
           patch: value,
+          agent,
         });
         setSaved(true);
         reload();
@@ -119,6 +134,29 @@ export const SettingsView: FC<SettingsViewProps> = ({ settings, projectPath }) =
           <h2 className="text-base font-semibold text-foreground">{t('heading')}</h2>
           <p className="text-sm text-muted-foreground">{t('intro')}</p>
         </header>
+
+        <nav
+          className="
+            flex w-fit flex-wrap items-center gap-1 rounded-lg bg-muted p-0.5
+          "
+          aria-label={t('agents')}
+        >
+          {settingsAgents.map((option) => {
+            return (
+              <Button
+                key={option}
+                size="sm"
+                variant={option === agent ? 'primary' : 'ghost'}
+                pressed={option === agent}
+                onClick={() => {
+                  onSelectAgent(option);
+                }}
+              >
+                {agentOption(option).label}
+              </Button>
+            );
+          })}
+        </nav>
 
         <nav
           className="flex w-fit items-center gap-1 rounded-lg bg-muted p-0.5"
@@ -154,17 +192,47 @@ export const SettingsView: FC<SettingsViewProps> = ({ settings, projectPath }) =
           </p>
         )}
 
-        {settings.status === 'ready' && scopes.length === 1 && (
+        {settings.status === 'ready' && scopes.length === 1
+          && projectScopedSettingsAgents.includes(agent) && (
           <p className="text-xs text-muted-foreground" data-settings-project-hint>
             {t('projectHint')}
           </p>
         )}
 
         {current == null && settings.status === 'ready' && (
-          <EmptyState icon={<SlidersHorizontal className="size-8" />} title={t('noScope')} />
+          <EmptyState
+            icon={<SlidersHorizontal className="size-8" />}
+            title={scopes.length === 0 ? t('noSettingsFile') : t('noScope')}
+          />
         )}
 
-        {current != null && draft != null && (
+        {current != null && current.editable !== true && (
+          <div className="
+            grid gap-3 rounded-xl border border-border bg-card p-4
+          "
+          >
+            <p className="font-mono text-[11px] break-all text-muted-foreground">
+              {current.path}
+              {!current.exists && ` · ${t('willBeCreated')}`}
+            </p>
+            <p className="
+              flex items-center gap-2 rounded-lg border border-warn/40
+              bg-warn/10 px-3 py-2 text-xs text-warn
+            "
+            >
+              <CircleAlert className="size-3.5" />
+              {t('readOnly')}
+            </p>
+            <p className="text-xs text-muted-foreground">{t('readOnlyHint')}</p>
+            <p className="font-mono text-[11px] break-all text-muted-foreground" data-holds>
+              {current.preservedKeys.length === 0
+                ? t('holdsNothing')
+                : t('holds', { keys: current.preservedKeys.join(', ') })}
+            </p>
+          </div>
+        )}
+
+        {current?.editable === true && draft != null && (
           <div className="
             grid gap-4 rounded-xl border border-border bg-card p-4
           "

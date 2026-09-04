@@ -109,6 +109,53 @@ stays; configuration management is where the work is. Each phase gates the next.
   always-on context is re-sent every turn and a per-turn figure floored at
   "<$0.0001" for most plugins and said nothing.
 
+- **Skills and subagents counted by name.** Skill and Task were one bar each in
+  the tool list, which said a skill ran but never which one; on this machine
+  that hid seven skills behind a single bar. Both names were already parsed,
+  Task through to `kind: 'task'` and Skill only into a presentational row, so
+  Skill gained the first-class kind Task already had rather than having the
+  stats layer read a display row back out. The report grows two lists and
+  leaves one out where the project ran none.
+- **HTML export.** JSON needs a reader and Markdown needs a renderer, so
+  neither is something to open or send on. One file with its styles inline,
+  following the reader's light or dark preference. Everything written into it
+  is escaped, because a transcript carries the markup and script tags that were
+  discussed inside the session, and the ampersand pass runs first or it would
+  re-encode the entities the later passes introduce. Body text is written into
+  a pre-wrap block rather than parsed as markdown: a parser would be a second
+  renderer to keep in step with the app's own.
+- **Worktrees read as the repository they belong to.** A branch checked out
+  beside the main tree is its own folder, so every reader recorded it as a
+  separate project and one repository listed twice. A linked worktree's `.git`
+  is a file naming the repository that owns it, resolved once over the merged
+  project list rather than in each of the nine readers, which all report a
+  folder without knowing what owns it. Verified against a real `git worktree
+  add`; not verified end to end, which would need recorded sessions inside a
+  worktree.
+- **Settings beyond Claude** (was item 13). The paths were hardcoded to
+  `~/.claude`, and the plan's suggestion to drive them from `SPECS` did not
+  survive contact: `SPECS` names MCP and rules files, not settings files, and
+  `~/.claude/settings.json` is not in it at all. A surface map now names where
+  each agent keeps its settings, and only Claude's is editable. That is not
+  timidity: Gemini and OpenCode keep JSON of an entirely different schema, so
+  writing `permissions.allow` into one would invent configuration the agent
+  never asked for, and Codex and Grok are TOML. Four agents have no general
+  settings file whatsoever and say so.
+  A read-only surface still reports its path and what it holds, because which
+  file carries a setting is the part that is hard to find. TOML is read by line
+  scan for its outermost section names, no dependency added, because Codex
+  writes a table per project and per plugin and the full paths listed hundreds
+  of keys where the question is which areas the file configures.
+  The refusal lives in the service, not only the view, so a request that
+  reaches it directly is refused too. `readSettings`, `readScopeSettings` and
+  `settingsPathFor` are gone: the map replaced all three, and keeping them
+  would have been two mechanisms for one answer.
+  The picker list lives in `config/agents`, not the service, because the view
+  is client code and importing a value from a module that reads the filesystem
+  pulled `node:fs/promises` into the browser bundle and blanked the app. The
+  build did not catch it; hydration did. A test asserts the two lists name the
+  same agents so they cannot drift.
+
 ## Phase 2: Agent tiers
 
 - [x] Tier 1, history + management: Claude Code, Codex, GitHub Copilot, Cursor

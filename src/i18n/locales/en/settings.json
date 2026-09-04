@@ -1,6 +1,6 @@
 {
   "heading": "Settings manager",
-  "intro": "Claude Code merges three settings files in order: yours, the project's, and the local one it never commits. Edit each here.",
+  "intro": "Each agent merges its own settings files, in the order it merges them. Claude Code’s are edited here; the rest are read as written.",
   "scopes": "Settings scopes",
   "scopeUser": "User",
   "scopeProject": "Project",
@@ -30,5 +30,11 @@
   "removeEnv": "Remove {{name}}",
   "preserved": "Kept untouched on save: {{keys}}",
   "save": "Save settings",
-  "saved": "Saved"
+  "saved": "Saved",
+  "agents": "Agents",
+  "readOnly": "Read-only here",
+  "readOnlyHint": "This agent keeps its own settings schema, so it is read as written rather than edited. Change it in the file itself.",
+  "holds": "Holds: {{keys}}",
+  "holdsNothing": "This file has no settings in it yet.",
+  "noSettingsFile": "This agent has no settings file of its own. Its MCP servers and rules are read in Health."
 }

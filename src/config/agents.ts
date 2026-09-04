@@ -186,3 +186,26 @@ export const agentOption = (agent: string): AgentOption => {
 export const isAgentId = (value: string): value is AgentId => {
   return AGENTS_BY_ID.has(value);
 };
+
+/*
+ * The agents that keep a settings file of their own, in the order the picker
+ * offers them. Here rather than in settingsService because the picker is client
+ * code and that module reads the filesystem, so importing a value from it would
+ * pull node builtins into the browser bundle. A settings test asserts the two
+ * lists match, so a new surface cannot be added in one place alone.
+ */
+const SETTINGS_AGENTS = new Set<AgentId>(['claude', 'codex', 'gemini', 'opencode', 'grok']);
+
+export const settingsAgents: readonly AgentId[] = agentOptions.flatMap((option) => {
+  return SETTINGS_AGENTS.has(option.id) ? [option.id] : [];
+});
+
+/*
+ * Of those, the ones that also read a file inside the project, so the prompt to
+ * pick one is shown only where it would actually reveal another scope.
+ */
+const PROJECT_SCOPED_SETTINGS = new Set<AgentId>(['claude', 'gemini', 'grok']);
+
+export const projectScopedSettingsAgents: readonly AgentId[] = agentOptions.flatMap((option) => {
+  return PROJECT_SCOPED_SETTINGS.has(option.id) ? [option.id] : [];
+});

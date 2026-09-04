@@ -153,6 +153,7 @@ export interface FileHistoryResponse {
 export type StorageResponse = StorageReport;
 
 export interface SettingsBody {
+  readonly agent?: AgentId | undefined;
   readonly projectPath: string;
 }
 
