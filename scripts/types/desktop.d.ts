@@ -2,7 +2,16 @@
    under Node, which has no Deno global, and Deno's own lib would be a
    dependency carried for the sake of two members. */
 declare namespace Deno {
-  class BrowserWindow extends EventTarget {}
+  interface BrowserWindowOptions {
+    // Initial width in logical pixels.
+    width?: number;
+    // Initial height in logical pixels.
+    height?: number;
+  }
+
+  class BrowserWindow extends EventTarget {
+    constructor(options?: BrowserWindowOptions);
+  }
 
   function exit(code: number): never;
 }

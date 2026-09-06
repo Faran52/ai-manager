@@ -329,11 +329,15 @@ stays; configuration management is where the work is. Each phase gates the next.
       how wide the sidebar is, and it is dropped altogether once both columns
       are folded, because 112px is no place for it and the All projects card
       carries the same counts.
-- [ ] Give the desktop window a native feel through `deno.json`, not CSS. The
-      `desktop` block configures the app's name, identifier, icons, backend and
-      release feed, and nothing about the window itself, so it opens at whatever
-      default the webview picks. What is actually settable there needs reading
-      out of the deno desktop docs before this is scoped: an initial and a
-      minimum size are the parts worth having, and a macOS title bar style only
-      if it is offered as configuration rather than something to fake in the
-      page.
+- [x] The desktop window is configured from the entry that already adopts it,
+      because `deno.json`'s `desktop` block sets nothing about the window —
+      app metadata, backend, output, code signing, the update feed and error
+      reporting are the whole of it. `BrowserWindowOptions` carries `width`
+      and `height` (800×600 otherwise), so the entry opens the shell at
+      1440×900 logical pixels. A minimum size was the other part worth having
+      and does not exist: no option on the constructor and no setter on the
+      window, so there was nothing to configure. What the docs do offer for
+      the title bar is `frameless` and `transparentTitlebar`, both
+      creation-only, and blending the title bar in gives the traffic lights
+      the top-left corner of the page — a style to adopt when the header is
+      drawn to host them, not something to fake in CSS, so none is set.
