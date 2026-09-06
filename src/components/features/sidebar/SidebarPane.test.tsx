@@ -14,7 +14,11 @@ import {
   vi,
 } from 'vitest';
 
-import { projectsPaneStorageKey } from '@config/storageKeys';
+import {
+  projectsDrawerStorageKey,
+  projectsPaneStorageKey,
+  sessionsListStorageKey,
+} from '@config/storageKeys';
 
 import { SidebarPane } from './SidebarPane';
 
@@ -109,20 +113,20 @@ describe('SidebarPane', () => {
     expect(onSelectAllProjects).toHaveBeenCalledTimes(1);
   });
 
-  test('restores and resizes the project pane', async () => {
+  test('restores and resizes the project drawer', async () => {
     localStorage.setItem(projectsPaneStorageKey, '999');
 
     render(<SidebarPane {...base} projects={[]} sessions={[]} />);
 
-    const divider = screen.getByRole('slider', { name: 'Resize projects and sessions' });
+    const divider = screen.getByRole('slider', { name: 'Resize projects' });
 
-    expect(divider.getAttribute('aria-valuenow')).toBe('640');
+    expect(divider.getAttribute('aria-valuenow')).toBe('480');
     divider.focus();
-    await userEvent.keyboard('{ArrowUp}');
+    await userEvent.keyboard('{ArrowLeft}');
 
-    expect(divider.getAttribute('aria-valuenow')).toBe('616');
+    expect(divider.getAttribute('aria-valuenow')).toBe('456');
     await waitFor(() => {
-      expect(localStorage.getItem(projectsPaneStorageKey)).toBe('616');
+      expect(localStorage.getItem(projectsPaneStorageKey)).toBe('456');
     });
   });
 
@@ -781,5 +785,89 @@ describe('SidebarPane branches', () => {
 
     expect(screen.getByText('Alpha')).toBeDefined();
     expect(screen.queryByText('Beta')).toBeNull();
+  });
+});
+
+describe('SidebarPane collapsed columns', () => {
+  test('folds the projects drawer to its marks and unfolds it again', async () => {
+    render(<SidebarPane {...base} projects={[project('p', 'webapp')]} sessions={[]} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Hide projects' }));
+
+    expect(screen.getByRole('button', { name: 'webapp' })).toBeDefined();
+    expect(screen.queryByLabelText('Filter projects')).toBeNull();
+    await waitFor(() => {
+      expect(localStorage.getItem(projectsDrawerStorageKey)).toBe('false');
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Show projects' }));
+
+    expect(screen.queryByRole('button', { name: 'webapp' })).toBeNull();
+    expect(screen.getByLabelText('Filter projects')).toBeDefined();
+  });
+
+  test('opens a project and the whole machine from the folded drawer', async () => {
+    const onSelectProject = vi.fn();
+    const onSelectAllProjects = vi.fn();
+
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p1', 'webapp'), project('p2', 'cli-tool')]}
+        sessions={[]}
+        onSelectProject={onSelectProject}
+        onSelectAllProjects={onSelectAllProjects}
+      />,
+    );
+    await userEvent.type(screen.getByLabelText('Filter projects'), 'cli');
+    await userEvent.click(screen.getByRole('button', { name: 'Hide projects' }));
+
+    expect(screen.queryByRole('button', { name: 'webapp' })).toBeNull();
+
+    await userEvent.click(screen.getByRole('button', { name: 'cli-tool' }));
+
+    expect(onSelectProject).toHaveBeenCalledWith(expect.objectContaining({ id: 'p2' }));
+
+    await userEvent.click(screen.getByRole('button', { name: 'All projects' }));
+
+    expect(onSelectAllProjects).toHaveBeenCalledTimes(1);
+  });
+
+  test('folds the session list to the agent mark each row carries', async () => {
+    const onSelectSession = vi.fn();
+
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p', 'webapp')]}
+        sessions={[session('a', 'Login fix')]}
+        onSelectSession={onSelectSession}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Hide sessions' }));
+
+    expect(screen.getByText('CC')).toBeDefined();
+    await waitFor(() => {
+      expect(localStorage.getItem(sessionsListStorageKey)).toBe('false');
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Login fix' }));
+
+    expect(onSelectSession).toHaveBeenCalledWith(expect.objectContaining({ filePath: '/r/a.jsonl' }));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Show sessions' }));
+
+    expect(screen.queryByText('CC')).toBeNull();
+  });
+
+  test('restores both columns folded', () => {
+    localStorage.setItem(projectsDrawerStorageKey, 'false');
+    localStorage.setItem(sessionsListStorageKey, 'false');
+
+    render(<SidebarPane {...base} projects={[project('p', 'webapp')]} sessions={[]} />);
+
+    expect(screen.getByRole('button', { name: 'Show projects' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Show sessions' })).toBeDefined();
+    expect(screen.queryByRole('slider')).toBeNull();
+    expect(screen.queryByText('1 project')).toBeNull();
   });
 });

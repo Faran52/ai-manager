@@ -10,7 +10,6 @@ import { initI18n } from '@i18n/index';
 import { motion, MotionConfig } from 'motion/react';
 
 import { appShortcuts } from '@config/shortcuts';
-import { sidebarWidthStorageKey } from '@config/storageKeys';
 
 import {
   deleteProject,
@@ -24,7 +23,6 @@ import { isTypingTarget, matchesShortcut } from '@utils/shortcutUtils';
 import {
   Button,
   fadeTransition,
-  PaneDivider,
   Toast,
 } from '@ui/index';
 import { AgentSetupPanel, usePluginToggle } from '@features/agent-setup';
@@ -73,17 +71,6 @@ import type { FC, ReactNode } from 'react';
 type SessionsPanel = 'transcript' | 'grid' | 'edits';
 
 const EMPTY_PROJECTS: readonly ProjectSummary[] = [];
-const MIN_SIDEBAR_WIDTH = 280;
-const MAX_SIDEBAR_WIDTH = 520;
-const DEFAULT_SIDEBAR_WIDTH = 340;
-
-const initialSidebarWidth = (): number => {
-  const stored = Number(localStorage.getItem(sidebarWidthStorageKey));
-
-  return Number.isFinite(stored) && stored >= MIN_SIDEBAR_WIDTH
-    ? Math.min(stored, MAX_SIDEBAR_WIDTH)
-    : DEFAULT_SIDEBAR_WIDTH;
-};
 
 initI18n();
 
@@ -118,7 +105,6 @@ export const HistoryApp: FC = () => {
   const [retentionNotice, setRetentionNotice] = useState<string | null>(null);
   const [highlightTimestamp, setHighlightTimestamp] = useState<string | undefined>(undefined);
   const [archivedSession, setArchivedSession] = useState<ArchivedSession | null>(null);
-  const [sidebarWidth, setSidebarWidth] = useState(initialSidebarWidth);
   const [nowMs] = useState(() => {
     return Date.now();
   });
@@ -173,10 +159,6 @@ export const HistoryApp: FC = () => {
     },
     [visibleProjects],
   );
-
-  useEffect(() => {
-    localStorage.setItem(sidebarWidthStorageKey, String(sidebarWidth));
-  }, [sidebarWidth]);
 
   /**
    * The agents prune on their own schedule and this app is only running some of
@@ -494,10 +476,12 @@ export const HistoryApp: FC = () => {
             onReload={projects.reload}
           />
 
-          <div
-            className="grid min-h-0 flex-1 overflow-hidden"
-            style={{ gridTemplateColumns: `${String(sidebarWidth)}px 8px minmax(0, 1fr)` }}
-          >
+          {/*
+            * The sidebar sizes itself from the columns it is holding open, so
+            * folding one gives the width back to the pane rather than to the
+            * other column.
+            */}
+          <div className="flex min-h-0 flex-1 overflow-hidden">
             <SidebarPane
               wholeMachine={analyticsScope === 'global'}
               onSelectAllProjects={() => {
@@ -515,18 +499,6 @@ export const HistoryApp: FC = () => {
               onDeleteProject={deleteSelectedProject}
               onRenameSession={renameSelectedSession}
               onDeleteSession={deleteSelectedSession}
-            />
-            <PaneDivider
-              label={t('resizeSidebar')}
-              value={sidebarWidth}
-              min={MIN_SIDEBAR_WIDTH}
-              max={MAX_SIDEBAR_WIDTH}
-              orientation="horizontal"
-              onResize={(delta) => {
-                setSidebarWidth((width) => {
-                  return Math.min(Math.max(width + delta, MIN_SIDEBAR_WIDTH), MAX_SIDEBAR_WIDTH);
-                });
-              }}
             />
             <motion.div
               key={view}

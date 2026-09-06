@@ -7,6 +7,9 @@ export const accentStorageKey = 'acm-accent';
 export const fontSizeStorageKey = 'acm-font-size';
 export const projectsPaneStorageKey = 'acm-projects-pane';
 export const sidebarWidthStorageKey = 'acm-sidebar-width';
+// Whether each sidebar column is open. Absent means it is.
+export const projectsDrawerStorageKey = 'acm-projects-drawer';
+export const sessionsListStorageKey = 'acm-sessions-list';
 export const messageFiltersStorageKey = 'acm-message-filters';
 export const messageFilterBarStorageKey = 'acm-message-filter-bar';
 export const messageNavigatorOpenStorageKey = 'acm-message-navigator-open';

@@ -315,15 +315,20 @@ stays; configuration management is where the work is. Each phase gates the next.
       replacing that session with them was the one thing the tab could not do.
       `BoardPanels` lost its edits half rather than keeping an unreachable
       second copy of it.
-- [ ] Give the desktop window a native feel through `deno.json`, not CSS. `FontSizePicker`,
-      `LanguagePicker`, `AccentPicker` and `ThemePicker` are four separate icon
-      buttons crowding the end of the header, beside Search and Refresh, which
-      are actions rather than preferences. One gear opening a popover that holds
-      all four separates the two kinds of control and gives the three appearance
-      pickers somewhere to grow. `PopupMenu` already exists and each picker is
-      self-contained, so this is a container, not a rewrite. Not the Settings
-      view: that manages the agents' files on disk, and these are this app's own
-      display preferences.
+- [x] The projects drawer folds to its marks, and so does the session list. A
+      column that vanishes is a lie about what is there: folded, a project is
+      the first letters of its folder and a session is the agent circle its row
+      already carries, both keeping the selection bar, so you can still see
+      where you are and move without unfolding anything. The two lists are
+      columns now rather than a stack split by a horizontal divider, which is
+      what makes folding one worth anything: the width it gives up goes to the
+      pane, not to its neighbour. The sidebar sizes itself from the columns it
+      is holding open, so `HistoryApp` no longer owns a sidebar width and both
+      dividers moved into `SidebarPane`. The status line is contained
+      (`contain: inline-size`) so that a row of counts cannot be what decides
+      how wide the sidebar is, and it is dropped altogether once both columns
+      are folded, because 112px is no place for it and the All projects card
+      carries the same counts.
 - [ ] Give the desktop window a native feel through `deno.json`, not CSS. The
       `desktop` block configures the app's name, identifier, icons, backend and
       release feed, and nothing about the window itself, so it opens at whatever

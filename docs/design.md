@@ -361,6 +361,12 @@ rereads:
    The paragraph above describing 79 frozen sizes described a state that no longer exists.
 3. **The headless kit won.** The menu is Radix `dropdown-menu`, which brings arrow keys, typeahead,
    the submenu the funnel needs, and portalled positioning. See below.
+4. **The shell is the mock's arrangement**: rail, projects drawer, session list, pane. Each list
+   column folds to a 56px strip of its own marks, projects to the first letters of the folder name
+   and sessions to the agent circle the row already carries, and the width a folded column gives up
+   goes to the pane rather than to the column beside it. What a strip cannot carry is the second
+   line of a row, so a project loses its path and a session its age and message count until the
+   column is unfolded again.
 
 ## Open decisions
 
@@ -390,8 +396,6 @@ Screens that need service work before they can be built as drawn:
   both figures.
 - Reveal in Finder does not exist. It needs three OS labels, a widened `deno desktop` grant, and it
   belongs on the project's right-click menu rather than in Settings.
-- The shell itself is new. The app is two columns today, `sidebar | divider | 1fr`, with projects
-  and sessions sharing one pane in every view.
 
 One thing found while inventorying and worth a decision of its own: the whole **Prompt history**
 feature is written in `src/i18n/locales/en/session.json`, with scopes, search and an orphaned-prompts

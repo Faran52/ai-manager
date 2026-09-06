@@ -382,6 +382,20 @@
     color: var(--agent-dark);
   }
 
+  /* The pair of hues lives on [data-agent] in AgentTag.css, so a mark that
+     stands in for a session sets only the roles it fills them into. */
+  .sidebar-agent-mark {
+    color: var(--agent-light, var(--muted-foreground));
+    background: color-mix(in srgb, currentcolor 16%, var(--muted));
+  }
+
+  .dark .sidebar-agent-mark {
+    color: var(--agent-dark, var(--muted-foreground));
+  }
+
+  /* The sidebar is as wide as the columns it holds open, so the status line
+     must not be what decides that: contained, it sizes as though it were empty
+     and two collapsed strips stay 112px rather than as wide as this text. */
   .sidebar-status {
     display: flex;
     flex: none;
@@ -390,9 +404,11 @@
     justify-content: space-between;
     min-height: 1.75rem;
     padding-inline: 0.75rem;
+    contain: inline-size;
     font-family: var(--font-mono);
     font-size: 0.5625rem;
     color: color-mix(in srgb, var(--muted-foreground) 78%, transparent);
+    border-inline-end: 1px solid var(--border);
     border-top: 1px solid var(--border);
   }
 }
