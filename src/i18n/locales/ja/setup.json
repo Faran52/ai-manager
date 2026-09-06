@@ -66,5 +66,8 @@
   "auth": "認証",
   "from": "取得元",
   "modelConfigured": "設定されたモデル",
-  "colProblem": "問題"
+  "colProblem": "問題",
+  "noSessions": "セッションなし",
+  "sessionCount_one": "{{count}} セッション",
+  "sessionCount_other": "{{count}} セッション"
 }

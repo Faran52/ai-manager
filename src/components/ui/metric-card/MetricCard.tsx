@@ -15,11 +15,11 @@ export const MetricCard: FC<MetricCardProps> = ({
 }) => {
   return (
     <div
-      className="rounded-xl border border-border bg-card p-4 shadow-sm"
+      className="rounded-lg border border-border bg-card p-4 shadow-sm"
       data-metric-card
     >
       <div className="
-        flex items-center gap-1.5 text-[11px] font-medium tracking-wider
+        flex items-center gap-1.5 text-body font-medium tracking-wider
         text-muted-foreground uppercase
       "
       >

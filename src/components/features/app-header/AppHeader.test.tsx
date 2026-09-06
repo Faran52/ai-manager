@@ -23,12 +23,9 @@ afterEach(() => {
 
 const mount = (overrides?: Partial<Parameters<typeof AppHeader>[0]>) => {
   const props = {
-    view: 'sessions',
-    onViewChange: vi.fn(),
     onOpenSearch: vi.fn(),
     onReload: vi.fn(),
-    themeMode: 'light',
-    onThemeChange: vi.fn(),
+    onOpenSettings: vi.fn(),
     ...overrides,
   } satisfies AppHeaderProps;
 
@@ -38,39 +35,6 @@ const mount = (overrides?: Partial<Parameters<typeof AppHeader>[0]>) => {
 };
 
 describe('AppHeader', () => {
-  test('switches between the two views', async () => {
-    const props = mount();
-
-    await userEvent.click(screen.getByRole('button', { name: /Analytics/ }));
-    expect(props.onViewChange).toHaveBeenCalledWith('analytics');
-
-    await userEvent.click(screen.getByRole('button', { name: /Sessions/ }));
-    expect(props.onViewChange).toHaveBeenCalledWith('sessions');
-
-    await userEvent.click(screen.getByRole('button', { name: /Health/ }));
-    expect(props.onViewChange).toHaveBeenCalledWith('health');
-
-    await userEvent.click(screen.getByRole('button', { name: /Archive/ }));
-    expect(props.onViewChange).toHaveBeenCalledWith('archive');
-
-    await userEvent.click(screen.getByRole('button', { name: /Sessions/ }));
-    expect(props.onViewChange).toHaveBeenCalledWith('sessions');
-  });
-
-  test('leaves settings and the board out of the row of views', () => {
-    mount({ view: 'sessions' });
-
-    expect(screen.queryByRole('button', { name: /Settings/ })).toBeNull();
-    expect(screen.queryByRole('button', { name: /Board/ })).toBeNull();
-  });
-
-  test('marks the active view as pressed', () => {
-    mount({ view: 'health' });
-
-    expect(screen.getByRole('button', { name: /Health/ }).getAttribute('aria-pressed')).toBe('true');
-    expect(screen.getByRole('button', { name: /Analytics/ }).getAttribute('aria-pressed')).toBe('false');
-  });
-
   test('wires search and reload', async () => {
     const props = mount();
 
@@ -79,15 +43,6 @@ describe('AppHeader', () => {
 
     expect(props.onOpenSearch).toHaveBeenCalledOnce();
     expect(props.onReload).toHaveBeenCalledOnce();
-  });
-
-  test('picks a theme directly, without cycling through one that looks the same', async () => {
-    const props = mount({ themeMode: 'dark' });
-
-    await userEvent.click(screen.getByTitle('Theme: Dark'));
-    await userEvent.click(screen.getByText('Light'));
-
-    expect(props.onThemeChange).toHaveBeenCalledWith('light');
   });
 
   test('shows refresh progress for three seconds', async () => {

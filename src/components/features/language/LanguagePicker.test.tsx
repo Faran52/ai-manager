@@ -1,7 +1,6 @@
 import { initI18n } from '@i18n/index';
 import {
   cleanup,
-  fireEvent,
   render,
   screen,
   waitFor,
@@ -23,54 +22,37 @@ afterEach(() => {
   cleanup();
 });
 
+const picker = (): HTMLSelectElement => {
+  return screen.getByRole('combobox');
+};
+
 describe('LanguagePicker', () => {
   test('follows the system until a language is chosen, and again on request', async () => {
     await i18n.changeLanguage('en');
     localStorage.removeItem(languageStorageKey);
     render(<LanguagePicker />);
 
-    await userEvent.click(screen.getByRole('button'));
+    expect(picker().value).toBe('system');
 
-    expect(screen.getByText('System')).toBeDefined();
-
-    await userEvent.click(screen.getByText('한국어'));
+    await userEvent.selectOptions(picker(), 'ko');
 
     expect(localStorage.getItem(languageStorageKey)).toBe('ko');
     expect(document.documentElement.lang).toBe('ko');
 
-    await userEvent.click(screen.getByRole('button'));
-    // The menu is in Korean by now, so the system entry is found by its place.
-    await userEvent.click(screen.getAllByRole('menuitem')[0] ?? document.body);
+    await userEvent.selectOptions(picker(), 'system');
 
     await waitFor(() => {
       expect(localStorage.getItem(languageStorageKey)).toBeNull();
     });
   });
 
-  test('marks the system as the choice in force while nothing is stored', async () => {
-    await i18n.changeLanguage('en');
-    localStorage.removeItem(languageStorageKey);
-    render(<LanguagePicker />);
-
-    await userEvent.click(screen.getByRole('button'));
-
-    const items = screen.getAllByRole('menuitem');
-    const system = items[0];
-
-    expect(system?.textContent).toContain('System');
-    expect(system?.querySelector('svg.text-primary')).not.toBeNull();
-    expect(items[1]?.querySelector('svg.text-primary')).toBeNull();
-  });
-
   test('lists every language and switches the active one', async () => {
     render(<LanguagePicker />);
 
-    await userEvent.click(screen.getByRole('button'));
+    expect(screen.getByRole('option', { name: '日本語' })).toBeDefined();
+    expect(screen.getByRole('option', { name: 'العربية' })).toBeDefined();
 
-    expect(screen.getByText('日本語')).toBeDefined();
-    expect(screen.getByText('العربية')).toBeDefined();
-
-    await userEvent.click(screen.getByText('日本語'));
+    await userEvent.selectOptions(picker(), 'ja');
 
     expect(document.documentElement.lang).toBe('ja');
     expect(document.documentElement.dir).toBe('ltr');
@@ -79,28 +61,26 @@ describe('LanguagePicker', () => {
   test('flips the document direction for arabic and back', async () => {
     render(<LanguagePicker />);
 
-    await userEvent.click(screen.getByRole('button'));
-    await userEvent.click(screen.getByText('العربية'));
+    await userEvent.selectOptions(picker(), 'ar');
 
     expect(document.documentElement.dir).toBe('rtl');
 
-    await userEvent.click(screen.getByRole('button'));
-    await userEvent.click(screen.getByText('English'));
+    await userEvent.selectOptions(picker(), 'en');
 
     expect(document.documentElement.dir).toBe('ltr');
   });
 
-  test('closes the menu without choosing a language', async () => {
+  /*
+   * The system entry is a value on the same control rather than a first row in
+   * a menu, so it survives the list being relabelled into the chosen language.
+   */
+  test('keeps the system entry addressable in any language', async () => {
+    await i18n.changeLanguage('ko');
     render(<LanguagePicker />);
 
-    await userEvent.click(screen.getByRole('button'));
+    expect(screen.getByRole('option', { name: /System|시스템/ })).toBeDefined();
+    await userEvent.selectOptions(picker(), 'system');
 
-    expect(screen.getByRole('menu')).toBeDefined();
-
-    fireEvent.keyDown(window, { key: 'Escape' });
-
-    await waitFor(() => {
-      expect(screen.queryByRole('menu')).toBeNull();
-    });
+    expect(picker().value).toBe('system');
   });
 });

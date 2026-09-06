@@ -51,7 +51,7 @@ export const EnvEditor: FC<EnvEditorProps> = ({ entries, onChange }) => {
         >
           <span>{t('envHeading')}</span>
           <span className="
-            font-mono text-[10px] font-normal text-muted-foreground
+            font-mono text-figure font-normal text-muted-foreground
           "
           >
             {entries.length}
@@ -73,7 +73,7 @@ export const EnvEditor: FC<EnvEditorProps> = ({ entries, onChange }) => {
             </span>
           )}
         </h4>
-        <p className="text-[11px] text-muted-foreground">{t('envHint')}</p>
+        <p className="text-body text-muted-foreground">{t('envHint')}</p>
       </header>
       {entries.length > 0 && (
         <ul className="grid gap-1">
@@ -81,7 +81,7 @@ export const EnvEditor: FC<EnvEditorProps> = ({ entries, onChange }) => {
             return (
               <li key={entry.name} className="flex items-center gap-2">
                 <span className="
-                  w-40 shrink-0 truncate font-mono text-[11px] font-medium
+                  w-40 shrink-0 truncate font-mono text-body font-medium
                   text-foreground
                 "
                 >

@@ -281,7 +281,41 @@ stays; configuration management is where the work is. Each phase gates the next.
 
 ## Phase 7: Preferences and the desktop shell
 
-- [ ] Four appearance controls collapse into one gear. `FontSizePicker`,
+- [x] Four appearance controls collapse into one gear, and stop being popovers
+      while they are at it. The gear opens the Settings sheet, and Appearance
+      holds one row each for Theme, Accent, Text size and Language, every value
+      readable without opening anything. Theme and Text size are a new
+      `SegmentedControl` built on native radios, because a radio group is a
+      promise about arrow keys and one tab stop and the browser already keeps
+      it; Accent is six swatches plus `<input type="color">` for a seventh,
+      custom colour, which rides an inline `--primary` since no `[data-accent]`
+      rule can exist for it; Language is a native `<select>`, which keeps the
+      system entry addressable after the list relabels itself into Korean.
+      About grew the Updates row it was missing, storing check-on-launch or
+      never.
+- [x] The menu became Radix. `PopupMenu` had `role="menu"` and answered no arrow
+      key, and the funnel needed a submenu that did not exist. `ui/menu` now
+      wraps `@radix-ui/react-dropdown-menu`. Only four call sites moved: the
+      other four were the appearance pickers, which stopped being menus.
+- [x] The radius scale is 4/5/7/9/11 and the 6px `--radius` is deleted. No
+      arbitrary radius is left in `src/`.
+- [x] Archive opens on the archives. The page title, the intro paragraph and the
+      three stat cards reading 0, 0 and 0B are gone; the figures ride the
+      section header of the list they summarise, retention's state is a `Switch`
+      rather than the bare word "Off", and the copies-only guarantee sits under
+      the control it describes.
+- [x] Analytics stopped joining two figures with a middot. Provider rows give
+      tokens and share a column each, model rows state whether their cost is
+      exact, estimated or unpriced, the by-hour peak is marked and an hour that
+      recorded nothing keeps a hairline instead of vanishing, and the seven
+      weekday values are ranked rows rather than a second chart form.
+- [x] File edits left the Transcript / Board / File edits strip and became a
+      panel beside the transcript, sharing one strip of width with the Navigator
+      so only one is ever open. The edits belong to the session being read, so
+      replacing that session with them was the one thing the tab could not do.
+      `BoardPanels` lost its edits half rather than keeping an unreachable
+      second copy of it.
+- [ ] Give the desktop window a native feel through `deno.json`, not CSS. `FontSizePicker`,
       `LanguagePicker`, `AccentPicker` and `ThemePicker` are four separate icon
       buttons crowding the end of the header, beside Search and Refresh, which
       are actions rather than preferences. One gear opening a popover that holds

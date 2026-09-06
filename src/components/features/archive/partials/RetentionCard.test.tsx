@@ -105,7 +105,7 @@ test('turns the rule on and reloads', async () => {
   vi.stubGlobal('fetch', fetchMock);
   renderCard(resource('ready', status(), reload));
 
-  await userEvent.click(screen.getByRole('button', { name: 'Off' }));
+  await userEvent.click(screen.getByRole('switch', { name: 'Retention' }));
 
   await waitFor(() => {
     expect(reload).toHaveBeenCalledTimes(1);
@@ -120,7 +120,10 @@ test('shows the rule as on and can turn it back off', async () => {
   }));
   renderCard(resource('ready', status({ enabled: true }), reload));
 
-  await userEvent.click(screen.getByRole('button', { name: 'On' }));
+  expect(screen.getByRole('switch', { name: 'Retention' }).getAttribute('data-state'))
+    .toBe('checked');
+
+  await userEvent.click(screen.getByRole('switch', { name: 'Retention' }));
 
   await waitFor(() => {
     expect(reload).toHaveBeenCalledTimes(1);
@@ -221,7 +224,7 @@ test('reports a failure to save and a failure to archive', async () => {
     <RetentionCard retention={resource('ready', status())} nowMs={NOW} />,
   );
 
-  await userEvent.click(screen.getByRole('button', { name: 'Off' }));
+  await userEvent.click(screen.getByRole('switch', { name: 'Retention' }));
   expect(await screen.findByText('read-only')).toBeDefined();
   unmount();
 

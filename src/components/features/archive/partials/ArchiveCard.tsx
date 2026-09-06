@@ -66,7 +66,7 @@ export const ArchiveCard: FC<ArchiveCardProps> = ({
 
   return (
     <div
-      className="overflow-hidden rounded-xl border border-border bg-card"
+      className="overflow-hidden rounded-lg border border-border bg-card"
       data-archive-card
       data-archive-id={archive.id}
     >
@@ -142,7 +142,7 @@ export const ArchiveCard: FC<ArchiveCardProps> = ({
                         "
                       >
                         <span className="
-                          shrink-0 font-mono text-[10px] text-muted-foreground
+                          shrink-0 font-mono text-figure text-muted-foreground
                         "
                         >
                           {agentOption(session.agent).label}
@@ -154,7 +154,7 @@ export const ArchiveCard: FC<ArchiveCardProps> = ({
                           {session.title}
                         </span>
                         <span className="
-                          shrink-0 text-[10px] text-muted-foreground
+                          shrink-0 text-figure text-muted-foreground
                         "
                         >
                           {session.projectName}

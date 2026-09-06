@@ -7,7 +7,6 @@ import type { FC, ReactNode } from 'react';
 
 export interface ConfirmDialogProps {
   readonly open: boolean;
-  readonly labelledBy: string;
   readonly icon: ReactNode;
   readonly heading: string;
   readonly description: ReactNode;
@@ -21,7 +20,6 @@ export interface ConfirmDialogProps {
 
 export const ConfirmDialog: FC<ConfirmDialogProps> = ({
   open,
-  labelledBy,
   icon,
   heading,
   description,
@@ -33,12 +31,9 @@ export const ConfirmDialog: FC<ConfirmDialogProps> = ({
 }) => {
   const { t } = useTranslation('common');
   return (
-    <Modal open={open} onClose={onClose} labelledBy={labelledBy} widthClass="max-w-md">
+    <Modal open={open} onClose={onClose} title={heading} widthClass="max-w-md">
       <div className="p-5">
-        <h2
-          id={labelledBy}
-          className="flex items-center gap-2 text-base font-semibold"
-        >
+        <h2 className="flex items-center gap-2 text-base font-semibold">
           {icon}
           {heading}
         </h2>

@@ -21,7 +21,7 @@ export const DateDivider: FC<DateDividerProps> = ({ timestampMs, nowMs }) => {
       data-date-divider
     >
       <span className="h-px flex-1 bg-border/50" />
-      <span className="text-[11px] font-medium text-muted-foreground/80">{label}</span>
+      <span className="text-body font-medium text-muted-foreground/80">{label}</span>
       <span className="h-px flex-1 bg-border/50" />
     </div>
   );

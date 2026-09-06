@@ -511,7 +511,7 @@ test('opens the plugin table in a dialog and closes it again', async () => {
 
   expect(await screen.findByRole('switch', { name: 'review' })).toBeDefined();
 
-  await userEvent.click(screen.getByRole('button', { name: 'Close dialog' }));
+  await userEvent.keyboard('{Escape}');
 
   await waitFor(() => {
     expect(screen.queryByRole('switch', { name: 'review' })).toBeNull();

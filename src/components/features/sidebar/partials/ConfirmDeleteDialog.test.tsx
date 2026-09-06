@@ -130,7 +130,7 @@ test('confirms deletion for multiple selected sessions', async () => {
     />,
   );
 
-  expect(screen.getByText('Delete 2 sessions permanently?')).toBeDefined();
+  expect(screen.getByRole('heading', { name: 'Delete 2 sessions permanently?' })).toBeDefined();
   expect(screen.getByText('2 selected sessions will be permanently deleted.')).toBeDefined();
   await userEvent.click(screen.getByRole('button', { name: 'Delete 2 permanently' }));
   expect(onConfirm).toHaveBeenCalledWith(expect.arrayContaining([expect.objectContaining({ id: 's' })]));

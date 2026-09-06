@@ -7,7 +7,6 @@ import {
 import { useTranslation } from 'react-i18next';
 
 import { initI18n } from '@i18n/index';
-import { Settings } from 'lucide-react';
 import { motion, MotionConfig } from 'motion/react';
 
 import { appShortcuts } from '@config/shortcuts';
@@ -20,7 +19,6 @@ import {
   runRetention,
 } from '@lib/apis/apiClient';
 import { findAgentProject } from '@services/history/historyService';
-import { cn } from '@utils/cnUtils';
 import { isTypingTarget, matchesShortcut } from '@utils/shortcutUtils';
 
 import {
@@ -33,7 +31,7 @@ import { AgentSetupPanel, usePluginToggle } from '@features/agent-setup';
 import { AnalyticsView, useAnalyticsScope } from '@features/analytics';
 import { AppHeader } from '@features/app-header';
 import { ArchiveView } from '@features/archive';
-import { BoardPanels } from '@features/board';
+import { BoardPanels, editsInSession } from '@features/board';
 import {
   useAgentSetup,
   useArchives,
@@ -49,12 +47,13 @@ import {
 } from '@features/history-data';
 import { SearchDialog } from '@features/search';
 import { SessionViewer } from '@features/session-viewer';
-import { SettingsView } from '@features/settings';
+import { SettingsSheet } from '@features/settings';
 import { SidebarPane } from '@features/sidebar';
 import { useTheme } from '@features/theme';
 import { UpdateBanner } from '@features/updates';
 
 import { ShortcutsDialog } from './partials';
+import { NavRail } from './partials/NavRail';
 
 import type { AgentId } from '@config/agents';
 import type { ShortcutSpec } from '@config/shortcuts';
@@ -88,7 +87,11 @@ const initialSidebarWidth = (): number => {
 
 initI18n();
 
-const SESSION_PANELS: readonly SessionsPanel[] = ['transcript', 'grid', 'edits'];
+/*
+ * File edits left this strip: the edits belong to the session on screen, so they
+ * open as a panel beside the transcript rather than replacing it.
+ */
+const SESSION_PANELS: readonly SessionsPanel[] = ['transcript', 'grid'];
 
 const SESSION_PANEL_LABELS: Record<SessionsPanel, string> = {
   transcript: 'navTranscript',
@@ -110,6 +113,7 @@ export const HistoryApp: FC = () => {
     : `${selectedProject.agent}:${selectedProject.id}`;
   const { scope: analyticsScope, setScope: setAnalyticsScope } = useAnalyticsScope(projectKey);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [retentionNotice, setRetentionNotice] = useState<string | null>(null);
   const [highlightTimestamp, setHighlightTimestamp] = useState<string | undefined>(undefined);
@@ -127,9 +131,13 @@ export const HistoryApp: FC = () => {
   const retention = useRetention(view === 'archive');
   const storage = useStorage(view === 'analytics');
   const [settingsAgent, setSettingsAgent] = useState<AgentId>('claude');
-  const settings = useSettings(view === 'settings' ? projectPath : null, settingsAgent);
+  const settings = useSettings(settingsOpen ? projectPath : null, settingsAgent);
   const boardScope = view === 'sessions' && sessionsPanel !== 'transcript';
-  const edits = useRecentEdits(selectedProject, boardScope);
+  /*
+   * The edits feed the board and the transcript's own edits panel, so it loads
+   * for the whole Sessions view rather than for the board alone.
+   */
+  const edits = useRecentEdits(selectedProject, view === 'sessions');
   const newestSessions = useNewestSessions(boardScope && selectedProject == null);
   const sessionCounts = useMemo(() => {
     const path = selectedProject?.actualPath;
@@ -222,7 +230,7 @@ export const HistoryApp: FC = () => {
         setView('archive');
       }],
       [appShortcuts.viewSettings, () => {
-        setView('settings');
+        setSettingsOpen(true);
       }],
       [appShortcuts.viewBoard, () => {
         setView('sessions');
@@ -396,26 +404,25 @@ export const HistoryApp: FC = () => {
                 gitBranch={selectedSession?.gitBranch}
                 highlightTimestamp={highlightTimestamp}
                 sourceModifiedMs={selectedSession?.modifiedMs ?? 0}
+                editedFiles={editsInSession(edits.data ?? [], selectedFilePath ?? undefined)}
+                editsStatus={edits.status}
+                editsError={edits.error}
+                projectPath={selectedProject?.actualPath}
+                nowMs={nowMs}
+                onOpenEdit={openEditedSession}
               />
             )
           : (
               <div className="min-h-0 flex-1 overflow-y-auto">
                 <BoardPanels
-                  panel={sessionsPanel}
-                  project={selectedProject?.actualPath}
-                  sessionFilePath={sessionsPanel === 'edits'
-                    ? selectedFilePath ?? undefined
-                    : undefined}
                   sessions={selectedProject == null
                     ? newestSessions.data ?? []
                     : sessionList}
                   sessionsStatus={selectedProject == null
                     ? newestSessions.status
                     : sessions.status}
-                  edits={edits}
                   nowMs={nowMs}
                   onOpenSession={selectSession}
-                  onOpenEdit={openEditedSession}
                 />
               </div>
             )}
@@ -428,7 +435,6 @@ export const HistoryApp: FC = () => {
         status={stats.status}
         projectName={selectedProject?.name ?? t('noProject')}
         scope={analyticsScope}
-        onScopeChange={setAnalyticsScope}
         projectAgent={selectedProject?.agent}
         sessions={analyticsScope === 'global' ? newestSessions.data ?? [] : sessionList}
         onOpenSession={openStatsSession}
@@ -440,14 +446,6 @@ export const HistoryApp: FC = () => {
         retention={retention}
         nowMs={nowMs}
         onOpenSession={openArchivedSession}
-      />
-    ),
-    settings: (
-      <SettingsView
-        settings={settings}
-        projectPath={selectedProject?.actualPath ?? null}
-        agent={settingsAgent}
-        onSelectAgent={setSettingsAgent}
       />
     ),
     health: (
@@ -475,17 +473,25 @@ export const HistoryApp: FC = () => {
   return (
     <MotionConfig reducedMotion="user">
       <div className="flex h-dvh overflow-hidden bg-background text-foreground">
+        {/*
+          * The rail sits flush at the window edge, ahead of everything else, so
+          * where you are never scrolls away with what you are looking at.
+          */}
+        <NavRail
+          flagged={(agentSetup.data?.findings ?? []).length}
+          view={view}
+          onViewChange={setView}
+        />
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <UpdateBanner />
           <AppHeader
-            view={view}
-            onViewChange={setView}
             onOpenSearch={() => {
               setSearchOpen(true);
             }}
+            onOpenSettings={() => {
+              setSettingsOpen(true);
+            }}
             onReload={projects.reload}
-            themeMode={theme.mode}
-            onThemeChange={theme.setMode}
           />
 
           <div
@@ -493,6 +499,10 @@ export const HistoryApp: FC = () => {
             style={{ gridTemplateColumns: `${String(sidebarWidth)}px 8px minmax(0, 1fr)` }}
           >
             <SidebarPane
+              wholeMachine={analyticsScope === 'global'}
+              onSelectAllProjects={() => {
+                setAnalyticsScope('global');
+              }}
               projects={visibleProjects}
               projectsStatus={projects.status}
               selectedProject={selectedProject}
@@ -530,30 +540,6 @@ export const HistoryApp: FC = () => {
           </div>
         </div>
 
-        {/*
-          * Settings are reached from a corner rather than from the row of
-          * views: they are somewhere you go once to change something, not one
-          * of the places you work.
-          */}
-        <button
-          type="button"
-          aria-label={tCommon('navSettings')}
-          aria-pressed={view === 'settings'}
-          title={tCommon('navSettings')}
-          data-settings-button
-          onClick={() => {
-            setView(view === 'settings' ? 'sessions' : 'settings');
-          }}
-          className={cn(`
-            fixed inset-e-4 bottom-4 z-20 flex size-9 items-center
-            justify-center rounded-full border border-border bg-card
-            text-muted-foreground shadow-lg transition-colors
-            hover:text-foreground
-          `, view === 'settings' && 'bg-primary text-primary-foreground')}
-        >
-          <Settings className="size-4" />
-        </button>
-
         <Toast message={retentionNotice} />
 
         <ShortcutsDialog
@@ -561,6 +547,19 @@ export const HistoryApp: FC = () => {
           onClose={() => {
             setShortcutsOpen(false);
           }}
+        />
+
+        <SettingsSheet
+          agent={settingsAgent}
+          open={settingsOpen}
+          projectPath={selectedProject?.actualPath ?? null}
+          settings={settings}
+          themeMode={theme.mode}
+          onClose={() => {
+            setSettingsOpen(false);
+          }}
+          onSelectAgent={setSettingsAgent}
+          onThemeChange={theme.setMode}
         />
 
         <SearchDialog

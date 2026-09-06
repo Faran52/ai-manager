@@ -113,13 +113,13 @@ const FilePath: FC<{ readonly scope: ScopeSettings }> = ({ scope }) => {
     <div className="flex items-center gap-2 border-b border-border pb-3">
       <FileCode2 className="size-3.5 shrink-0 text-muted-foreground" />
       <span className="
-        text-[10px] font-semibold tracking-wider text-muted-foreground uppercase
+        text-figure font-semibold tracking-wider text-muted-foreground uppercase
       "
       >
         {t('file')}
       </span>
       <span className="
-        min-w-0 flex-1 font-mono text-[11px] break-all text-foreground
+        min-w-0 flex-1 font-mono text-body break-all text-foreground
       "
       >
         {scope.path}
@@ -159,7 +159,7 @@ const KeyList: FC<{
 }> = ({ label, keys }) => {
   return (
     <div className="grid gap-1.5">
-      <span className="text-[11px] text-muted-foreground">{label}</span>
+      <span className="text-body text-muted-foreground">{label}</span>
       <KeyChips keys={keys} />
     </div>
   );
@@ -170,7 +170,7 @@ const KeyList: FC<{
 const GroupLabel: FC<{ readonly children: string }> = ({ children }) => {
   return (
     <span className="
-      text-[10px] font-semibold tracking-wider text-muted-foreground uppercase
+      text-figure font-semibold tracking-wider text-muted-foreground uppercase
     "
     >
       {children}
@@ -254,7 +254,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
         <div className="flex flex-wrap items-center gap-2">
           <span
             className="
-              text-[10px] font-semibold tracking-wider text-muted-foreground
+              text-figure font-semibold tracking-wider text-muted-foreground
               uppercase
             "
             aria-hidden="true"
@@ -339,7 +339,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
                   areas.
                 */}
                 {(!scope.exists || scope.editable === true) && (
-                  <span className="font-mono text-[10px] font-normal opacity-60">
+                  <span className="font-mono text-figure font-normal opacity-60">
                     {scope.exists ? managedCount(drafts[scope.path] ?? scope) : t('absent')}
                   </span>
                 )}
@@ -383,7 +383,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
 
         {current != null && current.editable !== true && (
           <div className="
-            grid gap-3 rounded-xl border border-border bg-card p-4
+            grid gap-3 rounded-lg border border-border bg-card p-4
           "
           >
             <FilePath scope={current} />
@@ -407,7 +407,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
               */}
               {current.preservedKeys.length === 0
                 ? (
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-body text-muted-foreground">
                       {current.exists ? t('holdsNothing') : t('notPresentHint')}
                     </p>
                   )
@@ -418,7 +418,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
 
         {current?.editable === true && draft != null && (
           <div className="
-            grid gap-4 rounded-xl border border-border bg-card p-4
+            grid gap-4 rounded-lg border border-border bg-card p-4
           "
           >
             <FilePath scope={current} />
@@ -493,7 +493,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
             {current.preservedKeys.length > 0 && (
               <details data-preserved-keys>
                 <summary className="
-                  cursor-pointer text-[11px] text-muted-foreground
+                  cursor-pointer text-body text-muted-foreground
                   hover:text-foreground
                 "
                 >

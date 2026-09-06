@@ -54,6 +54,10 @@ const session = (id: string, title: string, projectId = 'p'): SessionSummary => 
 };
 
 const base = {
+  wholeMachine: false,
+  onSelectAllProjects: () => {
+    return undefined;
+  },
   projectsStatus: 'ready',
   sessionsStatus: 'ready',
   selectedProject: project('p', 'selected'),
@@ -89,6 +93,22 @@ const openProject = async (name: string, agent = 'Claude Code'): Promise<void> =
 };
 
 describe('SidebarPane', () => {
+  test('asks for every project at once from the pinned card', async () => {
+    const onSelectAllProjects = vi.fn();
+
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p', 'selected')]}
+        sessions={[]}
+        onSelectAllProjects={onSelectAllProjects}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: /All projects/u }));
+
+    expect(onSelectAllProjects).toHaveBeenCalledTimes(1);
+  });
+
   test('restores and resizes the project pane', async () => {
     localStorage.setItem(projectsPaneStorageKey, '999');
 
@@ -377,10 +397,11 @@ describe('SidebarPane agent and mutation actions', () => {
 
     expect(screen.getByText('codex-app')).toBeDefined();
     await userEvent.click(screen.getByRole('button', { name: /Filter agents/u }));
-    await userEvent.click(screen.getByRole('button', { name: 'Claude Code' }));
+    await userEvent.click(screen.getByRole('menuitemcheckbox', { name: /Claude Code/u }));
     expect(screen.queryByText('codex-app')).toBeNull();
-    await userEvent.click(screen.getByRole('button', { name: 'All agents' }));
+    await userEvent.click(screen.getByRole('menuitemcheckbox', { name: /All agents/u }));
     expect(screen.getByText('codex-app')).toBeDefined();
+    await userEvent.keyboard('{Escape}');
 
     fireEvent.contextMenu(screen.getByText('claude-app'));
     await userEvent.click(screen.getByText('Delete project history'));

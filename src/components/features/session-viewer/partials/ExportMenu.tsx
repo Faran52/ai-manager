@@ -19,7 +19,7 @@ import {
 import { copyTextToClipboard, saveTextFile } from '@utils/browserFilesUtils';
 import { slugOf } from '@utils/slugUtils';
 
-import { MenuItem, PopupMenu } from '@ui/index';
+import { Menu, MenuItem } from '@ui/index';
 
 import type { ExportMeta } from '@services/export/exportService';
 import type { HistoryEntry } from '@services/history/historyService';
@@ -50,43 +50,34 @@ export const ExportMenu: FC<ExportMenuProps> = ({
   const markdown = (): string => {
     return entriesToMarkdown(meta(), entries);
   };
-  const close = (): void => {
-    setOpen(false);
-  };
-  const run = (action: () => void): void => {
-    action();
-    close();
-  };
 
   return (
-    <div className="relative" data-export-menu>
-      <button
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => {
-          setCopied(false);
-          setOpen((value) => {
-            return !value;
-          });
+    <div data-export-menu>
+      <Menu
+        label={t('export')}
+        open={open}
+        onOpenChange={(next) => {
+          if (next) {
+            setCopied(false);
+          }
+
+          setOpen(next);
         }}
-        className="toolbar-button"
+        trigger={(
+          <button type="button" className="toolbar-button">
+            <Download className="size-3.5" />
+            {t('exportAction')}
+            <ChevronDown className="size-3 transition-transform" data-open={open} />
+          </button>
+        )}
       >
-        <Download className="size-3.5" />
-        {t('exportAction')}
-        <ChevronDown className="size-3 transition-transform" data-open={open} />
-      </button>
-      <PopupMenu open={open} onClose={close} label={t('export')}>
         <MenuItem
           icon={copied
             ? <Check className="size-3.5 text-ok" />
             : <Clipboard className="size-3.5" />}
-          onClick={() => {
+          onSelect={() => {
             void (async (): Promise<void> => {
-              const copiedOk = await copyTextToClipboard(markdown());
-
-              setCopied(copiedOk);
-              close();
+              setCopied(await copyTextToClipboard(markdown()));
             })();
           }}
         >
@@ -94,39 +85,29 @@ export const ExportMenu: FC<ExportMenuProps> = ({
         </MenuItem>
         <MenuItem
           icon={<FileText className="size-3.5" />}
-          onClick={() => {
-            run(() => {
-              saveTextFile(`${slugOf(title)}.md`, markdown(), 'text/markdown');
-            });
+          onSelect={() => {
+            saveTextFile(`${slugOf(title)}.md`, markdown(), 'text/markdown');
           }}
         >
           {t('exportMarkdown')}
         </MenuItem>
         <MenuItem
           icon={<FileCode className="size-3.5" />}
-          onClick={() => {
-            run(() => {
-              saveTextFile(
-                `${slugOf(title)}.html`,
-                entriesToHtml(meta(), entries),
-                'text/html',
-              );
-            });
+          onSelect={() => {
+            saveTextFile(`${slugOf(title)}.html`, entriesToHtml(meta(), entries), 'text/html');
           }}
         >
           {t('exportHtml')}
         </MenuItem>
         <MenuItem
           icon={<FileJson className="size-3.5" />}
-          onClick={() => {
-            run(() => {
-              saveTextFile(`${slugOf(title)}.json`, entriesToJson(entries), 'application/json');
-            });
+          onSelect={() => {
+            saveTextFile(`${slugOf(title)}.json`, entriesToJson(entries), 'application/json');
           }}
         >
           {t('exportJson')}
         </MenuItem>
-      </PopupMenu>
+      </Menu>
       {copied && <span className="sr-only" role="status">{t('copied', { ns: 'common' })}</span>}
     </div>
   );

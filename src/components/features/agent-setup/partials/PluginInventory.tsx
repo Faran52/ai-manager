@@ -26,18 +26,18 @@ const CELL = 'truncate py-2 pe-4 text-start align-middle';
 const SWITCH_CELL = 'py-2 pe-4 text-start align-middle whitespace-nowrap';
 
 const SWITCH = `
-  flex items-center gap-1.5 text-[10px] transition-opacity hover:opacity-80
+  flex items-center gap-1.5 text-figure transition-opacity hover:opacity-80
   disabled:opacity-50
 `;
 const TRACK = 'relative inline-flex h-3 w-6 shrink-0 rounded-full transition-colors';
 // Logical inset plus an RTL-mirrored shift, so the thumb travels inward either way.
 const THUMB = 'absolute top-0.5 start-0.5 size-2 rounded-full transition-transform';
 const HEAD = cn(CELL, `
-  sticky top-0 z-10 bg-popover text-[10px] font-medium tracking-wider
+  sticky top-0 z-10 bg-popover text-figure font-medium tracking-wider
   text-muted-foreground uppercase
 `);
 const NUMERIC = 'text-end';
-const TABLE = 'w-full table-fixed border-collapse font-mono text-[11px]';
+const TABLE = 'w-full table-fixed border-collapse font-mono text-body';
 const ROW = `
   border-b border-border/40 last:border-0
   hover:bg-muted-foreground/5
@@ -148,7 +148,7 @@ export const PluginInventory: FC<PluginInventoryProps> = ({
         * A separate table repeated every plugin name to say three more numbers
         * about it, so the reader matched rows across two grids by eye.
         */}
-      <p className="pb-2 text-[11px] text-muted-foreground">
+      <p className="pb-2 text-body text-muted-foreground">
         {costs?.length === 0 ? t('costsNone') : t('costsExplainer')}
       </p>
       <table className={TABLE}>
@@ -183,7 +183,7 @@ export const PluginInventory: FC<PluginInventoryProps> = ({
                   {/* Nearly every plugin shares one marketplace, so only an
                       unrecognised one earns a line under the name. */}
                   {!plugin.knownMarketplace && (
-                    <span className="block truncate text-[10px] text-warn">
+                    <span className="block truncate text-figure text-warn">
                       {`${plugin.marketplace} ?`}
                     </span>
                   )}

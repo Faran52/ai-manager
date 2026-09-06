@@ -1,8 +1,4 @@
-import {
-  render,
-  screen,
-  waitFor,
-} from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
   expect,
@@ -12,39 +8,32 @@ import {
 
 import { ThemePicker } from './ThemePicker';
 
-test('offers every mode and marks the active one', async () => {
+test('offers every mode and marks the active one', () => {
   render(<ThemePicker mode="dark" onChange={vi.fn()} />);
-  await userEvent.click(screen.getByTitle('Theme: Dark'));
 
   for (const label of ['Light', 'Dark', 'Match system']) {
-    expect(screen.getByText(label)).toBeDefined();
+    expect(screen.getByRole('radio', { name: label })).toBeDefined();
   }
 
-  expect(screen.getByText('Dark').parentElement?.querySelector('svg')).not.toBeNull();
+  expect(screen.getByRole('radio', { name: 'Dark' })).toHaveProperty('checked', true);
+  expect(screen.getByRole('radio', { name: 'Light' })).toHaveProperty('checked', false);
 });
 
-test('sets the chosen mode and closes', async () => {
+test('sets the chosen mode', async () => {
   const onChange = vi.fn();
 
   render(<ThemePicker mode="system" onChange={onChange} />);
-  await userEvent.click(screen.getByTitle('Theme: Match system'));
-  await userEvent.click(screen.getByText('Light'));
+  await userEvent.click(screen.getByRole('radio', { name: 'Light' }));
 
   expect(onChange).toHaveBeenCalledWith('light');
-  await waitFor(() => {
-    expect(screen.queryByText('Match system')).toBeNull();
-  });
 });
 
-test('dismisses without changing the mode', async () => {
-  const onChange = vi.fn();
+/*
+ * The control is the whole set, not a popover, so every mode is on screen at
+ * rest. That is the point of the change: there is nothing to open or dismiss.
+ */
+test('shows every mode without being opened', () => {
+  render(<ThemePicker mode="light" onChange={vi.fn()} />);
 
-  render(<ThemePicker mode="light" onChange={onChange} />);
-  await userEvent.click(screen.getByTitle('Theme: Light'));
-  await userEvent.keyboard('{Escape}');
-
-  await waitFor(() => {
-    expect(screen.queryByText('Match system')).toBeNull();
-  });
-  expect(onChange).not.toHaveBeenCalled();
+  expect(screen.getAllByRole('radio')).toHaveLength(3);
 });

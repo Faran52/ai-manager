@@ -48,7 +48,7 @@ export const FileChangeBody: FC<FileChangeBodyProps> = ({ input }) => {
 
   return (
     <div className="grid gap-1" data-file-change>
-      <p className="font-mono text-[11px] break-all text-muted-foreground">{input.path}</p>
+      <p className="font-mono text-body break-all text-muted-foreground">{input.path}</p>
       <PatchView hunks={hunks} />
     </div>
   );

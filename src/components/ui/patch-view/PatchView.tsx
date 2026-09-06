@@ -47,7 +47,7 @@ export const PatchView: FC<PatchViewProps> = ({ hunks }) => {
         return (
           <div key={hunkKey}>
             <div className="
-              border-b border-border bg-muted px-3 py-1 text-[11px]
+              border-b border-border bg-muted px-3 py-1 text-body
               text-muted-foreground
             "
             >

@@ -44,27 +44,24 @@ const renderRow = (
   props: Partial<Parameters<typeof AgentRow>[0]> = {},
 ): void => {
   render(
-    <table>
-      <tbody>
-        <AgentRow
-          setup={agentSetup}
-          projectPath={PROJECT}
-          plugins={[]}
-          findings={[]}
-          sessionCount={0}
-          nowMs={nowMs}
-          columns={5}
-          open={false}
-          onToggle={noop}
-          onOpenPlugins={noop}
-          {...props}
-        />
-      </tbody>
-    </table>,
+    <ul>
+      <AgentRow
+        setup={agentSetup}
+        projectPath={PROJECT}
+        plugins={[]}
+        findings={[]}
+        sessionCount={0}
+        nowMs={nowMs}
+        open={false}
+        onToggle={noop}
+        onOpenPlugins={noop}
+        {...props}
+      />
+    </ul>,
   );
 };
 
-test('puts each count in its own column without an inline label', () => {
+test('labels each figure beside it, so a card reads without a header row', () => {
   renderRow(
     setup({
       mcpServers: [{
@@ -83,10 +80,9 @@ test('puts each count in its own column without an inline label', () => {
     { sessionCount: 16 },
   );
 
-  expect(screen.getByText('16')).toBeDefined();
-  // The table has a header row now, so the figures carry no label of their own.
-  expect(screen.queryByText('MCP 1')).toBeNull();
-  expect(screen.queryByText('Rules 1')).toBeNull();
+  expect(screen.getByText('16 sessions')).toBeDefined();
+  expect(screen.getByText('MCP')).toBeDefined();
+  expect(screen.getByText('Rules')).toBeDefined();
 });
 
 test('counts the plugins that are switched on, for claude alone', () => {
@@ -114,10 +110,11 @@ test('counts the plugins that are switched on, for claude alone', () => {
   expect(screen.getByText('1/2')).toBeDefined();
 });
 
-test('dashes a column the agent records nothing for', () => {
+test('prints nothing at all for what the agent does not record', () => {
   renderRow(setup({ agent: 'gemini' }));
 
-  expect(screen.getAllByText('—').length).toBeGreaterThan(0);
+  expect(screen.queryByText('—')).toBeNull();
+  expect(screen.getByText('no sessions')).toBeDefined();
 });
 
 test('keeps the detail out of the table until the row is opened', () => {

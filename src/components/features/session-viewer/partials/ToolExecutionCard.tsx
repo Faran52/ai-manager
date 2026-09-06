@@ -91,13 +91,13 @@ export const ToolExecutionCard: FC<ToolExecutionCardProps> = ({ call, outcome })
         <span className="shrink-0 text-primary" data-tool-tone={summary.tone}>
           {TONE_ICONS[summary.tone]}
         </span>
-        <span className="shrink-0 font-mono text-[11px] text-primary">
+        <span className="shrink-0 font-mono text-body text-primary">
           {summary.label}
         </span>
         {summary.detail.length > 0 && (
           <span
             className="
-              min-w-0 flex-1 truncate font-mono text-[11px] font-normal
+              min-w-0 flex-1 truncate font-mono text-body font-normal
               text-muted-foreground
             "
             title={summary.detail}

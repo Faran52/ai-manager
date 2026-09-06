@@ -66,5 +66,8 @@
   "auth": "驗證",
   "from": "來自",
   "modelConfigured": "已設定的模型",
-  "colProblem": "問題"
+  "colProblem": "問題",
+  "noSessions": "無工作階段",
+  "sessionCount_one": "{{count}} 個工作階段",
+  "sessionCount_other": "{{count}} 個工作階段"
 }

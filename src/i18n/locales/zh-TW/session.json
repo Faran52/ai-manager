@@ -84,5 +84,9 @@
   "promptScopeAll": "全部",
   "promptScopes": "提示詞範圍",
   "promptsOfEverything": "全部記錄數",
-  "exportHtml": "HTML 檔案"
+  "exportHtml": "HTML 檔案",
+  "fileEdits": "檔案變更",
+  "closeFileEdits": "關閉檔案變更",
+  "openFileEdits": "開啟檔案變更",
+  "noFileEdits": "此工作階段未變更任何檔案。"
 }

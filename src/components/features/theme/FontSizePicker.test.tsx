@@ -1,8 +1,4 @@
-import {
-  render,
-  screen,
-  waitFor,
-} from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
   afterEach,
@@ -17,41 +13,29 @@ afterEach(() => {
   document.documentElement.removeAttribute('data-font-size');
 });
 
-const openPicker = async (): Promise<void> => {
-  render(<FontSizePicker />);
-  await userEvent.click(screen.getByTitle('Change text size'));
-};
-
-test('offers every size and marks the active one', async () => {
+test('offers every size and marks the active one', () => {
   localStorage.setItem('acm-font-size', 'large');
-  await openPicker();
+  render(<FontSizePicker />);
 
   for (const label of ['Compact', 'Normal', 'Large']) {
-    expect(screen.getByText(label)).toBeDefined();
+    expect(screen.getByRole('radio', { name: label })).toBeDefined();
   }
 
-  expect(screen.getByText('Large').parentElement?.querySelector('svg')).not.toBeNull();
-  expect(screen.getByText('Compact').parentElement?.querySelector('svg')).toBeNull();
+  expect(screen.getByRole('radio', { name: 'Large' })).toHaveProperty('checked', true);
+  expect(screen.getByRole('radio', { name: 'Compact' })).toHaveProperty('checked', false);
 });
 
-test('applies and persists a chosen size, then closes', async () => {
-  await openPicker();
-  await userEvent.click(screen.getByText('Compact'));
+test('applies and persists a chosen size', async () => {
+  render(<FontSizePicker />);
+  await userEvent.click(screen.getByRole('radio', { name: 'Compact' }));
 
   expect(localStorage.getItem('acm-font-size')).toBe('compact');
   expect(document.documentElement.dataset.fontSize).toBe('compact');
-
-  await waitFor(() => {
-    expect(screen.queryByText('Compact')).toBeNull();
-  });
 });
 
-test('dismisses without changing the size', async () => {
-  await openPicker();
-  await userEvent.keyboard('{Escape}');
+test('leaves the stored size alone until one is chosen', () => {
+  render(<FontSizePicker />);
 
-  await waitFor(() => {
-    expect(screen.queryByText('Compact')).toBeNull();
-  });
   expect(localStorage.getItem('acm-font-size')).toBeNull();
+  expect(screen.getByRole('radio', { name: 'Normal' })).toHaveProperty('checked', true);
 });

@@ -21,7 +21,7 @@ export const FloatingDate: FC<FloatingDateProps> = ({ timestampMs, nowMs }) => {
     <div className="pointer-events-none sticky top-0 z-10 flex justify-center">
       <span
         className="
-          rounded-full border border-border bg-card/90 px-2.5 py-0.5 text-[10px]
+          rounded-full border border-border bg-card/90 px-2.5 py-0.5 text-figure
           font-medium text-muted-foreground shadow-sm backdrop-blur-sm
         "
         data-floating-date

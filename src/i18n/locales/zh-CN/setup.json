@@ -66,5 +66,8 @@
   "auth": "认证",
   "from": "来自",
   "modelConfigured": "已配置的模型",
-  "colProblem": "问题"
+  "colProblem": "问题",
+  "noSessions": "无会话",
+  "sessionCount_one": "{{count}} 个会话",
+  "sessionCount_other": "{{count}} 个会话"
 }

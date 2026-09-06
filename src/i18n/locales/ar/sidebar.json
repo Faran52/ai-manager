@@ -94,5 +94,18 @@
   "threadParts_two": "جزآن",
   "threadParts_few": "{{count}} أجزاء",
   "threadParts_many": "{{count}} جزءًا",
-  "threadParts_other": "{{count}} جزء"
+  "threadParts_other": "{{count}} جزء",
+  "allProjects": "كل المشاريع",
+  "sessionTally_zero": "لا جلسات",
+  "sessionTally_one": "جلسة واحدة",
+  "sessionTally_two": "جلستان",
+  "sessionTally_few": "{{count}} جلسات",
+  "sessionTally_many": "{{count}} جلسة",
+  "sessionTally_other": "{{count}} جلسة",
+  "projectTally_zero": "لا مشاريع",
+  "projectTally_one": "مشروع واحد",
+  "projectTally_two": "مشروعان",
+  "projectTally_few": "{{count}} مشاريع",
+  "projectTally_many": "{{count}} مشروعًا",
+  "projectTally_other": "{{count}} مشروع"
 }

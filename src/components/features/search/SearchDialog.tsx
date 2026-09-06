@@ -81,11 +81,8 @@ export const SearchDialog: FC<SearchDialogProps> = ({
   const hasQuery = term.trim().length >= 2;
 
   return (
-    <Modal open={open} onClose={onClose} labelledBy="search-dialog-title" widthClass="max-w-2xl">
-      <div
-        id="search-dialog-title"
-        className="border-b border-border px-4 py-3"
-      >
+    <Modal open={open} onClose={onClose} title={t('searchAllChatsLabel')} widthClass="max-w-2xl">
+      <div className="border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
           <SearchIcon className="size-4 text-muted-foreground" />
           <input
@@ -136,7 +133,7 @@ export const SearchDialog: FC<SearchDialogProps> = ({
           return (
             <div key={group.filePath} className="mb-2">
               <p className="
-                truncate px-2 py-1 text-[11px] font-semibold tracking-wider
+                truncate px-2 py-1 text-body font-semibold tracking-wider
                 text-muted-foreground uppercase
               "
               >
@@ -158,7 +155,7 @@ export const SearchDialog: FC<SearchDialogProps> = ({
                     "
                   >
                     <span className="
-                      mb-0.5 block text-[10px] tracking-wide
+                      mb-0.5 block text-figure tracking-wide
                       text-muted-foreground uppercase
                     "
                     >

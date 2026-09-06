@@ -2,45 +2,30 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
-  Archive,
-  BarChart3,
-  HeartPulse,
   History,
   RefreshCw,
   Search,
+  Settings,
 } from 'lucide-react';
 
 import { cn } from '@utils/cnUtils';
 
 import { Button, Toast } from '@ui/index';
-import { LanguagePicker } from '@features/language';
-import {
-  AccentPicker,
-  FontSizePicker,
-  ThemePicker,
-} from '@features/theme';
 
-import type { ThemeMode } from '@features/theme';
 import type { FC } from 'react';
 
-export type AppView = 'sessions' | 'analytics' | 'health' | 'archive' | 'settings';
+export type AppView = 'sessions' | 'analytics' | 'health' | 'archive';
 
 export interface AppHeaderProps {
-  readonly view: AppView;
-  readonly onViewChange: (view: AppView) => void;
   readonly onOpenSearch: () => void;
   readonly onReload: () => void;
-  readonly themeMode: ThemeMode;
-  readonly onThemeChange: (mode: ThemeMode) => void;
+  readonly onOpenSettings: () => void;
 }
 
 export const AppHeader: FC<AppHeaderProps> = ({
-  view,
-  onViewChange,
   onOpenSearch,
   onReload,
-  themeMode,
-  onThemeChange,
+  onOpenSettings,
 }) => {
   const { t } = useTranslation('common');
   const [refreshing, setRefreshing] = useState(false);
@@ -85,61 +70,12 @@ export const AppHeader: FC<AppHeaderProps> = ({
           </h1>
         </div>
 
-        <nav
-          className="ms-3 flex items-center gap-1 rounded-lg bg-muted p-0.5"
-          aria-label={t('navSessions')}
-        >
-          <Button
-            size="sm"
-            variant={view === 'sessions' ? 'primary' : 'ghost'}
-            onClick={() => {
-              onViewChange('sessions');
-            }}
-            pressed={view === 'sessions'}
-          >
-            {t('navSessions')}
-          </Button>
-          <Button
-            size="sm"
-            variant={view === 'analytics' ? 'primary' : 'ghost'}
-            onClick={() => {
-              onViewChange('analytics');
-            }}
-            pressed={view === 'analytics'}
-          >
-            <BarChart3 className="size-3.5" />
-            {t('navAnalytics')}
-          </Button>
-          <Button
-            size="sm"
-            variant={view === 'health' ? 'primary' : 'ghost'}
-            onClick={() => {
-              onViewChange('health');
-            }}
-            pressed={view === 'health'}
-          >
-            <HeartPulse className="size-3.5" />
-            {t('navHealth')}
-          </Button>
-          <Button
-            size="sm"
-            variant={view === 'archive' ? 'primary' : 'ghost'}
-            onClick={() => {
-              onViewChange('archive');
-            }}
-            pressed={view === 'archive'}
-          >
-            <Archive className="size-3.5" />
-            {t('navArchive')}
-          </Button>
-        </nav>
-
         <div className="ms-auto flex items-center gap-0.5">
           <Button size="sm" variant="ghost" onClick={onOpenSearch} title={t('searchAllChats')}>
             <Search className="size-3.5" />
             {t('searchAllChatsLabel')}
             <kbd className="
-              ms-1 rounded-sm border border-border px-1 font-mono text-[10px]
+              ms-1 rounded-sm border border-border px-1 font-mono text-figure
               text-muted-foreground
             "
             >
@@ -158,10 +94,9 @@ export const AppHeader: FC<AppHeaderProps> = ({
           >
             <RefreshCw className={cn('size-3.5', refreshing && 'animate-spin')} />
           </Button>
-          <FontSizePicker />
-          <LanguagePicker />
-          <AccentPicker />
-          <ThemePicker mode={themeMode} onChange={onThemeChange} />
+          <Button size="sm" variant="ghost" onClick={onOpenSettings} title={t('navSettings')}>
+            <Settings className="size-3.5" />
+          </Button>
         </div>
       </header>
       <Toast message={refreshing ? t('refreshingToast') : null} />

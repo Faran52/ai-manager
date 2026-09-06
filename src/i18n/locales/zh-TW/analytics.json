@@ -33,7 +33,6 @@
   "splitUnavailable": "此供應商未記錄足夠的明細，無法區分對話與非對話流量。",
   "providerDistribution": "供應商分布",
   "providerLabel": "{{provider}} · {{sessions}} · {{projects}}",
-  "tokensWithShare": "{{tokens}} · {{share}}%",
   "noProviders": "沒有供應商用量記錄。",
   "modelDistribution": "模型分布",
   "costUnavailable": "未記錄費用",
@@ -103,5 +102,6 @@
   "providerProjects_one": "{{count}} 個專案",
   "providerProjects_other": "{{count}} 個專案",
   "skillCalls": "使用的技能",
-  "subagentCalls": "使用的子代理"
+  "subagentCalls": "使用的子代理",
+  "sharePercent": "{{share}}%"
 }

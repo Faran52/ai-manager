@@ -1,0 +1,23 @@
+@layer components {
+  /*
+   * A native select keeps the OS list; only the closed control is drawn, and it
+   * matches the height and radius of every other control on the sheet.
+   */
+  .select-control {
+    padding: 0.3rem 0.6rem;
+    font-size: var(--text-body);
+    color: var(--foreground);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+
+  .select-control:hover {
+    border-color: var(--raised);
+  }
+
+  .select-control:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
+  }
+}

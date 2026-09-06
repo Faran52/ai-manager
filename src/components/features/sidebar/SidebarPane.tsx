@@ -42,6 +42,7 @@ import {
   SessionSelectionBar,
   SidebarContextMenu,
 } from './partials';
+import { AllProjectsCard } from './partials/AllProjectsCard';
 import { exportSessions } from './utils/bulkExportUtils';
 import { buildSessionThreads } from './utils/sessionThreadUtils';
 
@@ -64,6 +65,9 @@ export interface SidebarPaneProps {
   readonly selectedFilePath: string | null;
   readonly nowMs: number;
   readonly onSelectProject: (project: ProjectSummary) => void;
+  // True while the report is reading every project rather than one.
+  readonly wholeMachine: boolean;
+  readonly onSelectAllProjects: () => void;
   readonly onSelectSession: (session: SessionSummary) => void;
   readonly onDeleteProject: (project: ProjectSummary) => Promise<void>;
   readonly onRenameSession: (session: SessionSummary, title: string) => Promise<void>;
@@ -91,6 +95,8 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
   selectedFilePath,
   nowMs,
   onSelectProject,
+  wholeMachine,
+  onSelectAllProjects,
   onSelectSession,
   onDeleteProject,
   onRenameSession,
@@ -424,6 +430,16 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
             className="h-9 px-3"
           />
         </div>
+        {/* Pinned above the scroller: a scope control that scrolls away with
+            the list it scopes has become a list item again. */}
+        <AllProjectsCard
+          projects={projects}
+          selected={wholeMachine}
+          onSelect={() => {
+            exitSelectionMode();
+            onSelectAllProjects();
+          }}
+        />
         <ProjectTree
           projects={projects}
           projectsStatus={projectsStatus}
@@ -513,7 +529,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                       toggleThread(row.threadKey);
                     }}
                     className="
-                      flex w-full items-center gap-1.5 px-2 pt-1 text-[11px]
+                      flex w-full items-center gap-1.5 px-2 pt-1 text-body
                       text-muted-foreground
                       hover:text-foreground
                     "

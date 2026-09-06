@@ -1,0 +1,72 @@
+@layer components {
+  .menu-item {
+    display: flex;
+    gap: 0.55rem;
+    align-items: center;
+    width: 100%;
+    padding: 0.4rem 0.5rem;
+    font-size: var(--text-body);
+    color: var(--foreground-2);
+    text-align: start;
+    outline: none;
+
+    /* A menu row is a control, so it takes the control radius. */
+    border-radius: var(--radius-md);
+    transition: color 120ms ease, background-color 120ms ease;
+  }
+
+  /*
+   * Radix moves a single highlight with the pointer and the arrow keys, so the
+   * hover and keyboard states are one state rather than two that can both show.
+   */
+  .menu-item[data-highlighted] {
+    color: var(--foreground);
+    background: var(--accent);
+  }
+
+  .menu-item[data-disabled] {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  .menu-label {
+    padding: 0.5rem 0.5rem 0.25rem;
+    font-size: var(--text-eyebrow);
+    font-weight: 500;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .menu-separator {
+    height: 1px;
+    margin: 0.25rem 0.5rem;
+    background: var(--border);
+  }
+
+  /* A count, or what a submenu is set to. Never the row's own label. */
+  .menu-hint {
+    flex: none;
+    font-size: var(--text-figure);
+    color: var(--faint);
+  }
+
+  .menu-checkbox-indicator {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    color: var(--primary-foreground);
+    border: 1px solid color-mix(in srgb, var(--muted-foreground) 65%, transparent);
+
+    /* A small mark, the smallest step on the radius scale. */
+    border-radius: var(--radius-xs);
+  }
+
+  .menu-item[data-state="checked"] .menu-checkbox-indicator {
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+}

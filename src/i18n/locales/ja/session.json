@@ -84,5 +84,9 @@
   "promptScopeAll": "すべて",
   "promptScopes": "プロンプトの範囲",
   "promptsOfEverything": "全体の記録数",
-  "exportHtml": "HTML ファイル"
+  "exportHtml": "HTML ファイル",
+  "fileEdits": "ファイル編集",
+  "closeFileEdits": "ファイル編集を閉じる",
+  "openFileEdits": "ファイル編集を開く",
+  "noFileEdits": "このセッションはファイルを編集していません。"
 }

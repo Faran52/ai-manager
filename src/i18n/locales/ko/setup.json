@@ -66,5 +66,8 @@
   "auth": "인증",
   "from": "출처",
   "modelConfigured": "설정된 모델",
-  "colProblem": "문제"
+  "colProblem": "문제",
+  "noSessions": "세션 없음",
+  "sessionCount_one": "세션 {{count}}개",
+  "sessionCount_other": "세션 {{count}}개"
 }

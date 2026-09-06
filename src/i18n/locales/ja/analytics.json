@@ -33,7 +33,6 @@
   "splitUnavailable": "このプロバイダーでは、会話と会話以外の通信を分けるための詳細が記録されていません。",
   "providerDistribution": "プロバイダー別分布",
   "providerLabel": "{{provider}} · {{sessions}} · {{projects}}",
-  "tokensWithShare": "{{tokens}} · {{share}}%",
   "noProviders": "プロバイダーの使用記録はありません。",
   "modelDistribution": "モデル別分布",
   "costUnavailable": "コストの記録なし",
@@ -103,5 +102,6 @@
   "providerProjects_one": "{{count}} プロジェクト",
   "providerProjects_other": "{{count}} プロジェクト",
   "skillCalls": "使用したスキル",
-  "subagentCalls": "使用したサブエージェント"
+  "subagentCalls": "使用したサブエージェント",
+  "sharePercent": "{{share}}%"
 }

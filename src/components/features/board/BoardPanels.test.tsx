@@ -8,8 +8,6 @@ import {
 
 import { BoardPanels } from './BoardPanels';
 
-import type { AsyncResource } from '@features/history-data';
-import type { EditedFile, FileEdit } from '@services/edits/editsService';
 import type { SessionSummary } from '@services/history/historyService';
 
 const NOW = Date.parse('2026-08-28T12:00:00Z');
@@ -34,54 +32,17 @@ const session = (id: string, messageCount: number): SessionSummary => {
   };
 };
 
-const FILE: EditedFile = {
-  path: '/repo/src/a.ts',
-  edits: 2,
-  writes: 0,
-  sessionCount: 1,
-  lastEditedMs: NOW - 60_000,
-  recent: [{
-    kind: 'edit',
-    sessionId: 's1',
-    sessionTitle: 'Login fix',
-    sessionFilePath: '/sessions/s1.jsonl',
-    timestampMs: NOW - 60_000,
-    changes: 2,
-  }],
-};
-
-const editsResource = (
-  status: AsyncResource<readonly EditedFile[]>['status'],
-  data: readonly EditedFile[] | undefined,
-  error?: string,
-): AsyncResource<readonly EditedFile[]> => {
-  return {
-    status,
-    data,
-    error,
-    reload: noop,
-  };
-};
-
 const renderBoard = (overrides: {
-  readonly panel?: 'grid' | 'edits';
-  readonly project?: string | undefined;
   readonly sessions?: readonly SessionSummary[];
   readonly sessionsStatus?: 'loading' | 'ready' | 'error';
-  readonly edits?: AsyncResource<readonly EditedFile[]>;
   readonly onOpenSession?: (session: SessionSummary) => void;
-  readonly onOpenEdit?: (edit: FileEdit) => void;
 } = {}): void => {
   render(
     <BoardPanels
-      panel={overrides.panel ?? 'grid'}
-      project={'project' in overrides ? overrides.project : '/repo'}
       sessions={overrides.sessions ?? [session('a', 10), session('b', 5)]}
       sessionsStatus={overrides.sessionsStatus ?? 'ready'}
-      edits={overrides.edits ?? editsResource('ready', [FILE])}
       nowMs={NOW}
       onOpenSession={overrides.onOpenSession ?? noop}
-      onOpenEdit={overrides.onOpenEdit ?? noop}
     />,
   );
 };
@@ -112,16 +73,7 @@ test('opens a session from the grid', async () => {
 
 test('waits for sessions and says when there are none', () => {
   const { unmount } = render(
-    <BoardPanels
-      panel="grid"
-      project="/repo"
-      sessions={[]}
-      sessionsStatus="loading"
-      edits={editsResource('ready', [])}
-      nowMs={NOW}
-      onOpenSession={noop}
-      onOpenEdit={noop}
-    />,
+    <BoardPanels sessions={[]} sessionsStatus="loading" nowMs={NOW} onOpenSession={noop} />,
   );
 
   expect(screen.queryByText('This project has no sessions yet')).toBeNull();
@@ -132,63 +84,4 @@ test('waits for sessions and says when there are none', () => {
     sessionsStatus: 'ready',
   });
   expect(screen.getByText('This project has no sessions yet')).toBeDefined();
-});
-
-test('shows the files those sessions changed', async () => {
-  const onOpenEdit = vi.fn();
-
-  renderBoard({
-    panel: 'edits',
-    onOpenEdit,
-  });
-
-  expect(screen.getByText('src/a.ts')).toBeDefined();
-  expect(screen.queryByText('Sessions per day')).toBeNull();
-
-  await userEvent.click(screen.getByText('src/a.ts'));
-  await userEvent.click(screen.getByText('Login fix'));
-
-  expect(onOpenEdit).toHaveBeenCalledTimes(1);
-});
-
-test('names a file in full when no project shortens it', () => {
-  renderBoard({
-    panel: 'edits',
-    project: undefined,
-  });
-
-  expect(screen.getByText('/repo/src/a.ts')).toBeDefined();
-});
-
-test('waits for the edit scan and says when it found nothing', () => {
-  const { unmount } = render(
-    <BoardPanels
-      panel="edits"
-      project="/repo"
-      sessions={[]}
-      sessionsStatus="ready"
-      edits={editsResource('loading', undefined)}
-      nowMs={NOW}
-      onOpenSession={noop}
-      onOpenEdit={noop}
-    />,
-  );
-
-  expect(screen.queryByText('No file edits found')).toBeNull();
-  unmount();
-
-  renderBoard({
-    panel: 'edits',
-    edits: editsResource('ready', []),
-  });
-  expect(screen.getByText('No file edits found')).toBeDefined();
-});
-
-test('reports a failed edit scan', () => {
-  renderBoard({
-    panel: 'edits',
-    edits: editsResource('error', undefined, 'transcripts unreadable'),
-  });
-
-  expect(screen.getByText('transcripts unreadable')).toBeDefined();
 });

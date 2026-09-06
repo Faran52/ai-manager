@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  Check,
-  ChevronDown,
-  SlidersHorizontal,
-} from 'lucide-react';
+import { ChevronDown, SlidersHorizontal } from 'lucide-react';
 
 import { agentOptions } from '@config/agents';
 
-import { PopupMenu } from '@ui/index';
+import {
+  Menu,
+  MenuCheckboxItem,
+  MenuLabel,
+  MenuSeparator,
+} from '@ui/index';
 
 import type { AgentId } from '@config/agents';
 import type { FC } from 'react';
@@ -52,20 +53,31 @@ export const AgentFilterBar: FC<AgentFilterBarProps> = ({
       : total;
   }, 0);
   const triggerLabel = `Filter agents: ${summary}, ${String(selectedCount)} ${projectLabel(selectedCount)}`;
+
+  /*
+   * Only agents this list can actually offer. An agent with nothing recorded
+   * used to sit here greyed out, and a row that cannot be chosen is absent
+   * rather than disabled.
+   */
+  const offered = agentOptions.filter((agent) => {
+    return available.includes(agent.id);
+  });
   const groups = [
     {
       label: t('popularAgents'),
-      options: agentOptions.filter((agent) => {
+      options: offered.filter((agent) => {
         return agent.popular === true;
       }),
     },
     {
       label: t('moreSupported'),
-      options: agentOptions.filter((agent) => {
+      options: offered.filter((agent) => {
         return agent.popular !== true;
       }),
     },
-  ];
+  ].filter((group) => {
+    return group.options.length > 0;
+  });
 
   const toggleAgent = (agent: AgentId): void => {
     if (allSelected) {
@@ -88,84 +100,59 @@ export const AgentFilterBar: FC<AgentFilterBarProps> = ({
   };
 
   return (
-    <div className="relative shrink-0" data-agent-filter>
-      <button
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label={triggerLabel}
-        onClick={() => {
-          setOpen((current) => {
-            return !current;
-          });
-        }}
-        className="sidebar-filter-trigger"
-      >
-        <SlidersHorizontal className="size-3.5 shrink-0" />
-        <span className="min-w-0 flex-1 truncate">{summary}</span>
-        <span className="sidebar-filter-count">{selectedCount}</span>
-        <ChevronDown className="size-3.5 shrink-0" data-open={open} />
-      </button>
-      <PopupMenu
-        open={open}
-        onClose={() => {
-          setOpen(false);
-        }}
+    <div className="shrink-0" data-agent-filter>
+      <Menu
+        align="start"
         label={t('agentFilters')}
-      >
-        <div className="max-h-72 w-full overflow-y-auto p-0.5">
+        open={open}
+        onOpenChange={setOpen}
+        trigger={(
           <button
             type="button"
-            aria-label={t('allAgents')}
-            aria-pressed={allSelected}
-            data-selected={allSelected}
-            onClick={() => {
+            aria-label={triggerLabel}
+            className="sidebar-filter-trigger"
+          >
+            <SlidersHorizontal className="size-3.5 shrink-0" />
+            <span className="min-w-0 flex-1 truncate">{summary}</span>
+            <span className="sidebar-filter-count">{selectedCount}</span>
+            <ChevronDown className="size-3.5 shrink-0" data-open={open} />
+          </button>
+        )}
+      >
+        <div className="max-h-72 overflow-y-auto">
+          <MenuCheckboxItem
+            checked={allSelected}
+            hint={totalCount}
+            onChange={() => {
               onChange([]);
             }}
-            className="agent-filter-option"
           >
-            <Check className="agent-filter-check" />
-            <span className="min-w-0 flex-1 truncate">{t('allAgents')}</span>
-            <span className="sidebar-filter-count">{totalCount}</span>
-          </button>
+            {t('allAgents')}
+          </MenuCheckboxItem>
           {groups.map((group) => {
             return (
               <div key={group.label}>
-                <p className="
-                  px-2 pt-2 pb-1 text-[10px] font-semibold tracking-wider
-                  text-muted-foreground uppercase
-                "
-                >
-                  {group.label}
-                </p>
+                <MenuSeparator />
+                <MenuLabel>{group.label}</MenuLabel>
                 {group.options.map((agent) => {
-                  const enabled = available.includes(agent.id);
-                  const selected = !allSelected && active.includes(agent.id);
-
                   return (
-                    <button
-                      type="button"
+                    <MenuCheckboxItem
                       key={agent.id}
-                      aria-label={agent.label}
-                      aria-pressed={selected}
-                      data-selected={selected}
-                      disabled={!enabled}
-                      onClick={() => {
+                      checked={!allSelected && active.includes(agent.id)}
+                      hint={counts.get(agent.id) ?? 0}
+                      onChange={() => {
                         toggleAgent(agent.id);
                       }}
-                      className="agent-filter-option"
                     >
-                      <Check className="agent-filter-check" />
-                      <span className="min-w-0 flex-1 truncate">{agent.label}</span>
-                      <span className="sidebar-filter-count">{counts.get(agent.id) ?? 0}</span>
-                    </button>
+                      {agent.label}
+                    </MenuCheckboxItem>
                   );
                 })}
               </div>
             );
           })}
         </div>
-      </PopupMenu>
+      </Menu>
     </div>
   );
 };

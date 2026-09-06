@@ -62,7 +62,7 @@ export const WebOutcomeBody: FC<WebOutcomeBodyProps> = ({ label, text }) => {
                 rel="noreferrer"
                 className="
                   inline-flex max-w-52 items-center gap-1 rounded-md border
-                  border-border bg-background/60 px-2 py-1 text-[11px]
+                  border-border bg-background/60 px-2 py-1 text-body
                   text-muted-foreground
                   hover:border-primary/40 hover:text-primary
                 "

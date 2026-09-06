@@ -66,5 +66,10 @@
   "sessions": "セッション",
   "bulkArchiveNote": "選択したセッション",
   "threadParts_one": "{{count}} 個のパート",
-  "threadParts_other": "{{count}} 個のパート"
+  "threadParts_other": "{{count}} 個のパート",
+  "allProjects": "すべてのプロジェクト",
+  "sessionTally_one": "{{count}} セッション",
+  "sessionTally_other": "{{count}} セッション",
+  "projectTally_one": "{{count}} プロジェクト",
+  "projectTally_other": "{{count}} プロジェクト"
 }

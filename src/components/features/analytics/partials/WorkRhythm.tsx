@@ -2,9 +2,15 @@ import { useTranslation } from 'react-i18next';
 
 import { motion } from 'motion/react';
 
+import { cn } from '@utils/cnUtils';
 import { formatTokens } from '@utils/formatUtils';
 
-import { fillTransition, MOTION_STAGGER } from '@ui/index';
+import {
+  BAR_LIST_GRID,
+  BarRow,
+  fillTransition,
+  MOTION_STAGGER,
+} from '@ui/index';
 
 import { AnalyticsPanel } from './AnalyticsPanel';
 
@@ -71,22 +77,38 @@ const Strip: FC<{ readonly slots: readonly Slot[];
 
   return (
     <div className="grid gap-1">
-      <p className="text-[11px] text-muted-foreground">{caption}</p>
+      <p className="text-body text-muted-foreground">{caption}</p>
       <div className="flex items-end gap-0.5" role="img" aria-label={caption}>
         {slots.map((slot, index) => {
           const percent = peak === 0 ? 0 : (slot.count / peak) * 100;
+          const atPeak = peak > 0 && slot.count === peak;
 
           return (
             <div key={slot.key} className="grid min-w-0 flex-1 gap-1">
               <div className="flex h-16 items-end">
+                {/*
+                  * The column is given its height once and grown with a scale.
+                  * Animating the height itself relaid out the row on every
+                  * frame, and there are 24 of these beside a second chart.
+                  */}
                 <motion.div
                   title={`${slot.label}: ${formatTokens(slot.count)}`}
                   data-rhythm-bar={slot.key}
-                  // The live height is mid-tween, so the settled figure is its own attribute.
+                  // A style is not something a test should have to parse.
                   data-rhythm-height={percent}
-                  className="w-full rounded-t-sm bg-primary/70"
-                  initial={{ height: '0%' }}
-                  animate={{ height: `${String(percent)}%` }}
+                  data-rhythm-peak={atPeak || undefined}
+                  className={cn(
+                    'w-full origin-bottom rounded-t-sm',
+                    atPeak ? 'bg-primary' : 'bg-primary/70',
+                  )}
+                  /*
+                   * An hour that recorded nothing keeps a hairline rather than
+                   * vanishing, so "quiet" and "nothing" stop looking alike and
+                   * the row does not appear to close its gap.
+                   */
+                  style={{ height: percent === 0 ? '2px' : `${String(percent)}%` }}
+                  initial={{ scaleY: 0 }}
+                  animate={{ scaleY: 1 }}
                   transition={{
                     ...fillTransition,
                     delay: index * step,
@@ -94,7 +116,7 @@ const Strip: FC<{ readonly slots: readonly Slot[];
                 />
               </div>
               <span className="
-                overflow-hidden text-center text-[10px] leading-none
+                overflow-hidden text-center text-figure leading-none
                 text-muted-foreground tabular-nums
               "
               >
@@ -110,6 +132,9 @@ const Strip: FC<{ readonly slots: readonly Slot[];
 
 export const WorkRhythm: FC<WorkRhythmProps> = ({ rhythm, effort }) => {
   const { t } = useTranslation('analytics');
+  const weekdayPeak = rhythm.weekdays.reduce((best, count) => {
+    return Math.max(best, count);
+  }, 0);
   const facts: readonly (readonly [string, string])[] = [
     [t('peakHour'), rhythm.peakHour == null
       ? t('notRecorded', { ns: 'common' })
@@ -130,17 +155,30 @@ export const WorkRhythm: FC<WorkRhythmProps> = ({ rhythm, effort }) => {
     <AnalyticsPanel title={t('workRhythm')}>
       <div className="mt-3 grid gap-4" data-work-rhythm>
         <Strip caption={t('byHour')} slots={hourSlots(rhythm.hours)} />
-        <Strip
-          caption={t('byWeekday')}
-          slots={WEEKDAY_KEYS.map((key, slot) => {
-            return {
-              key,
-              label: t(key),
-              tick: t(key),
-              count: rhythm.weekdays[slot] ?? 0,
-            };
-          })}
-        />
+        {/*
+          * Seven values do not need a second chart form when the strip above
+          * already established one. They are "name, magnitude, figure", which
+          * is the row every ranked list in this app uses. The old columns also
+          * drew Saturday and Sunday as the widest blocks on the card, which
+          * read as the largest values rather than the smallest.
+          */}
+        <div className="grid gap-1">
+          <p className="text-body text-muted-foreground">{t('byWeekday')}</p>
+          <ul className={cn(BAR_LIST_GRID)}>
+            {WEEKDAY_KEYS.map((key, slot) => {
+              return (
+                <BarRow
+                  key={key}
+                  index={slot}
+                  label={t(key)}
+                  max={weekdayPeak}
+                  value={rhythm.weekdays[slot] ?? 0}
+                  formatValue={formatTokens}
+                />
+              );
+            })}
+          </ul>
+        </div>
         {/* The charts are one thought and the figures another. */}
         <dl className="
           grid grid-cols-2 gap-x-4 gap-y-1.5 border-t border-border pt-4 text-xs

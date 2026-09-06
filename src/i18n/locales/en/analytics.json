@@ -33,7 +33,6 @@
   "splitUnavailable": "This provider does not record enough detail to separate conversation from non-conversation traffic.",
   "providerDistribution": "Provider distribution",
   "providerLabel": "{{provider}} · {{sessions}} · {{projects}}",
-  "tokensWithShare": "{{tokens}} · {{share}}%",
   "noProviders": "No provider usage recorded.",
   "modelDistribution": "Model distribution",
   "costUnavailable": "No cost recorded",
@@ -103,5 +102,6 @@
   "providerProjects_one": "{{count}} project",
   "providerProjects_other": "{{count}} projects",
   "skillCalls": "Skills used",
-  "subagentCalls": "Subagents used"
+  "subagentCalls": "Subagents used",
+  "sharePercent": "{{share}}%"
 }

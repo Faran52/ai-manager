@@ -84,5 +84,9 @@
   "promptScopeAll": "Everything",
   "promptScopes": "Prompt scope",
   "promptsOfEverything": "Recorded in all",
-  "exportHtml": "HTML file"
+  "exportHtml": "HTML file",
+  "fileEdits": "File edits",
+  "closeFileEdits": "Close file edits",
+  "openFileEdits": "Open file edits",
+  "noFileEdits": "This session edited no files."
 }

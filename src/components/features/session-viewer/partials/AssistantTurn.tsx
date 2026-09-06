@@ -68,7 +68,7 @@ export const AssistantTurn: FC<AssistantTurnProps> = ({
       {hiddenCount > 0 && (
         <p
           className="
-            flex items-center gap-1.5 text-[11px] text-muted-foreground/80
+            flex items-center gap-1.5 text-body text-muted-foreground/80
           "
           data-hidden-blocks
         >

@@ -37,7 +37,6 @@
   "splitUnavailable": "لا يسجل هذا المزوّد تفاصيل كافية لفصل المحادثة عن حركة البيانات خارجها.",
   "providerDistribution": "توزيع المزوّدين",
   "providerLabel": "{{provider}} · {{sessions}} · {{projects}}",
-  "tokensWithShare": "{{tokens}} · {{share}}٪",
   "noProviders": "لم يُسجَّل استخدام لأي مزوّد.",
   "modelDistribution": "توزيع النماذج",
   "costUnavailable": "لم تُسجّل أي تكلفة",
@@ -127,5 +126,6 @@
   "providerProjects_many": "{{count}} مشروعًا",
   "providerProjects_other": "{{count}} مشروع",
   "skillCalls": "المهارات المستخدمة",
-  "subagentCalls": "الوكلاء الفرعيون المستخدمون"
+  "subagentCalls": "الوكلاء الفرعيون المستخدمون",
+  "sharePercent": "{{share}}%"
 }

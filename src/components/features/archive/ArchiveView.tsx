@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import {
   Archive,
   CircleAlert,
-  HardDrive,
   Loader2,
   Plus,
 } from 'lucide-react';
@@ -17,7 +16,7 @@ import {
   Button,
   ConfirmDialog,
   EmptyState,
-  MetricCard,
+  SectionHeader,
   Spinner,
   TextInput,
 } from '@ui/index';
@@ -104,37 +103,13 @@ export const ArchiveView: FC<ArchiveViewProps> = ({
   return (
     <div className="h-full overflow-y-auto p-4" data-archive-view>
       <div className="mx-auto grid max-w-4xl gap-4">
-        <header className="grid gap-1">
-          <h2 className="text-base font-semibold text-foreground">{t('heading')}</h2>
-        </header>
-
-        <p className="text-sm text-muted-foreground">{t('intro')}</p>
-
+        {/* The archives are what you came for, so they get the pane. Retention
+            is a setting: it keeps one card at the top and then gets out of the
+            way. */}
         <RetentionCard retention={retention} nowMs={nowMs} />
 
         <div className="
-          grid gap-3
-          sm:grid-cols-3
-        "
-        >
-          <MetricCard
-            label={t('archiveCount')}
-            value={String(list.length)}
-            icon={<Archive className="size-3.5" />}
-          />
-          <MetricCard
-            label={t('sessionsSaved')}
-            value={String(totals.sessions)}
-          />
-          <MetricCard
-            label={t('spaceUsed')}
-            value={sizeLabel(totals.bytes)}
-            icon={<HardDrive className="size-3.5" />}
-          />
-        </div>
-
-        <div className="
-          flex flex-wrap items-center gap-2 rounded-xl border border-border
+          flex flex-wrap items-center gap-2 rounded-lg border border-border
           bg-card p-3
         "
         >
@@ -167,6 +142,36 @@ export const ArchiveView: FC<ArchiveViewProps> = ({
           </p>
         )}
 
+        {/* Three figures that read 0, 0 and 0B on an empty install were three
+            full-size cards saying nothing happened. They ride the header of the
+            list they summarise instead. */}
+        <SectionHeader
+          icon={<Archive className="size-3.5" />}
+          label={t('panelArchives')}
+          action={(
+            <span className="
+              flex flex-wrap items-center gap-3 text-figure text-faint
+            "
+            >
+              <span>
+                <span className="font-mono text-foreground-2">{list.length}</span>
+                {' '}
+                {t('archiveCount')}
+              </span>
+              <span>
+                <span className="font-mono text-foreground-2">{totals.sessions}</span>
+                {' '}
+                {t('sessionsSaved')}
+              </span>
+              <span>
+                <span className="font-mono text-foreground-2">{sizeLabel(totals.bytes)}</span>
+                {' '}
+                {t('spaceUsed')}
+              </span>
+            </span>
+          )}
+        />
+
         {archives.status === 'loading' && <Spinner />}
 
         {archives.status === 'ready' && list.length === 0 && (
@@ -195,7 +200,6 @@ export const ArchiveView: FC<ArchiveViewProps> = ({
 
       <ConfirmDialog
         open={pendingDelete != null}
-        labelledBy="archive-delete-heading"
         icon={<CircleAlert className="size-4 text-destructive" />}
         heading={t('deleteArchive')}
         description={<p className="mt-2 text-sm text-muted-foreground">{t('deleteArchiveWarning')}</p>}

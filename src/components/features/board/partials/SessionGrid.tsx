@@ -58,8 +58,7 @@ export const SessionGrid: FC<SessionGridProps> = ({
                 onOpenSession(cell.session);
               }}
               className="
-                size-5 rounded-[3px] bg-primary transition-transform
-                outline-none
+                size-5 rounded-xs bg-primary transition-transform outline-none
                 hover:scale-125
                 focus-visible:ring-2 focus-visible:ring-ring
               "

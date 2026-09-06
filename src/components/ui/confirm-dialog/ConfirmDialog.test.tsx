@@ -19,7 +19,6 @@ const subject = (open: boolean, onClose: () => void): ReactElement => {
   return (
     <ConfirmDialog
       open={open}
-      labelledBy="confirm-title"
       icon={<i data-testid="icon" />}
       heading="Move to Trash?"
       description={<p>Are you sure?</p>}
@@ -38,7 +37,6 @@ describe('ConfirmDialog', () => {
     render(
       <ConfirmDialog
         open
-        labelledBy="confirm-title"
         icon={<i data-testid="icon" />}
         heading="Move to Trash?"
         description={<p>Are you sure?</p>}
@@ -48,7 +46,8 @@ describe('ConfirmDialog', () => {
       />,
     );
 
-    expect(screen.getByText('Move to Trash?')).toBeDefined();
+    expect(screen.getByRole('heading', { name: 'Move to Trash?' })).toBeDefined();
+    expect(screen.getByRole('dialog', { name: 'Move to Trash?' })).toBeDefined();
     expect(screen.getByText('Are you sure?')).toBeDefined();
 
     await userEvent.click(screen.getByRole('button', { name: 'Move it' }));
@@ -63,7 +62,6 @@ describe('ConfirmDialog', () => {
     render(
       <ConfirmDialog
         open
-        labelledBy="confirm-title"
         icon={null}
         heading="Busy"
         description={null}
@@ -88,7 +86,6 @@ describe('ConfirmDialog', () => {
     render(
       <ConfirmDialog
         open
-        labelledBy="confirm-title"
         icon={null}
         heading="Cancel me"
         description={null}

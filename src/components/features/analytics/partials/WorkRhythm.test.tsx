@@ -40,8 +40,10 @@ test('shows when the work happens and how much of it was typed', () => {
   expect(screen.getByText('8 days')).toBeDefined();
   expect(screen.getByText('12 of 30')).toBeDefined();
   expect(screen.getByText('1.2k')).toBeDefined();
-  expect(document.querySelector('[data-rhythm-bar="weekdayMon"]')?.getAttribute('title'))
-    .toBe('Mon: 5');
+  // Weekdays are ranked rows now, not a second column chart.
+  expect(document.querySelector('[data-bar-row="Mon"]')).not.toBeNull();
+  expect(document.querySelector('[data-bar-row="Mon"] [data-bar-fill]')
+    ?.getAttribute('data-bar-fill')).toBe('100');
 });
 
 test('scales the busiest hour to the full height of the strip', () => {
@@ -52,6 +54,21 @@ test('scales the busiest hour to the full height of the strip', () => {
 
   expect(busiest?.getAttribute('data-rhythm-height')).toBe('100');
   expect(quiet?.getAttribute('data-rhythm-height')).toBe('0');
+  // The peak is marked so the reader is not left counting along the row.
+  expect(busiest?.getAttribute('data-rhythm-peak')).toBe('true');
+  expect(quiet?.getAttribute('data-rhythm-peak')).toBeNull();
+});
+
+/*
+ * An hour with nothing recorded keeps a hairline rather than disappearing, so
+ * "quiet" and "nothing" stop looking alike.
+ */
+test('keeps an empty hour visible on the baseline', () => {
+  render(<WorkRhythm rhythm={rhythm()} effort={effort()} />);
+
+  const quiet = document.querySelector('[data-rhythm-bar="0"]');
+
+  expect(quiet?.getAttribute('style')).toContain('2px');
 });
 
 test('says nothing about a peak hour before anything has been recorded', () => {
@@ -71,6 +88,28 @@ test('says nothing about a peak hour before anything has been recorded', () => {
   );
 
   expect(screen.getByText('Not recorded')).toBeDefined();
-  expect(document.querySelector('[data-rhythm-bar="weekdayMon"]')
-    ?.getAttribute('data-rhythm-height')).toBe('0');
+  expect(document.querySelector('[data-bar-row="Mon"] [data-bar-fill]')
+    ?.getAttribute('data-bar-fill')).toBe('0');
+});
+
+/*
+ * A day of recorded sessions that happen to hold no tokens still draws 24
+ * slots, and dividing by a peak of zero would put NaN into every height.
+ */
+test('draws a strip of recorded hours that all hold nothing', () => {
+  render(
+    <WorkRhythm
+      rhythm={rhythm({
+        hours: Array.from({ length: 24 }, () => {
+          return 0;
+        }),
+      })}
+      effort={effort()}
+    />,
+  );
+
+  const first = document.querySelector('[data-rhythm-bar="0"]');
+
+  expect(first?.getAttribute('data-rhythm-height')).toBe('0');
+  expect(first?.getAttribute('data-rhythm-peak')).toBeNull();
 });

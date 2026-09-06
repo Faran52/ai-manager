@@ -66,5 +66,10 @@
   "sessions": "Sessions",
   "bulkArchiveNote": "Selected sessions",
   "threadParts_one": "{{count}} part",
-  "threadParts_other": "{{count}} parts"
+  "threadParts_other": "{{count}} parts",
+  "allProjects": "All projects",
+  "sessionTally_one": "{{count}} session",
+  "sessionTally_other": "{{count}} sessions",
+  "projectTally_one": "{{count}} project",
+  "projectTally_other": "{{count}} projects"
 }

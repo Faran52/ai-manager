@@ -15,99 +15,124 @@ import { Modal } from './Modal';
 
 import type { FC } from 'react';
 
+const user = userEvent.setup({ pointerEventsCheck: 0 });
+
 const mount = (onClose: () => void): ReturnType<typeof render> => {
   return render(
-    <Modal open onClose={onClose} labelledBy="dlg">
-      <p id="dlg">content</p>
+    <Modal open onClose={onClose} title="Details">
+      <p>content</p>
     </Modal>,
   );
 };
 
 describe('Modal', () => {
   test('renders nothing while closed', () => {
-    const { container } = render(
+    render(
       <Modal
         open={false}
         onClose={() => {
           return undefined;
         }}
-        labelledBy="d"
+        title="Details"
       >
         x
       </Modal>,
     );
 
-    expect(container.hasChildNodes()).toBe(false);
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  test('closes via the backdrop button and via Escape', async () => {
+  test('takes its accessible name from the title', () => {
+    mount(vi.fn());
+
+    expect(screen.getByRole('dialog', { name: 'Details' })).toBeDefined();
+  });
+
+  test('closes on Escape', async () => {
     const onClose = vi.fn();
     mount(onClose);
+    await user.keyboard('{Escape}');
 
-    await userEvent.click(screen.getByRole('button', { name: 'Close dialog' }));
     expect(onClose).toHaveBeenCalledTimes(1);
-
-    await userEvent.keyboard('{Escape}');
-    expect(onClose).toHaveBeenCalledTimes(2);
   });
 
   test('keeps content interactive inside the panel', async () => {
     const onClose = vi.fn();
     mount(onClose);
-    await userEvent.click(screen.getByText('content'));
+    await user.click(screen.getByText('content'));
 
     expect(onClose).not.toHaveBeenCalled();
   });
-});
 
-test('keeps focus where the user put it when the parent rerenders', () => {
-  const Host: FC<{ readonly tick: number }> = ({ tick }) => {
-    return (
-      <Modal
-        open
-        labelledBy="t"
-        onClose={() => {
-          expect(tick).toBeDefined();
-        }}
-      >
-        <input aria-label="typed here" />
-      </Modal>
+  test('moves focus into the dialog when it opens', () => {
+    render(
+      <Modal open onClose={vi.fn()} title="Details">
+        <button type="button">first</button>
+      </Modal>,
     );
-  };
 
-  const { rerender } = render(<Host tick={0} />);
-  const field = screen.getByLabelText('typed here');
+    expect(screen.getByRole('dialog').contains(document.activeElement)).toBe(true);
+  });
 
-  field.focus();
-  expect(document.activeElement).toBe(field);
+  test('lays a sheet out taller than a dialog', () => {
+    render(
+      <Modal open onClose={vi.fn()} title="Settings" variant="sheet">
+        <p>panes</p>
+      </Modal>,
+    );
 
-  rerender(<Host tick={1} />);
-  rerender(<Host tick={2} />);
+    expect(screen.getByRole('dialog').className).toContain('flex-col');
+  });
 
-  expect(document.activeElement).toBe(field);
-});
+  test('keeps focus where the user put it when the parent rerenders', () => {
+    const Host: FC<{ readonly tick: number }> = ({ tick }) => {
+      return (
+        <Modal
+          open
+          title="Details"
+          onClose={() => {
+            expect(tick).toBeDefined();
+          }}
+        >
+          <input aria-label="typed here" />
+        </Modal>
+      );
+    };
 
-test('keeps the dialog mounted while its exit animation plays', async () => {
-  const noop = (): void => {
-    return undefined;
-  };
-  const { rerender } = render(
-    <Modal open onClose={noop} labelledBy="dlg">
-      <p id="dlg">content</p>
-    </Modal>,
-  );
+    const { rerender } = render(<Host tick={0} />);
+    const field = screen.getByLabelText('typed here');
 
-  expect(screen.getByRole('dialog')).toBeDefined();
+    field.focus();
+    expect(document.activeElement).toBe(field);
 
-  rerender(
-    <Modal open={false} onClose={noop} labelledBy="dlg">
-      <p id="dlg">content</p>
-    </Modal>,
-  );
+    rerender(<Host tick={1} />);
+    rerender(<Host tick={2} />);
 
-  expect(screen.getByRole('dialog')).toBeDefined();
+    expect(document.activeElement).toBe(field);
+  });
 
-  await waitFor(() => {
-    expect(screen.queryByRole('dialog')).toBeNull();
+  test('keeps the dialog mounted while its exit animation plays', async () => {
+    const noop = (): void => {
+      return undefined;
+    };
+    const { rerender } = render(
+      <Modal open onClose={noop} title="Details">
+        <p>content</p>
+      </Modal>,
+    );
+
+    expect(screen.getByRole('dialog')).toBeDefined();
+
+    rerender(
+      <Modal open={false} onClose={noop} title="Details">
+        <p>content</p>
+      </Modal>,
+    );
+
+    expect(screen.getByRole('dialog')).toBeDefined();
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
   });
 });

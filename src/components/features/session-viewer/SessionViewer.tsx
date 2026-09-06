@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import {
   CircleAlert,
+  FileDiff,
   FileText,
   GitBranch,
   ListFilter,
@@ -24,7 +25,6 @@ import {
   Badge,
   Button,
   EmptyState,
-  PaneDivider,
   Spinner,
   useSmoothScroll,
 } from '@ui/index';
@@ -32,9 +32,11 @@ import { useMessages } from '@features/history-data';
 
 import { MessageTimeline } from './MessageTimeline';
 import {
+  CompanionPane,
   ExportMenu,
+  MAX_COMPANION_WIDTH,
   MessageFilterToolbar,
-  MessageNavigator,
+  MIN_COMPANION_WIDTH,
 } from './partials';
 import {
   countVisibleEntries,
@@ -44,8 +46,10 @@ import {
 } from './utils/messageFilterUtils';
 
 import type { AgentId } from '@config/agents';
+import type { EditedFile, FileEdit } from '@services/edits/editsService';
 import type { FC, ReactNode } from 'react';
 import type { TimelineNavigation } from './MessageTimeline';
+import type { CompanionPanel } from './partials';
 
 export interface SessionViewerProps {
   readonly filePath: string | null;
@@ -56,18 +60,24 @@ export interface SessionViewerProps {
   readonly gitBranch?: string | undefined;
   readonly highlightTimestamp: string | undefined;
   readonly sourceModifiedMs?: number | undefined;
+  // The edits this session made, shown beside it rather than in place of it.
+  readonly editedFiles?: readonly EditedFile[] | undefined;
+  readonly editsStatus?: 'loading' | 'ready' | 'error' | undefined;
+  readonly editsError?: string | undefined;
+  readonly projectPath?: string | undefined;
+  readonly nowMs?: number | undefined;
+  readonly onOpenEdit?: ((edit: FileEdit) => void)
+    | undefined;
 }
 
-const MIN_NAVIGATOR_WIDTH = 220;
-const MAX_NAVIGATOR_WIDTH = 420;
-const DEFAULT_NAVIGATOR_WIDTH = 280;
+const DEFAULT_COMPANION_WIDTH = 280;
 
 const initialNavigatorWidth = (): number => {
   const stored = Number(localStorage.getItem(messageNavigatorWidthStorageKey));
 
-  return Number.isFinite(stored) && stored >= MIN_NAVIGATOR_WIDTH
-    ? Math.min(stored, MAX_NAVIGATOR_WIDTH)
-    : DEFAULT_NAVIGATOR_WIDTH;
+  return Number.isFinite(stored) && stored >= MIN_COMPANION_WIDTH
+    ? Math.min(stored, MAX_COMPANION_WIDTH)
+    : DEFAULT_COMPANION_WIDTH;
 };
 
 export const SessionViewer: FC<SessionViewerProps> = ({
@@ -78,6 +88,12 @@ export const SessionViewer: FC<SessionViewerProps> = ({
   gitBranch,
   highlightTimestamp,
   sourceModifiedMs = 0,
+  editedFiles = [],
+  editsStatus = 'ready',
+  editsError,
+  projectPath,
+  nowMs = 0,
+  onOpenEdit,
 }) => {
   const { t } = useTranslation('session');
   const [includeSidechain, setIncludeSidechain] = useState(false);
@@ -87,8 +103,8 @@ export const SessionViewer: FC<SessionViewerProps> = ({
   const [filterBarOpen, setFilterBarOpen] = useState(() => {
     return localStorage.getItem(messageFilterBarStorageKey) !== 'false';
   });
-  const [navigatorOpen, setNavigatorOpen] = useState(() => {
-    return localStorage.getItem(messageNavigatorOpenStorageKey) !== 'false';
+  const [panel, setPanel] = useState<CompanionPanel>(() => {
+    return localStorage.getItem(messageNavigatorOpenStorageKey) === 'false' ? 'none' : 'navigator';
   });
   const [navigatorWidth, setNavigatorWidth] = useState(initialNavigatorWidth);
   const [navigation, setNavigation] = useState<TimelineNavigation | null>(null);
@@ -121,8 +137,8 @@ export const SessionViewer: FC<SessionViewerProps> = ({
   }, [filterBarOpen]);
 
   useEffect(() => {
-    localStorage.setItem(messageNavigatorOpenStorageKey, String(navigatorOpen));
-  }, [navigatorOpen]);
+    localStorage.setItem(messageNavigatorOpenStorageKey, String(panel === 'navigator'));
+  }, [panel]);
 
   useEffect(() => {
     localStorage.setItem(messageNavigatorWidthStorageKey, String(navigatorWidth));
@@ -132,8 +148,8 @@ export const SessionViewer: FC<SessionViewerProps> = ({
     const toggleNavigator = (event: KeyboardEvent): void => {
       if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'm') {
         event.preventDefault();
-        setNavigatorOpen((current) => {
-          return !current;
+        setPanel((current) => {
+          return current === 'navigator' ? 'none' : 'navigator';
         });
       }
     };
@@ -273,19 +289,34 @@ export const SessionViewer: FC<SessionViewerProps> = ({
             <ListFilter className="size-3.5" />
             {t('filters')}
           </Button>
+          {/* Both panels open from the same row of icons, one at a time. */}
           <Button
             size="sm"
-            variant={navigatorOpen ? 'primary' : 'ghost'}
-            pressed={navigatorOpen}
+            variant={panel === 'navigator' ? 'primary' : 'ghost'}
+            pressed={panel === 'navigator'}
             onClick={() => {
-              setNavigatorOpen((current) => {
-                return !current;
+              setPanel((current) => {
+                return current === 'navigator' ? 'none' : 'navigator';
               });
             }}
             title={t('openMessageNavigator')}
           >
             <ListTree className="size-3.5" />
             {t('navigator')}
+          </Button>
+          <Button
+            size="sm"
+            variant={panel === 'edits' ? 'primary' : 'ghost'}
+            pressed={panel === 'edits'}
+            onClick={() => {
+              setPanel((current) => {
+                return current === 'edits' ? 'none' : 'edits';
+              });
+            }}
+            title={t('openFileEdits')}
+          >
+            <FileDiff className="size-3.5" />
+            {t('fileEdits')}
           </Button>
           <ExportMenu entries={feed.entries} project={projectLabel} title={title} />
         </div>
@@ -314,36 +345,32 @@ export const SessionViewer: FC<SessionViewerProps> = ({
             {body}
           </div>
         </div>
-        {navigatorOpen && (
-          <>
-            <PaneDivider
-              label={t('resizeMessageNavigator')}
-              value={navigatorWidth}
-              min={MIN_NAVIGATOR_WIDTH}
-              max={MAX_NAVIGATOR_WIDTH}
-              orientation="horizontal"
-              onResize={(delta) => {
-                setNavigatorWidth((width) => {
-                  return Math.min(
-                    Math.max(width - delta, MIN_NAVIGATOR_WIDTH),
-                    MAX_NAVIGATOR_WIDTH,
-                  );
-                });
-              }}
-            />
-            <MessageNavigator
-              entries={feed.entries}
-              filters={filters}
-              width={navigatorWidth}
-              onNavigate={(index) => {
-                setNavigation({ index });
-              }}
-              onClose={() => {
-                setNavigatorOpen(false);
-              }}
-            />
-          </>
-        )}
+        <CompanionPane
+          panel={panel}
+          width={navigatorWidth}
+          entries={feed.entries}
+          filters={filters}
+          editedFiles={editedFiles}
+          editsStatus={editsStatus}
+          editsError={editsError}
+          projectPath={projectPath}
+          nowMs={nowMs}
+          onOpenEdit={onOpenEdit}
+          onNavigate={(index) => {
+            setNavigation({ index });
+          }}
+          onResize={(delta) => {
+            setNavigatorWidth((width) => {
+              return Math.min(
+                Math.max(width - delta, MIN_COMPANION_WIDTH),
+                MAX_COMPANION_WIDTH,
+              );
+            });
+          }}
+          onClose={() => {
+            setPanel('none');
+          }}
+        />
       </div>
     </section>
   );

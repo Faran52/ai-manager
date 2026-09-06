@@ -15,6 +15,20 @@
   --muted: #f2f0ec;
   --muted-foreground: #6b6862;
   --border: #e6e4e0;
+
+  /*
+   * Between foreground and muted-foreground. The revamp needed four steps of
+   * text where there were two, and without names every card invented its own.
+   */
+  --foreground-2: #3f3c38;
+  --faint: #85817a;
+  --dim: #a5a09a;
+
+  /* Inset depth for bar tracks and pressed controls. Black reads as a hole. */
+  --recess: #e4e1dc;
+
+  /* A surface floating above the pane. Sharing --border makes it disappear. */
+  --raised: #d5d2cd;
   --input: #e6e4e0;
   --accent: #e8e4dd;
   --accent-foreground: #1a1c20;
@@ -27,7 +41,31 @@
   --warn: #b26a15;
   --destructive: #b23a32;
   --destructive-foreground: #fff;
-  --radius: 0.375rem;
+
+  /*
+   * The custom-accent swatch before a colour is picked: the six that ship, in
+   * order, so the control shows what it is offering rather than a grey circle.
+   */
+  --accent-wheel: conic-gradient(
+    from 0deg,
+    #1f7a6d,
+    #5457d6,
+    #a96d0e,
+    #c2404f,
+    #5c8a20,
+    #2a7fa6,
+    #1f7a6d
+  );
+
+  /*
+   * One scale, by what a thing is rather than by size name. The old --radius
+   * was 0.375rem, which is 6px and matched nothing any surface actually drew.
+   */
+  --radius-xs: 4px;  /* small marks: checkboxes, the tag on an archive row */
+  --radius-sm: 5px;  /* a control nested inside another control */
+  --radius-md: 7px;  /* controls: buttons, inputs, menu rows, icon buttons */
+  --radius-lg: 9px;  /* surfaces: cards, panes, menus */
+  --radius-xl: 11px; /* the window frame and the pill chip, off-scale by intent */
 }
 
 .dark {
@@ -38,6 +76,11 @@
   --muted: #22252b;
   --muted-foreground: #9a9691;
   --border: #2a2e35;
+  --foreground-2: #c6c3bf;
+  --faint: #6f6c67;
+  --dim: #55524e;
+  --recess: #0d0e11;
+  --raised: #3a3f47;
   --input: #2a2e35;
   --accent: #2b2f37;
   --accent-foreground: #e8e6e3;
@@ -49,6 +92,16 @@
   --warn: #d98a2b;
   --destructive: #d2544b;
   --destructive-foreground: #1d0f0e;
+  --accent-wheel: conic-gradient(
+    from 0deg,
+    #2f9e8f,
+    #7c7ff0,
+    #e0a23c,
+    #e4707c,
+    #8fc44a,
+    #4fb3de,
+    #2f9e8f
+  );
 }
 
 [data-accent="teal"] { --primary: #1f7a6d; }

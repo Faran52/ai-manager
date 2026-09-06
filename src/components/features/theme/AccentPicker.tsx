@@ -1,15 +1,13 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Check, Palette } from 'lucide-react';
+import { cn } from '@utils/cnUtils';
 
 import {
-  Button,
-  MenuItem,
-  PopupMenu,
-} from '@ui/index';
-
-import { accentNames, useAccent } from './hooks/useAccent';
+  accentNames,
+  DEFAULT_CUSTOM_ACCENT,
+  isAccentName,
+  useAccent,
+} from './hooks/useAccent';
 
 import type { FC } from 'react';
 import type { AccentName } from './hooks/useAccent';
@@ -24,54 +22,65 @@ const LABEL_KEYS: Record<AccentName, string> = {
   sky: 'accentSky',
 };
 
+/*
+ * A swatch is already a colour, so selection cannot be a fill and it cannot be
+ * a border either without changing the colour being shown. It takes a ring,
+ * the same mark the selected session circle uses.
+ */
+const SWATCH = `
+  size-5 rounded-full border border-border transition-[box-shadow]
+  focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+  focus-visible:ring-offset-card
+`;
+const SELECTED = 'ring-2 ring-foreground ring-offset-2 ring-offset-card';
+
 export const AccentPicker: FC = () => {
   const { t } = useTranslation('common');
   const { accent, setAccent } = useAccent();
-  const [open, setOpen] = useState(false);
+  const custom = isAccentName(accent) ? DEFAULT_CUSTOM_ACCENT : accent;
 
   return (
-    <div className="relative">
-      <Button
-        size="sm"
-        variant="ghost"
-        title={t('accentChange')}
-        onClick={() => {
-          setOpen(!open);
-        }}
+    <div className="flex items-center gap-2">
+      {accentNames.map((name) => {
+        return (
+          <button
+            key={name}
+            type="button"
+            data-accent={name}
+            aria-label={t(LABEL_KEYS[name])}
+            aria-pressed={accent === name}
+            className={cn(SWATCH, 'bg-primary', accent === name && SELECTED)}
+            onClick={() => {
+              setAccent(name);
+            }}
+          />
+        );
+      })}
+      {/*
+        * The seventh swatch is the OS colour picker. It is a native control, so
+        * it costs nothing and it inherits whatever the system does about recent
+        * colours and accessibility.
+        */}
+      <label
+        className={cn(SWATCH, 'relative cursor-pointer', !isAccentName(accent) && SELECTED)}
+        style={{ background: isAccentName(accent) ? undefined : accent }}
       >
-        <Palette className="size-3.5" />
-      </Button>
-      <PopupMenu
-        open={open}
-        align="right"
-        label={t('accent')}
-        onClose={() => {
-          setOpen(false);
-        }}
-      >
-        {accentNames.map((name) => {
-          return (
-            <MenuItem
-              key={name}
-              icon={(
-                <span
-                  data-accent={name}
-                  className="size-3 rounded-full bg-primary ring-1 ring-border"
-                />
-              )}
-              onClick={() => {
-                setAccent(name);
-                setOpen(false);
-              }}
-            >
-              <span className="flex w-full items-center justify-between gap-3">
-                {t(LABEL_KEYS[name])}
-                {name === accent && <Check className="size-3.5 text-primary" />}
-              </span>
-            </MenuItem>
-          );
-        })}
-      </PopupMenu>
+        <span className="sr-only">{t('accentCustom')}</span>
+        {isAccentName(accent) && (
+          <span
+            aria-hidden
+            className="absolute inset-0 rounded-full bg-(image:--accent-wheel)"
+          />
+        )}
+        <input
+          type="color"
+          value={custom}
+          className="absolute inset-0 size-full cursor-pointer opacity-0"
+          onChange={(event) => {
+            setAccent(event.target.value);
+          }}
+        />
+      </label>
     </div>
   );
 };

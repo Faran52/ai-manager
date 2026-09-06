@@ -15,7 +15,7 @@ import { agentOption } from '@config/agents';
 import { copyTextToClipboard } from '@utils/browserFilesUtils';
 import { shellQuote } from '@utils/shellQuoteUtils';
 
-import { MenuItem, PopupMenu } from '@ui/index';
+import { Menu, MenuItem } from '@ui/index';
 
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
 import type { PopupPosition } from '@ui/index';
@@ -162,10 +162,20 @@ export const SidebarContextMenu: FC<SidebarContextMenuProps> = ({
       };
 
   return (
-    <PopupMenu open onClose={onClose} position={position} label={menu.label}>
+    <Menu
+      open
+      position={position}
+      label={menu.label}
+      trigger={<span aria-hidden />}
+      /*
+       * The menu is mounted already open at the cursor, so the only change
+       * Radix ever reports back is the close.
+       */
+      onOpenChange={onClose}
+    >
       <div
         className="
-          truncate border-b border-border px-2 py-1.5 text-[11px] font-medium
+          truncate border-b border-border px-2 py-1.5 text-body font-medium
           text-muted-foreground
         "
         title={menu.title}
@@ -174,17 +184,11 @@ export const SidebarContextMenu: FC<SidebarContextMenuProps> = ({
       </div>
       {menu.actions.map((action) => {
         return (
-          <MenuItem
-            key={action.label}
-            icon={action.icon}
-            onClick={() => {
-              action.onSelect();
-            }}
-          >
+          <MenuItem key={action.label} icon={action.icon} onSelect={action.onSelect}>
             {action.label}
           </MenuItem>
         );
       })}
-    </PopupMenu>
+    </Menu>
   );
 };

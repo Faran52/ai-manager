@@ -34,7 +34,6 @@ export const ConfirmDeleteDialog: FC<ConfirmDeleteDialogProps> = ({
   return (
     <ConfirmDialog
       open={open}
-      labelledBy="delete-session-title"
       icon={<Trash2 className="size-4 text-destructive" />}
       heading={count === 1 ? t('deleteSessionConfirm') : `Delete ${String(count)} sessions permanently?`}
       description={(

@@ -63,7 +63,7 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
               <span
                 key={weekday}
                 className="
-                  flex items-center text-[10px] leading-none
+                  flex items-center text-figure leading-none
                   text-muted-foreground
                 "
               >
@@ -100,7 +100,7 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
                 }}
               >
                 <span className="
-                  h-3 text-[10px] leading-none text-muted-foreground
+                  h-3 text-figure leading-none text-muted-foreground
                 "
                 >
                   {month.label}
@@ -139,7 +139,7 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
       </div>
 
       <div className="
-        mt-3 flex items-center justify-end gap-1 text-[10px]
+        mt-3 flex items-center justify-end gap-1 text-figure
         text-muted-foreground
       "
       >

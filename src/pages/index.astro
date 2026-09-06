@@ -15,14 +15,23 @@ import { HistoryApp } from '@features/app-shell';
 		<meta name="generator" content={Astro.generator} />
 		<title>AI Manager</title>
 		<script is:inline define:vars={{ themeStorageKey, accentStorageKey, fontSizeStorageKey }}>
-			const stored = localStorage.getItem(themeStorageKey);
-			const dark = stored === 'dark' || (stored !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
-			if (dark) {
-			  document.documentElement.classList.add('dark');
-			}
-			document.documentElement.dataset.accent = localStorage.getItem(accentStorageKey) || 'teal';
-			document.documentElement.dataset.fontSize = localStorage.getItem(fontSizeStorageKey) || 'normal';
-		</script>
+	const stored = localStorage.getItem(themeStorageKey);
+	const dark = stored === 'dark' || (stored !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+	if (dark) {
+	  document.documentElement.classList.add('dark');
+	}
+	// A custom accent is a hex the token file knows nothing about, so it
+	// rides an inline --primary rather than a [data-accent] selector.
+	const accent = localStorage.getItem(accentStorageKey) || 'teal';
+	if (accent.startsWith('#')) {
+	  document.documentElement.dataset.accent = 'custom';
+	  document.documentElement.style.setProperty('--primary', accent);
+	}
+ else {
+	  document.documentElement.dataset.accent = accent;
+	}
+	document.documentElement.dataset.fontSize = localStorage.getItem(fontSizeStorageKey) || 'normal';
+	</script>
 	</head>
 	<body>
 		<HistoryApp client:only="react" />

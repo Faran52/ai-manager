@@ -37,7 +37,7 @@ export const FileDiffPanel: FC<FileDiffPanelProps> = ({ sessionId, path }) => {
 
   if (versions.length === 0) {
     return (
-      <p className="text-[11px] text-muted-foreground" data-file-diff-empty>
+      <p className="text-body text-muted-foreground" data-file-diff-empty>
         {snapshot.status === 'error' ? t('diffFailed') : t('noSnapshots')}
       </p>
     );
@@ -66,13 +66,13 @@ export const FileDiffPanel: FC<FileDiffPanelProps> = ({ sessionId, path }) => {
       </div>
 
       {diff?.firstRecorded === true && (
-        <p className="text-[11px] text-muted-foreground">{t('firstSnapshot')}</p>
+        <p className="text-body text-muted-foreground">{t('firstSnapshot')}</p>
       )}
 
       {diff != null && diff.hunks.length > 0
         ? <PatchView hunks={diff.hunks} />
         : (
-            <p className="text-[11px] text-muted-foreground" data-file-diff-unchanged>
+            <p className="text-body text-muted-foreground" data-file-diff-unchanged>
               {t('noChangeRecorded')}
             </p>
           )}

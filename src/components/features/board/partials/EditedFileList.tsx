@@ -22,13 +22,33 @@ export interface EditedFileListProps {
   readonly files: readonly EditedFile[];
   readonly projectPath: string | undefined;
   readonly nowMs: number;
-  readonly onOpenEdit: (edit: FileEdit) => void;
+  /*
+   * Absent inside a session's own edits panel: the row would jump to the
+   * session already on screen, so it is a plain row there rather than a
+   * control that does nothing.
+   */
+  readonly onOpenEdit?: ((edit: FileEdit) => void)
+    | undefined;
 }
 
-const shortenPath = (path: string, projectPath: string | undefined): string => {
-  return projectPath != null && path.startsWith(projectPath)
+/*
+ * The name carries the row and the directory sits under it. A full path per row
+ * means reading forty copies of the same prefix to find the one part that
+ * differs, which is the filename.
+ */
+const splitPath = (path: string, projectPath: string | undefined): {
+  readonly name: string;
+  readonly directory: string;
+} => {
+  const relative = projectPath != null && path.startsWith(projectPath)
     ? path.slice(projectPath.length).replace(/^\//u, '')
     : path;
+  const cut = relative.lastIndexOf('/');
+
+  return {
+    name: cut === -1 ? relative : relative.slice(cut + 1),
+    directory: cut === -1 ? '' : relative.slice(0, cut),
+  };
 };
 
 export const EditedFileList: FC<EditedFileListProps> = ({
@@ -61,19 +81,23 @@ export const EditedFileList: FC<EditedFileListProps> = ({
               className="flex w-full items-center gap-2 px-3 py-2 text-start"
             >
               <FileDiff className="size-3.5 shrink-0 text-primary" />
-              <span className="
-                min-w-0 flex-1 truncate font-mono text-[11px] text-foreground
-              "
-              >
-                {shortenPath(file.path, projectPath)}
+              <span className="grid min-w-0 flex-1" title={file.path}>
+                <span className="truncate font-mono text-body text-foreground">
+                  {splitPath(file.path, projectPath).name}
+                </span>
+                {splitPath(file.path, projectPath).directory !== '' && (
+                  <span className="truncate font-mono text-figure text-dim">
+                    {splitPath(file.path, projectPath).directory}
+                  </span>
+                )}
               </span>
               <span className="
-                shrink-0 text-[10px] text-muted-foreground tabular-nums
+                shrink-0 text-figure text-muted-foreground tabular-nums
               "
               >
                 {t('editCount', { count: file.edits + file.writes })}
               </span>
-              <span className="shrink-0 text-[10px] text-muted-foreground">
+              <span className="shrink-0 text-figure text-muted-foreground">
                 {formatTimeAgo(file.lastEditedMs, nowMs)}
               </span>
               <ChevronDown
@@ -100,17 +124,18 @@ export const EditedFileList: FC<EditedFileListProps> = ({
                         >
                           <button
                             type="button"
+                            disabled={onOpenEdit == null}
                             onClick={() => {
-                              onOpenEdit(edit);
+                              onOpenEdit?.(edit);
                             }}
                             className="
                               flex min-w-0 flex-1 items-center gap-2 rounded-md
                               px-2 py-1 text-start
-                              hover:bg-accent
+                              enabled:hover:bg-accent
                             "
                           >
                             <span className="
-                              shrink-0 font-mono text-[10px]
+                              shrink-0 font-mono text-figure
                               text-muted-foreground
                             "
                             >
@@ -123,7 +148,7 @@ export const EditedFileList: FC<EditedFileListProps> = ({
                               {edit.sessionTitle}
                             </span>
                             <span className="
-                              shrink-0 text-[10px] text-muted-foreground
+                              shrink-0 text-figure text-muted-foreground
                             "
                             >
                               {formatTimeAgo(edit.timestampMs, nowMs)}

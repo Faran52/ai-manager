@@ -2,16 +2,38 @@ import { useTranslation } from 'react-i18next';
 
 import { formatCost, formatTokens } from '@utils/formatUtils';
 
-import { BarRow } from '@ui/index';
+import { Badge, BarRow } from '@ui/index';
 
 import { AnalyticsPanel } from './AnalyticsPanel';
 
 import type { StatsModelUsage } from '@services/stats/statsService';
+import type { PricingBasis } from '@services/stats/utils/pricingUtils';
 import type { FC } from 'react';
 
 export interface ModelDistributionProps {
   readonly models: readonly StatsModelUsage[];
 }
+
+/*
+ * Every row states its own basis, because a cost read off a price sheet and a
+ * cost inferred from what a provider billed are not the same claim. Keys, not
+ * text: the map lives outside the component where t is unavailable.
+ */
+const BASIS_KEYS: Record<PricingBasis, string> = {
+  exact: 'pricingBasisExact',
+  estimated: 'pricingBasisEstimated',
+  unpriced: 'pricingBasisUnpriced',
+};
+
+/*
+ * Four columns rather than three: the tokens and the cost are two figures, and
+ * a middot between them lines up only the second. Each gets a column of its
+ * own, sized to its widest entry.
+ */
+const GRID = `
+  mt-3 grid items-center gap-x-3 gap-y-2
+  [grid-template-columns:minmax(0,max-content)_minmax(3.5rem,1fr)_max-content_max-content]
+`;
 
 export const ModelDistribution: FC<ModelDistributionProps> = ({ models }) => {
   const { t } = useTranslation('analytics');
@@ -25,31 +47,36 @@ export const ModelDistribution: FC<ModelDistributionProps> = ({ models }) => {
 
   return (
     <AnalyticsPanel title={t('modelDistribution')}>
-      <div className="mt-3 space-y-3" data-model-distribution>
+      <ul className={GRID} data-model-distribution>
         {ordered.map((model, index) => {
-          const tokens = model.inputTokens + model.outputTokens;
-
           return (
-            <div key={model.model}>
-              <ul>
-                <BarRow
-                  index={index}
-                  label={model.model}
-                  value={tokens}
-                  max={max}
-                  formatValue={formatTokens}
-                />
-              </ul>
-              <div className="mt-1 flex items-center justify-end gap-2">
-                <span className="font-mono text-xs text-muted-foreground">
+            <BarRow
+              index={index}
+              key={model.model}
+              label={model.model}
+              max={max}
+              value={model.inputTokens + model.outputTokens}
+              formatValue={formatTokens}
+              qualifier={(
+                <Badge tone={model.basis === 'unpriced' ? 'warn' : 'neutral'}>
+                  {t(BASIS_KEYS[model.basis])}
+                </Badge>
+              )}
+              trailing={(
+                <span className="
+                  font-mono text-figure text-muted-foreground tabular-nums
+                "
+                >
                   {model.costUsd == null ? t('costUnavailable') : formatCost(model.costUsd)}
                 </span>
-              </div>
-            </div>
+              )}
+            />
           );
         })}
-        {models.length === 0 && <p className="text-xs text-muted-foreground">{t('noModels')}</p>}
-      </div>
+        {models.length === 0 && (
+          <li className="col-span-4 text-xs text-muted-foreground">{t('noModels')}</li>
+        )}
+      </ul>
     </AnalyticsPanel>
   );
 };

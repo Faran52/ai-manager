@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next';
 
+import { cn } from '@utils/cnUtils';
 import { formatTokens } from '@utils/formatUtils';
 
-import { BarRow } from '@ui/index';
+import { BAR_LIST_GRID, BarRow } from '@ui/index';
 
 import { AnalyticsPanel } from './AnalyticsPanel';
 
@@ -22,7 +23,12 @@ export const BarList: FC<BarListProps> = ({ title, items }) => {
 
   return (
     <AnalyticsPanel title={title}>
-      <ul className="mt-3 space-y-2" data-bar-list>
+      {/*
+        * The list is the grid, not the row: columns have to be shared for the
+        * bars to line up, and for the label and figure columns to size to the
+        * widest entry in the card rather than to a number picked in advance.
+        */}
+      <ul className={cn('mt-3', BAR_LIST_GRID)} data-bar-list>
         {items.map((item, index) => {
           return (
             <BarRow
@@ -35,7 +41,9 @@ export const BarList: FC<BarListProps> = ({ title, items }) => {
             />
           );
         })}
-        {items.length === 0 && <li className="text-xs text-muted-foreground">{t('nothingRecorded')}</li>}
+        {items.length === 0 && (
+          <li className="col-span-3 text-xs text-muted-foreground">{t('nothingRecorded')}</li>
+        )}
       </ul>
     </AnalyticsPanel>
   );

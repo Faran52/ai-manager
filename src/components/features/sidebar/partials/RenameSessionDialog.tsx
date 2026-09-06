@@ -39,7 +39,7 @@ export const RenameSessionDialog: FC<RenameSessionDialogProps> = ({
   }
 
   return (
-    <Modal open={open} onClose={onClose} labelledBy="rename-session-title" widthClass="max-w-md">
+    <Modal open={open} onClose={onClose} title={t('rename', { ns: 'common' })} widthClass="max-w-md">
       {target == null
         ? null
         : (
@@ -53,7 +53,7 @@ export const RenameSessionDialog: FC<RenameSessionDialogProps> = ({
                 }
               }}
             >
-              <h2 id="rename-session-title" className="text-base font-semibold">
+              <h2 className="text-base font-semibold">
                 {`Rename in ${agentOption(target.agent).label}`}
               </h2>
               <div className="mt-4">

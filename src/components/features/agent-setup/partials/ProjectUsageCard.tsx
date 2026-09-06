@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Coins } from 'lucide-react';
 
+import { cn } from '@utils/cnUtils';
 import {
   formatCost,
   formatDurationMs,
@@ -9,7 +10,11 @@ import {
   formatTokens,
 } from '@utils/formatUtils';
 
-import { BarRow, MetricCard } from '@ui/index';
+import {
+  BAR_LIST_GRID,
+  BarRow,
+  MetricCard,
+} from '@ui/index';
 
 import type { ProjectUsage } from '@services/agents/agentsService';
 import type { FC } from 'react';
@@ -50,7 +55,7 @@ export const ProjectUsageCard: FC<ProjectUsageCardProps> = ({ usage, nowMs }) =>
         <MetricCard label={t('time')} value={formatDurationMs(usage.durationMs)} />
       </div>
       {usage.models.length > 0 && (
-        <ul className="mt-2 grid gap-1 border-t border-border pt-2">
+        <ul className={cn('mt-2 border-t border-border pt-2', BAR_LIST_GRID)}>
           {usage.models.map((model, index) => {
             return (
               <BarRow

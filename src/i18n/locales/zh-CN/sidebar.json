@@ -66,5 +66,10 @@
   "sessions": "会话",
   "bulkArchiveNote": "所选会话",
   "threadParts_one": "{{count}} 个片段",
-  "threadParts_other": "{{count}} 个片段"
+  "threadParts_other": "{{count}} 个片段",
+  "allProjects": "所有项目",
+  "sessionTally_one": "{{count}} 个会话",
+  "sessionTally_other": "{{count}} 个会话",
+  "projectTally_one": "{{count}} 个项目",
+  "projectTally_other": "{{count}} 个项目"
 }

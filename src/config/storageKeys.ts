@@ -11,3 +11,5 @@ export const messageFiltersStorageKey = 'acm-message-filters';
 export const messageFilterBarStorageKey = 'acm-message-filter-bar';
 export const messageNavigatorOpenStorageKey = 'acm-message-navigator-open';
 export const messageNavigatorWidthStorageKey = 'acm-message-navigator-width';
+// Whether the app looks for a release on launch. Absent means it does.
+export const updateCheckStorageKey = 'acm-update-check';

@@ -54,7 +54,7 @@ export const StatusBadge: FC<StatusBadgeProps> = ({ status, pending }) => {
     <span
       className={cn(`
         inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5
-        text-[10px] font-medium
+        text-figure font-medium
       `, look.className)}
       data-status-badge={pending ? 'pending' : status}
     >

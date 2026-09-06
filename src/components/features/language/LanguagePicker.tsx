@@ -1,89 +1,45 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { labelOf, languages } from '@i18n/index';
-import {
-  Check,
-  Languages,
-  MonitorSmartphone,
-} from 'lucide-react';
-
-import {
-  Button,
-  MenuItem,
-  PopupMenu,
-} from '@ui/index';
+import { languages } from '@i18n/index';
 
 import { useSystemLanguage } from './hooks/useSystemLanguage';
 
 import type { FC } from 'react';
 
+const SYSTEM = 'system';
+
+/**
+ * A native `<select>`: one of seven values, no icons, no submenu. The OS draws
+ * its own list, which is already keyboard-navigable and typeahead-searchable in
+ * every locale this app ships.
+ */
 export const LanguagePicker: FC = () => {
   const { t, i18n } = useTranslation('common');
-  const [open, setOpen] = useState(false);
   const {
     following,
     follow,
     choose,
   } = useSystemLanguage();
-  const activeLabel = following
-    ? t('languageSystemNamed', { language: labelOf(i18n.language) })
-    : labelOf(i18n.language);
 
   return (
-    <div className="relative">
-      <Button
-        size="sm"
-        variant="ghost"
-        title={`${t('language')}: ${activeLabel}`}
-        aria-label={t('languageChange')}
-        onClick={() => {
-          setOpen(!open);
-        }}
-      >
-        <Languages className="size-3.5" />
-      </Button>
-      <PopupMenu
-        open={open}
-        align="right"
-        label={t('language')}
-        onClose={() => {
-          setOpen(false);
-        }}
-      >
-        <MenuItem
-          icon={<MonitorSmartphone className="size-3.5" />}
-          onClick={() => {
-            follow();
-            setOpen(false);
-          }}
-        >
-          <span className="flex w-full items-center justify-between gap-3">
-            {t('languageSystem')}
-            {following && <Check className="size-3.5 text-primary" />}
-          </span>
-        </MenuItem>
+    <select
+      aria-label={t('languageChange')}
+      className="select-control"
+      value={following ? SYSTEM : i18n.language}
+      onChange={(event) => {
+        if (event.target.value === SYSTEM) {
+          follow();
 
-        {languages.map((option) => {
-          return (
-            <MenuItem
-              key={option.id}
-              icon={<Languages className="size-3.5" />}
-              onClick={() => {
-                choose(option.id);
-                setOpen(false);
-              }}
-            >
-              <span className="flex w-full items-center justify-between gap-3">
-                {option.label}
-                {!following && option.id === i18n.language && (
-                  <Check className="size-3.5 text-primary" />
-                )}
-              </span>
-            </MenuItem>
-          );
-        })}
-      </PopupMenu>
-    </div>
+          return;
+        }
+
+        choose(event.target.value);
+      }}
+    >
+      <option value={SYSTEM}>{t('languageSystem')}</option>
+      {languages.map((option) => {
+        return <option key={option.id} value={option.id}>{option.label}</option>;
+      })}
+    </select>
   );
 };

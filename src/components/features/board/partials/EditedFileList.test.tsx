@@ -44,21 +44,21 @@ const noop = (): void => {
   return undefined;
 };
 
-test('shortens the path against the project and counts every change', () => {
+test('names the file and puts its directory underneath, counting every change', () => {
   render(
     <EditedFileList files={[file]} projectPath="/repo" nowMs={NOW} onOpenEdit={noop} />,
   );
 
-  expect(screen.getByText('src/a.ts')).toBeDefined();
+  expect(screen.getByText('a.ts')).toBeDefined();
   expect(screen.getByText('4 changes')).toBeDefined();
 });
 
-test('keeps a path that lies outside the project whole', () => {
+test('keeps the directory of a path that lies outside the project whole', () => {
   render(
     <EditedFileList files={[file]} projectPath="/elsewhere" nowMs={NOW} onOpenEdit={noop} />,
   );
 
-  expect(screen.getByText('/repo/src/a.ts')).toBeDefined();
+  expect(screen.getByText('/repo/src')).toBeDefined();
 });
 
 test('keeps the path whole when the project has none', () => {
@@ -66,7 +66,48 @@ test('keeps the path whole when the project has none', () => {
     <EditedFileList files={[file]} projectPath={undefined} nowMs={NOW} onOpenEdit={noop} />,
   );
 
-  expect(screen.getByText('/repo/src/a.ts')).toBeDefined();
+  expect(screen.getByText('/repo/src')).toBeDefined();
+});
+
+/*
+ * A file edited at the root of the project has no directory to put underneath
+ * it, so the row is its name alone rather than its name over an empty line.
+ */
+test('prints no directory line for a file at the project root', () => {
+  render(
+    <EditedFileList
+      files={[{
+        ...file,
+        path: '/repo/README.md',
+      }]}
+      projectPath="/repo"
+      nowMs={NOW}
+      onOpenEdit={noop}
+    />,
+  );
+
+  expect(screen.getByText('README.md')).toBeDefined();
+  expect(screen.queryByText('/repo')).toBeNull();
+});
+
+/*
+ * A bare filename with no slash anywhere is the same case reached the other
+ * way, and it must not slice a directory out of the name.
+ */
+test('names a path that has no directory at all', () => {
+  render(
+    <EditedFileList
+      files={[{
+        ...file,
+        path: 'notes.md',
+      }]}
+      projectPath={undefined}
+      nowMs={NOW}
+      onOpenEdit={noop}
+    />,
+  );
+
+  expect(screen.getByText('notes.md')).toBeDefined();
 });
 
 test('expands to the sessions that touched it, then collapses', async () => {
@@ -76,15 +117,15 @@ test('expands to the sessions that touched it, then collapses', async () => {
 
   expect(screen.queryByText('Login fix')).toBeNull();
 
-  await userEvent.click(screen.getByText('src/a.ts'));
+  await userEvent.click(screen.getByText('a.ts'));
 
   expect(screen.getByText('Login fix')).toBeDefined();
   expect(screen.getByText('First draft')).toBeDefined();
   expect(screen.getByText('edited')).toBeDefined();
   expect(screen.getByText('wrote')).toBeDefined();
 
-  await userEvent.click(screen.getByText('src/a.ts'));
-  expect(screen.getByText('src/a.ts')).toBeDefined();
+  await userEvent.click(screen.getByText('a.ts'));
+  expect(screen.getByText('a.ts')).toBeDefined();
 });
 
 test('opens the session an edit came from', async () => {
@@ -94,7 +135,7 @@ test('opens the session an edit came from', async () => {
     <EditedFileList files={[file]} projectPath="/repo" nowMs={NOW} onOpenEdit={onOpenEdit} />,
   );
 
-  await userEvent.click(screen.getByText('src/a.ts'));
+  await userEvent.click(screen.getByText('a.ts'));
   await userEvent.click(screen.getByText('Login fix'));
 
   expect(onOpenEdit).toHaveBeenCalledWith(file.recent[0]);
@@ -140,7 +181,7 @@ test('opens the stored changes for the session that made them', async () => {
     />,
   );
 
-  await userEvent.click(screen.getByText('src/a.ts'));
+  await userEvent.click(screen.getByText('a.ts'));
   await userEvent.click(screen.getAllByLabelText('Show changes')[0] ?? document.body);
 
   expect(await screen.findByText('+written')).toBeDefined();

@@ -590,6 +590,34 @@ describe('SessionViewer message navigator', () => {
     expect(screen.getByLabelText('Message navigator')).toBeDefined();
   });
 
+  /*
+   * One companion panel at a time: both want the same strip of width, so
+   * opening one closes the other rather than splitting the transcript twice.
+   */
+  test('swaps between the navigator and the file edits, and closes either', async () => {
+    localStorage.setItem(messageNavigatorOpenStorageKey, 'true');
+    stubPage();
+    openViewer();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Message navigator')).toBeDefined();
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'File edits' }));
+    expect(screen.getByLabelText('File edits')).toBeDefined();
+    expect(screen.queryByLabelText('Message navigator')).toBeNull();
+
+    // Pressing the open panel's own button closes it rather than reopening it.
+    await userEvent.click(screen.getByRole('button', { name: 'File edits' }));
+    expect(screen.queryByLabelText('File edits')).toBeNull();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Navigator' }));
+    expect(screen.getByLabelText('Message navigator')).toBeDefined();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Navigator' }));
+    expect(screen.queryByLabelText('Message navigator')).toBeNull();
+  });
+
   test('toggles with the keyboard shortcut and ignores other keys', async () => {
     stubPage();
     openViewer();

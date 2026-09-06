@@ -39,12 +39,9 @@ export const ShortcutsDialog: FC<ShortcutsDialogProps> = ({ open, onClose }) => 
   const apple = isApplePlatform();
 
   return (
-    <Modal open={open} onClose={onClose} labelledBy="shortcuts-heading" widthClass="max-w-md">
+    <Modal open={open} onClose={onClose} title={t('shortcuts')} widthClass="max-w-md">
       <div className="p-5">
-        <h2
-          id="shortcuts-heading"
-          className="flex items-center gap-2 text-base font-semibold"
-        >
+        <h2 className="flex items-center gap-2 text-base font-semibold">
           <Keyboard className="size-4 text-primary" />
           {t('shortcuts')}
         </h2>
@@ -62,7 +59,7 @@ export const ShortcutsDialog: FC<ShortcutsDialogProps> = ({ open, onClose }) => 
                 <dd>
                   <kbd className="
                     rounded-sm border border-border bg-background px-1.5 py-0.5
-                    font-mono text-[11px] text-muted-foreground
+                    font-mono text-body text-muted-foreground
                   "
                   >
                     {shortcutLabel(appShortcuts[id], apple)}

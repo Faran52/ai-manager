@@ -116,7 +116,7 @@ export const MessageNavigator: FC<MessageNavigatorProps> = ({
           {t('messageNavigator')}
         </h3>
         <span className="
-          font-mono text-[10px] text-muted-foreground tabular-nums
+          font-mono text-figure text-muted-foreground tabular-nums
         "
         >
           {visibleRows.length}
@@ -185,7 +185,7 @@ export const MessageNavigator: FC<MessageNavigatorProps> = ({
                         />
                         <span className="min-w-0 flex-1">
                           <span className="
-                            flex items-center gap-1.5 font-mono text-[9px]
+                            flex items-center gap-1.5 font-mono text-eyebrow
                             tracking-wide text-muted-foreground uppercase
                           "
                           >
@@ -193,7 +193,7 @@ export const MessageNavigator: FC<MessageNavigatorProps> = ({
                             <span>{t(row.kind)}</span>
                           </span>
                           <span className="
-                            mt-0.5 line-clamp-2 text-[11px]/4 text-foreground/85
+                            mt-0.5 line-clamp-2 text-body/4 text-foreground/85
                           "
                           >
                             {row.preview || t(row.kind)}

@@ -14,6 +14,7 @@ import { formatTimeAgo } from '@utils/formatUtils';
 import {
   Button,
   Spinner,
+  Switch,
   TextInput,
 } from '@ui/index';
 
@@ -104,30 +105,25 @@ export const RetentionCard: FC<RetentionCardProps> = ({ retention, nowMs }) => {
 
   return (
     <section
-      className="grid gap-3 rounded-xl border border-border bg-card p-4"
+      className="grid gap-3 rounded-lg border border-border bg-card p-4"
       data-retention-card
     >
-      <header className="flex items-start gap-2">
-        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
-        <div className="grid gap-0.5">
-          <h3 className="text-sm font-semibold text-foreground">{t('retentionHeading')}</h3>
-          <p className="text-xs text-muted-foreground">{t('retentionIntro')}</p>
-        </div>
+      {/* The state of the rule is a switch on the trailing edge of its own card,
+          not the bare word "Off" sitting in the middle of a sentence. */}
+      <header className="flex items-center gap-2">
+        <ShieldCheck className="size-4 shrink-0 text-primary" />
+        <h3 className="flex-1 text-ui font-semibold text-foreground">{t('retentionHeading')}</h3>
+        <Switch
+          checked={status.policy.enabled}
+          disabled={busy}
+          label={t('retentionHeading')}
+          onChange={(enabled) => {
+            save(enabled, status.policy.olderThanDays);
+          }}
+        />
       </header>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button
-          size="sm"
-          variant={status.policy.enabled ? 'primary' : 'ghost'}
-          pressed={status.policy.enabled}
-          disabled={busy}
-          onClick={() => {
-            save(!status.policy.enabled, status.policy.olderThanDays);
-          }}
-        >
-          {status.policy.enabled ? t('retentionOn') : t('retentionOff')}
-        </Button>
-
         <label className="flex items-center gap-2 text-xs text-muted-foreground">
           {t('retentionOlderThan')}
           <TextInput
@@ -152,8 +148,14 @@ export const RetentionCard: FC<RetentionCardProps> = ({ retention, nowMs }) => {
         </Button>
       </div>
 
+      {/* The guarantee belongs beside the one control on this screen that acts
+          on its own, not in a page intro nobody reads twice. */}
+      <p className="text-body text-muted-foreground" data-retention-guarantee>
+        {t('retentionIntro')}
+      </p>
+
       {!validDays && (
-        <p className="text-[11px] text-warn" data-retention-invalid>
+        <p className="text-body text-warn" data-retention-invalid>
           {t('retentionDaysInvalid', {
             min: MIN_DAYS,
             max: MAX_DAYS,
@@ -197,7 +199,7 @@ export const RetentionCard: FC<RetentionCardProps> = ({ retention, nowMs }) => {
                 key={session.filePath}
                 className="
                   flex items-center gap-2 rounded-md bg-muted/40 px-2 py-1
-                  text-[11px] text-muted-foreground
+                  text-body text-muted-foreground
                 "
               >
                 <span className="min-w-0 flex-1 truncate text-foreground">
@@ -208,7 +210,7 @@ export const RetentionCard: FC<RetentionCardProps> = ({ retention, nowMs }) => {
             );
           })}
           {due.length > PREVIEW_ROWS && (
-            <li className="px-2 py-1 text-[11px] text-muted-foreground">
+            <li className="px-2 py-1 text-body text-muted-foreground">
               {t('retentionMore', { count: due.length - PREVIEW_ROWS })}
             </li>
           )}

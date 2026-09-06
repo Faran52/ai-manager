@@ -74,7 +74,7 @@ export const RuleListEditor: FC<RuleListEditorProps> = ({
           <span className={cn('size-1.5 shrink-0 rounded-full', MARK_TONES[tone])} />
           <span>{label}</span>
           <span className="
-            font-mono text-[10px] font-normal text-muted-foreground
+            font-mono text-figure font-normal text-muted-foreground
           "
           >
             {rules.length}
@@ -101,7 +101,7 @@ export const RuleListEditor: FC<RuleListEditorProps> = ({
             </span>
           )}
         </h4>
-        <p className="text-[11px] text-muted-foreground">{hint}</p>
+        <p className="text-body text-muted-foreground">{hint}</p>
       </header>
       {rules.length > 0 && (
         <ul className="grid gap-1">
@@ -115,7 +115,7 @@ export const RuleListEditor: FC<RuleListEditorProps> = ({
                 )}
               >
                 <span className="
-                  min-w-0 flex-1 truncate font-mono text-[11px] text-foreground
+                  min-w-0 flex-1 truncate font-mono text-body text-foreground
                 "
                 >
                   {rule}

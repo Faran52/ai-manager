@@ -66,5 +66,10 @@
   "sessions": "세션",
   "bulkArchiveNote": "선택한 세션",
   "threadParts_one": "{{count}}개 부분",
-  "threadParts_other": "{{count}}개 부분"
+  "threadParts_other": "{{count}}개 부분",
+  "allProjects": "모든 프로젝트",
+  "sessionTally_one": "세션 {{count}}개",
+  "sessionTally_other": "세션 {{count}}개",
+  "projectTally_one": "프로젝트 {{count}}개",
+  "projectTally_other": "프로젝트 {{count}}개"
 }

@@ -33,7 +33,6 @@
   "splitUnavailable": "이 제공자는 대화와 비대화 트래픽을 구분할 만큼 상세한 정보를 기록하지 않습니다.",
   "providerDistribution": "제공자 분포",
   "providerLabel": "{{provider}} · {{sessions}} · {{projects}}",
-  "tokensWithShare": "{{tokens}} · {{share}}%",
   "noProviders": "기록된 제공자 사용량이 없습니다.",
   "modelDistribution": "모델 분포",
   "costUnavailable": "비용 기록 없음",
@@ -103,5 +102,6 @@
   "providerProjects_one": "프로젝트 {{count}}개",
   "providerProjects_other": "프로젝트 {{count}}개",
   "skillCalls": "사용한 스킬",
-  "subagentCalls": "사용한 서브에이전트"
+  "subagentCalls": "사용한 서브에이전트",
+  "sharePercent": "{{share}}%"
 }

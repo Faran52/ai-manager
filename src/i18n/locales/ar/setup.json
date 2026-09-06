@@ -86,5 +86,12 @@
   "auth": "المصادقة",
   "from": "من",
   "modelConfigured": "النموذج المُهيَّأ",
-  "colProblem": "مشكلة"
+  "colProblem": "مشكلة",
+  "noSessions": "لا جلسات",
+  "sessionCount_zero": "لا جلسات",
+  "sessionCount_one": "جلسة واحدة",
+  "sessionCount_two": "جلستان",
+  "sessionCount_few": "{{count}} جلسات",
+  "sessionCount_many": "{{count}} جلسة",
+  "sessionCount_other": "{{count}} جلسة"
 }

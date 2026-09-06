@@ -30,7 +30,6 @@ export const ConfirmDeleteProjectDialog: FC<ConfirmDeleteProjectDialogProps> = (
   return (
     <ConfirmDialog
       open={open}
-      labelledBy="delete-project-title"
       icon={<FolderX className="size-4 text-destructive" />}
       heading={t('deleteProjectConfirm')}
       description={(

@@ -532,13 +532,12 @@ describe('HistoryApp cross-view flows', () => {
     render(<HistoryApp />);
     await screen.findByText('alpha');
 
-    await userEvent.click(screen.getByTitle('Theme: Match system'));
-    await userEvent.click(screen.getByText('Dark'));
+    await userEvent.click(screen.getByTitle('Settings'));
+    await userEvent.click(await screen.findByRole('radio', { name: 'Dark' }));
 
     expect(localStorage.getItem('acm-theme')).toBe('dark');
 
-    await userEvent.click(screen.getByTitle('Theme: Dark'));
-    await userEvent.click(screen.getByText('Light'));
+    await userEvent.click(screen.getByRole('radio', { name: 'Light' }));
 
     expect(localStorage.getItem('acm-theme')).toBe('light');
   });
@@ -641,7 +640,7 @@ describe('HistoryApp header actions', () => {
     await screen.findByText('alpha');
 
     await userEvent.click(screen.getByTitle('Search all chats (press /)'));
-    await userEvent.click(screen.getByRole('button', { name: 'Close dialog' }));
+    await userEvent.keyboard('{Escape}');
 
     await waitFor(() => {
       expect(screen.queryByLabelText('Search history')).toBeNull();
@@ -681,6 +680,9 @@ describe('HistoryApp project and session mutations', () => {
     fireEvent.contextMenu(screen.getByRole('button', { name: 'Select a project: alpha' }));
     await userEvent.click(screen.getByText('Delete project history'));
     await userEvent.click(screen.getByRole('button', { name: 'Delete permanently' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
     await userEvent.click(screen.getByRole('button', { name: /Health/u }));
 
     expect(await screen.findByText('No project selected')).toBeDefined();
@@ -860,10 +862,12 @@ describe('HistoryApp keyboard shortcuts', () => {
     expect(await screen.findByRole('button', { name: /Health/ })).toBeDefined();
 
     await userEvent.keyboard('4');
-    expect(await screen.findByText('Archive manager')).toBeDefined();
+    // The pane opens on the archives themselves now, not on a title and an intro.
+    expect(await screen.findByRole('button', { name: /Create archive/u })).toBeDefined();
 
     await userEvent.keyboard('5');
-    expect(await screen.findByText('Settings manager')).toBeDefined();
+    expect(await screen.findByRole('dialog', { name: 'Settings' })).toBeDefined();
+    await userEvent.keyboard('{Escape}');
 
     await userEvent.keyboard('6');
     expect(await screen.findByRole('button', { name: 'Board' })).toBeDefined();
@@ -891,7 +895,7 @@ describe('HistoryApp keyboard shortcuts', () => {
 
     const dialog = within(screen.getByRole('dialog'));
 
-    expect(dialog.getByText('Keyboard shortcuts')).toBeDefined();
+    expect(dialog.getByRole('heading', { name: 'Keyboard shortcuts' })).toBeDefined();
     expect(dialog.getByText('Search all chats')).toBeDefined();
     expect(dialog.getByText('Toggle message navigator')).toBeDefined();
 
@@ -978,7 +982,7 @@ describe('HistoryApp archived transcripts', () => {
 });
 
 describe('HistoryApp board', () => {
-  test('opens a session from the board and jumps from a file edit to its turn', async () => {
+  test('opens the edits a session made beside its transcript, and jumps to the turn', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn((url: RequestInfo | URL) => {
@@ -1002,7 +1006,7 @@ describe('HistoryApp board', () => {
                 kind: 'edit',
                 sessionId: 's1',
                 sessionTitle: 'Login fix',
-                sessionFilePath: '/sessions/alpha/s1.jsonl',
+                sessionFilePath: '/r/alpha/s1.jsonl',
                 timestampMs: Date.parse('2026-05-05T10:00:00Z'),
                 changes: 1,
               }],
@@ -1022,11 +1026,47 @@ describe('HistoryApp board', () => {
     await openProject('alpha');
 
     await userEvent.click(screen.getByRole('button', { name: /^Sessions/ }));
+    /*
+     * File edits is a panel beside the transcript now, not a tab that replaces
+     * it, so a session has to be open before there are any edits to show.
+     */
+    await userEvent.click(await screen.findByText('The chosen one'));
     await userEvent.click(await screen.findByRole('button', { name: 'File edits' }));
-    await userEvent.click(await screen.findByText('src/a.ts'));
+    // The name carries the row now; the directory sits under it, dim.
+    await userEvent.click(await screen.findByText('a.ts'));
+    // Opening the edit jumps the transcript to the turn that made it.
     await userEvent.click(await screen.findByText('Login fix'));
 
     expect(await screen.findByText('the question')).toBeDefined();
+  });
+
+  test('still reaches the board from the sessions strip', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: RequestInfo | URL) => {
+        const path = toPath(url);
+
+        if (path.endsWith('/projects')) {
+          return Response.json(projectPayload);
+        }
+        if (path.endsWith('/sessions')) {
+          return Response.json(sessionsPayload('alpha'));
+        }
+        if (path.endsWith('/recent-edits')) {
+          return Response.json({ files: [] });
+        }
+
+        return Response.json({ stats: null });
+      }),
+    );
+
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+    await openProject('alpha');
+    await userEvent.click(screen.getByRole('button', { name: /^Sessions/u }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Board' }));
+
+    expect(document.querySelector('[data-board-view]')).not.toBeNull();
   });
 });
 
@@ -1088,7 +1128,29 @@ describe('HistoryApp retention on launch', () => {
 });
 
 describe('HistoryApp settings', () => {
-  test('opens settings from the corner and closes it again', async () => {
+  test('reads every project at once when the pinned card is chosen', async () => {
+    vi.stubGlobal('fetch', vi.fn((url: RequestInfo | URL) => {
+      const path = toPath(url);
+
+      if (path.endsWith('/projects')) {
+        return Response.json(projectPayload);
+      }
+      return Response.json({
+        sessions: [],
+        stats: null,
+      });
+    }));
+
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+
+    await userEvent.click(screen.getByRole('button', { name: /All projects/u }));
+
+    expect(screen.getByRole('button', { name: /All projects/u }).getAttribute('aria-pressed'))
+      .toBe('true');
+  });
+
+  test('opens settings as a sheet and closes it again', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn((url: RequestInfo | URL) => {
@@ -1101,16 +1163,16 @@ describe('HistoryApp settings', () => {
     render(<HistoryApp />);
     await screen.findByText('alpha');
 
-    const gear = screen.getByRole('button', { name: 'Settings' });
+    expect(screen.queryByRole('dialog')).toBeNull();
 
-    expect(gear.getAttribute('aria-pressed')).toBe('false');
+    await userEvent.click(screen.getByTitle('Settings'));
 
-    await userEvent.click(gear);
+    expect(await screen.findByRole('dialog', { name: 'Settings' })).toBeDefined();
 
-    expect(gear.getAttribute('aria-pressed')).toBe('true');
+    await userEvent.keyboard('{Escape}');
 
-    await userEvent.click(gear);
-
-    expect(gear.getAttribute('aria-pressed')).toBe('false');
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
   });
 });

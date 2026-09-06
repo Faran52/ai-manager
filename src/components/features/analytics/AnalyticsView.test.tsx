@@ -144,16 +144,11 @@ const storageResource: AsyncResource<StorageReport> = {
   },
 };
 
-const noop = (): void => {
-  return undefined;
-};
-
 const renderView = (
   projectStats: ProjectStats | null = stats,
   status: 'loading' | 'ready' | 'error' = 'ready',
   onOpenSession = vi.fn(),
   scope: 'global' | 'project' = 'project',
-  onScopeChange: (next: 'global' | 'project') => void = noop,
 ) => {
   const view = render(
     <AnalyticsView
@@ -163,7 +158,6 @@ const renderView = (
       status={status}
       projectName="webapp"
       scope={scope}
-      onScopeChange={onScopeChange}
       onOpenSession={onOpenSession}
     />,
   );
@@ -193,18 +187,6 @@ test('reports on the whole machine in the global scope', async () => {
   expect(screen.queryByText('Big one')).toBeNull();
 });
 
-test('asks for the scope the reader picked', async () => {
-  const onScopeChange = vi.fn();
-
-  renderView(stats, 'ready', vi.fn(), 'global', onScopeChange);
-
-  await userEvent.click(await screen.findByRole('button', { name: 'Project: webapp' }));
-  expect(onScopeChange).toHaveBeenCalledWith('project');
-
-  await userEvent.click(screen.getByRole('button', { name: 'Global' }));
-  expect(onScopeChange).toHaveBeenCalledWith('global');
-});
-
 test('shows project loading and empty states', async () => {
   const view = await settled(renderView(null, 'loading'));
 
@@ -218,7 +200,6 @@ test('shows project loading and empty states', async () => {
       status="ready"
       projectName="webapp"
       scope="project"
-      onScopeChange={noop}
       onOpenSession={vi.fn()}
     />,
   );

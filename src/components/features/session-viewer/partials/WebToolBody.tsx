@@ -37,7 +37,7 @@ export const WebToolBody: FC<WebToolBodyProps> = ({ input }) => {
         </span>
         <div className="min-w-0 pt-0.5">
           <p className="
-            text-[10px] tracking-wide text-muted-foreground uppercase
+            text-figure tracking-wide text-muted-foreground uppercase
           "
           >
             query
@@ -62,7 +62,7 @@ export const WebToolBody: FC<WebToolBodyProps> = ({ input }) => {
         </span>
         <div className="min-w-0 pt-0.5">
           <p className="
-            text-[10px] tracking-wide text-muted-foreground uppercase
+            text-figure tracking-wide text-muted-foreground uppercase
           "
           >
             {url?.hostname ?? 'url'}

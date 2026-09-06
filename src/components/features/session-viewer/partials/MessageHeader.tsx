@@ -63,7 +63,7 @@ export const MessageHeader: FC<MessageHeaderProps> = ({
   return (
     <div
       className={cn(
-        'flex items-center gap-1.5 text-[11px] text-muted-foreground',
+        'flex items-center gap-1.5 text-body text-muted-foreground',
         align === 'end' ? 'justify-end' : 'justify-start',
       )}
       data-message-header
@@ -79,7 +79,7 @@ export const MessageHeader: FC<MessageHeaderProps> = ({
       )}
       {sidechain && (
         <span className="
-          rounded-full bg-warn/15 px-1.5 py-0.5 font-mono text-[10px] text-warn
+          rounded-full bg-warn/15 px-1.5 py-0.5 font-mono text-figure text-warn
         "
         >
           {t('branch')}
@@ -87,7 +87,7 @@ export const MessageHeader: FC<MessageHeaderProps> = ({
       )}
       {model != null && (
         <span
-          className="ms-auto truncate font-mono text-[10px]"
+          className="ms-auto truncate font-mono text-figure"
           title={details.length > 0 ? `${model} · ${details}` : model}
           data-message-model
         >

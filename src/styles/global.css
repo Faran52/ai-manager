@@ -7,7 +7,9 @@
 @import "../components/features/app-header/AppHeader.css";
 @import "../components/features/agent-tag/AgentTag.css";
 @import "../components/features/sidebar/Sidebar.css";
-@import "../components/ui/popup-menu/PopupMenu.css";
+@import "../components/ui/menu/Menu.css";
+@import "../components/ui/segmented-control/SegmentedControl.css";
+@import "../components/features/language/LanguagePicker.css";
 @import "../components/ui/toast/Toast.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -21,6 +23,11 @@
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-foreground-2: var(--foreground-2);
+  --color-faint: var(--faint);
+  --color-dim: var(--dim);
+  --color-recess: var(--recess);
+  --color-raised: var(--raised);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-accent: var(--accent);
@@ -34,9 +41,22 @@
   --color-warn: var(--warn);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
-  --radius-sm: calc(var(--radius) - 2px);
-  --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) + 2px);
+
+  /*
+   * Named by role, and in rem so the Compact and Large settings reach them.
+   * [data-font-size] scales the root, which a px size ignores.
+   */
+  --text-eyebrow: 0.594rem;
+  --text-figure: 0.656rem;
+  --text-body: 0.719rem;
+  --text-ui: 0.781rem;
+  --text-value: 0.875rem;
+  --text-metric: 1.063rem;
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
 }
 
 @layer base {

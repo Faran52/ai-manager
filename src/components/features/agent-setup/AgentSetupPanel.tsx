@@ -6,8 +6,6 @@ import { motion } from 'motion/react';
 
 import { agentOption } from '@config/agents';
 
-import { cn } from '@utils/cnUtils';
-
 import {
   Badge,
   EmptyState,
@@ -46,15 +44,6 @@ export interface AgentSetupPanelProps {
   readonly nowMs: number;
   readonly onPluginToggle: (plugin: InstalledPlugin) => Promise<void>;
 }
-
-const PLUGINS_TITLE_ID = 'health-plugins-title';
-const COLUMNS = 5;
-
-const HEAD = `
-  py-1.5 pe-4 text-[10px] font-medium tracking-wider text-muted-foreground
-  uppercase
-`;
-const HEAD_NUMERIC = 'text-end';
 
 export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
   projectSelected,
@@ -149,52 +138,43 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
         usage={usage}
       />
       <ProjectTrustCard trust={trust} />
+      {/* A card per agent, because most of the table was dashes. Cards let a
+          bare agent be two lines and a configured one be twelve, which is the
+          information a fixed row shape threw away. */}
       {listed.length > 0 && (
-        <table className="w-full table-fixed border-collapse" data-agent-table>
-          <thead>
-            <tr className="border-b border-border">
-              <th scope="col" className={cn(HEAD, 'w-[40%] ps-1 text-start')}>
-                {t('colAgent')}
-              </th>
-              <th scope="col" className={cn(HEAD, HEAD_NUMERIC, 'w-[14%]')}>{t('mcp')}</th>
-              <th scope="col" className={cn(HEAD, HEAD_NUMERIC, 'w-[14%]')}>{t('rules')}</th>
-              <th scope="col" className={cn(HEAD, HEAD_NUMERIC, 'w-[16%]')}>
-                {t('pluginsTitle')}
-              </th>
-              <th scope="col" className={cn(HEAD, HEAD_NUMERIC, 'w-[16%] pe-1')}>
-                {t('sessions', { ns: 'sidebar' })}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {listed.map((setup) => {
-              return (
-                <AgentRow
-                  key={setup.agent}
-                  setup={setup}
-                  projectPath={projectPath}
-                  plugins={plugins}
-                  sessionCount={sessionCounts[setup.agent] ?? 0}
-                  findings={findingsFor(setup.agent)}
-                  nowMs={nowMs}
-                  columns={COLUMNS}
-                  open={expanded === setup.agent}
-                  onToggle={() => {
-                    setPicked(expanded === setup.agent ? null : setup.agent);
-                  }}
-                  onOpenPlugins={() => {
-                    setPluginsOpen(true);
-                  }}
-                />
-              );
-            })}
-          </tbody>
-        </table>
+        <ul
+          className="
+            grid gap-2.5
+            lg:grid-cols-2
+          "
+          data-agent-list
+        >
+          {listed.map((setup) => {
+            return (
+              <AgentRow
+                key={setup.agent}
+                setup={setup}
+                projectPath={projectPath}
+                plugins={plugins}
+                sessionCount={sessionCounts[setup.agent] ?? 0}
+                findings={findingsFor(setup.agent)}
+                nowMs={nowMs}
+                open={expanded === setup.agent}
+                onToggle={() => {
+                  setPicked(expanded === setup.agent ? null : setup.agent);
+                }}
+                onOpenPlugins={() => {
+                  setPluginsOpen(true);
+                }}
+              />
+            );
+          })}
+        </ul>
       )}
       {unconfigured.length > 0 && (
         <section data-health-group="not-set-up">
           <h3 className="
-            px-1 pb-1 text-[11px] font-semibold tracking-wider
+            px-1 pb-1 text-body font-semibold tracking-wider
             text-muted-foreground uppercase
           "
           >
@@ -224,12 +204,11 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
         onClose={() => {
           setPluginsOpen(false);
         }}
-        labelledBy={PLUGINS_TITLE_ID}
+        title={t('pluginsTitle')}
         widthClass="max-w-3xl"
       >
         <div className="flex max-h-[70vh] flex-col">
           <h3
-            id={PLUGINS_TITLE_ID}
             className="
               flex items-baseline gap-2 border-b border-border px-3 py-2 text-sm
               font-semibold

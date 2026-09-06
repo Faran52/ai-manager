@@ -271,7 +271,7 @@ export const ImageViewer: FC<ImageViewerProps> = ({ src, onClose }) => {
       </div>
       <p className="
         absolute inset-s-1/2 bottom-4 z-20 -translate-x-1/2 rounded-md
-        bg-black/45 px-3 py-1.5 font-mono text-[10px] tracking-wide
+        bg-black/45 px-3 py-1.5 font-mono text-figure tracking-wide
         text-white/55
       "
       >

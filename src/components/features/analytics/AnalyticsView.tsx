@@ -5,7 +5,7 @@ import { BarChart3, CircleAlert } from 'lucide-react';
 
 import { EmptyState, Spinner } from '@ui/index';
 
-import { AnalyticsReport, AnalyticsToolbar } from './partials';
+import { AnalyticsReport } from './partials';
 
 import type { AgentId } from '@config/agents';
 import type { AsyncResource } from '@features/history-data';
@@ -31,7 +31,6 @@ export interface AnalyticsViewProps {
   // Identifies the project rather than naming it, so that picking a different
   // one is noticed even where two projects share a name.
   readonly scope: Scope;
-  readonly onScopeChange: (scope: Scope) => void;
   readonly projectAgent?: AgentId | undefined;
   readonly onOpenSession: (session: SessionTokenTotals) => void;
   // Named in the report's own panels, so it stays even now the board has left.
@@ -100,7 +99,6 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
   status,
   projectName,
   scope,
-  onScopeChange,
   projectAgent,
   onOpenSession,
   sessions,
@@ -112,18 +110,9 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
   const selectedStatus = effectiveScope === 'global' ? global.status : status;
   const globalAgents = global.data?.agents ?? [];
 
-  const scopeSwitch = (
-    <AnalyticsToolbar
-      scope={effectiveScope}
-      onScopeChange={onScopeChange}
-      projectName={projectName}
-    />
-  );
-
   if (selectedStatus === 'loading') {
     return (
       <div className="flex min-h-0 flex-1 flex-col">
-        {scopeSwitch}
         <div className="flex flex-1 items-center justify-center" data-analytics-loading>
           <Spinner />
         </div>
@@ -134,7 +123,6 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
   if (selectedStats == null) {
     return (
       <div className="flex min-h-0 flex-1 flex-col">
-        {scopeSwitch}
         <div className="flex flex-1 items-center justify-center">
           <EmptyState
             icon={selectedStatus === 'error'
@@ -154,7 +142,6 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto" data-analytics-view>
-      {scopeSwitch}
       <AnalyticsReport
         stats={selectedStats}
         storage={storage}

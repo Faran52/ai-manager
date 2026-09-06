@@ -66,5 +66,8 @@
   "auth": "Auth",
   "from": "From",
   "modelConfigured": "Configured model",
-  "colProblem": "Problem"
+  "colProblem": "Problem",
+  "noSessions": "no sessions",
+  "sessionCount_one": "{{count}} session",
+  "sessionCount_other": "{{count}} sessions"
 }

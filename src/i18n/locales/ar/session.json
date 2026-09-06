@@ -96,5 +96,9 @@
   "promptScopeAll": "كل شيء",
   "promptScopes": "نطاق الطلبات",
   "promptsOfEverything": "المسجَّل إجمالًا",
-  "exportHtml": "ملف HTML"
+  "exportHtml": "ملف HTML",
+  "fileEdits": "تعديلات الملفات",
+  "closeFileEdits": "إغلاق تعديلات الملفات",
+  "openFileEdits": "فتح تعديلات الملفات",
+  "noFileEdits": "لم تُعدّل هذه الجلسة أي ملف."
 }

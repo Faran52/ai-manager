@@ -27,7 +27,7 @@ export const Badge: FC<BadgeProps> = ({
       className={cn(
         `
           inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 font-mono
-          text-[11px] leading-none whitespace-nowrap
+          text-body leading-none whitespace-nowrap
         `,
         TONES[tone],
       )}

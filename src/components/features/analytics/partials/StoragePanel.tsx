@@ -162,7 +162,7 @@ export const StoragePanel: FC<StoragePanelProps> = ({
 
           {disposable.length > 0 && !onlyThisProject && (
             <div className="
-              flex flex-wrap items-center justify-between gap-2 rounded-xl
+              flex flex-wrap items-center justify-between gap-2 rounded-lg
               border border-border bg-card p-3
             "
             >
@@ -195,7 +195,7 @@ export const StoragePanel: FC<StoragePanelProps> = ({
                       <li
                         key={held.agent}
                         className="
-                          grid gap-1.5 rounded-xl border border-border bg-card
+                          grid gap-1.5 rounded-lg border border-border bg-card
                           p-3
                         "
                       >
@@ -214,7 +214,7 @@ export const StoragePanel: FC<StoragePanelProps> = ({
                               <li
                                 key={entry.path}
                                 className="
-                                  flex items-center gap-2 text-[11px]
+                                  flex items-center gap-2 text-body
                                   text-muted-foreground
                                 "
                               >
@@ -235,13 +235,12 @@ export const StoragePanel: FC<StoragePanelProps> = ({
                 </ul>
               )}
 
-          <p className="text-[11px] text-muted-foreground">{t('storageReadOnly')}</p>
+          <p className="text-body text-muted-foreground">{t('storageReadOnly')}</p>
         </>
       )}
 
       <ConfirmDialog
         open={asking}
-        labelledBy="reclaim-storage"
         icon={<Trash2 className="size-4 text-destructive" />}
         heading={t('reclaimHeading')}
         confirmLabel={t('reclaimConfirm')}

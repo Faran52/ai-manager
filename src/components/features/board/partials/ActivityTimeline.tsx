@@ -37,7 +37,7 @@ export const ActivityTimeline: FC<ActivityTimelineProps> = ({ days }) => {
           );
         })}
       </div>
-      <div className="flex justify-between text-[10px] text-muted-foreground">
+      <div className="flex justify-between text-figure text-muted-foreground">
         <span>{days[0]?.date}</span>
         <span>{days.at(-1)?.date}</span>
       </div>
