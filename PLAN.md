@@ -330,14 +330,9 @@ stays; configuration management is where the work is. Each phase gates the next.
       are folded, because 112px is no place for it and the All projects card
       carries the same counts.
 - [x] The desktop window is configured from the entry that already adopts it,
-      because `deno.json`'s `desktop` block sets nothing about the window —
-      app metadata, backend, output, code signing, the update feed and error
-      reporting are the whole of it. `BrowserWindowOptions` carries `width`
-      and `height` (800×600 otherwise), so the entry opens the shell at
-      1440×900 logical pixels. A minimum size was the other part worth having
-      and does not exist: no option on the constructor and no setter on the
-      window, so there was nothing to configure. What the docs do offer for
-      the title bar is `frameless` and `transparentTitlebar`, both
-      creation-only, and blending the title bar in gives the traffic lights
-      the top-left corner of the page — a style to adopt when the header is
-      drawn to host them, not something to fake in CSS, so none is set.
+      because `deno.json`'s `desktop` block sets nothing about the window.
+      `BrowserWindowOptions` carries `width` and `height` (800x600 otherwise),
+      so the entry opens the shell at 1440x900 logical pixels. A minimum size
+      has no constructor option or setter, and the title bar styles
+      (`frameless`, `transparentTitlebar`) are creation-only and would hand
+      the traffic lights the page's corner, so neither is set.
