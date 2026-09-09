@@ -128,13 +128,18 @@ export const singleLine = (value: string, maxChars: number): string => {
 
 const HOME_PREFIX = /^\/(?:Users|home)\/[^/]+/u;
 
+// Collapses a home-directory prefix to `~`, the way the shell and the mock write a path.
+export const tildePath = (path: string): string => {
+  return path.replace(HOME_PREFIX, '~');
+};
+
 // Shows a path relative to the project when it lives inside it, or `~/…` when inside the home directory.
 export const shortPath = (path: string, projectPath: string): string => {
   if (projectPath.length > 0 && path.startsWith(`${projectPath}/`)) {
     return path.slice(projectPath.length + 1);
   }
 
-  return path.replace(HOME_PREFIX, '~');
+  return tildePath(path);
 };
 
 const KILOBYTE = 1024;
