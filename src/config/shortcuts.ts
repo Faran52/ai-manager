@@ -12,7 +12,6 @@ export type ShortcutId
     | 'viewHealth'
     | 'viewArchive'
     | 'viewSettings'
-    | 'viewBoard'
     | 'reload'
     | 'toggleNavigator'
     | 'showShortcuts';
@@ -24,7 +23,6 @@ export const appShortcuts: Record<ShortcutId, ShortcutSpec> = {
   viewHealth: { key: '3' },
   viewArchive: { key: '4' },
   viewSettings: { key: '5' },
-  viewBoard: { key: '6' },
   reload: { key: 'r' },
   toggleNavigator: {
     key: 'm',
@@ -45,7 +43,6 @@ export const shortcutOrder: readonly ShortcutId[] = [
   'viewHealth',
   'viewArchive',
   'viewSettings',
-  'viewBoard',
   'reload',
   'toggleNavigator',
 ];
