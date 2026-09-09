@@ -311,6 +311,26 @@ beforeEach(async () => {
       metadata: { diff: 5 },
     },
   });
+  addPart(database, 'part_read', 'msg_patch', 104, {
+    type: 'tool',
+    tool: 'read',
+    callID: 'call_read',
+    state: {
+      status: 'completed',
+      input: { filePath: '/doc.md' },
+      output: [
+        '<path>/doc.md</path>',
+        '<type>file</type>',
+        '<content>',
+        '1: # Heading',
+        '2: ',
+        '3: - a bullet',
+        '',
+        '(End of file - total 3 lines)',
+        '</content>',
+      ].join('\n'),
+    },
+  });
 
   addRawPart(database, 'part_d', 'ses_b', 'msg_d', null, {
     type: 'text',
@@ -834,6 +854,19 @@ describe('opencode patches', () => {
     expect(byId.get('call_edit')?.patch?.[0]?.lines).toEqual([' kept', '-gone', '+added']);
     expect(byId.get('call_nodiff')?.patch).toBeUndefined();
     expect(byId.get('call_badmeta')?.patch).toBeUndefined();
+  });
+});
+
+describe('opencode read output', () => {
+  test('strips the envelope, the line gutter and the pager note from a file read', async () => {
+    const entries = await loadOpenCodeEntries(reference('ses_patch'), [root]);
+    const outcome = (entries ?? []).flatMap((entry) => {
+      return entry.kind === 'user' ? entry.outcomes : [];
+    }).find((item) => {
+      return item.toolUseId === 'call_read';
+    });
+
+    expect(outcome?.text).toBe('# Heading\n\n- a bullet');
   });
 });
 

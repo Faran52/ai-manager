@@ -20,7 +20,17 @@ import {
   parseCodexHistory,
 } from './codexUtils';
 
-import type { HistoryEntry, PatchHunk } from '../types';
+import type {
+  HistoryEntry,
+  PatchHunk,
+  ToolCall,
+  ToolOutcome,
+} from '../types';
+
+interface OutputPart {
+  readonly type: string;
+  readonly text: string;
+}
 
 const line = (type: string, payload: object, timestamp = '2026-01-01T00:00:00.000Z'): string => {
   return JSON.stringify({
@@ -131,16 +141,22 @@ describe('parseCodexHistory', () => {
         id: 'custom-1',
         call_id: 'c3',
         name: 'exec',
-        input: '{"cmd":"pnpm check"}',
+        input: 'const r = await tools.exec_command({"cmd":"pnpm check && echo \\"done\\"","workdir":"/repo"});',
       }),
       line('response_item', {
         type: 'custom_tool_call_output',
         id: 'custom-output-1',
         call_id: 'c3',
-        output: [{
-          type: 'input_text',
-          text: 'all green',
-        }],
+        output: [
+          {
+            type: 'input_text',
+            text: 'Script completed\nWall time 0.1 seconds\nOutput:\n',
+          },
+          {
+            type: 'input_text',
+            text: 'all green',
+          },
+        ],
       }),
       line('response_item', {
         type: 'reasoning',
@@ -174,6 +190,7 @@ describe('parseCodexHistory', () => {
     expect(JSON.stringify(parsed.entries)).toContain('pnpm test');
     expect(JSON.stringify(parsed.entries)).toContain('pnpm check');
     expect(JSON.stringify(parsed.entries)).toContain('all green');
+    expect(JSON.stringify(parsed.entries)).not.toContain('Wall time');
     expect(JSON.stringify(parsed.entries)).toContain('Checking the gate');
     expect(JSON.stringify(parsed.entries)).toContain('Conversation compacted');
     expect(JSON.stringify(parsed.entries)).toContain('raw');
@@ -546,6 +563,24 @@ describe('codex patches', () => {
     }));
 
     expect(hunks[0]?.lines).toEqual([' kept', '-gone', '+added']);
+    expect(hunks[0]?.file).toBeUndefined();
+  });
+
+  test('names the file on every hunk when a patch touched more than one', () => {
+    const hunks = patchOf(applied({
+      '/repo/a.ts': {
+        type: 'update',
+        unified_diff: '@@ -1,1 +1,1 @@\n-a\n+A\n',
+      },
+      '/repo/b.ts': {
+        type: 'update',
+        unified_diff: '@@ -1,1 +1,1 @@\n-b\n+B\n',
+      },
+    }));
+
+    expect(hunks.map((hunk) => {
+      return hunk.file;
+    })).toEqual(['/repo/a.ts', '/repo/b.ts']);
   });
 
   test('shows a written file whole and a removed one as taken away', () => {
@@ -628,5 +663,126 @@ describe('codex patches', () => {
 
     expect(outcomes[0]?.patch).toHaveLength(1);
     expect(outcomes[1]?.patch).toBeUndefined();
+  });
+
+  test('reads the diff out of an apply_patch call source and pairs it with the output', () => {
+    const patch = [
+      '*** Begin Patch',
+      '*** Update File: /repo/dncr.ts',
+      '-const a = 1;',
+      '+const a = 2;',
+      '*** End Patch',
+    ].join('\\n');
+    const entries = parseCodexHistory([
+      line('session_meta', {
+        id: 'thread-ap',
+        cwd: '/repo',
+      }),
+      line('response_item', {
+        type: 'custom_tool_call',
+        call_id: 'call-ap',
+        name: 'exec',
+        input: `const patch = "${patch}";\nawait tools.apply_patch({patch});`,
+      }),
+      line('response_item', {
+        type: 'custom_tool_call_output',
+        call_id: 'call-ap',
+        output: 'Success. Updated the following files:\nM /repo/dncr.ts',
+      }),
+    ].join('\n')).entries;
+    const call = entries.find((entry) => {
+      return entry.kind === 'assistant';
+    });
+    const outcome = entries.flatMap((entry) => {
+      return entry.kind === 'user' ? entry.outcomes : [];
+    })[0];
+
+    expect(call?.kind === 'assistant' && call.blocks[0]?.blockType === 'tool-use'
+      && call.blocks[0].call.input).toMatchObject({
+      kind: 'file-edit',
+      path: '/repo/dncr.ts',
+    });
+    expect(outcome?.patch?.[0]?.lines).toEqual(['-const a = 1;', '+const a = 2;']);
+  });
+});
+
+describe('codex exec command and output handling', () => {
+  const run = (
+    input: string,
+    output: string | readonly OutputPart[],
+  ): readonly HistoryEntry[] => {
+    return parseCodexHistory([
+      line('session_meta', {
+        id: 's',
+        cwd: '/repo',
+      }),
+      line('response_item', {
+        type: 'custom_tool_call',
+        call_id: 'e1',
+        name: 'exec',
+        input,
+      }),
+      line('response_item', {
+        type: 'custom_tool_call_output',
+        call_id: 'e1',
+        output,
+      }),
+    ].join('\n')).entries;
+  };
+
+  const toolCall = (entries: readonly HistoryEntry[]): ToolCall | undefined => {
+    const turn = entries.find((entry) => {
+      return entry.kind === 'assistant';
+    });
+
+    return turn?.kind === 'assistant' && turn.blocks[0]?.blockType === 'tool-use'
+      ? turn.blocks[0].call
+      : undefined;
+  };
+
+  const firstOutcome = (entries: readonly HistoryEntry[]): ToolOutcome | undefined => {
+    return entries.flatMap((entry) => {
+      return entry.kind === 'user' ? entry.outcomes : [];
+    })[0];
+  };
+
+  test('reads the command past nested braces, and by either cmd or command', () => {
+    expect(toolCall(run(
+      'tools.exec_command({"command":"whoami","opts":{"tty":true}})',
+      'ok',
+    ))?.input).toMatchObject({
+      kind: 'bash',
+      command: 'whoami',
+    });
+  });
+
+  test('leaves the command empty when the wrapper object is not JSON', () => {
+    expect(toolCall(run('tools.exec_command({not json})', 'ok'))?.input)
+      .toMatchObject({
+        kind: 'bash',
+        command: '',
+      });
+  });
+
+  test('marks a failed script as an error and drops its banner', () => {
+    const outcome = firstOutcome(run('tools.exec_command({"cmd":"false"})', [
+      {
+        type: 'input_text',
+        text: 'Script failed\nWall time 0.0 seconds\nOutput:\n',
+      },
+      {
+        type: 'input_text',
+        text: 'boom',
+      },
+    ]));
+
+    expect(outcome).toMatchObject({
+      status: 'error',
+      text: 'boom',
+    });
+  });
+
+  test('shows an empty result as no text', () => {
+    expect(firstOutcome(run('tools.exec_command({"cmd":"true"})', ''))?.text).toBeUndefined();
   });
 });

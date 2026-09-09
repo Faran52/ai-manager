@@ -120,11 +120,31 @@ const statusOf = (state: JsonObject): ToolStatus => {
   return status === 'completed' ? 'ok' : 'interrupted';
 };
 
+/*
+ * OpenCode's `read` wraps the file body in <path>/<type>/<content> tags, numbers
+ * every line, and appends a pager note. The path is already on the call's own
+ * row and none of the rest is file content, so all of it is stripped and the
+ * card shows the file the way it reads: a markdown file renders, code prints.
+ */
+const READ_ENVELOPE = /^<path>[^\n]*<\/path>\n<type>[^\n]*<\/type>\n<content>\n?([\s\S]*?)\n?<\/content>\s*$/u;
+const LINE_GUTTER = /^\d+:[ \t]?/gmu;
+const PAGER_NOTE = /\((?:End of file|File has more lines)[^)]*\)\s*$/u;
+
+const unwrapReadEnvelope = (output: string): string => {
+  const inner = READ_ENVELOPE.exec(output)?.[1];
+
+  return inner == null
+    ? output
+    : inner.replace(LINE_GUTTER, '').replace(PAGER_NOTE, '').trimEnd();
+};
+
 const outputText = (state: JsonObject): string | undefined => {
   const output = state.output;
 
   if (typeof output === 'string') {
-    return output.length > 0 ? output : undefined;
+    const unwrapped = unwrapReadEnvelope(output);
+
+    return unwrapped.length > 0 ? unwrapped : undefined;
   }
 
   if (typeof output === 'number') {

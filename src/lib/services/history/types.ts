@@ -104,6 +104,12 @@ export interface PatchHunk {
   readonly newStart: number;
   readonly newLines: number;
   readonly lines: readonly string[];
+  /**
+   * Set only when a single patch spans more than one file (a Codex apply_patch),
+   * so the diff can be split under a header per file. A single-file patch names
+   * its file on the card and leaves this unset.
+   */
+  readonly file?: string | undefined;
 }
 
 export interface ResultImage {

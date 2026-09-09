@@ -8,18 +8,17 @@ import { humanPreview } from '@utils/titleUtils';
 
 import { parseToolInput, splitUserText } from '../../session/utils/parserUtils';
 
+import { decodeCodexTool } from './codexToolCall';
 import { fileFactsStore } from './fileFactsUtils';
 import { conversationMessageCount } from './outcomeUtils';
 
 import type {
-  AssistantBlock,
   AssistantTurnEntry,
   ChangedFile,
   HistoryEntry,
   PatchHunk,
   ProjectSummary,
   SessionSummary,
-  ToolCall,
   ToolOutcome,
 } from '../types';
 import type { RawToolInput } from './claudeRawUtils';
@@ -91,11 +90,6 @@ interface CodexLine {
   readonly type?: string | undefined;
 }
 
-interface CodexCommandArguments {
-  readonly cmd?: string | undefined;
-  readonly command?: string | undefined;
-}
-
 interface CodexCommandOutput {
   readonly output?: string | undefined;
 }
@@ -151,10 +145,6 @@ const isCodexLine = (value: unknown): value is CodexLine => {
   return typeof value === 'object' && value !== null;
 };
 
-const isCommandArguments = (value: unknown): value is CodexCommandArguments => {
-  return typeof value === 'object' && value !== null;
-};
-
 const isCommandOutput = (value: unknown): value is CodexCommandOutput => {
   return typeof value === 'object' && value !== null;
 };
@@ -176,28 +166,34 @@ const textContent = (payload: CodexPayload): string => {
   }).join('\n\n');
 };
 
-const outputContent = (payload: CodexPayload): string => {
+/*
+ * Codex prefixes every exec result with its own runner banner, and reports a
+ * failed run in that banner rather than in a status field. A successful run ends
+ * the banner with an `Output:` line; a failure often stops at `Script error:`
+ * with nothing after it, so both forms are stripped.
+ */
+const CODEX_RUNNER_BANNER = /^Script (?:completed|failed|error)[\s\S]*?\nOutput:[ \t]*\n?/u;
+const CODEX_ERROR_BANNER = /^Script (?:failed|error):?[ \t]*\n?/u;
+
+const rawOutput = (payload: CodexPayload): string => {
   if (typeof payload.output === 'string') {
     return payload.output;
   }
 
   return (payload.output ?? []).flatMap((part) => {
     return part.text == null ? [] : [part.text];
-  }).join('\n\n');
+  }).join('\n');
 };
 
-const commandFrom = (payload: CodexPayload): ToolCall => {
-  const rawArguments = payload.arguments ?? payload.input;
-  const args = rawArguments == null ? undefined : parsedJson(rawArguments);
-  const commandArgs = isCommandArguments(args) ? args : undefined;
-  const command = commandArgs?.cmd ?? commandArgs?.command;
-  const name = payload.name === 'exec_command' || payload.name === 'exec' ? 'Bash' : (payload.name ?? 'tool');
+const outputContent = (payload: CodexPayload): string => {
+  return rawOutput(payload)
+    .replace(CODEX_RUNNER_BANNER, '')
+    .replace(CODEX_ERROR_BANNER, '')
+    .trim();
+};
 
-  return {
-    id: payload.call_id ?? payload.id ?? '',
-    name,
-    input: parseToolInput(name, command == null ? {} : { command }),
-  };
+const outputFailed = (payload: CodexPayload): boolean => {
+  return /^Script (?:failed|error)\b/u.test(rawOutput(payload).trimStart());
 };
 
 const outcomeFrom = (
@@ -211,7 +207,7 @@ const outcomeFrom = (
 
   return {
     toolUseId: payload.call_id ?? '',
-    status: 'ok',
+    status: outputFailed(payload) ? 'error' : 'ok',
     text,
     images: [],
     ...patch == null ? {} : { patch },
@@ -237,8 +233,17 @@ const hunksOfChange = (change: CodexFileChange): readonly PatchHunk[] => {
 
 const absorbPatchApply = (scan: CodexScan, payload: CodexPayload): void => {
   const changes = Object.entries(payload.changes ?? {});
-  const hunks = changes.flatMap(([, change]) => {
-    return hunksOfChange(change);
+  const hunks = changes.flatMap(([path, change]) => {
+    return hunksOfChange(change).map((hunk) => {
+      // Tag the hunk with its file only when the patch touched more than one, so
+      // the diff can be split by file. A single-file patch names it on the card.
+      return changes.length > 1
+        ? {
+            ...hunk,
+            file: path,
+          }
+        : hunk;
+    });
   });
   const changed = changes.map(([path, change]) => {
     return {
@@ -403,10 +408,18 @@ const absorbResponseItem = (scan: CodexScan, payload: CodexPayload, timestamp: s
   }
 
   if (payload.type === 'function_call' || payload.type === 'custom_tool_call') {
-    const block: AssistantBlock = {
-      blockType: 'tool-use',
-      call: commandFrom(payload),
-    };
+    const decoded = decodeCodexTool(
+      payload.name,
+      payload.input ?? payload.arguments,
+      payload.call_id ?? payload.id ?? '',
+    );
+
+    // apply_patch keeps its diff in the call source, so it waits here for the
+    // output it pairs with, the same slot patch_apply_end fills.
+    if (decoded.patch != null || decoded.changed != null) {
+      scan.pendingPatch = decoded.patch;
+      scan.pendingChanged = decoded.changed;
+    }
 
     scan.entries.push({
       kind: 'assistant',
@@ -414,7 +427,10 @@ const absorbResponseItem = (scan: CodexScan, payload: CodexPayload, timestamp: s
       timestamp,
       sidechain: false,
       model: scan.model,
-      blocks: [block],
+      blocks: [{
+        blockType: 'tool-use',
+        call: decoded.call,
+      }],
     });
   }
   else if (payload.type === 'function_call_output' || payload.type === 'custom_tool_call_output') {

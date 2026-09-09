@@ -82,7 +82,7 @@ describe('parseHistoryLine', () => {
     });
   });
 
-  test('marks local command echoes as meta even without the flag', () => {
+  test('unwraps a local command echo and marks it meta even without the flag', () => {
     const entry = parseFields({
       type: 'user',
       uuid: 'u1',
@@ -93,7 +93,58 @@ describe('parseHistoryLine', () => {
       },
     });
 
-    expect(entry).toMatchObject({ meta: true });
+    expect(entry).toMatchObject({
+      meta: true,
+      text: 'done',
+    });
+  });
+
+  test('drops a turn that held only slash command scaffolding', () => {
+    const caveat = parseFields({
+      type: 'user',
+      uuid: 'u1',
+      timestamp: 't1',
+      isMeta: true,
+      message: {
+        role: 'user',
+        content: '<local-command-caveat>Caveat: generated while running a command.</local-command-caveat>',
+      },
+    });
+    const emptyEcho = parseFields({
+      type: 'user',
+      uuid: 'u2',
+      timestamp: 't2',
+      message: {
+        role: 'user',
+        content: '<local-command-stdout></local-command-stdout>',
+      },
+    });
+
+    expect(caveat).toBeUndefined();
+    expect(emptyEcho).toBeUndefined();
+  });
+
+  test('keeps a slash command as its chip with no leftover tagged text', () => {
+    const entry = parseFields({
+      type: 'user',
+      uuid: 'u1',
+      timestamp: 't1',
+      message: {
+        role: 'user',
+        content: [
+          '<command-name>/clear</command-name>',
+          '            <command-message>clear</command-message>',
+          '            <command-args></command-args>',
+        ].join('\n'),
+      },
+    });
+
+    expect(entry).toMatchObject({
+      command: '/clear',
+      text: '',
+      meta: false,
+    });
+    expect(entry?.kind === 'user' && entry.injectedText).toBeUndefined();
   });
 
   test('separates injected context appended to a real user message', () => {
@@ -127,6 +178,31 @@ describe('parseHistoryLine', () => {
         'workspace details',
         '</environment_context>',
       ].join('\n'),
+    });
+  });
+
+  test('files a skill payload under injected context rather than the message', () => {
+    const entry = parseFields({
+      type: 'user',
+      uuid: 'u1',
+      timestamp: 't1',
+      message: {
+        role: 'user',
+        content: [
+          'Base directory for this skill: /repo/plugins/x/skills/x',
+          '',
+          '# X',
+          '',
+          '- do the thing',
+        ].join('\n'),
+      },
+    });
+
+    expect(entry).toMatchObject({
+      kind: 'user',
+      meta: true,
+      text: '',
+      injectedText: 'Base directory for this skill: /repo/plugins/x/skills/x\n\n# X\n\n- do the thing',
     });
   });
 
@@ -496,12 +572,12 @@ describe('assistant turns', () => {
 });
 
 describe('system and summary lines', () => {
-  test('prefers string content for system text and falls back to subtype', () => {
+  test('keeps a system line that carries content', () => {
     const withContent = parseFields({
       type: 'system',
       uuid: 's1',
       timestamp: 't1',
-      subtype: 'stop_hook_summary',
+      subtype: 'away_summary',
       level: 'info',
       content: 'hooks finished',
     });
@@ -512,36 +588,66 @@ describe('system and summary lines', () => {
       timestamp: 't1',
       sidechain: false,
       level: 'info',
-      subtype: 'stop_hook_summary',
+      subtype: 'away_summary',
       text: 'hooks finished',
     });
 
-    const withoutContent = parseFields({
+    expect(parseFields({
       type: 'system',
-      uuid: 's2',
-      timestamp: 't2',
-      subtype: 'compact',
-    });
-
-    expect(withoutContent).toMatchObject({
-      text: 'compact',
-      level: undefined,
+      content: 'a bare notice',
+    })).toMatchObject({
+      kind: 'system',
+      uuid: '',
+      timestamp: '',
+      text: 'a bare notice',
     });
   });
 
-  test('labels a system line without subtype or level', () => {
-    const entry = parseFields({
+  test('unwraps a local-command system echo and drops it when empty', () => {
+    const withText = parseFields({
+      type: 'system',
+      uuid: 's1',
+      timestamp: 't1',
+      subtype: 'local_command',
+      level: 'info',
+      content: '<local-command-stdout>Set effort to xhigh</local-command-stdout>',
+    });
+    const empty = parseFields({
+      type: 'system',
+      uuid: 's2',
+      timestamp: 't2',
+      subtype: 'local_command',
+      level: 'info',
+      content: '<local-command-stdout></local-command-stdout>',
+    });
+
+    expect(withText).toMatchObject({
+      kind: 'system',
+      text: 'Set effort to xhigh',
+    });
+    expect(empty).toBeUndefined();
+  });
+
+  test('drops a system line that carries no content of its own', () => {
+    expect(parseFields({
       type: 'system',
       uuid: 's3',
       timestamp: 't3',
+      subtype: 'turn_duration',
+    })).toBeUndefined();
+    expect(parseFields({
+      type: 'system',
+      uuid: 's4',
+      timestamp: 't4',
+      subtype: 'stop_hook_summary',
+      level: 'suggestion',
+    })).toBeUndefined();
+    expect(parseFields({
+      type: 'system',
+      uuid: 's5',
+      timestamp: 't5',
       isSidechain: true,
-    });
-
-    expect(entry).toMatchObject({
-      text: 'system event',
-      subtype: undefined,
-      sidechain: true,
-    });
+    })).toBeUndefined();
   });
 
   test('parses a summary line and drops empty summaries', () => {
@@ -1223,7 +1329,7 @@ describe('absent-field fallbacks across the parser', () => {
     }
 
     expect(assistant.blocks).toEqual([]);
-    expect(system?.kind === 'system' && system.uuid).toBe('');
+    expect(system).toBeUndefined();
   });
 });
 
@@ -1308,7 +1414,7 @@ describe('final parser arms', () => {
       subtype: 'hook',
     });
 
-    expect(leveledSystem?.kind === 'system' && leveledSystem.text).toBe('hook (warn)');
+    expect(leveledSystem).toBeUndefined();
   });
 });
 

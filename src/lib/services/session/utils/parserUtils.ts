@@ -1,7 +1,10 @@
 import {
   AUTHORED_BLOCK,
   COMMAND_ARGS,
+  COMMAND_ECHO,
   COMMAND_NAME,
+  COMMAND_OUTPUT,
+  COMMAND_OUTPUT_TAGS,
   INJECTED_CONTEXT_PREFIXES,
   WRAPPED_BLOCK,
 } from '../constants';
@@ -517,17 +520,36 @@ const parseUserTurn = (raw: RawHistoryLine): UserTurnEntry | undefined => {
       outcomeBlocks.length === 1 ? sideChannel : undefined,
     );
   });
-  const text = userText(typeof payload.content === 'string' ? payload.content : undefined, blocks);
-  const splitText = splitUserText(text);
+  const rawText = userText(
+    typeof payload.content === 'string' ? payload.content : undefined,
+    blocks,
+  );
   const command = typeof payload.content === 'string' ? commandLabel(payload.content) : undefined;
   const images = attachedImages(blocks);
+  // A slash command's stdout is real text, so it is unwrapped and dimmed; its
+  // caveat and <command-*> echo are noise the chip already covers, so they go.
+  const isOutput = COMMAND_OUTPUT.test(rawText);
+  const stripped = rawText.replace(COMMAND_ECHO, '').trim();
+  const text = isOutput
+    ? rawText.replace(COMMAND_OUTPUT_TAGS, '').trim()
+    : stripped;
+  // A turn left with nothing after stripping command scaffolding, and no chip of
+  // its own to stand in for it, has nothing to render.
+  const scaffoldingOnly = text.length === 0
+    && (isOutput || stripped.length < rawText.trim().length);
+
+  if (scaffoldingOnly && command == null && images.length === 0 && outcomes.length === 0) {
+    return undefined;
+  }
+
+  const splitText = splitUserText(text);
 
   return {
     kind: 'user',
     uuid: raw.uuid ?? '',
     timestamp: raw.timestamp ?? '',
     sidechain: raw.isSidechain === true,
-    meta: raw.isMeta === true || splitText.meta,
+    meta: raw.isMeta === true || splitText.meta || isOutput,
     text: command != null ? '' : splitText.text,
     ...(splitText.injectedText == null ? {} : { injectedText: splitText.injectedText }),
     command,
@@ -607,16 +629,27 @@ const parseAssistantTurn = (raw: RawHistoryLine): AssistantTurnEntry | undefined
 const systemText = (raw: RawHistoryLine): string => {
   const content = raw.content;
 
-  if (typeof content === 'string' && content.length > 0) {
-    return content;
+  if (typeof content !== 'string') {
+    return '';
   }
 
-  const label = raw.subtype ?? 'system event';
-
-  return raw.level == null ? label : `${label} (${raw.level})`;
+  return COMMAND_OUTPUT.test(content)
+    ? content.replace(COMMAND_OUTPUT_TAGS, '').trim()
+    : content;
 };
 
-const parseSystemTurn = (raw: RawHistoryLine): SystemTurnEntry => {
+const parseSystemTurn = (raw: RawHistoryLine): SystemTurnEntry | undefined => {
+  const text = systemText(raw);
+
+  /**
+   * A system line with no content of its own is agent telemetry rather than
+   * conversation: turn_duration, stop_hook_summary, the empty command echo. A
+   * subtype label alone is not worth a row.
+   */
+  if (text.length === 0) {
+    return undefined;
+  }
+
   return {
     kind: 'system',
     uuid: raw.uuid ?? '',
@@ -624,7 +657,7 @@ const parseSystemTurn = (raw: RawHistoryLine): SystemTurnEntry => {
     sidechain: raw.isSidechain === true,
     level: raw.level,
     subtype: raw.subtype,
-    text: systemText(raw),
+    text,
   };
 };
 
