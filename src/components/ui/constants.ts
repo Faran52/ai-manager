@@ -52,6 +52,21 @@ export const collapseTransition: Transition = {
 };
 
 /*
+ * A sidebar column folding to its strip of marks, or back. Width is a layout
+ * property and the rules forbid animating it, but this is the argued exception:
+ * one bounded region, the same carve-out a height disclosure gets. It is a
+ * spring rather than a tween so a second click landing mid-fold carries the
+ * current velocity through instead of restarting from a curve, which is the
+ * stutter that reads as cheap. Zero bounce: an overshooting width would shove
+ * the pane past its resting place and drag it back.
+ */
+export const foldTransition: Transition = {
+  type: 'spring',
+  visualDuration: 0.34,
+  bounce: 0,
+};
+
+/*
  * A control answering a direct gesture: a switch thumb, a tab marker. Fastest
  * of the set with a little life in it, because the reader's finger or key is
  * the cause and the response has to feel immediate.
@@ -60,6 +75,20 @@ export const controlTransition: Transition = {
   type: 'spring',
   visualDuration: 0.18,
   bounce: 0.2,
+};
+
+/*
+ * A companion pane sliding out beside the transcript. A fold is a column
+ * snapping to its marks and back; this is a surface being revealed, so it takes
+ * longer and eases harder into place, the way a macOS drawer glides rather than
+ * flicks. Still a spring, so a toggle mid-slide carries its velocity through,
+ * and still zero bounce, because an overshooting width would shove the pane past
+ * where it stops and drag it back.
+ */
+export const drawerTransition: Transition = {
+  type: 'spring',
+  visualDuration: 0.44,
+  bounce: 0,
 };
 
 /*

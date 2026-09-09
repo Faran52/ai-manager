@@ -1,0 +1,12 @@
+@layer components {
+  /* The pair of hues lives on [data-agent] in AgentTag.css, so a mark that
+     stands in for a session sets only the roles it fills them into. */
+  .agent-mark {
+    color: var(--agent-light, var(--muted-foreground));
+    background: color-mix(in srgb, currentcolor 16%, var(--muted));
+  }
+
+  .dark .agent-mark {
+    color: var(--agent-dark, var(--muted-foreground));
+  }
+}

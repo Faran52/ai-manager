@@ -27,7 +27,7 @@ export const PatchView: FC<PatchViewProps> = ({ hunks }) => {
       "
       data-patch-view
     >
-      {hunks.map((hunk) => {
+      {hunks.map((hunk, index) => {
         /*
          * Coordinates alone do not identify a hunk here. A multi-edit call is
          * shown as one patch per edit, and each is diffed against its own
@@ -37,15 +37,32 @@ export const PatchView: FC<PatchViewProps> = ({ hunks }) => {
          * tells them apart.
          */
         const hunkKey = [
+          hunk.file ?? '',
           hunk.oldStart,
           hunk.oldLines,
           hunk.newStart,
           hunk.newLines,
           ...hunk.lines,
         ].join('-');
+        // A multi-file patch tags each hunk with its file; show the name once
+        // where it changes, so the reader is never guessing which file a hunk is in.
+        const fileHeader = hunk.file != null && hunk.file !== hunks[index - 1]?.file
+          ? hunk.file
+          : undefined;
 
         return (
           <div key={hunkKey}>
+            {fileHeader != null && (
+              <div
+                className="
+                  border-b border-border bg-muted px-3 py-1 text-body
+                  font-medium break-all text-foreground-2
+                "
+                data-patch-file
+              >
+                {fileHeader}
+              </div>
+            )}
             <div className="
               border-b border-border bg-muted px-3 py-1 text-body
               text-muted-foreground

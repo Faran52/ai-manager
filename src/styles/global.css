@@ -1,11 +1,10 @@
 @import "tailwindcss";
-@import "@fontsource-variable/ibm-plex-sans/wght.css";
-@import "@fontsource/ibm-plex-mono/latin-400.css";
-@import "@fontsource/ibm-plex-mono/latin-500.css";
-@import "@fontsource/ibm-plex-mono/latin-600.css";
+@import "@fontsource-variable/geist/wght.css";
+@import "@fontsource-variable/geist-mono/wght.css";
 @import "./tokens.css";
 @import "../components/features/app-header/AppHeader.css";
 @import "../components/features/agent-tag/AgentTag.css";
+@import "../components/ui/agent-mark/AgentMark.css";
 @import "../components/features/sidebar/Sidebar.css";
 @import "../components/ui/menu/Menu.css";
 @import "../components/ui/segmented-control/SegmentedControl.css";
@@ -15,8 +14,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-sans: "IBM Plex Sans Variable", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", menlo, consolas, monospace;
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, "SF Mono", menlo, consolas, monospace;
   --color-background: var(--background);
   --color-card: var(--card);
   --color-popover: var(--popover);
@@ -27,8 +26,13 @@
   --color-faint: var(--faint);
   --color-dim: var(--dim);
   --color-recess: var(--recess);
+  --color-code: var(--code);
+  --color-code-foreground: var(--code-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chrome: var(--chrome);
   --color-raised: var(--raised);
   --color-border: var(--border);
+  --color-hair: var(--hair);
   --color-input: var(--input);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);

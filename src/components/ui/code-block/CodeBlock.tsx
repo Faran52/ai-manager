@@ -26,10 +26,10 @@ export const CodeBlock: FC<CodeBlockProps> = ({ code, language }) => {
 
         return (
           <pre
-            className="overflow-x-auto rounded-lg p-3 text-xs/relaxed"
+            className="overflow-x-auto rounded-lg p-3 text-figure/relaxed"
             style={{
               ...style,
-              background: '#18181b',
+              background: 'var(--code)',
             }}
           >
             {tokens.map((line, lineIndex) => {

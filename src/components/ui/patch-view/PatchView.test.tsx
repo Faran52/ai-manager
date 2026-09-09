@@ -47,4 +47,39 @@ describe('PatchView', () => {
     expect(screen.getByText('-x')).toBeDefined();
     expect(screen.getByText('+y')).toBeDefined();
   });
+
+  test('shows no file header when the hunks name no file', () => {
+    render(<PatchView hunks={[hunk]} />);
+
+    expect(document.querySelector('[data-patch-file]')).toBeNull();
+  });
+
+  test('heads each file once when a patch spans more than one', () => {
+    render(
+      <PatchView hunks={[
+        {
+          ...hunk,
+          file: 'src/a.ts',
+          lines: ['-a', '+A'],
+        },
+        {
+          ...hunk,
+          file: 'src/a.ts',
+          lines: [' still a'],
+        },
+        {
+          ...hunk,
+          file: 'src/b.ts',
+          lines: ['-b', '+B'],
+        },
+      ]}
+      />,
+    );
+
+    const headers = [...document.querySelectorAll('[data-patch-file]')].map((node) => {
+      return node.textContent;
+    });
+
+    expect(headers).toEqual(['src/a.ts', 'src/b.ts']);
+  });
 });

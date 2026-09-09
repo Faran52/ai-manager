@@ -17,9 +17,19 @@
     border-radius: 999px;
   }
 
+  /* A bare dot in the agent's hue, for a meta line beside a name. The defaults
+     sit before the [data-agent] rules so a keyed agent still wins them. */
+  .agent-dot {
+    --agent-light: #52525b;
+    --agent-dark: #d4d4d8;
+
+    color: var(--agent-light);
+    background: currentcolor;
+  }
+
   [data-agent="claude"] {
-    --agent-light: #b45309;
-    --agent-dark: #fcd34d;
+    --agent-light: #0f766e;
+    --agent-dark: #2f9e8f;
   }
 
   [data-agent="codebuddy"] {
@@ -28,8 +38,8 @@
   }
 
   [data-agent="codex"] {
-    --agent-light: #16a34a;
-    --agent-dark: #4ade80;
+    --agent-light: #b45309;
+    --agent-dark: #e0a23c;
   }
 
   [data-agent="continue"] {
@@ -38,14 +48,14 @@
   }
 
   [data-agent="copilot"] {
-    --agent-light: #6639ba;
-    --agent-dark: #d2a8ff;
+    --agent-light: #9333ea;
+    --agent-dark: #c98ae0;
   }
 
   [data-agent="cline"],
   [data-agent="pi"] {
-    --agent-light: #0d9488;
-    --agent-dark: #2dd4bf;
+    --agent-light: #0369a1;
+    --agent-dark: #4fb3de;
   }
 
   [data-agent="crush"] {
@@ -71,8 +81,8 @@
   }
 
   [data-agent="gemini"] {
-    --agent-light: #9333ea;
-    --agent-dark: #c084fc;
+    --agent-light: #4d7c0f;
+    --agent-dark: #8fc44a;
   }
 
   [data-agent="goose"] {
@@ -107,8 +117,8 @@
 
   [data-agent="opencode"],
   [data-agent="trae"] {
-    --agent-light: #2563eb;
-    --agent-dark: #93c5fd;
+    --agent-light: #4f46e5;
+    --agent-dark: #7c7ff0;
   }
 
   [data-agent="openinterpreter"] {
@@ -152,6 +162,7 @@
   }
 
   .dark .agent-tag,
+  .dark .agent-dot,
   .dark .project-provider-dot {
     color: var(--agent-dark);
   }

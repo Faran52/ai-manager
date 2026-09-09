@@ -77,7 +77,13 @@ export const Menu: FC<MenuProps> = ({
       </DropdownMenuTrigger>
       <AnimatePresence>
         {isOpen && (
-          <DropdownMenuPortal forceMount>
+          /*
+           * A stable key so a fast open/close/open cycle reads as one element
+           * entering, not a second one entering while the first still exits.
+           * Without it AnimatePresence can leave the content stuck at its exit
+           * opacity, which reads as the menu rendering transparent.
+           */
+          <DropdownMenuPortal key="menu" forceMount>
             <DropdownMenuContent
               asChild
               align={position == null ? align : 'start'}

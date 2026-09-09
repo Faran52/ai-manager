@@ -77,8 +77,8 @@ export const PaneDivider: FC<PaneDividerProps> = ({
           focus-visible:bg-primary/20
         `,
         orientation === 'horizontal'
-          ? 'h-full w-2 cursor-col-resize border-s border-border'
-          : 'h-2 w-full cursor-row-resize border-t border-border',
+          ? 'h-full w-2 cursor-col-resize'
+          : 'h-2 w-full cursor-row-resize',
       )}
     >
       <span className={cn(

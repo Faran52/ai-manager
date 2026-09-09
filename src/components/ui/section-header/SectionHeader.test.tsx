@@ -9,3 +9,9 @@ test('renders a labelled section icon and action', () => {
   expect(screen.getByText('Projects')).toBeDefined();
   expect(screen.getByRole('button', { name: 'Action' })).toBeDefined();
 });
+
+test('shows a running total beside the label when given one', () => {
+  render(<SectionHeader icon={<i>icon</i>} label="Sessions" count={8} />);
+
+  expect(screen.getByText('8')).toBeDefined();
+});

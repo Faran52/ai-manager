@@ -8,8 +8,8 @@ export const CodeLine: FC<CodeLineProps> = ({ text }) => {
   return (
     <pre
       className="
-        overflow-x-auto rounded-lg bg-zinc-900 p-3 font-mono text-xs/relaxed
-        text-zinc-100
+        overflow-x-auto rounded-lg bg-code p-3 font-mono text-figure/relaxed
+        text-code-foreground
       "
       data-code-line
     >

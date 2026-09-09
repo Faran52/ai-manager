@@ -24,8 +24,26 @@
   --faint: #85817a;
   --dim: #a5a09a;
 
-  /* Inset depth for bar tracks and pressed controls. Black reads as a hole. */
+  /* One notch subtler than --border: the rule between transcript turns and the
+     lines beside a date separator, where a full border would divide too hard. */
+  --hair: #efedea;
+
+  /* Inset depth for bar tracks and pressed controls. Black reads as a hole.
+     It doubles as the canvas the shell's cards float on. */
   --recess: #e4e1dc;
+
+  /* The surface a command or a block of tool output sits on, and the ink on it.
+     Terminal-dark in both themes for now: the syntax highlighter ships one dark
+     palette, and a light code surface is part of the unfinished light mode.
+     ponytail: one token to retint when light mode is designed. */
+  --code: #1d2026;
+  --code-foreground: #c6c3bf;
+
+  /* The drawer and its folded strips, one step back from --card. */
+  --sidebar: #f6f5f3;
+
+  /* The titlebar and command bar above the body. */
+  --chrome: #f3f1ee;
 
   /* A surface floating above the pane. Sharing --border makes it disappear. */
   --raised: #d5d2cd;
@@ -76,10 +94,15 @@
   --muted: #22252b;
   --muted-foreground: #9a9691;
   --border: #2a2e35;
+  --hair: #23262c;
   --foreground-2: #c6c3bf;
   --faint: #6f6c67;
   --dim: #55524e;
   --recess: #0d0e11;
+  --code: #15171b;
+  --code-foreground: #c6c3bf;
+  --sidebar: #131519;
+  --chrome: #1a1d22;
   --raised: #3a3f47;
   --input: #2a2e35;
   --accent: #2b2f37;
