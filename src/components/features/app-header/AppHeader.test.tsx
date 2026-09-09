@@ -38,8 +38,8 @@ describe('AppHeader', () => {
   test('wires search and reload', async () => {
     const props = mount();
 
-    await userEvent.click(screen.getByTitle('Search all chats (press /)'));
-    await userEvent.click(screen.getByTitle('Refresh conversation history'));
+    await userEvent.click(screen.getByRole('button', { name: 'Search all chats (press /)' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Refresh conversation history' }));
 
     expect(props.onOpenSearch).toHaveBeenCalledOnce();
     expect(props.onReload).toHaveBeenCalledOnce();
@@ -49,11 +49,12 @@ describe('AppHeader', () => {
     vi.useFakeTimers();
     const props = mount();
 
-    fireEvent.click(screen.getByTitle('Refresh conversation history'));
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh conversation history' }));
 
     expect(props.onReload).toHaveBeenCalledOnce();
     expect(screen.getByRole('status').textContent).toBe('Refreshing conversation history…');
-    expect(screen.getByTitle('Refreshing conversation history').hasAttribute('disabled')).toBe(true);
+    expect(screen.getByRole('button', { name: 'Refreshing conversation history' })
+      .hasAttribute('disabled')).toBe(true);
 
     act(() => {
       vi.advanceTimersByTime(3000);
@@ -63,6 +64,7 @@ describe('AppHeader', () => {
       await vi.runAllTimersAsync();
     });
     expect(screen.queryByText('Refreshing conversation history…')).toBeNull();
-    expect(screen.getByTitle('Refresh conversation history').hasAttribute('disabled')).toBe(false);
+    expect(screen.getByRole('button', { name: 'Refresh conversation history' })
+      .hasAttribute('disabled')).toBe(false);
   });
 });

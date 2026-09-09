@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
-  History,
   RefreshCw,
   Search,
   Settings,
@@ -10,7 +9,7 @@ import {
 
 import { cn } from '@utils/cnUtils';
 
-import { Button, Toast } from '@ui/index';
+import { Toast, Tooltip } from '@ui/index';
 
 import type { FC } from 'react';
 
@@ -22,6 +21,11 @@ export interface AppHeaderProps {
   readonly onOpenSettings: () => void;
 }
 
+/**
+ * The titlebar: what the window is. A centred search field, and refresh and
+ * settings as icons on the trailing edge. The window carries no wordmark; on the
+ * desktop the OS draws the frame, and in the browser there is none to draw.
+ */
 export const AppHeader: FC<AppHeaderProps> = ({
   onOpenSearch,
   onReload,
@@ -46,57 +50,49 @@ export const AppHeader: FC<AppHeaderProps> = ({
 
   return (
     <>
-      <header
-        className="
-          flex h-12 shrink-0 items-center gap-3 border-b border-border bg-card
-          px-3
-        "
-        data-app-header
-      >
-        <div className="flex items-center gap-2">
-          <span className="
-            flex size-7 items-center justify-center rounded-lg bg-primary
-            text-primary-foreground shadow-sm ring-1 shadow-black/20
-            ring-primary-foreground/20
+      <header className="titlebar" data-app-header>
+        <button
+          type="button"
+          onClick={onOpenSearch}
+          aria-label={t('searchAllChats')}
+          className="titlebar-search"
+        >
+          <Search className="size-3" />
+          {t('searchPlaceholder')}
+          <kbd className="
+            ms-1 rounded-xs border border-border px-1 font-mono text-eyebrow
+            text-faint
           "
           >
-            <History className="size-4" />
-          </span>
-          <h1 className="
-            text-sm font-semibold tracking-[-0.02em] text-foreground
-          "
-          >
-            AI Manager
-          </h1>
-        </div>
+            /
+          </kbd>
+        </button>
 
-        <div className="ms-auto flex items-center gap-0.5">
-          <Button size="sm" variant="ghost" onClick={onOpenSearch} title={t('searchAllChats')}>
-            <Search className="size-3.5" />
-            {t('searchAllChatsLabel')}
-            <kbd className="
-              ms-1 rounded-sm border border-border px-1 font-mono text-figure
-              text-muted-foreground
-            "
+        <div className="ms-auto flex items-center gap-1">
+          <Tooltip content={refreshing ? t('refreshing') : t('refresh')}>
+            <button
+              type="button"
+              disabled={refreshing}
+              onClick={() => {
+                setRefreshing(true);
+                onReload();
+              }}
+              aria-label={refreshing ? t('refreshing') : t('refresh')}
+              className="chrome-icon-button"
             >
-              /
-            </kbd>
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={refreshing}
-            onClick={() => {
-              setRefreshing(true);
-              onReload();
-            }}
-            title={refreshing ? t('refreshing') : t('refresh')}
-          >
-            <RefreshCw className={cn('size-3.5', refreshing && 'animate-spin')} />
-          </Button>
-          <Button size="sm" variant="ghost" onClick={onOpenSettings} title={t('navSettings')}>
-            <Settings className="size-3.5" />
-          </Button>
+              <RefreshCw className={cn('size-3.5', refreshing && 'animate-spin')} />
+            </button>
+          </Tooltip>
+          <Tooltip content={t('navSettings')}>
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              aria-label={t('navSettings')}
+              className="chrome-icon-button"
+            >
+              <Settings className="size-3.5" />
+            </button>
+          </Tooltip>
         </div>
       </header>
       <Toast message={refreshing ? t('refreshingToast') : null} />

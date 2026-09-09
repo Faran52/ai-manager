@@ -27,3 +27,130 @@
     transform: rotate(180deg);
   }
 }
+
+@layer components {
+  /* The window chrome: a titlebar for what the window is, a command bar for
+     what you are looking at and what you can do to it. */
+  .titlebar {
+    position: relative;
+    display: flex;
+    flex: none;
+    gap: 0.5rem;
+    align-items: center;
+    height: 42px;
+    padding-inline: 0.75rem;
+    background: var(--chrome);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .titlebar-search {
+    position: absolute;
+    left: 50%;
+    display: flex;
+    gap: 0.4375rem;
+    align-items: center;
+    justify-content: center;
+    width: min(380px, 40vw);
+    height: 1.625rem;
+    padding-inline: 0.5625rem;
+    font-size: var(--text-ui);
+    color: var(--muted-foreground);
+    background: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    transform: translateX(-50%);
+    transition: color 120ms ease, border-color 120ms ease;
+  }
+
+  .titlebar-search:hover {
+    color: var(--foreground-2);
+    border-color: var(--raised);
+  }
+
+  .titlebar-search:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
+  }
+
+  .chrome-icon-button {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.625rem;
+    height: 1.625rem;
+    color: var(--muted-foreground);
+    border-radius: var(--radius-md);
+    transition: color 120ms ease, background-color 120ms ease;
+  }
+
+  .chrome-icon-button:hover,
+  .chrome-icon-button[data-active="true"] {
+    color: var(--foreground);
+    background: var(--accent);
+  }
+
+  .chrome-icon-button:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+  }
+
+  .command-bar {
+    display: flex;
+    flex: none;
+    gap: 0.5rem;
+    align-items: center;
+    height: 46px;
+    padding-inline: 0.75rem;
+    background: var(--chrome);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .context-chip {
+    display: inline-flex;
+    flex: none;
+    gap: 0.375rem;
+    align-items: center;
+    height: 1.625rem;
+    padding-inline: 0.625rem;
+    font-size: var(--text-ui);
+    color: var(--foreground-2);
+    white-space: nowrap;
+    background: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+
+  .context-chip svg {
+    flex: none;
+    opacity: 0.7;
+  }
+
+  .command-action {
+    display: inline-flex;
+    flex: none;
+    gap: 0.375rem;
+    align-items: center;
+    height: 1.875rem;
+    padding-inline: 0.625rem;
+    font-size: var(--text-ui);
+    color: var(--foreground-2);
+    white-space: nowrap;
+    border-radius: var(--radius-md);
+    transition: color 120ms ease, background-color 120ms ease;
+  }
+
+  .command-action:disabled {
+    opacity: 0.5;
+  }
+
+  .command-action:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+  }
+
+  .command-action:hover:not(:disabled) {
+    color: var(--foreground);
+    background: var(--accent);
+  }
+}
