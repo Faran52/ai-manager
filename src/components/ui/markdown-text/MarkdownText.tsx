@@ -67,11 +67,22 @@ export const MarkdownText: FC<MarkdownTextProps> = ({ text }) => {
   return (
     <div
       className="
-        prose-sm space-y-2 wrap-break-word
-        [&_h1]:text-base
-        [&_h2]:text-sm
-        [&_li]:ms-4
+        space-y-2 wrap-break-word
+        [&_blockquote]:border-s-2 [&_blockquote]:border-border
+        [&_blockquote]:ps-3 [&_blockquote]:text-foreground-2
+        [&_h1]:text-value [&_h1]:font-semibold [&_h1]:text-foreground
+        [&_h2]:text-ui [&_h2]:font-semibold [&_h2]:text-foreground
+        [&_h3]:text-ui [&_h3]:font-semibold [&_h3]:text-foreground
+        [&_hr]:my-3 [&_hr]:border-border
+        [&_li]:ms-4 [&_li]:text-ui [&_li]:leading-[1.6]
         [&_ol]:list-decimal
+        [&_p]:text-ui [&_p]:leading-[1.62]
+        [&_table]:my-2 [&_table]:block [&_table]:max-w-full
+        [&_table]:overflow-x-auto [&_table]:text-figure
+        [&_td]:border [&_td]:border-border [&_td]:px-2 [&_td]:py-1
+        [&_td]:align-top
+        [&_th]:border [&_th]:border-border [&_th]:bg-muted/40 [&_th]:px-2
+        [&_th]:py-1 [&_th]:text-start [&_th]:font-medium [&_th]:text-foreground
         [&_ul]:list-disc
       "
       data-markdown

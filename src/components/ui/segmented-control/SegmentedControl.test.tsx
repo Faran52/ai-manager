@@ -1,12 +1,27 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
+  afterEach,
   expect,
   test,
   vi,
 } from 'vitest';
 
 import { SegmentedControl } from './SegmentedControl';
+
+const reducedMotion = (matches: boolean): void => {
+  vi.stubGlobal('matchMedia', () => {
+    return {
+      matches,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+  });
+};
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 const OPTIONS = [
   {
@@ -28,10 +43,18 @@ const control = (onChange = vi.fn(), value = 'dark'): void => {
 };
 
 test('marks only the value in force', () => {
+  reducedMotion(false);
   control();
 
   expect(screen.getByRole('radio', { name: 'Dark' })).toHaveProperty('checked', true);
   expect(screen.getByRole('radio', { name: 'Light' })).toHaveProperty('checked', false);
+});
+
+test('renders the selected fill without motion for a reduced-motion reader', () => {
+  reducedMotion(true);
+  control();
+
+  expect(screen.getByRole('radio', { name: 'Dark' })).toHaveProperty('checked', true);
 });
 
 test('reports the chosen value', async () => {

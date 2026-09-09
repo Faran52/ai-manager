@@ -19,7 +19,22 @@
     color: var(--foreground-2);
     cursor: pointer;
     border-radius: var(--radius-sm);
-    transition: color 120ms ease, background-color 120ms ease;
+    transition: color 120ms ease;
+  }
+
+  /* The moving fill for the selected segment, carried on a shared layoutId. */
+  .segmented-thumb {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 25%);
+  }
+
+  .segmented-label {
+    position: relative;
+    z-index: 1;
   }
 
   /*
@@ -40,8 +55,6 @@
 
   .segmented-option:has(input:checked) {
     color: var(--foreground);
-    background: var(--card);
-    box-shadow: 0 1px 2px rgb(0 0 0 / 25%);
   }
 
   .segmented-option:has(input:focus-visible) {
