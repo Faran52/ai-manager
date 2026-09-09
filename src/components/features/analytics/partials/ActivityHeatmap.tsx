@@ -8,10 +8,10 @@ import { formatTokens } from '@utils/formatUtils';
 import { MOTION_STAGGER, riseTransition } from '@ui/index';
 
 import {
-  IDLE_CLASS,
   levelClass,
   levelFor,
   monthsOf,
+  WASH_SCALE,
   weeksTo,
 } from '../utils/heatmapUtils';
 
@@ -32,8 +32,6 @@ const ROW_LABEL: Partial<Record<(typeof ROW_KEYS)[number], string>> = {
   wed: 'weekdayWed',
   fri: 'weekdayFri',
 };
-
-const SCALE = [0, 1, 2, 3];
 
 /**
  * The grid takes the whole card, in both directions.
@@ -144,13 +142,13 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
       "
       >
         <span>{t('heatmapLess')}</span>
-        {SCALE.map((level) => {
+        {WASH_SCALE.map((wash) => {
           return (
             <span
-              key={level}
+              key={wash}
               className={`
                 size-3 rounded-sm
-                ${level === 0 ? IDLE_CLASS : levelClass(level, 3)}
+                ${wash}
               `}
             />
           );

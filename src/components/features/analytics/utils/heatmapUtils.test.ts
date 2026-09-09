@@ -29,9 +29,9 @@ describe('levelFor', () => {
 describe('levelClass', () => {
   test('maps each level to its wash', () => {
     expect(levelClass(0, 100)).toBe(IDLE_CLASS);
-    expect(levelClass(10, 100)).toBe('bg-ok/40');
-    expect(levelClass(30, 100)).toBe('bg-ok/70');
-    expect(levelClass(90, 100)).toBe('bg-ok');
+    expect(levelClass(10, 100)).toBe('bg-primary/40');
+    expect(levelClass(30, 100)).toBe('bg-primary/70');
+    expect(levelClass(90, 100)).toBe('bg-primary');
   });
 });
 

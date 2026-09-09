@@ -179,20 +179,25 @@ export const WorkRhythm: FC<WorkRhythmProps> = ({ rhythm, effort }) => {
             })}
           </ul>
         </div>
-        {/* The charts are one thought and the figures another. */}
+        {/* The charts are one thought and the figures another. A figure is a
+            cell with its label above it, not a label and a value colliding on
+            one line. */}
         <dl className="
-          grid grid-cols-2 gap-x-4 gap-y-1.5 border-t border-border pt-4 text-xs
+          grid grid-cols-2 gap-x-3 gap-y-3.5 border-t border-border pt-4
           sm:grid-cols-4
         "
         >
           {facts.map(([label, value]) => {
             return (
-              <div
-                key={label}
-                className="flex items-baseline justify-between gap-2"
-              >
-                <dt className="truncate text-muted-foreground">{label}</dt>
-                <dd className="font-medium tabular-nums">{value}</dd>
+              <div key={label} className="grid gap-0.5">
+                <dt className="truncate text-figure text-faint">{label}</dt>
+                <dd className="
+                  font-mono text-value font-semibold text-foreground
+                  tabular-nums
+                "
+                >
+                  {value}
+                </dd>
               </div>
             );
           })}

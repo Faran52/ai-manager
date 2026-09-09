@@ -18,10 +18,20 @@ export interface HeatmapWeek {
   readonly month?: string | undefined;
 }
 
-export const IDLE_CLASS = 'bg-muted';
+/*
+ * The four washes, idle first. Cells and the legend both read this one list, so
+ * the key under the grid can never drift from the grid. It tracks the accent
+ * (--primary), not --ok: the heatmap is a mark the reader colours in Settings
+ * like every bar in the report, and --ok is a fixed status colour that would
+ * ignore that choice. Idle is --recess, a hole, so "quiet" and "nothing" look
+ * different rather than both being the palest shade.
+ */
+export const WASH_SCALE = ['bg-recess', 'bg-primary/40', 'bg-primary/70', 'bg-primary'] as const;
+
+export const IDLE_CLASS = WASH_SCALE[0];
 
 // Buckets a day's token total against the week's peak into 0–3 intensity levels.
-export const levelFor = (tokens: number, peak: number): number => {
+export const levelFor = (tokens: number, peak: number): 0 | 1 | 2 | 3 => {
   if (tokens <= 0 || peak === 0) {
     return 0;
   }
@@ -34,16 +44,7 @@ export const levelFor = (tokens: number, peak: number): number => {
 };
 
 export const levelClass = (tokens: number, peak: number): string => {
-  switch (levelFor(tokens, peak)) {
-    case 1:
-      return 'bg-ok/40';
-    case 2:
-      return 'bg-ok/70';
-    case 3:
-      return 'bg-ok';
-    default:
-      return IDLE_CLASS;
-  }
+  return WASH_SCALE[levelFor(tokens, peak)];
 };
 
 /*
