@@ -139,6 +139,9 @@ describe('HistoryApp', () => {
     render(<HistoryApp />);
     await screen.findByText('alpha');
 
+    // The session column rides with the Sessions view, and its divider with it.
+    await userEvent.click(screen.getByRole('button', { name: /^Sessions/u }));
+
     const divider = screen.getByRole('slider', { name: 'Resize sidebar' });
 
     expect(divider.getAttribute('aria-valuenow')).toBe('520');
@@ -182,6 +185,8 @@ describe('HistoryApp', () => {
     expect(screen.getAllByRole('button', { name: /beta/ }).length).toBeGreaterThan(0);
 
     await openProject('alpha');
+    // Sessions are read from the Sessions view, where their column lives.
+    await userEvent.click(screen.getByRole('button', { name: /^Sessions/u }));
     const target = screen.getAllByText('The chosen one').at(0);
 
     if (target != null) {
@@ -532,7 +537,7 @@ describe('HistoryApp cross-view flows', () => {
     render(<HistoryApp />);
     await screen.findByText('alpha');
 
-    await userEvent.click(screen.getByTitle('Settings'));
+    await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
     await userEvent.click(await screen.findByRole('radio', { name: 'Dark' }));
 
     expect(localStorage.getItem('acm-theme')).toBe('dark');
@@ -597,7 +602,7 @@ describe('HistoryApp search jump flow', () => {
     render(<HistoryApp />);
 
     await screen.findByText('alpha');
-    await userEvent.click(screen.getByTitle('Search all chats (press /)'));
+    await userEvent.click(screen.getByRole('button', { name: 'Search all chats (press /)' }));
     await userEvent.type(screen.getByLabelText('Search history'), 'question');
 
     const hitButton = await screen.findByRole('button', { name: /question/ });
@@ -619,13 +624,54 @@ describe('HistoryApp header actions', () => {
     render(<HistoryApp />);
     await screen.findByText('alpha');
 
-    await userEvent.click(screen.getByTitle('Refresh conversation history'));
+    await userEvent.click(screen.getByRole('button', { name: 'Refresh conversation history' }));
 
     await waitFor(() => {
       expect(fetchMock.mock.calls.filter(([url]) => {
         return toPath(url).endsWith('/projects');
       }).length).toBeGreaterThanOrEqual(2);
     });
+  });
+
+  test('archives the open transcript from the command bar', async () => {
+    const fetchMock = vi.fn((url: RequestInfo | URL) => {
+      const path = toPath(url);
+
+      if (path.endsWith('/projects')) {
+        return Response.json(projectPayload);
+      }
+      if (path.endsWith('/sessions')) {
+        return Response.json(sessionsPayload('a'));
+      }
+      if (path.endsWith('/messages')) {
+        return Response.json(messagesPayload);
+      }
+      if (path.endsWith('/archive-create')) {
+        return Response.json({ archive: { id: 'arch-1' } });
+      }
+
+      return Response.json({ stats: null });
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+    await openProject('alpha');
+    await userEvent.click(screen.getByRole('button', { name: /^Sessions/ }));
+    await userEvent.click(await screen.findByText('The chosen one'));
+
+    const commandBar = document.querySelector('[data-command-bar]');
+
+    if (commandBar == null) {
+      throw new Error('the command bar never rendered');
+    }
+
+    await userEvent.click(within(commandBar as HTMLElement).getByRole('button', { name: 'Archive' }));
+
+    expect(await screen.findByText('Session archived')).toBeDefined();
+    expect(fetchMock.mock.calls.some(([url]) => {
+      return toPath(url).endsWith('/archive-create');
+    })).toBe(true);
   });
 
   test('closes search via the backdrop close control', async () => {
@@ -639,7 +685,7 @@ describe('HistoryApp header actions', () => {
     render(<HistoryApp />);
     await screen.findByText('alpha');
 
-    await userEvent.click(screen.getByTitle('Search all chats (press /)'));
+    await userEvent.click(screen.getByRole('button', { name: 'Search all chats (press /)' }));
     await userEvent.keyboard('{Escape}');
 
     await waitFor(() => {
@@ -727,6 +773,7 @@ describe('HistoryApp project and session mutations', () => {
     });
 
     await openProject('alpha');
+    await userEvent.click(screen.getByRole('button', { name: /^Sessions/u }));
     await screen.findByText('The chosen one');
     await userEvent.click(screen.getByText('The chosen one'));
     fireEvent.contextMenu(screen.getAllByText('The chosen one')[0] ?? document.body);
@@ -768,7 +815,7 @@ describe('HistoryApp degraded data', () => {
     render(<HistoryApp />);
 
     await waitFor(() => {
-      expect(screen.getByTitle('Refresh conversation history')).toBeDefined();
+      expect(screen.getByRole('button', { name: 'Refresh conversation history' })).toBeDefined();
     });
     await userEvent.click(screen.getByRole('button', { name: /Analytics/ }));
 
@@ -868,9 +915,6 @@ describe('HistoryApp keyboard shortcuts', () => {
     await userEvent.keyboard('5');
     expect(await screen.findByRole('dialog', { name: 'Settings' })).toBeDefined();
     await userEvent.keyboard('{Escape}');
-
-    await userEvent.keyboard('6');
-    expect(await screen.findByRole('button', { name: 'Board' })).toBeDefined();
 
     await userEvent.keyboard('2');
     expect(await screen.findByText(/No analytics for/)).toBeDefined();
@@ -981,7 +1025,7 @@ describe('HistoryApp archived transcripts', () => {
   });
 });
 
-describe('HistoryApp board', () => {
+describe('HistoryApp file edits', () => {
   test('opens the edits a session made beside its transcript, and jumps to the turn', async () => {
     vi.stubGlobal(
       'fetch',
@@ -1038,35 +1082,6 @@ describe('HistoryApp board', () => {
     await userEvent.click(await screen.findByText('Login fix'));
 
     expect(await screen.findByText('the question')).toBeDefined();
-  });
-
-  test('still reaches the board from the sessions strip', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn((url: RequestInfo | URL) => {
-        const path = toPath(url);
-
-        if (path.endsWith('/projects')) {
-          return Response.json(projectPayload);
-        }
-        if (path.endsWith('/sessions')) {
-          return Response.json(sessionsPayload('alpha'));
-        }
-        if (path.endsWith('/recent-edits')) {
-          return Response.json({ files: [] });
-        }
-
-        return Response.json({ stats: null });
-      }),
-    );
-
-    render(<HistoryApp />);
-    await screen.findByText('alpha');
-    await openProject('alpha');
-    await userEvent.click(screen.getByRole('button', { name: /^Sessions/u }));
-    await userEvent.click(await screen.findByRole('button', { name: 'Board' }));
-
-    expect(document.querySelector('[data-board-view]')).not.toBeNull();
   });
 });
 
@@ -1165,7 +1180,7 @@ describe('HistoryApp settings', () => {
 
     expect(screen.queryByRole('dialog')).toBeNull();
 
-    await userEvent.click(screen.getByTitle('Settings'));
+    await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
 
     expect(await screen.findByRole('dialog', { name: 'Settings' })).toBeDefined();
 

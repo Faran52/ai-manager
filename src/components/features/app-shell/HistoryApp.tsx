@@ -12,6 +12,7 @@ import { motion, MotionConfig } from 'motion/react';
 import { appShortcuts } from '@config/shortcuts';
 
 import {
+  createArchive,
   deleteProject,
   deleteSession,
   renameSession,
@@ -20,20 +21,14 @@ import {
 import { findAgentProject } from '@services/history/historyService';
 import { isTypingTarget, matchesShortcut } from '@utils/shortcutUtils';
 
-import {
-  Button,
-  fadeTransition,
-  Toast,
-} from '@ui/index';
+import { fadeTransition, Toast } from '@ui/index';
 import { AgentSetupPanel, usePluginToggle } from '@features/agent-setup';
 import { AnalyticsView, useAnalyticsScope } from '@features/analytics';
-import { AppHeader } from '@features/app-header';
+import { AppHeader, CommandBar } from '@features/app-header';
 import { ArchiveView } from '@features/archive';
-import { BoardPanels, editsInSession } from '@features/board';
 import {
   useAgentSetup,
   useArchives,
-  useNewestSessions,
   useProjects,
   useProjectStats,
   useRecentEdits,
@@ -44,7 +39,12 @@ import {
   useStorage,
 } from '@features/history-data';
 import { SearchDialog } from '@features/search';
-import { SessionViewer } from '@features/session-viewer';
+import {
+  CopyTranscriptButton,
+  editsInSession,
+  ExportMenu,
+  SessionViewer,
+} from '@features/session-viewer';
 import { SettingsSheet } from '@features/settings';
 import { SidebarPane } from '@features/sidebar';
 import { useTheme } from '@features/theme';
@@ -58,43 +58,26 @@ import type { ShortcutSpec } from '@config/shortcuts';
 import type { AppView } from '@features/app-header';
 import type { ArchivedSession } from '@services/archive/archiveService';
 import type { FileEdit } from '@services/edits/editsService';
-import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
+import type {
+  HistoryEntry,
+  ProjectSummary,
+  SessionSummary,
+} from '@services/history/historyService';
 import type { SearchHit } from '@services/search/searchService';
 import type { SessionTokenTotals } from '@services/stats/statsService';
 import type { FC, ReactNode } from 'react';
-
-/*
- * A session browser, a transcript and that session's file edits are three
- * readings of one thing, so they live together here rather than half of them
- * under Analytics, which only reports.
- */
-type SessionsPanel = 'transcript' | 'grid' | 'edits';
 
 const EMPTY_PROJECTS: readonly ProjectSummary[] = [];
 
 initI18n();
 
-/*
- * File edits left this strip: the edits belong to the session on screen, so they
- * open as a panel beside the transcript rather than replacing it.
- */
-const SESSION_PANELS: readonly SessionsPanel[] = ['transcript', 'grid'];
-
-const SESSION_PANEL_LABELS: Record<SessionsPanel, string> = {
-  transcript: 'navTranscript',
-  grid: 'navBoard',
-  edits: 'navEdits',
-};
-
 export const HistoryApp: FC = () => {
   const { t } = useTranslation('sidebar');
   const { t: tArchive } = useTranslation('archive');
-  const { t: tCommon } = useTranslation('common');
   const projects = useProjects();
   const [selectedProject, setSelectedProject] = useState<ProjectSummary | null>(null);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const [view, setView] = useState<AppView>('analytics');
-  const [sessionsPanel, setSessionsPanel] = useState<SessionsPanel>('transcript');
   const projectKey = selectedProject == null
     ? ''
     : `${selectedProject.agent}:${selectedProject.id}`;
@@ -105,6 +88,9 @@ export const HistoryApp: FC = () => {
   const [retentionNotice, setRetentionNotice] = useState<string | null>(null);
   const [highlightTimestamp, setHighlightTimestamp] = useState<string | undefined>(undefined);
   const [archivedSession, setArchivedSession] = useState<ArchivedSession | null>(null);
+  // The transcript the viewer has loaded, lifted here so the command bar's
+  // export menu can sit beside Archive rather than inside the viewer's header.
+  const [openEntries, setOpenEntries] = useState<readonly HistoryEntry[]>([]);
   const [nowMs] = useState(() => {
     return Date.now();
   });
@@ -118,13 +104,8 @@ export const HistoryApp: FC = () => {
   const storage = useStorage(view === 'analytics');
   const [settingsAgent, setSettingsAgent] = useState<AgentId>('claude');
   const settings = useSettings(settingsOpen ? projectPath : null, settingsAgent);
-  const boardScope = view === 'sessions' && sessionsPanel !== 'transcript';
-  /*
-   * The edits feed the board and the transcript's own edits panel, so it loads
-   * for the whole Sessions view rather than for the board alone.
-   */
+  // The transcript's edits panel reads this list, narrowed to the open session.
   const edits = useRecentEdits(selectedProject, view === 'sessions');
-  const newestSessions = useNewestSessions(boardScope && selectedProject == null);
   const sessionCounts = useMemo(() => {
     const path = selectedProject?.actualPath;
 
@@ -214,10 +195,6 @@ export const HistoryApp: FC = () => {
       [appShortcuts.viewSettings, () => {
         setSettingsOpen(true);
       }],
-      [appShortcuts.viewBoard, () => {
-        setView('sessions');
-        setSessionsPanel('grid');
-      }],
       [appShortcuts.reload, reloadProjects],
     ];
 
@@ -250,13 +227,9 @@ export const HistoryApp: FC = () => {
     setArchivedSession(null);
   }, []);
 
-  /*
-   * Every way of opening a transcript lands in the same place, so asking for
-   * one from the prompt list does not leave the list still covering it.
-   */
+  // Every way of opening a transcript lands on the Sessions view.
   const showSession = useCallback(() => {
     setView('sessions');
-    setSessionsPanel('transcript');
   }, []);
 
   const selectSession = useCallback((session: SessionSummary) => {
@@ -308,6 +281,20 @@ export const HistoryApp: FC = () => {
     projects.reload();
   }, [projects, selectedFilePath, sessions]);
 
+  // Archives the open transcript on its own, the same copy-only operation the
+  // sidebar's bulk select makes, so it survives the agent's next cleanup.
+  const archiveOpenSession = useCallback(async () => {
+    /* v8 ignore next 3 -- the command bar only wires this in with a session open */
+    if (selectedSession?.actualSessionId == null) {
+      return;
+    }
+
+    await createArchive({
+      sessionKeys: [`${selectedSession.agent}:${selectedSession.actualSessionId}`],
+    });
+    setRetentionNotice(t('sessionArchived', { ns: 'common' }));
+  }, [selectedSession, t]);
+
   const jumpToHit = useCallback(
     (hit: SearchHit) => {
       setView('sessions');
@@ -344,70 +331,38 @@ export const HistoryApp: FC = () => {
     [showSession],
   );
 
+  const openAgent = archivedSession?.agent
+    ?? selectedSession?.agent
+    ?? selectedProject?.agent
+    ?? 'claude';
+  const openTitle = archivedSession?.title
+    ?? selectedSession?.title
+    ?? selectedSession?.summary
+    ?? selectedSession?.preview;
+  const openProject = archivedSession?.projectName ?? selectedProject?.name ?? '';
+  const transcriptTitle = openTitle
+    ?? selectedFilePath?.split('/').at(-1)
+    ?? t('session', { ns: 'common' });
+  const transcriptOpen = view === 'sessions' && openEntries.length > 0;
+
   const VIEWS: Record<AppView, ReactNode> = {
     sessions: (
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <nav
-          className="
-            flex shrink-0 items-center gap-1 border-b border-border px-3 py-2
-          "
-          aria-label={tCommon('sessionsPanels')}
-        >
-          {SESSION_PANELS.map((name) => {
-            return (
-              <Button
-                key={name}
-                size="sm"
-                variant={name === sessionsPanel ? 'primary' : 'ghost'}
-                pressed={name === sessionsPanel}
-                onClick={() => {
-                  setSessionsPanel(name);
-                }}
-              >
-                {tCommon(SESSION_PANEL_LABELS[name])}
-              </Button>
-            );
-          })}
-        </nav>
-
-        {sessionsPanel === 'transcript'
-          ? (
-              <SessionViewer
-                filePath={selectedFilePath}
-                agent={archivedSession?.agent
-                  ?? selectedSession?.agent
-                  ?? selectedProject?.agent
-                  ?? 'claude'}
-                projectLabel={archivedSession?.projectName ?? selectedProject?.name ?? ''}
-                sessionTitle={archivedSession?.title
-                  ?? selectedSession?.title
-                  ?? selectedSession?.summary
-                  ?? selectedSession?.preview}
-                gitBranch={selectedSession?.gitBranch}
-                highlightTimestamp={highlightTimestamp}
-                sourceModifiedMs={selectedSession?.modifiedMs ?? 0}
-                editedFiles={editsInSession(edits.data ?? [], selectedFilePath ?? undefined)}
-                editsStatus={edits.status}
-                editsError={edits.error}
-                projectPath={selectedProject?.actualPath}
-                nowMs={nowMs}
-                onOpenEdit={openEditedSession}
-              />
-            )
-          : (
-              <div className="min-h-0 flex-1 overflow-y-auto">
-                <BoardPanels
-                  sessions={selectedProject == null
-                    ? newestSessions.data ?? []
-                    : sessionList}
-                  sessionsStatus={selectedProject == null
-                    ? newestSessions.status
-                    : sessions.status}
-                  nowMs={nowMs}
-                  onOpenSession={selectSession}
-                />
-              </div>
-            )}
+        <SessionViewer
+          filePath={selectedFilePath}
+          agent={openAgent}
+          sessionTitle={openTitle}
+          gitBranch={selectedSession?.gitBranch}
+          highlightTimestamp={highlightTimestamp}
+          sourceModifiedMs={selectedSession?.modifiedMs ?? 0}
+          editedFiles={editsInSession(edits.data ?? [], selectedFilePath ?? undefined)}
+          editsStatus={edits.status}
+          editsError={edits.error}
+          projectPath={selectedProject?.actualPath}
+          nowMs={nowMs}
+          onOpenEdit={openEditedSession}
+          onEntriesLoaded={setOpenEntries}
+        />
       </div>
     ),
     analytics: (
@@ -418,7 +373,7 @@ export const HistoryApp: FC = () => {
         projectName={selectedProject?.name ?? t('noProject')}
         scope={analyticsScope}
         projectAgent={selectedProject?.agent}
-        sessions={analyticsScope === 'global' ? newestSessions.data ?? [] : sessionList}
+        sessions={sessionList}
         onOpenSession={openStatsSession}
       />
     ),
@@ -454,39 +409,77 @@ export const HistoryApp: FC = () => {
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="flex h-dvh overflow-hidden bg-background text-foreground">
-        {/*
-          * The rail sits flush at the window edge, ahead of everything else, so
-          * where you are never scrolls away with what you are looking at.
-          */}
-        <NavRail
-          flagged={(agentSetup.data?.findings ?? []).length}
-          view={view}
-          onViewChange={setView}
+      <div className="
+        flex h-dvh flex-col overflow-hidden bg-recess text-foreground
+      "
+      >
+        <UpdateBanner />
+        {/* Titlebar and command bar run the full width, above the rail: the
+            chrome frames the window, the rail is a control inside it. */}
+        <AppHeader
+          onOpenSearch={() => {
+            setSearchOpen(true);
+          }}
+          onOpenSettings={() => {
+            setSettingsOpen(true);
+          }}
+          onReload={projects.reload}
         />
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <UpdateBanner />
-          <AppHeader
-            onOpenSearch={() => {
-              setSearchOpen(true);
-            }}
-            onOpenSettings={() => {
-              setSettingsOpen(true);
-            }}
-            onReload={projects.reload}
-          />
+        <CommandBar
+          view={view}
+          projectName={selectedProject?.name ?? null}
+          scope={analyticsScope}
+          onScopeChange={setAnalyticsScope}
+          onArchiveSession={view === 'sessions' && selectedSession?.actualSessionId != null
+            ? archiveOpenSession
+            : null}
+          onNotice={setRetentionNotice}
+          actions={transcriptOpen
+            ? (
+                <CopyTranscriptButton
+                  key={selectedFilePath ?? ''}
+                  entries={openEntries}
+                  project={openProject}
+                  title={transcriptTitle}
+                />
+              )
+            : null}
+          overflow={transcriptOpen
+            ? (
+                <ExportMenu
+                  entries={openEntries}
+                  project={openProject}
+                  title={transcriptTitle}
+                />
+              )
+            : null}
+        />
 
+        <div className="flex min-h-0 flex-1 overflow-hidden">
           {/*
-            * The sidebar sizes itself from the columns it is holding open, so
-            * folding one gives the width back to the pane rather than to the
-            * other column.
+            * The rail sits at the window edge, ahead of the columns, so where
+            * you are never scrolls away with what you are looking at.
             */}
-          <div className="flex min-h-0 flex-1 overflow-hidden">
+          <NavRail
+            flagged={(agentSetup.data?.findings ?? []).length}
+            view={view}
+            onViewChange={setView}
+          />
+          {/*
+            * The columns are cards on a darker canvas, and the sidebar sizes
+            * itself from the ones it holds open, so folding one gives the width
+            * back to the pane rather than to the other column. The 8px gaps
+            * between them are the resize dividers, which is why there is no gap
+            * class here.
+            */}
+          <div className="flex min-h-0 min-w-0 flex-1 p-2">
             <SidebarPane
               wholeMachine={analyticsScope === 'global'}
               onSelectAllProjects={() => {
                 setAnalyticsScope('global');
               }}
+              showSessions={view === 'sessions'}
+              showAllProjects={view === 'sessions' || view === 'analytics'}
               projects={visibleProjects}
               projectsStatus={projects.status}
               selectedProject={selectedProject}
@@ -505,7 +498,10 @@ export const HistoryApp: FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={fadeTransition}
-              className="flex min-h-0 min-w-0 flex-col overflow-hidden"
+              className="
+                flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg
+                border border-border bg-background
+              "
             >
               {VIEWS[view]}
             </motion.div>

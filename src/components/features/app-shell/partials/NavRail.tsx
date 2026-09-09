@@ -1,4 +1,3 @@
-import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -7,11 +6,10 @@ import {
   HeartPulse,
   MessageSquare,
 } from 'lucide-react';
-import { motion } from 'motion/react';
 
 import { cn } from '@utils/cnUtils';
 
-import { controlTransition, Tooltip } from '@ui/index';
+import { Tooltip } from '@ui/index';
 
 import type { AppView } from '@features/app-header';
 import type { FC, ReactNode } from 'react';
@@ -63,16 +61,14 @@ export const NavRail: FC<NavRailProps> = ({
   flagged,
 }) => {
   const { t } = useTranslation('common');
-  // Unique per rail, so a second one would not animate into this one's marker.
-  const markerId = useId();
 
   return (
     <nav
       aria-label={t('navPrimary')}
       data-nav-rail
       className="
-        flex w-12 shrink-0 flex-col items-center gap-1 border-e border-border
-        bg-background py-3
+        flex w-14 shrink-0 flex-col items-center gap-1.5 border-e border-border
+        bg-recess py-3
       "
     >
       {DESTINATIONS.map((destination) => {
@@ -90,19 +86,12 @@ export const NavRail: FC<NavRailProps> = ({
                 onViewChange(destination.id);
               }}
               className={cn(`
-                relative flex size-9 items-center justify-center rounded-md
-                text-muted-foreground transition-colors
+                relative flex size-10 items-center justify-center rounded-lg
+                text-faint transition-colors
                 hover:text-foreground
                 focus-visible:ring-2 focus-visible:ring-ring
-              `, active && 'text-primary')}
+              `, active && 'bg-accent text-primary')}
             >
-              {active && (
-                <motion.span
-                  className="absolute inset-0 -z-10 rounded-md bg-accent"
-                  layoutId={markerId}
-                  transition={controlTransition}
-                />
-              )}
               {destination.icon}
               {destination.id === 'health' && flagged > 0 && (
                 <span
