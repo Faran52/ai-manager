@@ -1,5 +1,8 @@
+import { withinDateFilter } from './dateFilterUtils';
+
 import type { AgentId } from '@config/agents';
 import type { ProjectSummary } from '@services/history/historyService';
+import type { DateFilter } from './dateFilterUtils';
 
 export interface TreeAgentBranch {
   readonly agent: AgentId;
@@ -25,6 +28,11 @@ export interface TreeProjectGroup {
 export interface BuildProjectTreeOptions {
   readonly agentFilter: readonly AgentId[];
   readonly textFilter: string;
+  // The funnel's date window and reading direction, both defaulted so callers
+  // that do not offer them (and their tests) need no change.
+  readonly dateFilter?: DateFilter | undefined;
+  readonly order?: 'newest' | 'oldest' | undefined;
+  readonly nowMs?: number | undefined;
 }
 
 /**
@@ -50,9 +58,12 @@ export const buildProjectTree = (
   options: BuildProjectTreeOptions,
 ): readonly TreeProjectGroup[] => {
   const needle = options.textFilter.trim().toLowerCase();
+  const dateFilter = options.dateFilter ?? 'all';
+  const nowMs = options.nowMs ?? Date.now();
 
   const grouped = Map.groupBy(projects.filter((project) => {
-    return options.agentFilter.length === 0 || options.agentFilter.includes(project.agent);
+    return (options.agentFilter.length === 0 || options.agentFilter.includes(project.agent))
+      && withinDateFilter(project.lastActivityMs, dateFilter, nowMs);
   }), groupKeyOf);
 
   const groups: TreeProjectGroup[] = [];
@@ -111,7 +122,9 @@ export const buildProjectTree = (
   }
 
   groups.sort((left, right) => {
-    return right.lastActivityMs - left.lastActivityMs;
+    return options.order === 'oldest'
+      ? left.lastActivityMs - right.lastActivityMs
+      : right.lastActivityMs - left.lastActivityMs;
   });
 
   return groups;

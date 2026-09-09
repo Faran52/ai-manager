@@ -1,8 +1,7 @@
-import { agentOption } from '@config/agents';
-
 import { cn } from '@utils/cnUtils';
+import { initialsOf } from '@utils/initialsUtils';
 
-import { Tooltip } from '@ui/index';
+import { AgentMark, Tooltip } from '@ui/index';
 
 import { PanelToggle } from './PanelToggle';
 
@@ -26,16 +25,13 @@ export interface CollapsedStripProps {
   readonly onExpand: () => void;
 }
 
-// "Claude Code" reads as CC and "OpenCode" as OC, so the capitals are the mark
-// wherever there are two. A folder name has none, and keeps its first letters.
-const initialsOf = (label: string): string => {
-  const capitals = label.replace(/[^\p{Lu}]/gu, '');
-
-  return (capitals.length > 1 ? capitals : label).slice(0, 2);
-};
-
-const markOf = (item: StripItem): ReactNode => {
-  return item.mark ?? initialsOf(item.agent == null ? item.label : agentOption(item.agent).label);
+/**
+ * A session folds to the agent circle its open row carries; a project with no
+ * agent folds to a square of the first letters of its folder name (there are no
+ * capitals to read).
+ */
+const projectMark = (item: StripItem): ReactNode => {
+  return item.mark ?? initialsOf(item.label);
 };
 
 /**
@@ -50,10 +46,7 @@ export const CollapsedStrip: FC<CollapsedStripProps> = ({
   onExpand,
 }) => {
   return (
-    <div className="
-      flex w-14 shrink-0 flex-col overflow-hidden border-e border-border
-    "
-    >
+    <div className="flex w-full shrink-0 flex-col overflow-hidden">
       <div className="
         flex h-9 shrink-0 items-center justify-center border-b border-border
       "
@@ -86,17 +79,23 @@ export const CollapsedStrip: FC<CollapsedStripProps> = ({
                       "
                     />
                   )}
-                  <span
-                    data-agent={item.agent}
-                    className={cn(`
-                      flex size-8 items-center justify-center text-figure
-                      font-semibold
-                    `, item.agent == null
-                      ? 'rounded-md bg-muted text-muted-foreground'
-                      : 'sidebar-agent-mark rounded-full')}
-                  >
-                    {markOf(item)}
-                  </span>
+                  {item.agent == null
+                    ? (
+                        <span className="
+                          flex size-8 items-center justify-center rounded-md
+                          bg-muted text-figure font-semibold
+                          text-muted-foreground
+                        "
+                        >
+                          {projectMark(item)}
+                        </span>
+                      )
+                    : (
+                        <AgentMark
+                          agent={item.agent}
+                          className="size-8 text-figure"
+                        />
+                      )}
                 </button>
               </Tooltip>
             </li>

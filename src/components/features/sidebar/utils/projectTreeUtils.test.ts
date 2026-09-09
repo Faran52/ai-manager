@@ -84,6 +84,43 @@ describe('buildProjectTree', () => {
     expect(tree[0]?.agents).toHaveLength(1);
   });
 
+  test('drops folders whose last activity falls outside the date window', () => {
+    const nowMs = Date.UTC(2026, 5, 1);
+    const projects = [
+      project('claude', 'fresh', 'fresh', '/repo/fresh', nowMs - 2 * 86_400_000),
+      project('claude', 'stale', 'stale', '/repo/stale', nowMs - 40 * 86_400_000),
+    ];
+
+    const tree = buildProjectTree(projects, {
+      agentFilter: [],
+      textFilter: '',
+      dateFilter: 'week',
+      nowMs,
+    });
+
+    expect(tree.map((group) => {
+      return group.name;
+    })).toEqual(['fresh']);
+  });
+
+  test('reads the list oldest first when asked', () => {
+    const tree = buildProjectTree(
+      [
+        project('claude', 'a', 'older', '/repo/older', 1),
+        project('claude', 'b', 'newer', '/repo/newer', 9),
+      ],
+      {
+        agentFilter: [],
+        textFilter: '',
+        order: 'oldest',
+      },
+    );
+
+    expect(tree.map((group) => {
+      return group.name;
+    })).toEqual(['older', 'newer']);
+  });
+
   test('marks a folder name match and rejects an absent match', () => {
     const projects = [project('claude', 'app', 'Workspace', '/repo/app', 1)];
 

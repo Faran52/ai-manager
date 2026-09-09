@@ -4,8 +4,6 @@ import { Layers } from 'lucide-react';
 
 import { agentOption } from '@config/agents';
 
-import { cn } from '@utils/cnUtils';
-
 import type { AgentId } from '@config/agents';
 import type { ProjectSummary } from '@services/history/historyService';
 import type { FC } from 'react';
@@ -14,6 +12,9 @@ export interface AllProjectsCardProps {
   readonly projects: readonly ProjectSummary[];
   readonly selected: boolean;
   readonly onSelect: () => void;
+  // The agents narrowing the list below, and a toggle for each tally chip.
+  readonly activeAgents: readonly AgentId[];
+  readonly onToggleAgent: (agent: AgentId) => void;
 }
 
 interface AgentTally {
@@ -42,15 +43,16 @@ const talliedBy = (projects: readonly ProjectSummary[]): readonly AgentTally[] =
  * Every project at once, pinned above the list rather than first inside it.
  *
  * It is not a project, so it must not read as one of the eight: it sits outside
- * the scroller, so it cannot scroll away with the list it scopes, and the rule
- * under it runs the full width of the drawer to read as the edge of the list
- * rather than a gap in it. A layers mark and a count stand in for the initials
- * and the path a project would carry.
+ * the scroller and the rule under it runs the full width of the drawer. Its
+ * agent tallies are branches like a project card's, and picking one narrows the
+ * list to what that agent has touched.
  */
 export const AllProjectsCard: FC<AllProjectsCardProps> = ({
   projects,
   selected,
   onSelect,
+  activeAgents,
+  onToggleAgent,
 }) => {
   const { t } = useTranslation('sidebar');
   const tallies = talliedBy(projects);
@@ -59,78 +61,58 @@ export const AllProjectsCard: FC<AllProjectsCardProps> = ({
   }, 0);
 
   return (
-    <div className="shrink-0 border-b border-border px-3 pt-1 pb-2.5">
-      <button
-        type="button"
-        aria-pressed={selected}
-        data-all-projects
-        onClick={onSelect}
-        className={cn(`
-          relative w-full overflow-hidden rounded-lg border px-2.5 py-2
-          text-start transition-colors
-          focus-visible:ring-2 focus-visible:ring-ring
-        `, selected
-          ? 'border-border bg-accent'
-          : `
-            border-transparent bg-card
-            hover:bg-accent/50
-          `)}
-      >
-        {selected && (
-          <span
-            aria-hidden="true"
-            className="
-              absolute inset-y-2.5 inset-s-0 w-0.5 rounded-e-full bg-primary
-            "
-          />
-        )}
-        <span className="flex items-center gap-2">
-          <span className="
-            flex size-5 shrink-0 items-center justify-center rounded-md bg-muted
-            text-faint
-          "
-          >
+    <div className="all-projects-pin">
+      <div className="project-card" data-active={selected}>
+        <button
+          type="button"
+          aria-pressed={selected}
+          data-all-projects
+          onClick={onSelect}
+          aria-label={t('allProjects')}
+          className="project-card-heading"
+        >
+          <span aria-hidden="true" className="project-card-badge">
             <Layers className="size-3" />
           </span>
-          <span className="
-            min-w-0 truncate text-ui font-semibold text-foreground
-          "
-          >
-            {t('allProjects')}
-          </span>
-          <span className="ms-auto shrink-0 font-mono text-figure text-faint">
+          <span className="project-card-name">{t('allProjects')}</span>
+          <span className="project-card-total">
             {t('sessionTally', { count: sessions })}
           </span>
-        </span>
-        <span className="mt-0.5 block font-mono text-figure text-dim">
+        </button>
+        <p className="project-card-path">
           {t('projectTally', { count: projects.length })}
-        </span>
+        </p>
         {tallies.length > 0 && (
-          <span className="mt-2 flex flex-wrap gap-1">
+          <div className="project-providers">
             {tallies.map((tally) => {
+              const active = activeAgents.includes(tally.agent);
+
               return (
-                <span
-                  data-agent={tally.agent}
+                <button
+                  type="button"
                   key={tally.agent}
-                  className="
-                    inline-flex items-center gap-1.5 rounded-md bg-muted px-1.5
-                    py-0.5 text-figure text-foreground-2
-                  "
+                  data-agent={tally.agent}
+                  data-selected={active}
+                  aria-pressed={active}
+                  aria-label={`${agentOption(tally.agent).label}, ${t('sessionTally', {
+                    count: tally.sessions,
+                  })}`}
+                  onClick={() => {
+                    onToggleAgent(tally.agent);
+                  }}
+                  className="project-provider"
                 >
-                  <span
-                    aria-hidden="true"
-                    className="
-                      project-provider-dot size-1.5 rounded-full bg-current
-                    "
-                  />
-                  {agentOption(tally.agent).label}
-                  <span className="font-mono text-faint">{tally.sessions}</span>
-                </span>
+                  <span className="project-provider-dot" aria-hidden />
+                  <span className="project-provider-name">
+                    {agentOption(tally.agent).label}
+                  </span>
+                  <span className="project-provider-count">{tally.sessions}</span>
+                </button>
               );
             })}
-          </span>
+          </div>
         )}
-      </button>
+      </div>
     </div>
   );
 };

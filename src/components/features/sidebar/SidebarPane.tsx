@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useEffect,
   useMemo,
   useState,
@@ -14,9 +15,9 @@ import {
   Search,
   Square,
 } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 
 import { agentOption } from '@config/agents';
-import { appConfig } from '@config/appConfig';
 import {
   projectsDrawerStorageKey,
   projectsPaneStorageKey,
@@ -31,7 +32,10 @@ import { toErrorMessage } from '@utils/errorUtils';
 import { formatTimeAgo } from '@utils/formatUtils';
 
 import {
+  AgentMark,
   EmptyState,
+  fadeTransition,
+  foldTransition,
   PaneDivider,
   SectionHeader,
   Spinner,
@@ -40,7 +44,6 @@ import {
 } from '@ui/index';
 
 import {
-  AgentFilterBar,
   ConfirmDeleteDialog,
   ConfirmDeleteProjectDialog,
   ProjectTree,
@@ -50,9 +53,12 @@ import {
 } from './partials';
 import { AllProjectsCard } from './partials/AllProjectsCard';
 import { CollapsedStrip } from './partials/CollapsedStrip';
+import { FunnelMenu } from './partials/FunnelMenu';
 import { PanelToggle } from './partials/PanelToggle';
 import { exportSessions } from './utils/bulkExportUtils';
+import { withinDateFilter } from './utils/dateFilterUtils';
 import { buildProjectTree } from './utils/projectTreeUtils';
+import { groupSessionsByRecency } from './utils/sessionGroupUtils';
 import { buildSessionThreads } from './utils/sessionThreadUtils';
 
 import type { AgentId } from '@config/agents';
@@ -65,6 +71,9 @@ import type {
 } from 'react';
 import type { SidebarMenuTarget } from './partials';
 import type { StripItem } from './partials/CollapsedStrip';
+import type { FunnelOrder } from './partials/FunnelMenu';
+import type { DateFilter } from './utils/dateFilterUtils';
+import type { RecencyBucket } from './utils/sessionGroupUtils';
 
 export interface SidebarPaneProps {
   readonly projects: readonly ProjectSummary[];
@@ -82,6 +91,14 @@ export interface SidebarPaneProps {
   readonly onDeleteProject: (project: ProjectSummary) => Promise<void>;
   readonly onRenameSession: (session: SessionSummary, title: string) => Promise<void>;
   readonly onDeleteSession: (session: SessionSummary) => Promise<void>;
+  /**
+   * The session list belongs to the transcript beside it, so it rides along
+   * with the Sessions view only. Health and Archive read the projects column
+   * alone; folding this away keeps the pane about what it reports.
+   */
+  readonly showSessions?: boolean;
+  // The scope card is pinned above the list where a report can be global.
+  readonly showAllProjects?: boolean;
 }
 
 const MIN_PROJECTS_WIDTH = 200;
@@ -90,10 +107,29 @@ const DEFAULT_PROJECTS_WIDTH = 260;
 const MIN_SESSIONS_WIDTH = 280;
 const MAX_SESSIONS_WIDTH = 520;
 const DEFAULT_SESSIONS_WIDTH = 320;
+// The width a column folds to: its strip of marks, w-14 in the tailwind scale.
+const COLLAPSED_WIDTH = '3.5rem';
 
 // A session is named by whatever it carries, and every agent carries a different one of these.
 const titleOf = (session: SessionSummary): string => {
   return session.title ?? session.summary ?? session.preview ?? session.id;
+};
+
+/*
+ * The line under the title, only when there is a distinct first message to
+ * show: if the row is already named by its summary or preview, printing it
+ * twice says nothing.
+ */
+const previewOf = (session: SessionSummary): string | null => {
+  const line = session.summary ?? session.preview;
+
+  return line == null || line === titleOf(session) ? null : line;
+};
+
+const BUCKET_LABEL: Record<RecencyBucket, string> = {
+  today: 'recencyToday',
+  week: 'recencyWeek',
+  earlier: 'recencyEarlier',
 };
 
 const storedWidth = (key: string, fallback: number, min: number, max: number): number => {
@@ -117,10 +153,16 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
   onDeleteProject,
   onRenameSession,
   onDeleteSession,
+  showSessions = true,
+  showAllProjects = true,
 }) => {
   const { t, i18n } = useTranslation('sidebar');
   const [projectFilter, setProjectFilter] = useState('');
   const [sessionFilter, setSessionFilter] = useState('');
+  const [projectDateFilter, setProjectDateFilter] = useState<DateFilter>('all');
+  const [projectOrder, setProjectOrder] = useState<FunnelOrder>('newest');
+  const [sessionDateFilter, setSessionDateFilter] = useState<DateFilter>('all');
+  const [sessionOrder, setSessionOrder] = useState<FunnelOrder>('newest');
   const [projectsWidth, setProjectsWidth] = useState(() => {
     return storedWidth(
       projectsPaneStorageKey,
@@ -154,18 +196,13 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
   const [deleteProjectTarget, setDeleteProjectTarget] = useState<ProjectSummary | null>(null);
   const [deleteTargets, setDeleteTargets] = useState<readonly SessionSummary[]>([]);
   const [expandedThreads, setExpandedThreads] = useState<readonly string[]>([]);
+  const [collapsedGroups, setCollapsedGroups] = useState<readonly RecencyBucket[]>([]);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [bulkNotice, setBulkNotice] = useState<string | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedSessionPaths, setSelectedSessionPaths] = useState<readonly string[]>([]);
   const [mutationBusy, setMutationBusy] = useState(false);
   const [mutationError, setMutationError] = useState('');
-
-  const availableAgents = useMemo(() => {
-    return [...new Set(projects.map((project) => {
-      return project.agent;
-    }))];
-  }, [projects]);
 
   const agentCounts = useMemo(() => {
     const counts = new Map<AgentId, number>();
@@ -180,19 +217,23 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
   const visibleSessions = useMemo(() => {
     const needle = sessionFilter.trim().toLowerCase();
 
-    return needle.length === 0
-      ? sessions
-      : sessions.filter((session) => {
-          const haystack = [
-            session.title,
-            session.summary,
-            session.preview,
-            session.gitBranch,
-          ].join(' ').toLowerCase();
+    return sessions.filter((session) => {
+      if (!withinDateFilter(session.lastTimestampMs, sessionDateFilter, nowMs)) {
+        return false;
+      }
 
-          return haystack.includes(needle);
-        });
-  }, [sessionFilter, sessions]);
+      if (needle.length === 0) {
+        return true;
+      }
+
+      return [
+        session.title,
+        session.summary,
+        session.preview,
+        session.gitBranch,
+      ].join(' ').toLowerCase().includes(needle);
+    });
+  }, [nowMs, sessionDateFilter, sessionFilter, sessions]);
 
   /**
    * Resuming or compacting a session writes a fresh transcript, so one piece of
@@ -200,7 +241,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
    * parts rather than as unrelated neighbours in the list.
    */
   const sessionRows = useMemo(() => {
-    return buildSessionThreads(visibleSessions).flatMap((thread) => {
+    return buildSessionThreads(visibleSessions, sessionOrder).flatMap((thread) => {
       const head = {
         session: thread.head,
         threadKey: thread.key,
@@ -223,7 +264,11 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
         };
       })];
     });
-  }, [expandedThreads, visibleSessions]);
+  }, [expandedThreads, sessionOrder, visibleSessions]);
+
+  const sessionGroups = useMemo(() => {
+    return groupSessionsByRecency(sessionRows, nowMs);
+  }, [nowMs, sessionRows]);
 
   const selectableSessions = useMemo(() => {
     return visibleSessions.filter((session) => {
@@ -249,6 +294,35 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
             return open !== key;
           })
         : [...current, key];
+    });
+  };
+
+  const toggleGroup = (bucket: RecencyBucket): void => {
+    setCollapsedGroups((current) => {
+      return current.includes(bucket)
+        ? current.filter((shut) => {
+            return shut !== bucket;
+          })
+        : [...current, bucket];
+    });
+  };
+
+  /*
+   * Empty means every agent, so the first pick narrows to just that one and
+   * clearing the last pick widens back out. The all-projects tallies and the
+   * funnel's Agents submenu both drive this.
+   */
+  const toggleProjectAgent = (agent: AgentId): void => {
+    setActiveAgents((current) => {
+      if (current.length === 0) {
+        return [agent];
+      }
+
+      return current.includes(agent)
+        ? current.filter((item) => {
+            return item !== agent;
+          })
+        : [...current, agent];
     });
   };
 
@@ -292,12 +366,6 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
     return new Set(projects.map((project) => {
       return project.actualPath ?? `name:${project.name}`;
     })).size;
-  }, [projects]);
-
-  const sessionCount = useMemo(() => {
-    return projects.reduce((total, project) => {
-      return total + project.sessionCount;
-    }, 0);
   }, [projects]);
 
   const allSelectableSelected = selectableSessions.length > 0
@@ -422,19 +490,24 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
    */
   const projectStripItems = (): readonly StripItem[] => {
     return [
-      {
-        id: 'all-projects',
-        label: t('allProjects'),
-        mark: <Layers className="size-3.5" />,
-        selected: wholeMachine,
-        onSelect: () => {
-          exitSelectionMode();
-          onSelectAllProjects();
-        },
-      },
+      ...showAllProjects
+        ? [{
+            id: 'all-projects',
+            label: t('allProjects'),
+            mark: <Layers className="size-3.5" />,
+            selected: wholeMachine,
+            onSelect: () => {
+              exitSelectionMode();
+              onSelectAllProjects();
+            },
+          }]
+        : [],
       ...buildProjectTree(projects, {
         agentFilter: activeAgents,
         textFilter: projectFilter,
+        dateFilter: projectDateFilter,
+        order: projectOrder,
+        nowMs,
       }).flatMap((group) => {
         const branch = group.agents[0];
 
@@ -506,56 +579,94 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
   }
 
   return (
-    <aside className="flex min-h-0 shrink-0 flex-col overflow-hidden bg-card/80" data-sidebar>
-      <div className="flex min-h-0 flex-1 overflow-hidden">
-        {projectsOpen
-          ? (
-              <>
-                <section className="flex min-h-0 shrink-0 flex-col" style={{ width: projectsWidth }}>
+    <aside className="flex min-h-0 shrink-0 overflow-hidden" data-sidebar>
+      {/*
+        * A column is never swapped for its strip: the width springs between the
+        * two on a spring that carries velocity through an interrupting click,
+        * and the old content fades out as the new fades in, so folding reads as
+        * the column handing its width back rather than two states cutting.
+        */}
+      <motion.section
+        initial={false}
+        animate={{ width: projectsOpen ? projectsWidth : COLLAPSED_WIDTH }}
+        transition={foldTransition}
+        className="
+          relative flex min-h-0 shrink-0 flex-col overflow-hidden rounded-lg
+          border border-border bg-sidebar
+        "
+      >
+        <AnimatePresence initial={false} mode="popLayout">
+          {projectsOpen
+            ? (
+                <motion.div
+                  key="open"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={fadeTransition}
+                  className="flex min-h-0 min-w-0 flex-1 flex-col"
+                  style={{ width: projectsWidth }}
+                >
                   <SectionHeader
                     icon={<FolderClosed className="size-3.5" />}
                     label={t('projects')}
+                    count={projectCount}
+                    casing="plain"
                     action={(
-                      <span className="flex items-center gap-1">
-                        <AgentFilterBar
-                          active={activeAgents}
-                          available={availableAgents}
-                          counts={agentCounts}
-                          onChange={setActiveAgents}
-                        />
-                        <PanelToggle
-                          label={t('hideProjects')}
-                          onToggle={() => {
-                            setProjectsOpen(false);
-                          }}
-                        />
-                      </span>
+                      <PanelToggle
+                        label={t('hideProjects')}
+                        onToggle={() => {
+                          setProjectsOpen(false);
+                        }}
+                      />
                     )}
                   />
-                  <div className="shrink-0 px-3 pb-2">
+                  <div className="flex shrink-0 items-center gap-1.5 px-3 pb-2">
                     <TextInput
                       value={projectFilter}
                       onInput={setProjectFilter}
                       label={t('filterProjects')}
                       placeholder={t('filterProjects')}
-                      className="h-9 px-3"
+                      className="min-w-0 flex-1"
+                    />
+                    <FunnelMenu
+                      label={t('filterAndSortProjects')}
+                      align="start"
+                      agents={{
+                        counts: agentCounts,
+                        active: activeAgents,
+                        onToggle: toggleProjectAgent,
+                        onClear: () => {
+                          setActiveAgents([]);
+                        },
+                      }}
+                      dateFilter={projectDateFilter}
+                      onDateFilterChange={setProjectDateFilter}
+                      order={projectOrder}
+                      onOrderChange={setProjectOrder}
                     />
                   </div>
                   {/* Pinned above the scroller: a scope control that scrolls
                       away with the list it scopes has become a list item. */}
-                  <AllProjectsCard
-                    projects={projects}
-                    selected={wholeMachine}
-                    onSelect={() => {
-                      exitSelectionMode();
-                      onSelectAllProjects();
-                    }}
-                  />
+                  {showAllProjects && (
+                    <AllProjectsCard
+                      projects={projects}
+                      selected={wholeMachine}
+                      onSelect={() => {
+                        exitSelectionMode();
+                        onSelectAllProjects();
+                      }}
+                      activeAgents={activeAgents}
+                      onToggleAgent={toggleProjectAgent}
+                    />
+                  )}
                   <ProjectTree
                     projects={projects}
                     projectsStatus={projectsStatus}
                     agentFilter={activeAgents}
                     textFilter={projectFilter}
+                    dateFilter={projectDateFilter}
+                    order={projectOrder}
                     selectedProject={selectedProject}
                     nowMs={nowMs}
                     onSelectProject={(project) => {
@@ -569,245 +680,378 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                       });
                     }}
                   />
-                </section>
-                <PaneDivider
-                  label={t('resize')}
-                  value={projectsWidth}
-                  min={MIN_PROJECTS_WIDTH}
-                  max={MAX_PROJECTS_WIDTH}
-                  orientation="horizontal"
-                  onResize={(delta) => {
-                    setProjectsWidth((width) => {
-                      return Math.min(
-                        Math.max(width + delta, MIN_PROJECTS_WIDTH),
-                        MAX_PROJECTS_WIDTH,
-                      );
-                    });
-                  }}
-                />
-              </>
-            )
-          : (
-              <CollapsedStrip
-                expandLabel={t('showProjects')}
-                listLabel={t('projects')}
-                items={projectStripItems()}
-                onExpand={() => {
-                  setProjectsOpen(true);
-                }}
-              />
-            )}
-        {sessionsOpen
-          ? (
-              <>
-                <section className="flex min-h-0 shrink-0 flex-col" style={{ width: sessionsWidth }}>
-                  <SectionHeader
-                    icon={<MessagesSquare className="size-3.5" />}
-                    label={selectedProject == null
-                      ? t('sessions')
-                      : `${agentOption(selectedProject.agent).label} · ${selectedProject.name}`}
-                    action={(
-                      <span className="flex items-center gap-1">
-                        {sessionHeaderAction}
-                        <PanelToggle
-                          label={t('hideSessions')}
-                          onToggle={() => {
-                            setSessionsOpen(false);
-                          }}
-                        />
-                      </span>
-                    )}
+                </motion.div>
+              )
+            : (
+                <motion.div
+                  key="strip"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={fadeTransition}
+                  className="flex min-h-0 flex-1"
+                >
+                  <CollapsedStrip
+                    expandLabel={t('showProjects')}
+                    listLabel={t('projects')}
+                    items={projectStripItems()}
+                    onExpand={() => {
+                      setProjectsOpen(true);
+                    }}
                   />
-                  {selectionMode && (
-                    <SessionSelectionBar
-                      selectedCount={selectedSessions.length}
-                      allSelected={allSelectableSelected}
-                      onToggleAll={toggleAllSessions}
-                      busy={bulkBusy}
-                      onDelete={() => {
-                        setDeleteTargets(selectedSessions);
-                      }}
-                      onArchive={archiveSelected}
-                      onExport={exportSelected}
-                    />
-                  )}
-                  <div className="shrink-0 px-3 pb-2">
-                    <TextInput
-                      value={sessionFilter}
-                      onInput={setSessionFilter}
-                      label={t('filterSessions')}
-                      placeholder={t('filterSessions')}
-                      disabled={selectedProject == null}
-                      className="h-9 px-3"
-                    />
-                  </div>
-                  <ul className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
-                    {sessionRows.map((row) => {
-                      const session = row.session;
-                      const active = session.filePath === selectedFilePath;
-                      const canDelete = agentOption(session.agent).canDelete;
-                      const selectedForDelete = selectedSessionPaths.includes(session.filePath);
-                      const title = titleOf(session);
-                      const threaded = row.partCount > 1;
-                      const open = expandedThreads.includes(row.threadKey);
-
-                      return (
-                        <li
-                          key={session.filePath}
-                          className={cn(row.continuation && 'ps-4')}
-                        >
-                          {threaded && (
-                            <button
-                              type="button"
-                              aria-expanded={open}
-                              aria-label={t('threadParts', { count: row.partCount })}
-                              data-thread-toggle={row.threadKey}
-                              onClick={() => {
-                                toggleThread(row.threadKey);
+                </motion.div>
+              )}
+        </AnimatePresence>
+      </motion.section>
+      {projectsOpen && (
+        <PaneDivider
+          label={t('resize')}
+          value={projectsWidth}
+          min={MIN_PROJECTS_WIDTH}
+          max={MAX_PROJECTS_WIDTH}
+          orientation="horizontal"
+          onResize={(delta) => {
+            setProjectsWidth((width) => {
+              return Math.min(
+                Math.max(width + delta, MIN_PROJECTS_WIDTH),
+                MAX_PROJECTS_WIDTH,
+              );
+            });
+          }}
+        />
+      )}
+      {/* The session list rides with the Sessions view alone: Health and
+            Archive read the projects column, and a list of sessions under a
+            report it cannot open is one more thing to look past. */}
+      <AnimatePresence initial={false}>
+        {showSessions && (
+          <motion.section
+            key="sessions-column"
+            initial={false}
+            animate={{ width: sessionsOpen ? sessionsWidth : COLLAPSED_WIDTH }}
+            exit={{
+              width: 0,
+              opacity: 0,
+            }}
+            transition={foldTransition}
+            className="
+              relative flex min-h-0 shrink-0 flex-col overflow-hidden rounded-lg
+              border border-border bg-background
+            "
+          >
+            <AnimatePresence initial={false} mode="popLayout">
+              {sessionsOpen
+                ? (
+                    <motion.div
+                      key="open"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={fadeTransition}
+                      className="flex min-h-0 min-w-0 flex-1 flex-col"
+                      style={{ width: sessionsWidth }}
+                    >
+                      <SectionHeader
+                        icon={<MessagesSquare className="size-3.5" />}
+                        label={t('sessions')}
+                        count={sessions.length > 0 ? sessions.length : undefined}
+                        casing="plain"
+                        action={(
+                          <span className="flex items-center gap-1">
+                            {sessionHeaderAction}
+                            <PanelToggle
+                              label={t('hideSessions')}
+                              onToggle={() => {
+                                setSessionsOpen(false);
                               }}
-                              className="
-                                flex w-full items-center gap-1.5 px-2 pt-1
-                                text-body text-muted-foreground
-                                hover:text-foreground
-                              "
-                            >
-                              <ChevronDown className={cn(`
-                                size-3 transition-transform
-                              `, !open && '-rotate-90')}
-                              />
-                              {t('threadParts', { count: row.partCount })}
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (selectionMode) {
-                                toggleSessionSelection(session);
-                              }
-                              else {
-                                onSelectSession(session);
-                              }
-                            }}
-                            disabled={selectionMode && !canDelete}
-                            onContextMenu={(event) => {
-                              if (selectionMode) {
-                                event.preventDefault();
-                              }
-                              else {
-                                openMenu(event, {
-                                  kind: 'session',
-                                  session,
-                                });
-                              }
-                            }}
-                            aria-current={selectionMode ? undefined : active}
-                            aria-pressed={selectionMode ? selectedForDelete : undefined}
-                            data-session-item={session.filePath}
-                            className={cn('sidebar-row', (selectedForDelete || (!selectionMode && active)) && `
-                              is-active
-                            `)}
-                          >
-                            <span className="flex min-w-0 items-center gap-2.5">
-                              {selectionMode && (selectedForDelete
-                                ? (
-                                    <CheckSquare2 className="
-                                      size-4 shrink-0 text-primary
-                                    "
-                                    />
-                                  )
-                                : (
-                                    <Square className="
-                                      size-4 shrink-0 text-muted-foreground
-                                    "
-                                    />
-                                  ))}
-                              <span className="
-                                block min-w-0 truncate text-sm font-medium
-                                text-foreground
-                              "
-                              >
-                                {title}
-                              </span>
-                            </span>
-                            <span className="
-                              mt-1 flex items-center gap-2 text-xs
-                              text-muted-foreground
-                            "
-                            >
-                              <span>{formatTimeAgo(session.lastTimestampMs, nowMs, i18n.language)}</span>
-                              <span>{t('messageCount', { count: row.messageCount })}</span>
-                            </span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                    {sessionsStatus === 'loading' && (
-                      <li className="flex justify-center py-4">
-                        <Spinner />
-                      </li>
-                    )}
-                    {sessionsStatus === 'ready' && selectedProject == null && (
-                      <EmptyState
-                        icon={<FolderClosed className="size-8" />}
-                        title={t('selectProject')}
-                        hint={t('selectProjectHint')}
+                            />
+                          </span>
+                        )}
                       />
-                    )}
-                    {sessionsStatus === 'ready' && selectedProject != null && sessions.length === 0
-                      && sessionFilter.trim().length === 0 && (
-                      <EmptyState
-                        icon={<MessagesSquare className="size-8" />}
-                        title={t('noSessionsYet')}
-                        hint={t('noStoredSessions')}
-                      />
-                    )}
-                    {sessionsStatus === 'ready' && selectedProject != null && visibleSessions.length === 0
-                      && (sessions.length > 0 || sessionFilter.trim().length > 0) && (
-                      <EmptyState
-                        icon={<Search className="size-8" />}
-                        title={t('noSessionsMatch')}
-                        hint={t('adjustFilter')}
-                      />
-                    )}
-                  </ul>
-                </section>
-                <PaneDivider
-                  label={t('resizeSidebar')}
-                  value={sessionsWidth}
-                  min={MIN_SESSIONS_WIDTH}
-                  max={MAX_SESSIONS_WIDTH}
-                  orientation="horizontal"
-                  onResize={(delta) => {
-                    setSessionsWidth((width) => {
-                      return Math.min(
-                        Math.max(width + delta, MIN_SESSIONS_WIDTH),
-                        MAX_SESSIONS_WIDTH,
-                      );
-                    });
-                  }}
-                />
-              </>
-            )
-          : (
-              <CollapsedStrip
-                expandLabel={t('showSessions')}
-                listLabel={t('sessions')}
-                items={sessionStripItems()}
-                onExpand={() => {
-                  setSessionsOpen(true);
-                }}
-              />
-            )}
-      </div>
+                      {selectionMode && (
+                        <SessionSelectionBar
+                          selectedCount={selectedSessions.length}
+                          allSelected={allSelectableSelected}
+                          onToggleAll={toggleAllSessions}
+                          busy={bulkBusy}
+                          onDelete={() => {
+                            setDeleteTargets(selectedSessions);
+                          }}
+                          onArchive={archiveSelected}
+                          onExport={exportSelected}
+                        />
+                      )}
+                      <div className="
+                        flex shrink-0 items-center gap-1.5 px-3 pb-2
+                      "
+                      >
+                        <TextInput
+                          value={sessionFilter}
+                          onInput={setSessionFilter}
+                          label={t('filterSessions')}
+                          placeholder={t('filterSessions')}
+                          disabled={selectedProject == null}
+                          className="min-w-0 flex-1"
+                        />
+                        <FunnelMenu
+                          label={t('filterAndSortSessions')}
+                          dateFilter={sessionDateFilter}
+                          onDateFilterChange={setSessionDateFilter}
+                          order={sessionOrder}
+                          onOrderChange={setSessionOrder}
+                        />
+                      </div>
+                      <ul className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
+                        {sessionGroups.map((group) => {
+                          const shut = collapsedGroups.includes(group.bucket);
 
-      {/* Folded to two strips the sidebar is 112px wide, which is no place for
-          a status line, and the counts are on the All projects card anyway. */}
-      {!selectionMode && (projectsOpen || sessionsOpen) && (
-        <footer className="sidebar-status">
-          <span>{`v${appConfig.version}`}</span>
-          <span>{t('projectCount', { count: projectCount })}</span>
-          <span>{t('sessionCount', { count: sessionCount })}</span>
-        </footer>
+                          return (
+                            <Fragment key={group.bucket}>
+                              <li>
+                                <button
+                                  type="button"
+                                  aria-expanded={!shut}
+                                  data-session-group={group.bucket}
+                                  onClick={() => {
+                                    toggleGroup(group.bucket);
+                                  }}
+                                  className="
+                                    flex w-full items-center gap-1.5 px-2 pt-3
+                                    pb-1 text-body font-semibold
+                                    text-muted-foreground
+                                    hover:text-foreground
+                                  "
+                                >
+                                  <ChevronDown className={cn(`
+                                    size-3 transition-transform
+                                  `, shut && '-rotate-90')}
+                                  />
+                                  {t(BUCKET_LABEL[group.bucket])}
+                                  <span className="
+                                    ms-auto font-mono text-figure text-faint
+                                  "
+                                  >
+                                    {group.count}
+                                  </span>
+                                </button>
+                              </li>
+                              {!shut && group.rows.map((row) => {
+                                const session = row.session;
+                                const active = session.filePath === selectedFilePath;
+                                const canDelete = agentOption(session.agent).canDelete;
+                                const selectedForDelete = selectedSessionPaths
+                                  .includes(session.filePath);
+                                const title = titleOf(session);
+                                const preview = previewOf(session);
+                                const threaded = row.partCount > 1;
+                                const open = expandedThreads.includes(row.threadKey);
+                                // Selection mode borrows the leading gutter for a
+                                // checkbox; otherwise it carries the agent circle.
+                                let leadMark: ReactNode = (
+                                  <AgentMark
+                                    agent={session.agent}
+                                    className="size-7 text-figure"
+                                  />
+                                );
+
+                                if (selectionMode) {
+                                  leadMark = selectedForDelete
+                                    ? (
+                                        <CheckSquare2 className="
+                                          size-4 shrink-0 text-primary
+                                        "
+                                        />
+                                      )
+                                    : (
+                                        <Square className="
+                                          size-4 shrink-0 text-muted-foreground
+                                        "
+                                        />
+                                      );
+                                }
+
+                                return (
+                                  <li
+                                    key={session.filePath}
+                                    className={cn(row.continuation && 'ps-4')}
+                                  >
+                                    {threaded && (
+                                      <button
+                                        type="button"
+                                        aria-expanded={open}
+                                        aria-label={t('threadParts', { count: row.partCount })}
+                                        data-thread-toggle={row.threadKey}
+                                        onClick={() => {
+                                          toggleThread(row.threadKey);
+                                        }}
+                                        className="
+                                          flex w-full items-center gap-1.5 px-2
+                                          pt-1 text-body text-muted-foreground
+                                          hover:text-foreground
+                                        "
+                                      >
+                                        <ChevronDown className={cn(`
+                                          size-3 transition-transform
+                                        `, !open && '-rotate-90')}
+                                        />
+                                        {t('threadParts', { count: row.partCount })}
+                                      </button>
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (selectionMode) {
+                                          toggleSessionSelection(session);
+                                        }
+                                        else {
+                                          onSelectSession(session);
+                                        }
+                                      }}
+                                      disabled={selectionMode && !canDelete}
+                                      onContextMenu={(event) => {
+                                        if (selectionMode) {
+                                          event.preventDefault();
+                                        }
+                                        else {
+                                          openMenu(event, {
+                                            kind: 'session',
+                                            session,
+                                          });
+                                        }
+                                      }}
+                                      aria-current={selectionMode ? undefined : active}
+                                      aria-pressed={selectionMode ? selectedForDelete : undefined}
+                                      data-session-item={session.filePath}
+                                      className={cn('sidebar-row', (selectedForDelete
+                                        || (!selectionMode && active)) && `
+                                          is-active
+                                        `)}
+                                    >
+                                      {leadMark}
+                                      <span className="
+                                        flex min-w-0 flex-1 flex-col gap-0.5
+                                      "
+                                      >
+                                        <span className="
+                                          flex items-baseline gap-2
+                                        "
+                                        >
+                                          <span className="
+                                            min-w-0 flex-1 truncate text-sm
+                                            font-medium text-foreground
+                                          "
+                                          >
+                                            {title}
+                                          </span>
+                                          <span className="
+                                            shrink-0 font-mono text-figure
+                                            text-faint
+                                          "
+                                          >
+                                            {formatTimeAgo(
+                                              session.lastTimestampMs,
+                                              nowMs,
+                                              i18n.language,
+                                            )}
+                                          </span>
+                                        </span>
+                                        {preview != null && (
+                                          <span className="
+                                            truncate text-body
+                                            text-muted-foreground
+                                          "
+                                          >
+                                            {preview}
+                                          </span>
+                                        )}
+                                        <span>
+                                          <span className="
+                                            inline-block rounded-xs border
+                                            border-border px-1 font-mono
+                                            text-figure text-faint
+                                          "
+                                          >
+                                            {t('messageCount', { count: row.messageCount })}
+                                          </span>
+                                        </span>
+                                      </span>
+                                    </button>
+                                  </li>
+                                );
+                              })}
+                            </Fragment>
+                          );
+                        })}
+                        {sessionsStatus === 'loading' && (
+                          <li className="flex justify-center py-4">
+                            <Spinner />
+                          </li>
+                        )}
+                        {sessionsStatus === 'ready' && selectedProject == null && (
+                          <EmptyState
+                            icon={<FolderClosed className="size-8" />}
+                            title={t('selectProject')}
+                            hint={t('selectProjectHint')}
+                          />
+                        )}
+                        {sessionsStatus === 'ready' && selectedProject != null && sessions.length === 0
+                          && sessionFilter.trim().length === 0 && (
+                          <EmptyState
+                            icon={<MessagesSquare className="size-8" />}
+                            title={t('noSessionsYet')}
+                            hint={t('noStoredSessions')}
+                          />
+                        )}
+                        {sessionsStatus === 'ready' && selectedProject != null && visibleSessions.length === 0
+                          && (sessions.length > 0 || sessionFilter.trim().length > 0) && (
+                          <EmptyState
+                            icon={<Search className="size-8" />}
+                            title={t('noSessionsMatch')}
+                            hint={t('adjustFilter')}
+                          />
+                        )}
+                      </ul>
+                    </motion.div>
+                  )
+                : (
+                    <motion.div
+                      key="strip"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={fadeTransition}
+                      className="flex min-h-0 flex-1"
+                    >
+                      <CollapsedStrip
+                        expandLabel={t('showSessions')}
+                        listLabel={t('sessions')}
+                        items={sessionStripItems()}
+                        onExpand={() => {
+                          setSessionsOpen(true);
+                        }}
+                      />
+                    </motion.div>
+                  )}
+            </AnimatePresence>
+          </motion.section>
+        )}
+      </AnimatePresence>
+      {showSessions && sessionsOpen && (
+        <PaneDivider
+          label={t('resizeSidebar')}
+          value={sessionsWidth}
+          min={MIN_SESSIONS_WIDTH}
+          max={MAX_SESSIONS_WIDTH}
+          orientation="horizontal"
+          onResize={(delta) => {
+            setSessionsWidth((width) => {
+              return Math.min(
+                Math.max(width + delta, MIN_SESSIONS_WIDTH),
+                MAX_SESSIONS_WIDTH,
+              );
+            });
+          }}
+        />
       )}
       {menuTarget != null && !selectionMode && (
         <SidebarContextMenu

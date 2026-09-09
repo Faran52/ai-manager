@@ -35,6 +35,8 @@ const base = {
   projectsStatus: 'ready',
   agentFilter: [],
   textFilter: '',
+  dateFilter: 'all',
+  order: 'newest',
   selectedProject: null,
   nowMs: 5,
   onSelectProject: () => {

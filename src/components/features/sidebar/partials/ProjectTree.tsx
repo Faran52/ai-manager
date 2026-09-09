@@ -5,7 +5,8 @@ import { FolderSearch } from 'lucide-react';
 
 import { agentOption } from '@config/agents';
 
-import { formatTimeAgo } from '@utils/formatUtils';
+import { formatTimeAgo, tildePath } from '@utils/formatUtils';
+import { initialsOf } from '@utils/initialsUtils';
 
 import { EmptyState, Spinner } from '@ui/index';
 
@@ -14,6 +15,8 @@ import { buildProjectTree } from '../utils/projectTreeUtils';
 import type { AgentId } from '@config/agents';
 import type { ProjectSummary } from '@services/history/historyService';
 import type { FC, MouseEvent } from 'react';
+import type { DateFilter } from '../utils/dateFilterUtils';
+import type { FunnelOrder } from './FunnelMenu';
 
 type Status = 'loading' | 'ready' | 'error';
 
@@ -22,6 +25,8 @@ export interface ProjectTreeProps {
   readonly projectsStatus: Status;
   readonly agentFilter: readonly AgentId[];
   readonly textFilter: string;
+  readonly dateFilter: DateFilter;
+  readonly order: FunnelOrder;
   readonly selectedProject: ProjectSummary | null;
   readonly nowMs: number;
   readonly onSelectProject: (project: ProjectSummary) => void;
@@ -33,6 +38,8 @@ export const ProjectTree: FC<ProjectTreeProps> = ({
   projectsStatus,
   agentFilter,
   textFilter,
+  dateFilter,
+  order,
   selectedProject,
   nowMs,
   onSelectProject,
@@ -43,10 +50,13 @@ export const ProjectTree: FC<ProjectTreeProps> = ({
     return buildProjectTree(projects, {
       agentFilter,
       textFilter,
+      dateFilter,
+      order,
+      nowMs,
     }).filter((group) => {
       return group.matchesFilter;
     });
-  }, [agentFilter, projects, textFilter]);
+  }, [agentFilter, dateFilter, nowMs, order, projects, textFilter]);
 
   if (projectsStatus === 'loading') {
     return (
@@ -95,16 +105,19 @@ export const ProjectTree: FC<ProjectTreeProps> = ({
                 onOpenMenu(event, primaryBranch.source);
               }}
             >
-              <span className="project-card-copy">
-                <span className="project-card-name">{group.name}</span>
-                {group.actualPath != null && (
-                  <span className="project-card-path" title={group.actualPath}>{group.actualPath}</span>
-                )}
+              {/* The mark a project carries in the strip stands in for it here
+                  too: two letters where a project name has none of its own. */}
+              <span aria-hidden="true" className="project-card-badge">
+                {initialsOf(group.name)}
               </span>
+              <span className="project-card-name">{group.name}</span>
               <span className="project-card-total">
                 {t('sessionCount', { count: group.sessionCount })}
               </span>
             </button>
+            {group.actualPath != null && (
+              <p className="project-card-path" title={group.actualPath}>{tildePath(group.actualPath)}</p>
+            )}
             <div className="project-providers">
               {group.agents.map((branch) => {
                 const selected = selectedProject?.agent === branch.agent

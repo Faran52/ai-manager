@@ -400,8 +400,9 @@ describe('SidebarPane agent and mutation actions', () => {
     );
 
     expect(screen.getByText('codex-app')).toBeDefined();
-    await userEvent.click(screen.getByRole('button', { name: /Filter agents/u }));
-    await userEvent.click(screen.getByRole('menuitemcheckbox', { name: /Claude Code/u }));
+    await userEvent.click(screen.getByRole('button', { name: 'Filter and sort projects' }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: /Agents/u }));
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: /Claude Code/u }));
     expect(screen.queryByText('codex-app')).toBeNull();
     await userEvent.click(screen.getByRole('menuitemcheckbox', { name: /All agents/u }));
     expect(screen.getByText('codex-app')).toBeDefined();
@@ -412,6 +413,71 @@ describe('SidebarPane agent and mutation actions', () => {
     expect(screen.getByText(/source project folder on disk is untouched/u)).toBeDefined();
     await userEvent.click(screen.getByRole('button', { name: 'Delete permanently' }));
     expect(onDeleteProject).toHaveBeenCalledWith(expect.objectContaining({ id: 'claude' }));
+  });
+
+  test('adds and drops agents one at a time from the project funnel', async () => {
+    const codexProject: ProjectSummary = {
+      ...project('codex', 'codex-app'),
+      agent: 'codex',
+    };
+    const geminiProject: ProjectSummary = {
+      ...project('gemini', 'gemini-app'),
+      agent: 'gemini',
+    };
+
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('claude', 'claude-app'), codexProject, geminiProject]}
+        sessions={[]}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Filter and sort projects' }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: /Agents/u }));
+
+    // From "every agent", the first pick narrows to just that one.
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: /Claude Code/u }));
+    expect(screen.queryByText('codex-app')).toBeNull();
+    expect(screen.queryByText('gemini-app')).toBeNull();
+
+    // A second pick widens the set rather than replacing it.
+    await userEvent.click(screen.getByRole('menuitemcheckbox', { name: /Codex CLI/u }));
+    expect(screen.getByText('codex-app')).toBeDefined();
+    expect(screen.queryByText('gemini-app')).toBeNull();
+
+    // Dropping one leaves the other still narrowing the list.
+    await userEvent.click(screen.getByRole('menuitemcheckbox', { name: /Claude Code/u }));
+    expect(screen.queryByText('claude-app')).toBeNull();
+    expect(screen.getByText('codex-app')).toBeDefined();
+  });
+
+  test('narrows the session list to a recent window from the funnel', async () => {
+    const fresh = {
+      ...session('fresh', 'Fresh'),
+      lastTimestampMs: base.nowMs - 2 * 86_400_000,
+    };
+    const stale = {
+      ...session('stale', 'Stale'),
+      lastTimestampMs: base.nowMs - 40 * 86_400_000,
+    };
+
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p', 'selected')]}
+        sessions={[fresh, stale]}
+      />,
+    );
+
+    expect(screen.getByText('Stale')).toBeDefined();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Filter and sort sessions' }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: /Date/u }));
+    await userEvent.click(await screen.findByRole('menuitemradio', { name: 'Last 7 days' }));
+
+    expect(screen.queryByText('Stale')).toBeNull();
+    expect(screen.getByText('Fresh')).toBeDefined();
   });
 
   test('renames and deletes sessions through confirmed dialogs', async () => {
@@ -702,6 +768,30 @@ describe('SidebarPane bulk actions', () => {
   });
 });
 
+describe('SidebarPane session groups', () => {
+  test('collapses a recency group and opens it again', async () => {
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p', 'webapp')]}
+        sessions={[session('a', 'Login fix'), session('b', 'Logout bug')]}
+      />,
+    );
+
+    expect(screen.getByText('Login fix')).toBeDefined();
+
+    const header = screen.getByRole('button', { expanded: true });
+
+    await userEvent.click(header);
+
+    expect(screen.queryByText('Login fix')).toBeNull();
+
+    await userEvent.click(header);
+
+    expect(screen.getByText('Login fix')).toBeDefined();
+  });
+});
+
 describe('SidebarPane session threads', () => {
   const MINUTE = 60_000;
   const START = Date.UTC(2026, 0, 2, 9);
@@ -794,15 +884,17 @@ describe('SidebarPane collapsed columns', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Hide projects' }));
 
     expect(screen.getByRole('button', { name: 'webapp' })).toBeDefined();
-    expect(screen.queryByLabelText('Filter projects')).toBeNull();
     await waitFor(() => {
-      expect(localStorage.getItem(projectsDrawerStorageKey)).toBe('false');
+      expect(screen.queryByLabelText('Filter projects')).toBeNull();
     });
+    expect(localStorage.getItem(projectsDrawerStorageKey)).toBe('false');
 
     await userEvent.click(screen.getByRole('button', { name: 'Show projects' }));
 
-    expect(screen.queryByRole('button', { name: 'webapp' })).toBeNull();
     expect(screen.getByLabelText('Filter projects')).toBeDefined();
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'webapp' })).toBeNull();
+    });
   });
 
   test('opens a project and the whole machine from the folded drawer', async () => {
@@ -827,7 +919,14 @@ describe('SidebarPane collapsed columns', () => {
 
     expect(onSelectProject).toHaveBeenCalledWith(expect.objectContaining({ id: 'p2' }));
 
-    await userEvent.click(screen.getByRole('button', { name: 'All projects' }));
+    // Once the open drawer has handed its width back, the folded strip is the
+    // only place "All projects" still lives.
+    await waitFor(() => {
+      expect(screen.queryByLabelText('Filter projects')).toBeNull();
+    });
+    await userEvent.click(within(screen.getByRole('list', { name: 'Projects' })).getByRole('button', {
+      name: 'All projects',
+    }));
 
     expect(onSelectAllProjects).toHaveBeenCalledTimes(1);
   });
@@ -845,18 +944,25 @@ describe('SidebarPane collapsed columns', () => {
     );
     await userEvent.click(screen.getByRole('button', { name: 'Hide sessions' }));
 
-    expect(screen.getByText('CC')).toBeDefined();
+    // The folded strip carries the agent circle, and the row it stands in for
+    // still opens on a click without unfolding anything first.
+    const strip = screen.getByRole('button', { name: 'Login fix' });
+
+    expect(within(strip).getByText('CC')).toBeDefined();
     await waitFor(() => {
       expect(localStorage.getItem(sessionsListStorageKey)).toBe('false');
     });
 
-    await userEvent.click(screen.getByRole('button', { name: 'Login fix' }));
+    await userEvent.click(strip);
 
     expect(onSelectSession).toHaveBeenCalledWith(expect.objectContaining({ filePath: '/r/a.jsonl' }));
 
     await userEvent.click(screen.getByRole('button', { name: 'Show sessions' }));
 
-    expect(screen.queryByText('CC')).toBeNull();
+    expect(screen.getByLabelText('Filter sessions')).toBeDefined();
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'Login fix' })).toBeNull();
+    });
   });
 
   test('restores both columns folded', () => {
@@ -869,5 +975,97 @@ describe('SidebarPane collapsed columns', () => {
     expect(screen.getByRole('button', { name: 'Show sessions' })).toBeDefined();
     expect(screen.queryByRole('slider')).toBeNull();
     expect(screen.queryByText('1 project')).toBeNull();
+  });
+});
+
+describe('SidebarPane view scope', () => {
+  test('keeps the session column out of a view that cannot open sessions', () => {
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p', 'webapp')]}
+        sessions={[session('a', 'Login fix')]}
+        showSessions={false}
+      />,
+    );
+
+    expect(screen.getByText('webapp')).toBeDefined();
+    expect(screen.queryByLabelText('Filter sessions')).toBeNull();
+    expect(screen.queryByRole('slider', { name: 'Resize sidebar' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Hide sessions' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Show sessions' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Login fix' })).toBeNull();
+  });
+
+  test('drops the scope card where a report is always scoped to a project', () => {
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p', 'webapp')]}
+        sessions={[]}
+        showAllProjects={false}
+      />,
+    );
+
+    expect(screen.queryByRole('button', { name: /All projects/u })).toBeNull();
+    expect(screen.getByText('webapp')).toBeDefined();
+  });
+
+  test('leaves the scope card out of the folded strip where the view hides it', () => {
+    localStorage.setItem(projectsDrawerStorageKey, 'false');
+
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p', 'webapp')]}
+        sessions={[]}
+        showAllProjects={false}
+        showSessions={false}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Show projects' })).toBeDefined();
+    expect(screen.queryByRole('button', { name: /All projects/u })).toBeNull();
+  });
+
+  test('reads the session list from either end of its history via the funnel', async () => {
+    const early = {
+      ...session('a', 'Early'),
+      lastTimestampMs: Date.UTC(2026, 0, 1),
+    };
+    const late = {
+      ...session('b', 'Late'),
+      lastTimestampMs: Date.UTC(2026, 0, 2),
+    };
+
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p', 'webapp')]}
+        sessions={[early, late]}
+      />,
+    );
+
+    const order = () => {
+      const rows = [...document.querySelectorAll('[data-sidebar] ul button')]
+        .map((row) => {
+          return row.textContent;
+        });
+
+      return rows.findIndex((text) => {
+        return text.includes('Late');
+      }) < rows.findIndex((text) => {
+        return text.includes('Early');
+      })
+        ? 'late-first'
+        : 'early-first';
+    };
+
+    expect(order()).toBe('late-first');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Filter and sort sessions' }));
+    await userEvent.click(screen.getByRole('menuitemradio', { name: 'Oldest first' }));
+
+    expect(order()).toBe('early-first');
   });
 });

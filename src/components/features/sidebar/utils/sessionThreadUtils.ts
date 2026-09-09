@@ -15,6 +15,8 @@ interface Run {
   readonly parts: SessionSummary[];
 }
 
+export type SessionThreadOrder = 'newest' | 'oldest';
+
 /**
  * Rewinding a session writes the messages up to that point into a fresh file,
  * so one conversation ends up as several transcripts that all begin with the
@@ -51,8 +53,11 @@ const threadFrom = (key: string, run: Run): SessionThread => {
 };
 
 // Groups a project's sessions into the conversations they actually were, then
-// orders the threads the way the flat list was ordered: most recent first.
-export const buildSessionThreads = (sessions: readonly SessionSummary[]): readonly SessionThread[] => {
+// orders the threads from the end of their history the reader asked for.
+export const buildSessionThreads = (
+  sessions: readonly SessionSummary[],
+  order: SessionThreadOrder = 'newest',
+): readonly SessionThread[] => {
   const runs = new Map<string, Run>();
 
   for (const session of sessions) {
@@ -77,6 +82,8 @@ export const buildSessionThreads = (sessions: readonly SessionSummary[]): readon
   return [...runs].map(([key, run]) => {
     return threadFrom(key, run);
   }).sort((left, right) => {
-    return right.lastTimestampMs - left.lastTimestampMs;
+    return order === 'newest'
+      ? right.lastTimestampMs - left.lastTimestampMs
+      : left.lastTimestampMs - right.lastTimestampMs;
   });
 };

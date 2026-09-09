@@ -90,6 +90,17 @@ describe('buildSessionThreads', () => {
     })).toEqual(['recent', 'old']);
   });
 
+  test('reads the threads from the oldest end when asked to', () => {
+    const threads = buildSessionThreads([
+      session('old', START, START + 5 * MINUTE),
+      session('recent', START + 200 * MINUTE, START + 210 * MINUTE),
+    ], 'oldest');
+
+    expect(threads.map((thread) => {
+      return thread.head.id;
+    })).toEqual(['old', 'recent']);
+  });
+
   test('counts the fullest part rather than the sum, and spans them all', () => {
     const [thread] = buildSessionThreads([
       session('rewound', START, START + 10 * MINUTE, {

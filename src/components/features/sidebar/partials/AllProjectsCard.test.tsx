@@ -10,6 +10,7 @@ import {
 import { AllProjectsCard } from './AllProjectsCard';
 
 import type { ProjectSummary } from '@services/history/historyService';
+import type { AllProjectsCardProps } from './AllProjectsCard';
 
 const PROJECTS: readonly ProjectSummary[] = [
   {
@@ -41,16 +42,31 @@ const PROJECTS: readonly ProjectSummary[] = [
   },
 ];
 
+const renderCard = (props: Partial<AllProjectsCardProps> = {}): AllProjectsCardProps => {
+  const merged: AllProjectsCardProps = {
+    projects: PROJECTS,
+    selected: false,
+    onSelect: vi.fn(),
+    activeAgents: [],
+    onToggleAgent: vi.fn(),
+    ...props,
+  };
+
+  render(<AllProjectsCard {...merged} />);
+
+  return merged;
+};
+
 describe('AllProjectsCard', () => {
   test('counts every session and every project', () => {
-    render(<AllProjectsCard projects={PROJECTS} selected={false} onSelect={vi.fn()} />);
+    renderCard();
 
     expect(screen.getByText('35 sessions')).toBeDefined();
     expect(screen.getByText('3 projects')).toBeDefined();
   });
 
   test('tallies each agent across all of them, heaviest first', () => {
-    render(<AllProjectsCard projects={PROJECTS} selected={false} onSelect={vi.fn()} />);
+    renderCard();
 
     const agents = screen.getAllByText(/Claude Code|Codex CLI/u);
 
@@ -60,22 +76,41 @@ describe('AllProjectsCard', () => {
   });
 
   test('reports whether it is the scope in view', () => {
-    render(<AllProjectsCard projects={PROJECTS} selected onSelect={vi.fn()} />);
+    renderCard({ selected: true });
 
-    expect(screen.getByRole('button', { pressed: true })).toBeDefined();
+    expect(screen.getByRole('button', {
+      name: 'All projects',
+      pressed: true,
+    })).toBeDefined();
   });
 
   test('asks for every project when pressed', async () => {
-    const onSelect = vi.fn();
+    const { onSelect } = renderCard();
 
-    render(<AllProjectsCard projects={PROJECTS} selected={false} onSelect={onSelect} />);
-    await userEvent.click(screen.getByRole('button'));
+    await userEvent.click(screen.getByRole('button', { name: 'All projects' }));
 
     expect(onSelect).toHaveBeenCalledTimes(1);
   });
 
+  test('toggles an agent in the filter when its tally is clicked', async () => {
+    const { onToggleAgent } = renderCard({ activeAgents: ['codex'] });
+
+    expect(screen.getByRole('button', {
+      name: /Codex CLI/u,
+      pressed: true,
+    })).toBeDefined();
+    expect(screen.getByRole('button', {
+      name: /Claude Code/u,
+      pressed: false,
+    })).toBeDefined();
+
+    await userEvent.click(screen.getByRole('button', { name: /Claude Code/u }));
+
+    expect(onToggleAgent).toHaveBeenCalledWith('claude');
+  });
+
   test('says nothing about agents before any project has loaded', () => {
-    render(<AllProjectsCard projects={[]} selected={false} onSelect={vi.fn()} />);
+    renderCard({ projects: [] });
 
     expect(screen.getByText('0 projects')).toBeDefined();
     expect(screen.queryByText('Claude Code')).toBeNull();
