@@ -178,6 +178,8 @@ surface.** There is no acceptable trade of smoothness for convenience. The vocab
 | `collapseTransition` | disclosure: a row or drawer opening        | 0      |
 | `controlTransition`  | a control answering a gesture: thumb, tab  | 0.2    |
 | `fillTransition`     | a bar growing to its value                 | 0      |
+| `foldTransition`     | a sidebar column folding to its mark strip | 0      |
+| `drawerTransition`   | a companion pane sliding in beside the pane | 0     |
 
 ### The rules behind those numbers
 
@@ -204,6 +206,14 @@ analytics pane holds dozens of bars, so every frame relaid out the pane. It scal
 height animation is genuinely unavoidable, it is a disclosure of a single bounded region and it is
 the exception that gets argued for, not assumed.
 
+Two width folds are that exception, argued and accepted: `foldTransition` on a sidebar column and
+`drawerTransition` on a companion pane. Each is one bounded region whose inner content is pinned to
+a fixed size and clipped, so the animated box carries no reflow of its own and only its single
+neighbour relayouts. Both are springs, so an interrupting click keeps its velocity, and both have
+zero bounce, so the neighbour is never shoved past its rest. A disclosure row (`collapseTransition`,
+a bounded height, zero bounce) is the other accepted exception: the rows below it slide down as it
+opens, which is the behaviour a reader expects, not the wobble the bounce ban is about.
+
 **Lists arrive in sequence.** `MOTION_STAGGER` between siblings, so the eye reads an order instead of
 a flash. A stagger long enough to notice as waiting is too long.
 
@@ -212,11 +222,11 @@ end state without the travel, never a broken layout.
 
 ### Still to do
 
-The seven remaining `height` animations (`AgentRow`, `ArchiveCard`, `EditedFileList`,
-`ToolExecutionCard`, `WorkRhythm`, `SidebarPane`, `MessageTimeline`) are the layout-driven ones left.
-They want either a transform-based disclosure or a measured, bounded region. The mock's charts also
-want their fills on entry: the heatmap cells, the by-hour columns and the calendar grid currently
-appear at full value.
+`AgentRow`, `ArchiveCard` and `WorkRhythm` still animate `height` and want a transform-based
+disclosure or a measured, bounded region. `SidebarPane` now folds on `foldTransition` and
+`MessageTimeline` scrolls on a `translateY`, so both have left the list. The mock's charts also want
+their fills on entry: the heatmap cells, the by-hour columns and the calendar grid currently appear
+at full value.
 
 ## Component principles
 
@@ -263,6 +273,12 @@ entire contract.
 agent is, or reads i18n for anything but its own chrome (a close button's label). A component that
 needs a `ProjectSummary` belongs in `features/`.
 
+The one carve-out is `AgentMark`. Agent identity is a cross-cutting visual: the `[data-agent]` hue
+is a global CSS contract in `AgentTag.css`, `agentOption` is a `@config` lookup rather than a
+`features/` import, and the same circle is drawn by the session list, its folded strip and the
+transcript. One `AgentId` in and a `<span data-agent>` out is not the domain knowledge this rule
+guards against.
+
 ### The keyboard contract per primitive
 
 | Primitive | Role                     | Keys it must answer                                     |
@@ -279,11 +295,16 @@ pointing toward it on screen. The primitives handle this; a hand-rolled one woul
 
 ## Components
 
-### Exist (24, in `src/components/ui`)
+### Exist (26, in `src/components/ui`)
 
-Badge, BarRow, Button, CodeBlock, CodeLine, ConfirmDialog, EmptyState, MarkdownText,
-MenuCheckboxItem, MenuItem, MetricCard, Modal, PaneDivider, PatchView, PopupMenu, SectionHeader,
-Spinner, Switch, Tabs, TabsPanel, TextInput, Toast, Tooltip, TruncatedText.
+AgentMark, Badge, BarRow, Button, CodeBlock, CodeLine, ConfirmDialog, Disclosure, EmptyState,
+MarkdownText, MenuCheckboxItem, MenuItem, MetricCard, Modal, OutputBlock, PaneDivider, PatchView,
+PopupMenu, SectionHeader, Spinner, Switch, Tabs, TabsPanel, TextInput, Toast, Tooltip.
+
+`Disclosure` is the one collapsible: a trigger and a height-animated region on `collapseTransition`,
+reduced-motion aware. Thinking, the injected-context row and the tool card all open through it.
+`OutputBlock` is a tool result shown inline under its label (the tool card is the only collapse),
+with a Parsed / Raw switch when the body reads as Markdown. It replaced `TruncatedText`.
 
 Check this list before building anything: the mock's tiles are `MetricCard`, its ranked rows are
 `BarRow`, its switches are `Switch`, its funnel is `PopupMenu` plus `MenuCheckboxItem`.
@@ -377,9 +398,10 @@ rereads:
    edits panel carries all three because it inherited them from the board half it replaced; nothing
    else has been swept.
 4. **Right-to-left.** Not drawn, and thin in the code.
-5. **Where the board lives.** The mock deletes the Transcript / Board / File edits strip outright,
-   but it never draws the board, and the board is a view of a whole project rather than a companion
-   to one session. File edits has left the strip; Transcript and Board still share it.
+
+The board is settled: it is deleted. The mock removed the Transcript / Board / File edits strip
+and never drew a board, and a grid of a whole project's sessions was a companion to no single one.
+The Sessions view is the transcript alone now, with Navigator and File edits as panels beside it.
 
 ## Known gaps behind the mock
 
