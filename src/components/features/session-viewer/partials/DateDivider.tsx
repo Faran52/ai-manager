@@ -15,14 +15,14 @@ export const DateDivider: FC<DateDividerProps> = ({ timestampMs, nowMs }) => {
 
   return (
     <div
-      className="flex items-center gap-3 py-1 select-none"
+      className="flex items-center gap-3 py-1 tracking-wide select-none"
       role="separator"
       aria-label={label}
       data-date-divider
     >
-      <span className="h-px flex-1 bg-border/50" />
-      <span className="text-body font-medium text-muted-foreground/80">{label}</span>
-      <span className="h-px flex-1 bg-border/50" />
+      <span className="h-px flex-1 bg-hair" />
+      <span className="text-figure text-dim">{label}</span>
+      <span className="h-px flex-1 bg-hair" />
     </div>
   );
 };

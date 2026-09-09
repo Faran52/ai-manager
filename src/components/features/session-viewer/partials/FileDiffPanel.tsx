@@ -16,7 +16,7 @@ export interface FileDiffPanelProps {
 }
 
 export const FileDiffPanel: FC<FileDiffPanelProps> = ({ sessionId, path }) => {
-  const { t } = useTranslation('board');
+  const { t } = useTranslation('session');
   const [version, setVersion] = useState<number>();
   const snapshot = useFileHistory({
     sessionId,

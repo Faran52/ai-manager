@@ -68,14 +68,14 @@ export const WebToolBody: FC<WebToolBodyProps> = ({ input }) => {
             {url?.hostname ?? 'url'}
           </p>
           {url == null
-            ? <p className="font-mono text-xs break-all text-foreground">{input.url}</p>
+            ? <p className="font-mono text-body break-all text-foreground">{input.url}</p>
             : (
                 <a
                   href={url.href}
                   target="_blank"
                   rel="noreferrer"
                   className="
-                    inline-flex max-w-full items-center gap-1 text-xs
+                    inline-flex max-w-full items-center gap-1 text-body
                     text-primary
                     hover:underline
                   "
@@ -88,7 +88,7 @@ export const WebToolBody: FC<WebToolBodyProps> = ({ input }) => {
       </div>
       {input.prompt != null && input.prompt.length > 0 && (
         <div className="
-          border-s border-border ps-2 text-xs text-muted-foreground
+          border-s border-border ps-2 text-body text-muted-foreground
         "
         >
           {input.prompt}

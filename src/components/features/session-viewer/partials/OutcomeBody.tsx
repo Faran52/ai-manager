@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-import { TruncatedText } from '@ui/index';
+import { OutputBlock } from '@ui/index';
 
 import { OutcomeImages } from './OutcomeImages';
 import { WebOutcomeBody } from './WebOutcomeBody';
@@ -24,10 +24,20 @@ export const OutcomeBody: FC<OutcomeBodyProps> = ({ outcome, kind = 'default' })
   return (
     <div className="space-y-2">
       {hasText && (kind === 'web-search' || kind === 'web-fetch'
-        ? <WebOutcomeBody label={kind === 'web-search' ? t('result') : t('contentHeading')} text={outcome.text} />
-        : <TruncatedText label={kind === 'mcp' ? t('result') : t('output')} text={outcome.text} />)}
+        ? (
+            <WebOutcomeBody
+              label={kind === 'web-search' ? t('result') : t('contentHeading')}
+              text={outcome.text}
+            />
+          )
+        : (
+            <OutputBlock
+              label={kind === 'mcp' ? t('result') : t('output')}
+              text={outcome.text}
+            />
+          ))}
       {outcome.stderr != null && outcome.stderr.length > 0 && (
-        <TruncatedText label={t('stderr')} text={outcome.stderr} />
+        <OutputBlock label={t('stderr')} text={outcome.stderr} />
       )}
       {outcome.images.length > 0 && <OutcomeImages images={outcome.images} />}
     </div>

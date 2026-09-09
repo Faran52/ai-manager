@@ -2,12 +2,13 @@ import { useTranslation } from 'react-i18next';
 
 import {
   CircleAlert,
-  FileDiff,
+  FileText,
   X,
 } from 'lucide-react';
 
 import { Spinner } from '@ui/index';
-import { EditedFileList } from '@features/board';
+
+import { EditedFileList } from './EditedFileList';
 
 import type { EditedFile, FileEdit } from '@services/edits/editsService';
 import type { FC } from 'react';
@@ -44,7 +45,9 @@ export const FileEditsPanel: FC<FileEditsPanelProps> = ({
 
   return (
     <aside
-      className="flex h-full shrink-0 flex-col bg-card/55"
+      className="
+        flex h-full shrink-0 flex-col border-s border-border bg-background
+      "
       style={{ width }}
       aria-label={t('fileEdits')}
       data-file-edits-panel
@@ -53,7 +56,7 @@ export const FileEditsPanel: FC<FileEditsPanelProps> = ({
         flex min-h-11 shrink-0 items-center gap-2 border-b border-border px-3
       "
       >
-        <FileDiff className="size-3.5 text-primary" />
+        <FileText className="size-3.5 text-faint" />
         <h3 className="
           min-w-0 flex-1 truncate text-xs font-semibold text-foreground
         "

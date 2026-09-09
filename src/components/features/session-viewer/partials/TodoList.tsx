@@ -14,7 +14,7 @@ const TODO_TONES: Record<string, string> = {
 
 export const TodoList: FC<TodoListProps> = ({ todos }) => {
   return (
-    <ul className="space-y-1 text-xs" data-todo-list>
+    <ul className="space-y-1 text-body" data-todo-list>
       {todos.map((todo, index) => {
         return (
           <li

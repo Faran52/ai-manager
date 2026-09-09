@@ -1,6 +1,6 @@
 import { ExternalLink } from 'lucide-react';
 
-import { TruncatedText } from '@ui/index';
+import { OutputBlock } from '@ui/index';
 
 import type { FC } from 'react';
 
@@ -74,7 +74,7 @@ export const WebOutcomeBody: FC<WebOutcomeBodyProps> = ({ label, text }) => {
           })}
         </div>
       )}
-      <TruncatedText label={label} text={text} />
+      <OutputBlock label={label} text={text} />
     </div>
   );
 };

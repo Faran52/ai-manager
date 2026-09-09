@@ -32,6 +32,7 @@ describe('AssistantTurn', () => {
   test('names the model and hides its usage behind a title', () => {
     render(
       <AssistantTurn
+        agent="claude"
         entry={turn([{
           blockType: 'text',
           text: 'hello',
@@ -47,13 +48,14 @@ describe('AssistantTurn', () => {
     expect(model.getAttribute('title')).toContain('22 out');
     expect(model.getAttribute('title')).toContain('33 cached');
     expect(model.getAttribute('title')).toContain('$0.25');
-    expect(screen.getByText('Assistant')).toBeDefined();
+    expect(screen.getByText('Claude Code')).toBeDefined();
     expect(screen.getByText('hello')).toBeDefined();
   });
 
   test('dispatches thinking, redacted and tool-use blocks', () => {
     render(
       <AssistantTurn
+        agent="claude"
         entry={turn([
           {
             blockType: 'thinking',
@@ -88,9 +90,29 @@ describe('AssistantTurn', () => {
     expect(screen.getByText('Error')).toBeDefined();
   });
 
+  test('notes how many blocks a filter is hiding', () => {
+    render(
+      <AssistantTurn
+        agent="claude"
+        entry={turn([{
+          blockType: 'text',
+          text: 'shown',
+        }])}
+        visibleBlocks={[]}
+        hiddenCount={2}
+        outcomeFor={() => {
+          return undefined;
+        }}
+      />,
+    );
+
+    expect(document.querySelector('[data-hidden-blocks]')).not.toBeNull();
+  });
+
   test('hides the chip row when no metadata exists', () => {
     render(
       <AssistantTurn
+        agent="claude"
         entry={turn([], {
           model: undefined,
           usage: undefined,

@@ -324,8 +324,8 @@ describe('ToolExecutionCard input rows and image fallbacks', () => {
   });
 });
 
-describe('long payloads collapse behind details', () => {
-  test('truncates output past the cap', async () => {
+describe('long payloads', () => {
+  test('notes the length once output runs past the cap', async () => {
     render(
       <ToolExecutionCard
         call={bashCall}
@@ -333,7 +333,7 @@ describe('long payloads collapse behind details', () => {
           toolUseId: 'tu1',
           status: 'ok',
           images: [],
-          text: 'x'.repeat(4_500),
+          text: 'x'.repeat(20_500),
         }}
       />,
     );
@@ -343,7 +343,7 @@ describe('long payloads collapse behind details', () => {
       await userEvent.click(button);
     }
 
-    expect(screen.getByText(/4500 chars/)).toBeDefined();
+    expect(screen.getByText(/20500 chars/u)).toBeDefined();
   });
 });
 

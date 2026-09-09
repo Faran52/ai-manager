@@ -9,16 +9,25 @@ import {
 import { ThinkingCard } from './ThinkingCard';
 
 describe('ThinkingCard', () => {
-  test('toggles its body through the native details state', async () => {
+  test('reveals the reasoning on toggle', async () => {
     render(<ThinkingCard thinking="secret reasoning" />);
 
-    const card = document.querySelector('details[data-thinking]');
+    const trigger = screen.getByRole('button', { name: /thinking/i });
 
-    expect(card?.hasAttribute('open')).toBe(false);
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.queryByText('secret reasoning')).toBeNull();
+
+    await userEvent.click(trigger);
+
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
     expect(screen.getByText('secret reasoning')).toBeDefined();
+  });
 
-    await userEvent.click(screen.getByText('Thinking'));
+  test('renders the reasoning as markdown', async () => {
+    render(<ThinkingCard thinking={'**Planning the change**\n\nweigh the options'} />);
 
-    expect(card?.hasAttribute('open')).toBe(true);
+    await userEvent.click(screen.getByRole('button', { name: /thinking/i }));
+
+    expect(screen.getByText('Planning the change').tagName).toBe('STRONG');
   });
 });

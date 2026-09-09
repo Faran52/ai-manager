@@ -2,13 +2,10 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
-  Check,
-  ChevronDown,
-  Clipboard,
-  Download,
   FileCode,
   FileJson,
   FileText,
+  MoreHorizontal,
 } from 'lucide-react';
 
 import {
@@ -16,7 +13,7 @@ import {
   entriesToJson,
   entriesToMarkdown,
 } from '@services/export/exportService';
-import { copyTextToClipboard, saveTextFile } from '@utils/browserFilesUtils';
+import { saveTextFile } from '@utils/browserFilesUtils';
 import { slugOf } from '@utils/slugUtils';
 
 import { Menu, MenuItem } from '@ui/index';
@@ -31,6 +28,10 @@ export interface ExportMenuProps {
   readonly title: string;
 }
 
+/*
+ * The command bar's overflow: the transcript exports that are not the one-click
+ * copy sitting promoted beside it. A downloaded file per format.
+ */
 export const ExportMenu: FC<ExportMenuProps> = ({
   entries,
   project,
@@ -38,8 +39,7 @@ export const ExportMenu: FC<ExportMenuProps> = ({
 }) => {
   const { t } = useTranslation('session');
   const [open, setOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
-  // Both writers take the same header, so the meta is built once.
+  // Both writers take the same header, so the meta is built once per action.
   const meta = (): ExportMeta => {
     return {
       title,
@@ -47,46 +47,24 @@ export const ExportMenu: FC<ExportMenuProps> = ({
       exportedAtMs: Date.now(),
     };
   };
-  const markdown = (): string => {
-    return entriesToMarkdown(meta(), entries);
-  };
 
   return (
     <div data-export-menu>
       <Menu
+        align="end"
         label={t('export')}
         open={open}
-        onOpenChange={(next) => {
-          if (next) {
-            setCopied(false);
-          }
-
-          setOpen(next);
-        }}
+        onOpenChange={setOpen}
         trigger={(
-          <button type="button" className="toolbar-button">
-            <Download className="size-3.5" />
-            {t('exportAction')}
-            <ChevronDown className="size-3 transition-transform" data-open={open} />
+          <button type="button" className="command-action" aria-label={t('export')}>
+            <MoreHorizontal className="size-3.5" />
           </button>
         )}
       >
         <MenuItem
-          icon={copied
-            ? <Check className="size-3.5 text-ok" />
-            : <Clipboard className="size-3.5" />}
-          onSelect={() => {
-            void (async (): Promise<void> => {
-              setCopied(await copyTextToClipboard(markdown()));
-            })();
-          }}
-        >
-          {copied ? t('copiedMarkdown') : t('copyMarkdown')}
-        </MenuItem>
-        <MenuItem
           icon={<FileText className="size-3.5" />}
           onSelect={() => {
-            saveTextFile(`${slugOf(title)}.md`, markdown(), 'text/markdown');
+            saveTextFile(`${slugOf(title)}.md`, entriesToMarkdown(meta(), entries), 'text/markdown');
           }}
         >
           {t('exportMarkdown')}
@@ -108,7 +86,6 @@ export const ExportMenu: FC<ExportMenuProps> = ({
           {t('exportJson')}
         </MenuItem>
       </Menu>
-      {copied && <span className="sr-only" role="status">{t('copied', { ns: 'common' })}</span>}
     </div>
   );
 };

@@ -22,6 +22,13 @@ test('omits the clock for a timestamp it cannot read', () => {
   expect(document.querySelector('time')).toBeNull();
 });
 
+test('shows a given name in place of the bare role', () => {
+  render(<MessageHeader roleKey="assistant" name="Claude Code" timestamp="whenever" />);
+
+  expect(screen.getByText('Claude Code')).toBeDefined();
+  expect(screen.queryByText('Assistant')).toBeNull();
+});
+
 test('marks a sidechain turn as a branch', () => {
   render(<MessageHeader roleKey="assistant" timestamp="2026-06-01T14:32:00Z" sidechain />);
 

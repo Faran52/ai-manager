@@ -18,7 +18,7 @@ export const McpToolBody: FC<McpToolBodyProps> = ({ call, identity }) => {
 
   return (
     <div className="space-y-2" data-mcp-tool-body>
-      <div className="flex min-w-0 items-center gap-2 text-xs">
+      <div className="flex min-w-0 items-center gap-2 text-body">
         <span className="
           grid size-6 shrink-0 place-items-center rounded-md bg-primary/10
           text-primary

@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 
-import { cn } from '@utils/cnUtils';
 import {
   formatClock,
   formatCost,
@@ -12,12 +11,14 @@ import type { FC } from 'react';
 
 export interface MessageHeaderProps {
   readonly roleKey: string;
+  // The speaker's name when it is more than the bare role: an assistant turn
+  // reads by its agent ("Claude Code"), the same mark the avatar carries.
+  readonly name?: string | undefined;
   readonly timestamp: string;
   readonly sidechain?: boolean;
   readonly model?: string | undefined;
   readonly usage?: TokenUsage | undefined;
   readonly costUsd?: number | undefined;
-  readonly align?: 'start' | 'end';
 }
 
 // The full model id is long enough to crowd the row, and the family is the part being scanned for.
@@ -46,12 +47,12 @@ const usageTitle = (
 
 export const MessageHeader: FC<MessageHeaderProps> = ({
   roleKey,
+  name,
   timestamp,
   sidechain = false,
   model,
   usage,
   costUsd,
-  align = 'start',
 }) => {
   const { t } = useTranslation('session');
   const timestampMs = Date.parse(timestamp);
@@ -62,13 +63,10 @@ export const MessageHeader: FC<MessageHeaderProps> = ({
 
   return (
     <div
-      className={cn(
-        'flex items-center gap-1.5 text-body text-muted-foreground',
-        align === 'end' ? 'justify-end' : 'justify-start',
-      )}
+      className="flex items-baseline gap-2 text-body text-dim"
       data-message-header
     >
-      <span className="font-medium">{t(roleKey)}</span>
+      <span className="font-semibold text-foreground-2">{name ?? t(roleKey)}</span>
       {readable && (
         <>
           <span aria-hidden="true">·</span>

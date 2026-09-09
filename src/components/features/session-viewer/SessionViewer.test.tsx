@@ -15,11 +15,7 @@ import {
   vi,
 } from 'vitest';
 
-import {
-  messageFilterBarStorageKey,
-  messageNavigatorOpenStorageKey,
-  messageNavigatorWidthStorageKey,
-} from '@config/storageKeys';
+import { messageNavigatorOpenStorageKey, messageNavigatorWidthStorageKey } from '@config/storageKeys';
 
 import { SessionViewer } from './SessionViewer';
 
@@ -64,17 +60,16 @@ const stubPage = (): void => {
 
 describe('SessionViewer', () => {
   test('shows the empty state without a file', () => {
-    render(<SessionViewer filePath={null} projectLabel="" sessionTitle={undefined} highlightTimestamp={undefined} />);
+    render(<SessionViewer filePath={null} sessionTitle={undefined} highlightTimestamp={undefined} />);
 
     expect(screen.getByText('No session selected')).toBeDefined();
   });
 
-  test('names the branch the session was working on beside its project', async () => {
+  test('names the agent and the branch the session was working on', async () => {
     stubPage();
     render(
       <SessionViewer
         filePath="/sessions/s.jsonl"
-        projectLabel="webapp"
         sessionTitle="Login fix"
         gitBranch="feat/login"
         highlightTimestamp={undefined}
@@ -82,7 +77,7 @@ describe('SessionViewer', () => {
     );
 
     expect(await screen.findByText('feat/login')).toBeDefined();
-    expect(screen.getByText('webapp')).toBeDefined();
+    expect(screen.getByText('Claude Code')).toBeDefined();
   });
 
   test('loads a feed with toolbar metadata and load-more', async () => {
@@ -90,7 +85,6 @@ describe('SessionViewer', () => {
     render(
       <SessionViewer
         filePath="/sessions/s.jsonl"
-        projectLabel="webapp"
         sessionTitle="Login fix"
         highlightTimestamp={undefined}
       />,
@@ -100,7 +94,6 @@ describe('SessionViewer', () => {
       expect(screen.getByText('the question')).toBeDefined();
     });
     expect(screen.getByText('Login fix')).toBeDefined();
-    expect(screen.getByText('webapp')).toBeDefined();
     expect(screen.getByText(/Load more/)).toBeDefined();
   });
 
@@ -135,7 +128,7 @@ describe('SessionViewer', () => {
     );
 
     render(
-      <SessionViewer filePath="/f.jsonl" projectLabel="p" sessionTitle={undefined} highlightTimestamp={undefined} />,
+      <SessionViewer filePath="/f.jsonl" sessionTitle={undefined} highlightTimestamp={undefined} />,
     );
     await waitFor(() => {
       expect(screen.getByText('first chunk')).toBeDefined();
@@ -148,57 +141,6 @@ describe('SessionViewer', () => {
     });
     expect(screen.queryByText(/Load more/)).toBeNull();
   });
-
-  test('copies markdown through the export menu', async () => {
-    const writeText = vi.fn();
-    vi.stubGlobal('navigator', { clipboard: { writeText } });
-    stubPage();
-
-    render(<SessionViewer filePath="/f.jsonl" projectLabel="proj" sessionTitle="T" highlightTimestamp={undefined} />);
-    await waitFor(() => {
-      expect(screen.getByText('the question')).toBeDefined();
-    });
-
-    await userEvent.click(screen.getByText('Export'));
-    await userEvent.click(screen.getByText('Copy markdown'));
-
-    await waitFor(() => {
-      expect(writeText).toHaveBeenCalledOnce();
-    });
-    expect(String(writeText.mock.calls.at(0)?.at(0))).toContain('# T');
-  });
-
-  test('downloads a json export via the menu', async () => {
-    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockImplementation(() => {
-      return 'blob:x';
-    });
-    const revokeObjectURL = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {
-      return undefined;
-    });
-    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {
-      return undefined;
-    });
-    stubPage();
-
-    render(
-      <SessionViewer
-        filePath="/f.jsonl"
-        projectLabel="proj"
-        sessionTitle="My Title"
-        highlightTimestamp={undefined}
-      />,
-    );
-    await waitFor(() => {
-      expect(screen.getByText('the question')).toBeDefined();
-    });
-
-    await userEvent.click(screen.getByText('Export'));
-    await userEvent.click(screen.getByText('JSON file'));
-
-    expect(createObjectURL).toHaveBeenCalledOnce();
-    expect(revokeObjectURL).toHaveBeenCalledWith('blob:x');
-    expect(clickSpy).toHaveBeenCalledOnce();
-  });
 });
 
 describe('SessionViewer states', () => {
@@ -210,7 +152,6 @@ describe('SessionViewer states', () => {
     render(
       <SessionViewer
         filePath="/gone.jsonl"
-        projectLabel="p"
         sessionTitle={undefined}
         highlightTimestamp={undefined}
       />,
@@ -245,7 +186,6 @@ describe('SessionViewer states', () => {
     render(
       <SessionViewer
         filePath="/f.jsonl"
-        projectLabel="p"
         sessionTitle={undefined}
         highlightTimestamp={undefined}
       />,
@@ -253,7 +193,7 @@ describe('SessionViewer states', () => {
     await screen.findByText('main line');
     expect(screen.getByText('1 message')).toBeDefined();
 
-    await userEvent.click(screen.getByText('Include subagent activity'));
+    await userEvent.click(screen.getByRole('button', { name: 'Include subagent activity' }));
 
     expect(fetchMock.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
@@ -265,14 +205,13 @@ describe('SessionViewer states', () => {
       <SessionViewer
         filePath="/f.jsonl"
         agent="codex"
-        projectLabel="p"
         sessionTitle={undefined}
         highlightTimestamp={undefined}
       />,
     );
     await screen.findByText('the question');
 
-    expect(screen.queryByText('Include subagent activity')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Include subagent activity' })).toBeNull();
   });
 
   test('scrolls to a highlighted timestamp once entries exist', async () => {
@@ -284,7 +223,6 @@ describe('SessionViewer states', () => {
     render(
       <SessionViewer
         filePath="/f.jsonl"
-        projectLabel="p"
         sessionTitle="T"
         highlightTimestamp="2026-05-05T10:00:00Z"
       />,
@@ -307,7 +245,6 @@ describe('SessionViewer states', () => {
     const view = render(
       <SessionViewer
         filePath="/f.jsonl"
-        projectLabel="p"
         sessionTitle="T"
         highlightTimestamp="2026-05-05T10:00:00Z"
       />,
@@ -317,7 +254,6 @@ describe('SessionViewer states', () => {
     view.rerender(
       <SessionViewer
         filePath="/f.jsonl"
-        projectLabel="p"
         sessionTitle="T"
         highlightTimestamp={undefined}
       />,
@@ -325,7 +261,6 @@ describe('SessionViewer states', () => {
     view.rerender(
       <SessionViewer
         filePath="/f.jsonl"
-        projectLabel="p"
         sessionTitle="T"
         highlightTimestamp="2026-05-05T10:00:00Z"
       />,
@@ -336,7 +271,6 @@ describe('SessionViewer states', () => {
     view.rerender(
       <SessionViewer
         filePath="/f.jsonl"
-        projectLabel="p"
         sessionTitle="T"
         highlightTimestamp="2026-05-05T10:00:00Z"
       />,
@@ -357,7 +291,6 @@ describe('SessionViewer remaining states', () => {
     render(
       <SessionViewer
         filePath="/f.jsonl"
-        projectLabel="p"
         sessionTitle={undefined}
         highlightTimestamp={undefined}
       />,
@@ -365,79 +298,20 @@ describe('SessionViewer remaining states', () => {
 
     expect(screen.getByRole('status')).toBeDefined();
   });
-
-  test('downloads a markdown export via the menu', async () => {
-    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockImplementation(() => {
-      return 'blob:m';
-    });
-
-    const revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {
-      return undefined;
-    });
-    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {
-      return undefined;
-    });
-    stubPage();
-
-    render(<SessionViewer filePath="/f.jsonl" projectLabel="proj" sessionTitle="Doc" highlightTimestamp={undefined} />);
-    await screen.findByText('the question');
-
-    await userEvent.click(screen.getByText('Export'));
-    await userEvent.click(screen.getByText('Markdown file'));
-
-    expect(createObjectURL).toHaveBeenCalledOnce();
-    expect(revokeObjectURLSpy).toHaveBeenCalledOnce();
-    clickSpy.mockRestore();
-  });
-
-  test('downloads an html export via the menu', async () => {
-    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockImplementation(() => {
-      return 'blob:h';
-    });
-
-    const revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {
-      return undefined;
-    });
-    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {
-      return undefined;
-    });
-    stubPage();
-
-    render(<SessionViewer filePath="/f.jsonl" projectLabel="proj" sessionTitle="Doc" highlightTimestamp={undefined} />);
-    await screen.findByText('the question');
-
-    await userEvent.click(screen.getByText('Export'));
-    await userEvent.click(screen.getByText('HTML file'));
-
-    expect(createObjectURL).toHaveBeenCalledOnce();
-    expect(revokeObjectURLSpy).toHaveBeenCalledOnce();
-    clickSpy.mockRestore();
-  });
 });
 
 describe('SessionViewer feedback', () => {
-  test('announces the copy and toggles the sidechain filter state', async () => {
-    const writeText = vi.fn();
-    vi.stubGlobal('navigator', { clipboard: { writeText } });
+  test('toggles the sidechain filter state from the header', async () => {
     stubPage();
 
-    render(<SessionViewer filePath="/f.jsonl" projectLabel="p" sessionTitle="T" highlightTimestamp={undefined} />);
+    render(<SessionViewer filePath="/f.jsonl" sessionTitle="T" highlightTimestamp={undefined} />);
     await screen.findByText('the question');
 
-    const sidechainButton = screen.getByText('Include subagent activity').closest('button');
+    const sidechainButton = screen.getByRole('button', { name: 'Include subagent activity' });
 
-    if (sidechainButton != null) {
-      await userEvent.click(sidechainButton);
-    }
+    await userEvent.click(sidechainButton);
 
-    expect(sidechainButton?.getAttribute('aria-pressed')).toBe('true');
-
-    await userEvent.click(screen.getByText('Export'));
-    await userEvent.click(screen.getByText('Copy markdown'));
-
-    expect(await screen.findByText('Copied!')).toBeDefined();
-    await userEvent.click(screen.getByText('Export'));
-    expect(screen.getByText('Copy markdown')).toBeDefined();
+    expect(sidechainButton.getAttribute('aria-pressed')).toBe('true');
   });
 });
 
@@ -501,60 +375,38 @@ describe('SessionViewer conversation filters', () => {
       });
     }));
 
-    render(<SessionViewer filePath="/f.jsonl" projectLabel="p" sessionTitle="T" highlightTimestamp={undefined} />);
+    render(<SessionViewer filePath="/f.jsonl" sessionTitle="T" highlightTimestamp={undefined} />);
     await screen.findByText('visible answer');
 
     await userEvent.click(screen.getByRole('button', { name: 'Filter messages' }));
-    await userEvent.click(screen.getByRole('menuitemcheckbox', { name: 'Assistant messages' }));
-    expect(screen.queryByText('visible answer')).toBeNull();
-    await userEvent.click(screen.getByRole('button', { name: 'Show Assistant messages' }));
 
-    await userEvent.click(screen.getByRole('button', { name: 'Filter messages' }));
-    await userEvent.click(screen.getByRole('menuitemcheckbox', { name: 'Thinking' }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: /Participants/ }));
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: 'Assistant messages' }));
+    expect(screen.queryByText('visible answer')).toBeNull();
+    await userEvent.click(screen.getByRole('menuitemcheckbox', { name: 'User messages' }));
+    expect(screen.queryByText('visible question')).toBeNull();
+
+    await userEvent.click(await screen.findByRole('menuitem', { name: /Content/ }));
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: 'Thinking' }));
     expect(screen.queryByText('private reasoning')).toBeNull();
     await userEvent.click(screen.getByRole('menuitemcheckbox', { name: 'Tool activity' }));
     expect(screen.queryByText('Read')).toBeNull();
     await userEvent.click(screen.getByRole('menuitemcheckbox', { name: 'Commands' }));
     expect(screen.queryByText('/review')).toBeNull();
-    await userEvent.click(screen.getByRole('menuitemcheckbox', { name: 'User messages' }));
-    expect(screen.queryByText('visible question')).toBeNull();
     await userEvent.click(screen.getByRole('menuitemcheckbox', { name: 'Text messages' }));
     expect(screen.queryByText('visible answer')).toBeNull();
 
-    await userEvent.click(screen.getByLabelText('Reset conversation filters'));
+    await userEvent.click(screen.getByRole('menuitem', { name: /Reset filters/ }));
     expect(screen.getByText('visible question')).toBeDefined();
     expect(screen.getByText('visible answer')).toBeDefined();
   });
 });
 
 describe('SessionViewer title fallbacks', () => {
-  test('falls back to the generic title for symbol-only names', async () => {
-    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockImplementation(() => {
-      return 'blob:s';
-    });
-    const revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {
-      return undefined;
-    });
-    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {
-      return undefined;
-    });
-    stubPage();
-
-    render(<SessionViewer filePath="/f.jsonl" projectLabel="p" sessionTitle="!!!" highlightTimestamp={undefined} />);
-    await screen.findByText('the question');
-
-    await userEvent.click(screen.getByText('Export'));
-    await userEvent.click(screen.getByText('JSON file'));
-
-    expect(createObjectURL).toHaveBeenCalledOnce();
-    expect(revokeObjectURLSpy).toHaveBeenCalledOnce();
-    clickSpy.mockRestore();
-  });
-
   test('uses the generic title when the file path has no basename', async () => {
     stubPage();
 
-    render(<SessionViewer filePath="/" projectLabel="p" sessionTitle={undefined} highlightTimestamp={undefined} />);
+    render(<SessionViewer filePath="/" sessionTitle={undefined} highlightTimestamp={undefined} />);
 
     expect(screen.getByText('Session')).toBeDefined();
     await screen.findByText('the question');
@@ -566,7 +418,6 @@ describe('SessionViewer message navigator', () => {
     render(
       <SessionViewer
         filePath="/sessions/s.jsonl"
-        projectLabel="webapp"
         sessionTitle="Login fix"
         highlightTimestamp={undefined}
       />,
@@ -586,7 +437,7 @@ describe('SessionViewer message navigator', () => {
     expect(screen.queryByLabelText('Message navigator')).toBeNull();
     expect(localStorage.getItem(messageNavigatorOpenStorageKey)).toBe('false');
 
-    await userEvent.click(screen.getByText('Navigator'));
+    await userEvent.click(screen.getByRole('button', { name: 'Navigator' }));
     expect(screen.getByLabelText('Message navigator')).toBeDefined();
   });
 
@@ -604,12 +455,12 @@ describe('SessionViewer message navigator', () => {
     });
 
     await userEvent.click(screen.getByRole('button', { name: 'File edits' }));
-    expect(screen.getByLabelText('File edits')).toBeDefined();
+    expect(screen.getByRole('complementary', { name: 'File edits' })).toBeDefined();
     expect(screen.queryByLabelText('Message navigator')).toBeNull();
 
     // Pressing the open panel's own button closes it rather than reopening it.
     await userEvent.click(screen.getByRole('button', { name: 'File edits' }));
-    expect(screen.queryByLabelText('File edits')).toBeNull();
+    expect(screen.queryByRole('complementary', { name: 'File edits' })).toBeNull();
 
     await userEvent.click(screen.getByRole('button', { name: 'Navigator' }));
     expect(screen.getByLabelText('Message navigator')).toBeDefined();
@@ -623,7 +474,7 @@ describe('SessionViewer message navigator', () => {
     openViewer();
 
     await waitFor(() => {
-      expect(screen.getByText('Navigator')).toBeDefined();
+      expect(screen.getByRole('button', { name: 'Navigator' })).toBeDefined();
     });
 
     fireEvent.keyDown(window, {
@@ -638,7 +489,9 @@ describe('SessionViewer message navigator', () => {
       metaKey: true,
       shiftKey: true,
     });
-    expect(screen.queryByLabelText('Message navigator')).toBeNull();
+    await waitFor(() => {
+      expect(screen.queryByLabelText('Message navigator')).toBeNull();
+    });
 
     fireEvent.keyDown(window, {
       key: 'm',
@@ -746,7 +599,6 @@ describe('SessionViewer live watching', () => {
     const { rerender } = render(
       <SessionViewer
         filePath="/sessions/s.jsonl"
-        projectLabel="webapp"
         sessionTitle="Login fix"
         highlightTimestamp={undefined}
         sourceModifiedMs={1}
@@ -759,7 +611,6 @@ describe('SessionViewer live watching', () => {
     rerender(
       <SessionViewer
         filePath="/sessions/s.jsonl"
-        projectLabel="webapp"
         sessionTitle="Login fix"
         highlightTimestamp={undefined}
         sourceModifiedMs={2}
@@ -777,46 +628,25 @@ describe('SessionViewer live watching', () => {
   });
 });
 
-describe('SessionViewer filter bar', () => {
-  test('dismisses the bar, remembers it, and brings it back from the header', async () => {
+describe('SessionViewer filter menu', () => {
+  test('opens from the header funnel and marks itself when a filter is on', async () => {
     stubPage();
     render(
       <SessionViewer
         filePath="/sessions/s.jsonl"
-        projectLabel="webapp"
         sessionTitle="Login fix"
         highlightTimestamp={undefined}
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Filter messages' })).toBeDefined();
-    });
+    const trigger = await screen.findByRole('button', { name: 'Filter messages' });
 
-    await userEvent.click(screen.getByRole('button', { name: 'Hide the filter bar' }));
+    expect(trigger.dataset.active).toBe('false');
 
-    expect(screen.queryByRole('button', { name: 'Filter messages' })).toBeNull();
-    expect(localStorage.getItem(messageFilterBarStorageKey)).toBe('false');
+    await userEvent.click(trigger);
+    await userEvent.click(await screen.findByRole('menuitem', { name: /Content/ }));
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: 'Thinking' }));
 
-    await userEvent.click(screen.getByText('Filters'));
-    expect(screen.getByRole('button', { name: 'Filter messages' })).toBeDefined();
-  });
-
-  test('starts hidden when it was dismissed last time', async () => {
-    localStorage.setItem(messageFilterBarStorageKey, 'false');
-    stubPage();
-    render(
-      <SessionViewer
-        filePath="/sessions/s.jsonl"
-        projectLabel="webapp"
-        sessionTitle="Login fix"
-        highlightTimestamp={undefined}
-      />,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Filters')).toBeDefined();
-    });
-    expect(screen.queryByRole('button', { name: 'Filter messages' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Filter messages' }).dataset.active).toBe('true');
   });
 });

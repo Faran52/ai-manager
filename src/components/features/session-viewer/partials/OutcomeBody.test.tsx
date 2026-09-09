@@ -9,14 +9,14 @@ test('renders outcome text, errors and images while allowing an empty result', (
     <OutcomeBody outcome={{
       toolUseId: 't',
       status: 'error',
-      text: 'output',
+      text: 'the stdout body',
       stderr: 'failure',
       images: [{ url: 'https://example.com/image.png' }],
     }}
     />,
   );
 
-  expect(screen.getByText('output')).toBeDefined();
+  expect(screen.getByText('the stdout body')).toBeDefined();
   expect(screen.getByText('failure')).toBeDefined();
   expect(screen.getByRole('img')).toBeDefined();
 

@@ -3,29 +3,28 @@ import { useTranslation } from 'react-i18next';
 
 import {
   CircleAlert,
-  FileDiff,
   FileText,
   GitBranch,
-  ListFilter,
   ListTree,
-  MessageSquare,
+  Users,
 } from 'lucide-react';
 
 import { agentOption } from '@config/agents';
+import { appShortcuts } from '@config/shortcuts';
 import {
-  messageFilterBarStorageKey,
   messageFiltersStorageKey,
   messageNavigatorOpenStorageKey,
   messageNavigatorWidthStorageKey,
 } from '@config/storageKeys';
 
 import { cn } from '@utils/cnUtils';
+import { isTypingTarget, matchesShortcut } from '@utils/shortcutUtils';
 
 import {
-  Badge,
   Button,
   EmptyState,
   Spinner,
+  Tooltip,
   useSmoothScroll,
 } from '@ui/index';
 import { useMessages } from '@features/history-data';
@@ -33,9 +32,8 @@ import { useMessages } from '@features/history-data';
 import { MessageTimeline } from './MessageTimeline';
 import {
   CompanionPane,
-  ExportMenu,
   MAX_COMPANION_WIDTH,
-  MessageFilterToolbar,
+  MessageFilterMenu,
   MIN_COMPANION_WIDTH,
 } from './partials';
 import {
@@ -47,6 +45,7 @@ import {
 
 import type { AgentId } from '@config/agents';
 import type { EditedFile, FileEdit } from '@services/edits/editsService';
+import type { HistoryEntry } from '@services/history/historyService';
 import type { FC, ReactNode } from 'react';
 import type { TimelineNavigation } from './MessageTimeline';
 import type { CompanionPanel } from './partials';
@@ -54,7 +53,6 @@ import type { CompanionPanel } from './partials';
 export interface SessionViewerProps {
   readonly filePath: string | null;
   readonly agent?: AgentId | undefined;
-  readonly projectLabel: string;
   readonly sessionTitle: string | undefined;
   // Named beside the project, since it says which line of work this session is on.
   readonly gitBranch?: string | undefined;
@@ -68,6 +66,9 @@ export interface SessionViewerProps {
   readonly nowMs?: number | undefined;
   readonly onOpenEdit?: ((edit: FileEdit) => void)
     | undefined;
+  // Hands the loaded transcript up so the command bar can export it.
+  readonly onEntriesLoaded?: ((entries: readonly HistoryEntry[]) => void)
+    | undefined;
 }
 
 const DEFAULT_COMPANION_WIDTH = 280;
@@ -80,10 +81,88 @@ const initialNavigatorWidth = (): number => {
     : DEFAULT_COMPANION_WIDTH;
 };
 
+// The model the assistant last answered on, for the meta line. The transcript
+// itself still marks a mid-session model switch turn by turn.
+const modelOf = (entries: readonly HistoryEntry[]): string | undefined => {
+  return entries.reduce<string | undefined>((found, entry) => {
+    return entry.kind === 'assistant' && entry.model != null ? entry.model : found;
+  }, undefined);
+};
+
+/*
+ * An icon-only header control: tooltip and label for the name, a lit background
+ * for the on state. The panel toggles and the filter switch all wear it.
+ */
+const HeaderAction: FC<{
+  readonly label: string;
+  readonly icon: ReactNode;
+  readonly active: boolean;
+  readonly onClick: () => void;
+}> = ({
+  label,
+  icon,
+  active,
+  onClick,
+}) => {
+  return (
+    <Tooltip content={label}>
+      <button
+        type="button"
+        aria-label={label}
+        aria-pressed={active}
+        onClick={onClick}
+        className={cn('toolbar-button', active && 'bg-primary/10 text-primary')}
+      >
+        {icon}
+      </button>
+    </Tooltip>
+  );
+};
+
+/*
+ * One half of the companion-panel segmented pair. Lit like a raised tab when its
+ * panel is open, flat when it is not, so the pair can also show neither on.
+ */
+const PanelTab: FC<{
+  readonly label: string;
+  readonly icon: ReactNode;
+  readonly active: boolean;
+  readonly onClick: () => void;
+}> = ({
+  label,
+  icon,
+  active,
+  onClick,
+}) => {
+  return (
+    <Tooltip content={label}>
+      <button
+        type="button"
+        aria-label={label}
+        aria-pressed={active}
+        onClick={onClick}
+        className={cn(
+          `
+            flex h-5.25 w-6.5 items-center justify-center rounded-sm
+            transition-colors
+          `,
+          active
+            ? 'bg-card text-foreground'
+            : `
+              text-muted-foreground
+              hover:text-foreground
+            `,
+        )}
+      >
+        {icon}
+      </button>
+    </Tooltip>
+  );
+};
+
 export const SessionViewer: FC<SessionViewerProps> = ({
   filePath,
   agent = 'claude',
-  projectLabel,
   sessionTitle,
   gitBranch,
   highlightTimestamp,
@@ -94,14 +173,12 @@ export const SessionViewer: FC<SessionViewerProps> = ({
   projectPath,
   nowMs = 0,
   onOpenEdit,
+  onEntriesLoaded,
 }) => {
   const { t } = useTranslation('session');
   const [includeSidechain, setIncludeSidechain] = useState(false);
   const [filters, setFilters] = useState(() => {
     return decodeMessageFilters(localStorage.getItem(messageFiltersStorageKey));
-  });
-  const [filterBarOpen, setFilterBarOpen] = useState(() => {
-    return localStorage.getItem(messageFilterBarStorageKey) !== 'false';
   });
   const [panel, setPanel] = useState<CompanionPanel>(() => {
     return localStorage.getItem(messageNavigatorOpenStorageKey) === 'false' ? 'none' : 'navigator';
@@ -122,19 +199,25 @@ export const SessionViewer: FC<SessionViewerProps> = ({
    */
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
   const visibleEntries = countVisibleEntries(feed.entries, filters);
-  // The bar can be dismissed while filters are on, so the header button stays
-  // lit to explain why the transcript is shorter than the message count.
+  const model = modelOf(feed.entries);
   const filtersActive = hasActiveMessageFilters(filters);
+  const countLabel = filtersActive
+    ? t('itemsShown', {
+        visible: visibleEntries,
+        total: feed.entries.length,
+      })
+    : t('itemsLoaded', { count: feed.entries.length });
 
   useSmoothScroll(scrollElement);
+
+  // The command bar's export menu reads the entries this viewer loaded.
+  useEffect(() => {
+    onEntriesLoaded?.(feed.entries);
+  }, [feed.entries, onEntriesLoaded]);
 
   useEffect(() => {
     localStorage.setItem(messageFiltersStorageKey, encodeMessageFilters(filters));
   }, [filters]);
-
-  useEffect(() => {
-    localStorage.setItem(messageFilterBarStorageKey, String(filterBarOpen));
-  }, [filterBarOpen]);
 
   useEffect(() => {
     localStorage.setItem(messageNavigatorOpenStorageKey, String(panel === 'navigator'));
@@ -146,12 +229,14 @@ export const SessionViewer: FC<SessionViewerProps> = ({
 
   useEffect(() => {
     const toggleNavigator = (event: KeyboardEvent): void => {
-      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'm') {
-        event.preventDefault();
-        setPanel((current) => {
-          return current === 'navigator' ? 'none' : 'navigator';
-        });
+      if (isTypingTarget(event.target) || !matchesShortcut(event, appShortcuts.toggleNavigator)) {
+        return;
       }
+
+      event.preventDefault();
+      setPanel((current) => {
+        return current === 'navigator' ? 'none' : 'navigator';
+      });
     };
 
     window.addEventListener('keydown', toggleNavigator);
@@ -198,6 +283,7 @@ export const SessionViewer: FC<SessionViewerProps> = ({
       <>
         <MessageTimeline
           entries={feed.entries}
+          agent={agent}
           filters={filters}
           scrollElement={scrollElement}
           highlightTimestamp={highlightTimestamp}
@@ -221,124 +307,123 @@ export const SessionViewer: FC<SessionViewerProps> = ({
       "
       data-session-viewer
     >
-      <header className="
-        flex min-h-14 shrink-0 items-center gap-2 border-b border-border
-        bg-card/70 px-4
-      "
-      >
-        <div className="max-w-[55%] min-w-0 flex-1">
+      <header className="shrink-0 border-b border-border">
+        <div className="flex items-center gap-3 px-4.5 pt-2.75">
           <h2
-            className="truncate text-sm font-semibold text-foreground"
+            className="
+              min-w-0 flex-1 truncate text-sm font-semibold text-foreground
+            "
             data-session-title
           >
             {title}
           </h2>
-          <p className="
-            flex items-center gap-2 truncate text-xs text-muted-foreground
-          "
+          <span
+            className="
+              inline-flex shrink-0 items-center gap-1.5 text-body font-medium
+              text-ok
+            "
+            title={feed.syncing ? t('checkingUpdates') : t('liveUpdates')}
+            data-live
           >
-            <span className="truncate">{projectLabel}</span>
-            {gitBranch != null && (
-              <span className="flex min-w-0 items-center gap-1">
-                <GitBranch className="size-3 shrink-0" />
-                <span className="truncate" data-session-branch>{gitBranch}</span>
-              </span>
-            )}
-          </p>
-        </div>
-        <div className="ms-auto flex shrink-0 items-center gap-1.5">
-          <Badge tone="success" title={feed.syncing ? t('checkingUpdates') : t('liveUpdates')}>
             <span className={cn('size-1.5 rounded-full bg-current', feed.syncing && `
               animate-pulse
             `)}
             />
             {t('live')}
-          </Badge>
-          <Badge tone="accent" title={t('userAndAssistant')}>
-            <MessageSquare className="size-3" />
-            {t('messageCount', { count: feed.messageCount })}
-          </Badge>
-
-          {supportsSidechains && (
-            <Button
-              size="sm"
-              variant={includeSidechain ? 'primary' : 'ghost'}
-              pressed={includeSidechain}
-              onClick={() => {
-                setIncludeSidechain((value) => {
-                  return !value;
-                });
-              }}
-              title={t('includeSubagents')}
+          </span>
+          <div className="flex shrink-0 items-center gap-1.5">
+            {supportsSidechains && (
+              <HeaderAction
+                label={t('includeSubagentActivity')}
+                icon={<Users className="size-3.5" />}
+                active={includeSidechain}
+                onClick={() => {
+                  setIncludeSidechain((value) => {
+                    return !value;
+                  });
+                }}
+              />
+            )}
+            {/* One segmented pair, one panel at a time (or none). */}
+            <div className="
+              flex items-center gap-0.5 rounded-md border border-border bg-muted
+              p-0.5
+            "
             >
-              <ListFilter className="size-3.5" />
-              {t('includeSubagentActivity')}
-            </Button>
+              <PanelTab
+                label={t('navigator')}
+                icon={<ListTree className="size-3.5" />}
+                active={panel === 'navigator'}
+                onClick={() => {
+                  setPanel((current) => {
+                    return current === 'navigator' ? 'none' : 'navigator';
+                  });
+                }}
+              />
+              <PanelTab
+                label={t('fileEdits')}
+                icon={<FileText className="size-3.5" />}
+                active={panel === 'edits'}
+                onClick={() => {
+                  setPanel((current) => {
+                    return current === 'edits' ? 'none' : 'edits';
+                  });
+                }}
+              />
+            </div>
+            <MessageFilterMenu filters={filters} onChange={setFilters} />
+          </div>
+        </div>
+        {/* The sub-header: one mono line of who and what, then how much of it is
+            loaded (or, once filtered, how much is shown). */}
+        <div
+          className="
+            flex min-w-0 items-center gap-1.5 px-4.5 pt-1 pb-2.75 font-mono
+            text-figure text-faint
+          "
+          data-session-meta
+        >
+          <span
+            data-agent={agent}
+            className="agent-dot size-1.5 shrink-0 rounded-full"
+            aria-hidden
+          />
+          <span className="shrink-0">{agentOption(agent).label}</span>
+          {model != null && (
+            <>
+              <span className="text-dim">/</span>
+              <span className="truncate">{model}</span>
+            </>
           )}
-          <Button
-            size="sm"
-            variant={filterBarOpen || filtersActive ? 'primary' : 'ghost'}
-            pressed={filterBarOpen}
-            onClick={() => {
-              setFilterBarOpen((current) => {
-                return !current;
-              });
-            }}
-            title={filterBarOpen ? t('hideFilterBar') : t('showFilterBar')}
+          {gitBranch != null && (
+            <>
+              <span className="text-dim">/</span>
+              <GitBranch className="size-3 shrink-0" />
+              <span className="min-w-0 truncate" data-session-branch>{gitBranch}</span>
+            </>
+          )}
+          <span className="text-dim">/</span>
+          <span className="shrink-0">
+            {t('messageCount', { count: feed.messageCount })}
+          </span>
+          <span
+            className={cn(
+              'ms-auto shrink-0 ps-2 tabular-nums',
+              filtersActive && 'text-primary',
+            )}
+            data-loaded-count
           >
-            <ListFilter className="size-3.5" />
-            {t('filters')}
-          </Button>
-          {/* Both panels open from the same row of icons, one at a time. */}
-          <Button
-            size="sm"
-            variant={panel === 'navigator' ? 'primary' : 'ghost'}
-            pressed={panel === 'navigator'}
-            onClick={() => {
-              setPanel((current) => {
-                return current === 'navigator' ? 'none' : 'navigator';
-              });
-            }}
-            title={t('openMessageNavigator')}
-          >
-            <ListTree className="size-3.5" />
-            {t('navigator')}
-          </Button>
-          <Button
-            size="sm"
-            variant={panel === 'edits' ? 'primary' : 'ghost'}
-            pressed={panel === 'edits'}
-            onClick={() => {
-              setPanel((current) => {
-                return current === 'edits' ? 'none' : 'edits';
-              });
-            }}
-            title={t('openFileEdits')}
-          >
-            <FileDiff className="size-3.5" />
-            {t('fileEdits')}
-          </Button>
-          <ExportMenu entries={feed.entries} project={projectLabel} title={title} />
+            {countLabel}
+          </span>
         </div>
       </header>
-
-      {filterBarOpen && (
-        <MessageFilterToolbar
-          filters={filters}
-          total={feed.entries.length}
-          visible={visibleEntries}
-          onChange={setFilters}
-          onDismiss={() => {
-            setFilterBarOpen(false);
-          }}
-        />
-      )}
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <div
           ref={setScrollElement}
           className="
-            min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain p-4
+            min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-4.5
+            pt-1.5
           "
         >
           <div className="mx-auto max-w-5xl">
@@ -348,6 +433,7 @@ export const SessionViewer: FC<SessionViewerProps> = ({
         <CompanionPane
           panel={panel}
           width={navigatorWidth}
+          agent={agent}
           entries={feed.entries}
           filters={filters}
           editedFiles={editedFiles}

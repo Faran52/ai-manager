@@ -7,9 +7,10 @@ import {
   entryIsVisible,
   hasActiveMessageFilters,
   toggleMessageFilter,
+  visibleAssistantBlocks,
 } from './messageFilterUtils';
 
-import type { HistoryEntry } from '@services/history/historyService';
+import type { AssistantBlock, HistoryEntry } from '@services/history/historyService';
 
 const entries: readonly HistoryEntry[] = [
   {
@@ -121,6 +122,36 @@ describe('message filters', () => {
       return blockIsVisible(block, noThinking);
     })).toEqual([true, false, false, true]);
   });
+});
+
+test('splits a turn into the blocks a filter keeps and the count it drops', () => {
+  const blocks: readonly AssistantBlock[] = [
+    {
+      blockType: 'text',
+      text: 'shown',
+    },
+    {
+      blockType: 'thinking',
+      thinking: 'hidden',
+    },
+    {
+      blockType: 'tool-use',
+      call: {
+        id: 'c1',
+        name: 'Bash',
+        input: {
+          kind: 'bash',
+          command: 'ls',
+        },
+      },
+    },
+  ];
+  const noThinking = toggleMessageFilter(defaultMessageFilters(), 'thinking');
+  const result = visibleAssistantBlocks(blocks, noThinking);
+
+  expect(result.blocks).toHaveLength(2);
+  expect(result.hiddenCount).toBe(1);
+  expect(visibleAssistantBlocks(blocks, defaultMessageFilters()).hiddenCount).toBe(0);
 });
 
 test('round-trips filters through storage and rejects damaged values', () => {

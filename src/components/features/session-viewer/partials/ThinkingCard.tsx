@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
 
-import { Brain, ChevronDown } from 'lucide-react';
+import { Brain } from 'lucide-react';
+
+import { Disclosure, MarkdownView } from '@ui/index';
 
 import type { FC } from 'react';
 
@@ -10,31 +12,26 @@ export interface ThinkingCardProps {
 
 export const ThinkingCard: FC<ThinkingCardProps> = ({ thinking }) => {
   const { t } = useTranslation('session');
+
   return (
-    <details
-      className="group rounded-lg border border-primary/30 bg-primary/5"
-      data-thinking
+    <Disclosure
+      className="rounded-lg border border-primary/30 bg-primary/5"
+      triggerClassName="gap-1.5 px-3 py-1.5 text-body font-medium text-primary"
+      summary={(
+        <>
+          <Brain className="size-3.5 shrink-0" />
+          <span>{t('thinking')}</span>
+        </>
+      )}
     >
-      <summary className="
-        flex cursor-pointer list-none items-center gap-1.5 px-3 py-1.5 text-xs
-        font-medium text-primary
+      {/* Codex and Gemini both record reasoning as `**subject**` headers, so the
+          body is Markdown by nature and renders parsed without asking. */}
+      <div className="
+        border-t border-primary/20 px-3 py-2 text-muted-foreground
       "
       >
-        <Brain className="size-3.5" />
-        <span>{t('thinking')}</span>
-        <ChevronDown className="
-          size-3 transition-transform
-          group-open:rotate-180
-        "
-        />
-      </summary>
-      <p className="
-        border-t border-primary/20 px-3 py-2 text-xs/relaxed whitespace-pre-wrap
-        text-muted-foreground
-      "
-      >
-        {thinking}
-      </p>
-    </details>
+        <MarkdownView text={thinking} trusted />
+      </div>
+    </Disclosure>
   );
 };

@@ -25,6 +25,11 @@ export interface MessageFilters {
 
 export type MessageFilterKey = keyof MessageRoleFilters | keyof MessageContentFilters;
 
+export interface VisibleAssistantBlocks {
+  readonly blocks: readonly AssistantBlock[];
+  readonly hiddenCount: number;
+}
+
 const FILTER_COUNT = 6;
 
 export const defaultMessageFilters = (): MessageFilters => {
@@ -88,6 +93,22 @@ export const blockIsVisible = (block: AssistantBlock, filters: MessageFilters): 
     case 'tool-use':
       return filters.content.tools;
   }
+};
+
+// One pass over a turn's blocks: the ones a filter keeps, and how many it drops.
+// The timeline was filtering the same array twice to get both numbers.
+export const visibleAssistantBlocks = (
+  blocks: readonly AssistantBlock[],
+  filters: MessageFilters,
+): VisibleAssistantBlocks => {
+  const shown = blocks.filter((block) => {
+    return blockIsVisible(block, filters);
+  });
+
+  return {
+    blocks: shown,
+    hiddenCount: blocks.length - shown.length,
+  };
 };
 
 export const entryIsVisible = (

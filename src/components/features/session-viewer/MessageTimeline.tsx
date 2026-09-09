@@ -11,7 +11,7 @@ import { motion } from 'motion/react';
 
 import { cn } from '@utils/cnUtils';
 
-import { fadeTransition } from '@ui/index';
+import { fadeTransition, useReducedMotion } from '@ui/index';
 
 import {
   AssistantTurn,
@@ -21,13 +21,14 @@ import {
   SystemNotice,
   UserTurn,
 } from './partials';
-import { blockIsVisible, defaultMessageFilters } from './utils/messageFilterUtils';
+import { defaultMessageFilters, visibleAssistantBlocks } from './utils/messageFilterUtils';
 import {
   buildTimelineModel,
   dayAtRow,
   rowIndexForTimestamp,
 } from './utils/timelineUtils';
 
+import type { AgentId } from '@config/agents';
 import type { HistoryEntry, ToolOutcome } from '@services/history/historyService';
 import type { FC } from 'react';
 import type { MessageFilters } from './utils/messageFilterUtils';
@@ -35,6 +36,8 @@ import type { TimelineRow } from './utils/timelineUtils';
 
 export interface MessageTimelineProps {
   readonly entries: readonly HistoryEntry[];
+  // The session's agent, so each assistant turn's mark carries its hue.
+  readonly agent: AgentId;
   readonly filters?: MessageFilters;
   readonly scrollElement?: HTMLDivElement | null;
   readonly highlightTimestamp?: string | undefined;
@@ -87,6 +90,7 @@ const renderRow = (
   orphans: ReadonlyMap<string, readonly ToolOutcome[]>,
   filters: MessageFilters,
   nowMs: number,
+  agent: AgentId,
 ) => {
   if (row.kind === 'date') {
     return <DateDivider timestampMs={row.timestampMs} nowMs={nowMs} />;
@@ -99,27 +103,28 @@ const renderRow = (
       return (
         <UserTurn
           entry={entry}
+          agent={agent}
           orphans={orphans.get(entry.uuid) ?? []}
           filters={filters.content}
           showHeader={!row.continues}
         />
       );
-    case 'assistant':
+    case 'assistant': {
+      const visible = visibleAssistantBlocks(entry.blocks, filters);
+
       return (
         <AssistantTurn
           entry={entry}
-          visibleBlocks={entry.blocks.filter((block) => {
-            return blockIsVisible(block, filters);
-          })}
-          hiddenCount={entry.blocks.length - entry.blocks.filter((block) => {
-            return blockIsVisible(block, filters);
-          }).length}
+          agent={agent}
+          visibleBlocks={visible.blocks}
+          hiddenCount={visible.hiddenCount}
           outcomeFor={(toolUseId) => {
             return pairs.get(toolUseId);
           }}
           showHeader={!row.continues}
         />
       );
+    }
     case 'system':
       return <SystemNotice entry={entry} />;
     case 'summary':
@@ -129,6 +134,7 @@ const renderRow = (
 
 export const MessageTimeline: FC<MessageTimelineProps> = ({
   entries,
+  agent,
   filters = defaultMessageFilters(),
   scrollElement,
   highlightTimestamp,
@@ -139,6 +145,7 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
   const ownScrollRef = useRef<HTMLDivElement>(null);
   const scrollMarginRef = useRef(0);
   const scrolledForRef = useRef<string | null>(null);
+  const reduceMotion = useReducedMotion();
 
   // Frozen on mount so the day labels do not shift while the timeline is open.
   const [mountedNowMs] = useState(() => {
@@ -201,11 +208,19 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
     scrolledForRef.current = highlightTimestamp;
   }, [highlightTimestamp, model.rows, virtualizer]);
 
+  /**
+   * A click in the navigator is a deliberate jump the reader is following with
+   * their eyes, so it glides to the row rather than teleporting to it. Search,
+   * which lands on a row the reader has not seen, still snaps (above).
+   */
   useEffect(() => {
     if (navigation != null) {
-      virtualizer.scrollToIndex(navigation.index, { align: 'center' });
+      virtualizer.scrollToIndex(navigation.index, {
+        align: 'center',
+        behavior: reduceMotion ? 'auto' : 'smooth',
+      });
     }
-  }, [navigation, virtualizer]);
+  }, [navigation, reduceMotion, virtualizer]);
 
   const firstVisible = virtualizer.getVirtualItems()[0];
   // A separator on screen already names the day; the pill is for when it is not.
@@ -236,18 +251,36 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
             return null;
           }
 
+          /**
+           * A hairline between adjacent turns, the way the mock separates them. A
+           * date row in between already breaks the run, and a turn that continues
+           * the same speaker stays in the same block, so neither takes a rule.
+           */
+          const previous = model.rows[item.index - 1];
+          const next = model.rows[item.index + 1];
+          const dividedFromPrevious = row.kind === 'entry'
+            && !row.continues
+            && previous?.kind === 'entry';
+          // A continued turn sits tight against the one it extends, at both ends:
+          // its own top, and the bottom of the row above it.
+          const openTight = row.kind === 'entry' && row.continues;
+          const closeTight = next?.kind === 'entry' && next.continues;
+
           return (
             <div
               key={item.key}
               ref={virtualizer.measureElement}
               data-index={item.index}
               className={cn(
-                'absolute top-0 left-0 w-full pb-4 transition-opacity',
+                'absolute top-0 left-0 w-full transition-opacity',
+                openTight ? 'pt-1.5' : 'pt-3.5',
+                closeTight ? 'pb-1.5' : 'pb-3.5',
+                dividedFromPrevious && 'border-t border-hair',
                 row.kind === 'entry' && row.dimmed && 'opacity-60',
               )}
               style={{ transform: `translateY(${String(item.start - scrollMarginRef.current)}px)` }}
             >
-              {renderRow(row, model.pairs, model.orphans, filters, nowMs)}
+              {renderRow(row, model.pairs, model.orphans, filters, nowMs, agent)}
             </div>
           );
         })}

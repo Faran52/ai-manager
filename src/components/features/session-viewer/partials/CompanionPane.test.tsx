@@ -46,6 +46,7 @@ const pane = (overrides: Partial<CompanionPaneProps> = {}): void => {
     <CompanionPane
       panel="edits"
       width={280}
+      agent="claude"
       entries={[]}
       filters={filters}
       editedFiles={files}

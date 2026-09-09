@@ -62,7 +62,7 @@ const entries: HistoryEntry[] = [
 
 describe('MessageTimeline', () => {
   test('orders turns and dims sidechain content', () => {
-    render(<MessageTimeline entries={entries} />);
+    render(<MessageTimeline agent="claude" entries={entries} />);
 
     expect(screen.getByText('question')).toBeDefined();
     expect(screen.getByText('answer')).toBeDefined();
@@ -74,7 +74,7 @@ describe('MessageTimeline', () => {
   });
 
   test('pairs tool results onto their calls inside the timeline', async () => {
-    render(<MessageTimeline entries={entries} />);
+    render(<MessageTimeline agent="claude" entries={entries} />);
     const button = screen.getAllByRole<HTMLButtonElement>('button').at(0);
 
     if (button != null) {
@@ -87,22 +87,24 @@ describe('MessageTimeline', () => {
 
   test('renders named outcomes whose calls are missing', () => {
     render(
-      <MessageTimeline entries={[
-        {
-          kind: 'user',
-          uuid: 'orphan',
-          timestamp: 't',
-          sidechain: false,
-          meta: true,
-          text: '',
-          outcomes: [{
-            toolUseId: 'missing',
-            status: 'error',
-            text: 'unmatched result',
-            images: [],
-          }],
-        },
-      ]}
+      <MessageTimeline
+        agent="claude"
+        entries={[
+          {
+            kind: 'user',
+            uuid: 'orphan',
+            timestamp: 't',
+            sidechain: false,
+            meta: true,
+            text: '',
+            outcomes: [{
+              toolUseId: 'missing',
+              status: 'error',
+              text: 'unmatched result',
+              images: [],
+            }],
+          },
+        ]}
       />,
     );
 
@@ -135,9 +137,34 @@ describe('MessageTimeline extra kinds', () => {
       },
     ];
 
-    render(<MessageTimeline entries={extended} />);
+    render(<MessageTimeline agent="claude" entries={extended} />);
 
     expect(screen.getByText('notice')).toBeDefined();
+  });
+});
+
+describe('MessageTimeline navigation', () => {
+  test('snaps to a navigated row for a reduced-motion reader', () => {
+    vi.stubGlobal('matchMedia', () => {
+      return {
+        matches: true,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      };
+    });
+    const scrollSpy = vi.spyOn(Element.prototype, 'scrollTo').mockImplementation(() => {
+      return undefined;
+    });
+
+    try {
+      render(<MessageTimeline agent="claude" entries={entries} navigation={{ index: 1 }} />);
+
+      expect(screen.getByText('question')).toBeDefined();
+    }
+    finally {
+      scrollSpy.mockRestore();
+      vi.unstubAllGlobals();
+    }
   });
 });
 
@@ -147,25 +174,27 @@ describe('MessageTimeline summary keys', () => {
 
     try {
       render(
-        <MessageTimeline entries={[
-          {
-            kind: 'user',
-            uuid: 'u1',
-            timestamp: 't1',
-            sidechain: false,
-            meta: false,
-            text: 'hi',
-            outcomes: [],
-          },
-          {
-            kind: 'summary',
-            text: 'Conversation compacted',
-          },
-          {
-            kind: 'summary',
-            text: 'Conversation compacted',
-          },
-        ]}
+        <MessageTimeline
+          agent="claude"
+          entries={[
+            {
+              kind: 'user',
+              uuid: 'u1',
+              timestamp: 't1',
+              sidechain: false,
+              meta: false,
+              text: 'hi',
+              outcomes: [],
+            },
+            {
+              kind: 'summary',
+              text: 'Conversation compacted',
+            },
+            {
+              kind: 'summary',
+              text: 'Conversation compacted',
+            },
+          ]}
         />,
       );
 

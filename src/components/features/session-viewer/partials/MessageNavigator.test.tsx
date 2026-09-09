@@ -105,6 +105,7 @@ const renderNavigator = (onNavigate = noop): void => {
   render(
     <MessageNavigator
       entries={entries}
+      agent="claude"
       filters={defaultMessageFilters()}
       width={280}
       onNavigate={onNavigate}
@@ -129,7 +130,7 @@ test('previews every entry kind and collapses whitespace', () => {
 test('labels an entry with no preview by its kind', () => {
   renderNavigator();
 
-  expect(screen.getByLabelText('Assistant 5')).toBeDefined();
+  expect(screen.getByLabelText('Claude Code 5')).toBeDefined();
   expect(screen.getByLabelText('User 8')).toBeDefined();
 });
 
@@ -137,7 +138,7 @@ test('jumps to the row it was asked for, counting the day separator', async () =
   const onNavigate = vi.fn();
 
   renderNavigator(onNavigate);
-  await userEvent.click(screen.getByLabelText('Assistant 3'));
+  await userEvent.click(screen.getByLabelText('Claude Code 3'));
 
   expect(onNavigate).toHaveBeenCalledWith(3);
 });
@@ -166,6 +167,7 @@ test('closes on request', async () => {
   render(
     <MessageNavigator
       entries={entries}
+      agent="claude"
       filters={defaultMessageFilters()}
       width={280}
       onNavigate={noop}

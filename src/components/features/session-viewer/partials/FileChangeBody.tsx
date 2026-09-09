@@ -40,7 +40,7 @@ export const FileChangeBody: FC<FileChangeBodyProps> = ({ input }) => {
 
   if (hunks.length === 0) {
     return (
-      <p className="text-xs text-muted-foreground" data-file-change-empty>
+      <p className="text-body text-muted-foreground" data-file-change-empty>
         {t('noChangeRequested')}
       </p>
     );

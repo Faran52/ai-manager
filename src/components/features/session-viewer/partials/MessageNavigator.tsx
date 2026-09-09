@@ -7,14 +7,22 @@ import {
   X,
 } from 'lucide-react';
 
+import { agentOption } from '@config/agents';
+
+import { cn } from '@utils/cnUtils';
+
 import { buildTimelineModel } from '../utils/timelineUtils';
 
+import type { AgentId } from '@config/agents';
 import type { HistoryEntry } from '@services/history/historyService';
 import type { FC } from 'react';
 import type { MessageFilters } from '../utils/messageFilterUtils';
 
 export interface MessageNavigatorProps {
   readonly entries: readonly HistoryEntry[];
+  // The session's agent, so an assistant row reads in its hue and by its name,
+  // the way the session list marks it.
+  readonly agent: AgentId;
   readonly filters: MessageFilters;
   readonly width: number;
   readonly onNavigate: (index: number) => void;
@@ -60,6 +68,7 @@ const previewOf = (entry: HistoryEntry): string => {
 
 export const MessageNavigator: FC<MessageNavigatorProps> = ({
   entries,
+  agent,
   filters,
   width,
   onNavigate,
@@ -93,13 +102,17 @@ export const MessageNavigator: FC<MessageNavigatorProps> = ({
   const visibleRows = needle.length === 0
     ? rows
     : rows.filter((row) => {
+        const label = row.kind === 'assistant' ? agentOption(agent).label : t(row.kind);
+
         return row.preview.toLowerCase().includes(needle)
-          || t(row.kind).toLowerCase().includes(needle);
+          || label.toLowerCase().includes(needle);
       });
 
   return (
     <aside
-      className="flex h-full shrink-0 flex-col bg-card/55"
+      className="
+        flex h-full shrink-0 flex-col border-s border-border bg-background
+      "
       style={{ width }}
       aria-label={t('messageNavigator')}
       data-message-navigator
@@ -108,12 +121,12 @@ export const MessageNavigator: FC<MessageNavigatorProps> = ({
         flex min-h-11 shrink-0 items-center gap-2 border-b border-border px-3
       "
       >
-        <ListTree className="size-3.5 text-primary" />
+        <ListTree className="size-3.5 text-faint" />
         <h3 className="
           min-w-0 flex-1 truncate text-xs font-semibold text-foreground
         "
         >
-          {t('messageNavigator')}
+          {t('navigator')}
         </h3>
         <span className="
           font-mono text-figure text-muted-foreground tabular-nums
@@ -162,41 +175,72 @@ export const MessageNavigator: FC<MessageNavigatorProps> = ({
               </p>
             )
           : (
-              <ol className="space-y-0.5">
+              <ol className="space-y-px">
                 {visibleRows.map((row) => {
+                  // The assistant reads by its agent's name and hue, the way the
+                  // session list marks it; every other kind keeps its plain word.
+                  const roleLabel = row.kind === 'assistant'
+                    ? agentOption(agent).label
+                    : t(row.kind);
+
                   return (
                     <li key={row.key}>
                       <button
                         type="button"
                         className="
-                          group flex w-full gap-2 rounded-lg p-2 text-start
+                          flex w-full gap-2.5 rounded-md px-2.5 py-1.5
+                          text-start
                           hover:bg-accent
                           focus-visible:outline-2 focus-visible:outline-ring
                         "
-                        aria-label={`${t(row.kind)} ${String(row.position)}`}
+                        aria-label={`${roleLabel} ${String(row.position)}`}
                         onClick={() => {
                           onNavigate(row.index);
                         }}
                       >
+                        {/* The count in its own column, the way the mock keeps
+                            the number small beside a two-line preview. */}
                         <span className="
-                          mt-1.5 size-1.5 shrink-0 rounded-full bg-primary/70
-                          group-hover:bg-primary
+                          mt-px w-4 shrink-0 font-mono text-figure text-dim
+                          tabular-nums
                         "
-                        />
+                        >
+                          {String(row.position).padStart(2, '0')}
+                        </span>
                         <span className="min-w-0 flex-1">
                           <span className="
-                            flex items-center gap-1.5 font-mono text-eyebrow
-                            tracking-wide text-muted-foreground uppercase
+                            mb-0.5 flex items-center gap-1.5 text-eyebrow
+                            font-semibold tracking-wide text-muted-foreground
+                            uppercase
                           "
                           >
-                            <span>{String(row.position).padStart(2, '0')}</span>
-                            <span>{t(row.kind)}</span>
+                            {/* The role reads as colour, the same question the
+                                session list answers with the agent circle. */}
+                            {row.kind === 'assistant'
+                              ? (
+                                  <span
+                                    data-agent={agent}
+                                    className="
+                                      agent-dot size-1.5 shrink-0 rounded-full
+                                    "
+                                  />
+                                )
+                              : (
+                                  <span className={cn(
+                                    'size-1.5 shrink-0 rounded-full',
+                                    row.kind === 'user'
+                                      ? 'bg-muted-foreground'
+                                      : 'bg-primary/70',
+                                  )}
+                                  />
+                                )}
+                            {roleLabel}
                           </span>
                           <span className="
-                            mt-0.5 line-clamp-2 text-body/4 text-foreground/85
+                            line-clamp-2 text-body/snug text-foreground-2
                           "
                           >
-                            {row.preview || t(row.kind)}
+                            {row.preview || roleLabel}
                           </span>
                         </span>
                       </button>

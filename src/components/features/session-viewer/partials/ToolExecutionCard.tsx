@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 
 import {
   AlertTriangle,
-  ChevronDown,
   FileCode2,
   Globe2,
   PlugZap,
@@ -11,11 +10,10 @@ import {
   SquareTerminal,
   Wrench,
 } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
 
 import { cn } from '@utils/cnUtils';
 
-import { collapseTransition, PatchView } from '@ui/index';
+import { Disclosure, PatchView } from '@ui/index';
 
 import { mcpToolIdentity } from '../utils/mcpToolUtils';
 import { toolSummary } from '../utils/toolSummaryUtils';
@@ -50,14 +48,12 @@ export const ToolExecutionCard: FC<ToolExecutionCardProps> = ({ call, outcome })
   const { t } = useTranslation('session');
   const status: ToolStatus = outcome?.status ?? 'ok';
   const [open, setOpen] = useState(status === 'error');
-  const isDiff = call.input.kind === 'file-edit'
-    || call.input.kind === 'multi-edit'
-    || call.input.kind === 'file-write';
   const showOutcome = outcome != null;
   // A checklist is the whole content of its own call, so there is no result to be waiting on.
   const isChecklist = call.input.kind === 'todo-write';
   const mcpIdentity = mcpToolIdentity(call);
   const summary = toolSummary(call, outcome);
+  const failed = status === 'error';
   let outcomeKind: 'default' | 'mcp' | 'web-fetch' | 'web-search' = 'default';
 
   if (mcpIdentity != null) {
@@ -69,86 +65,75 @@ export const ToolExecutionCard: FC<ToolExecutionCardProps> = ({ call, outcome })
 
   return (
     <div
-      className="overflow-hidden rounded-lg border border-border bg-card/60"
+      className={cn(
+        'overflow-hidden rounded-md border',
+        /**
+         * A failed call keeps the card shape but takes the destructive colour, so
+         * one failure in a run of twenty reads at a glance and never reads as the
+         * amber a pending call wears.
+         */
+        failed
+          ? 'border-destructive/40 bg-destructive/[0.07]'
+          : 'border-border bg-muted',
+        open && 'rounded-b-none',
+      )}
       data-tool-card
       data-tool-kind={outcomeKind}
       data-status={status}
     >
-      <button
-        type="button"
-        onClick={() => {
-          setOpen((value) => {
-            return !value;
-          });
-        }}
-        aria-expanded={open}
-        className="
-          flex w-full items-center gap-2 px-3 py-1.5 text-start text-xs
-          font-medium text-foreground
-          hover:bg-muted/70
+      <Disclosure
+        open={open}
+        onOpenChange={setOpen}
+        triggerClassName="
+          gap-2 px-2.5 py-1.5 text-body font-medium text-foreground
+          hover:bg-accent/40
         "
+        summary={(
+          <>
+            <span className="shrink-0 text-faint" data-tool-tone={summary.tone}>
+              {TONE_ICONS[summary.tone]}
+            </span>
+            <span className="shrink-0 font-mono text-body text-primary">
+              {summary.label}
+            </span>
+            {/* Always the flex child that takes the slack, empty or not, so the
+                badge stays pinned right whether or not the call has a detail. */}
+            <span
+              className="
+                min-w-0 flex-1 truncate font-mono text-body font-normal
+                text-muted-foreground
+              "
+              title={summary.detail}
+              data-tool-detail
+            >
+              {summary.detail}
+            </span>
+            <span className="shrink-0">
+              <StatusBadge status={status} pending={outcome == null && !isChecklist} />
+            </span>
+          </>
+        )}
       >
-        <span className="shrink-0 text-primary" data-tool-tone={summary.tone}>
-          {TONE_ICONS[summary.tone]}
-        </span>
-        <span className="shrink-0 font-mono text-body text-primary">
-          {summary.label}
-        </span>
-        {summary.detail.length > 0 && (
-          <span
-            className="
-              min-w-0 flex-1 truncate font-mono text-body font-normal
-              text-muted-foreground
-            "
-            title={summary.detail}
-            data-tool-detail
-          >
-            {summary.detail}
-          </span>
+        <div className={cn(
+          'space-y-2 border-t px-3 py-2',
+          failed ? 'border-destructive/40' : 'border-border',
         )}
-        <span className={cn('shrink-0', summary.detail.length === 0 && 'ms-auto')}>
-          <StatusBadge status={status} pending={outcome == null && !isChecklist} />
-        </span>
-        <ChevronDown className={cn(`
-          size-3.5 shrink-0 text-muted-foreground transition-transform
-        `, open && 'rotate-180')}
-        />
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            key="tool-card-body"
-            initial={{
-              height: 0,
-              opacity: 0,
-            }}
-            animate={{
-              height: 'auto',
-              opacity: 1,
-            }}
-            exit={{
-              height: 0,
-              opacity: 0,
-            }}
-            transition={collapseTransition}
-            className="overflow-hidden"
-          >
-            <div className="space-y-2 border-t border-border px-3 py-2">
-              <ToolInputBody call={call} changeRecorded={outcome?.patch != null} />
-              {showOutcome && isDiff && outcome.patch != null && <PatchView hunks={outcome.patch} />}
-              {showOutcome && !isDiff && <OutcomeBody outcome={outcome} kind={outcomeKind} />}
-              {showOutcome && isDiff && outcome.patch == null && <OutcomeBody outcome={outcome} />}
-              {status === 'error' && showOutcome && outcome.text == null && (
-                <p className="flex items-center gap-1 text-xs text-destructive">
-                  <AlertTriangle className="size-3.5" />
-                  {' '}
-                  {t('toolErrorNoDetails')}
-                </p>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        >
+          <ToolInputBody call={call} changeRecorded={outcome?.patch != null} />
+          {/* A recorded diff wins over the outcome text either way: Codex reports
+              apply_patch as a generic call, not a file-edit, but still hands its
+              patch to the outcome. */}
+          {showOutcome && outcome.patch != null && <PatchView hunks={outcome.patch} />}
+          {showOutcome && outcome.patch == null && <OutcomeBody outcome={outcome} kind={outcomeKind} />}
+          {failed && showOutcome && outcome.text == null && outcome.patch == null && (
+            <p className="flex items-center gap-1 text-body text-destructive">
+              <AlertTriangle className="size-3.5" />
+              {' '}
+              {t('toolErrorNoDetails')}
+            </p>
+          )}
+        </div>
+      </Disclosure>
     </div>
   );
 };

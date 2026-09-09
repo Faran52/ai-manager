@@ -21,15 +21,32 @@ const base: UserTurnEntry = {
 
 describe('UserTurn', () => {
   test('shows the message bubble with a timestamp anchor', () => {
-    render(<UserTurn entry={base} orphans={[]} />);
+    render(<UserTurn entry={base} agent="claude" orphans={[]} />);
 
     expect(screen.getByText('hello world')).toBeDefined();
     expect(document.querySelector('[data-timestamp="2026-01-01T00:00:00Z"]')).not.toBeNull();
   });
 
+  test('renders the message as markdown', () => {
+    render(
+      <UserTurn
+        agent="claude"
+        entry={{
+          ...base,
+          text: '## Plan\n\n1. first\n2. second',
+        }}
+        orphans={[]}
+      />,
+    );
+
+    expect(screen.getByText('Plan').tagName).toBe('H2');
+    expect(screen.getByText('first').closest('ol')).not.toBeNull();
+  });
+
   test('renders slash commands as chips without a bubble', () => {
     render(
       <UserTurn
+        agent="claude"
         entry={{
           ...base,
           text: '',
@@ -46,6 +63,7 @@ describe('UserTurn', () => {
   test('marks meta echoes and renders orphan results', () => {
     render(
       <UserTurn
+        agent="claude"
         entry={{
           ...base,
           meta: true,
@@ -72,6 +90,7 @@ describe('UserTurn', () => {
 test('keeps injected context collapsed beside the real user message', () => {
   const { rerender } = render(
     <UserTurn
+      agent="claude"
       entry={{
         ...base,
         text: 'Fix this.',
@@ -82,11 +101,12 @@ test('keeps injected context collapsed beside the real user message', () => {
   );
 
   expect(screen.getByText('Fix this.')).toBeDefined();
-  expect(screen.getByText('Injected context')).toBeDefined();
-  expect(document.querySelector('details')?.hasAttribute('open')).toBe(false);
+  expect(screen.getByRole('button', { name: 'Injected context' }).getAttribute('aria-expanded')).toBe('false');
+  expect(screen.queryByText('<environment_context>hidden</environment_context>')).toBeNull();
 
   rerender(
     <UserTurn
+      agent="claude"
       entry={{
         ...base,
         text: 'Fix this.',
@@ -109,6 +129,7 @@ describe('UserTurn orphans without text', () => {
   test('skips them instead of rendering empty blocks', () => {
     render(
       <UserTurn
+        agent="claude"
         entry={{
           ...base,
           text: '',
@@ -125,10 +146,11 @@ describe('UserTurn orphans without text', () => {
   });
 });
 
-describe('UserTurn dim bubbles', () => {
+describe('UserTurn dim meta turns', () => {
   test('dims meta turns that still carry text', () => {
     render(
       <UserTurn
+        agent="claude"
         entry={{
           ...base,
           meta: true,
@@ -138,15 +160,15 @@ describe('UserTurn dim bubbles', () => {
       />,
     );
 
-    const bubble = screen.getByText('echo text');
-
-    expect(bubble.className).toContain('bg-muted');
+    expect(screen.getByText('echo text').closest('.text-muted-foreground')).not.toBeNull();
+    expect(document.querySelector('[data-user-turn][data-meta="true"]')).not.toBeNull();
   });
 });
 
 test('shows a screenshot pasted into the turn', () => {
   render(
     <UserTurn
+      agent="claude"
       entry={{
         kind: 'user',
         uuid: 'u9',
