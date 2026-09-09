@@ -102,7 +102,7 @@ export const ArchiveView: FC<ArchiveViewProps> = ({
 
   return (
     <div className="h-full overflow-y-auto p-4" data-archive-view>
-      <div className="mx-auto grid max-w-4xl gap-4">
+      <div className="mx-auto grid max-w-5xl gap-4">
         {/* The archives are what you came for, so they get the pane. Retention
             is a setting: it keeps one card at the top and then gets out of the
             way. */}

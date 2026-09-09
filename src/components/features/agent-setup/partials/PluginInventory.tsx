@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@utils/cnUtils';
 import { toErrorMessage } from '@utils/errorUtils';
 
-import { Spinner } from '@ui/index';
+import { Spinner, Switch } from '@ui/index';
 
 import { usePluginCosts } from '../hooks/usePluginCosts';
 
@@ -25,13 +25,6 @@ const CELL = 'truncate py-2 pe-4 text-start align-middle';
  */
 const SWITCH_CELL = 'py-2 pe-4 text-start align-middle whitespace-nowrap';
 
-const SWITCH = `
-  flex items-center gap-1.5 text-figure transition-opacity hover:opacity-80
-  disabled:opacity-50
-`;
-const TRACK = 'relative inline-flex h-3 w-6 shrink-0 rounded-full transition-colors';
-// Logical inset plus an RTL-mirrored shift, so the thumb travels inward either way.
-const THUMB = 'absolute top-0.5 start-0.5 size-2 rounded-full transition-transform';
 const HEAD = cn(CELL, `
   sticky top-0 z-10 bg-popover text-figure font-medium tracking-wider
   text-muted-foreground uppercase
@@ -166,7 +159,8 @@ export const PluginInventory: FC<PluginInventoryProps> = ({
         <tbody>
           {ordered(plugins).map((plugin) => {
             const cost = byId.get(plugin.id);
-            const name = plugin.id.split('@')[0];
+            /* v8 ignore next -- splitting on a literal separator always yields index 0 */
+            const name = plugin.id.split('@')[0] ?? plugin.id;
 
             return (
               <tr
@@ -216,36 +210,21 @@ export const PluginInventory: FC<PluginInventoryProps> = ({
                   {cost == null ? '·' : costIn(cost.estimatedCostUsd)}
                 </td>
                 <td className={SWITCH_CELL}>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={plugin.enabled}
-                    aria-label={name}
-                    disabled={busyId === plugin.id}
-                    onClick={() => {
-                      void toggle(plugin);
-                    }}
-                    className={SWITCH}
-                  >
-                    <span className={cn(TRACK, plugin.enabled
-                      ? 'bg-ok/60'
-                      : 'bg-muted-foreground/30')}
-                    >
-                      <span className={cn(THUMB, plugin.enabled
-                        ? `
-                          translate-x-3 bg-ok
-                          rtl:-translate-x-3
-                        `
-                        : 'bg-muted-foreground')}
-                      />
-                    </span>
-                    <span className={plugin.enabled
-                      ? 'text-ok'
-                      : 'text-muted-foreground'}
-                    >
+                  {/* The shared Switch primitive, so the "on" state tracks the
+                      accent like every other switch rather than a fixed --ok. */}
+                  <span className="flex items-center gap-1.5 text-figure">
+                    <Switch
+                      checked={plugin.enabled}
+                      disabled={busyId === plugin.id}
+                      onChange={() => {
+                        void toggle(plugin);
+                      }}
+                      label={name}
+                    />
+                    <span className="text-muted-foreground">
                       {plugin.enabled ? t('stateOn') : t('stateOff')}
                     </span>
-                  </button>
+                  </span>
                 </td>
               </tr>
             );

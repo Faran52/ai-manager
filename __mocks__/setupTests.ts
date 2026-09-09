@@ -1,10 +1,19 @@
 // Global test setup, wired from `vitest.config.ts`. Every global mock belongs here.
 
 import { initI18n } from '@i18n/index';
+import { MotionGlobalConfig } from 'motion/react';
 
 interface AnimationCancel {
   cancel: (this: Animation) => void;
 }
+
+/*
+ * Motion animates over real time even in a headless run, so an exit transition
+ * keeps a node mounted for a few frames after it is removed and a `toBeNull`
+ * assertion right after the click fails. Skipping animations lands every
+ * transition on its final frame at once, which is what a test wants to see.
+ */
+MotionGlobalConfig.skipAnimations = true;
 
 // Components call useTranslation directly, so the runtime has to exist before
 // any of them render or they would only ever show raw keys.

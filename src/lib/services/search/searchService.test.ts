@@ -192,6 +192,7 @@ describe('searchAgentHistory', () => {
         uuid: 's1',
         timestamp: 't3',
         subtype: 'compact_boundary',
+        content: 'compact boundary reached',
       },
       {
         type: 'summary',

@@ -124,7 +124,7 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
 
   return (
     <motion.div
-      className="flex min-w-0 flex-col gap-4"
+      className="flex max-w-5xl min-w-0 flex-col gap-4"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={fadeTransition}
