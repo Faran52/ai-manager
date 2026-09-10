@@ -35,18 +35,21 @@ describe('InjectedContextBody', () => {
     expect(screen.queryByText(/system-reminder/u)).toBeNull();
   });
 
-  test('unwraps an environment_details block instead of printing its tags', () => {
+  test('lifts a Cline environment_details into rows without printing its tags', () => {
     const text = [
       '<environment_details>',
-      '# Current Mode',
+      '# Current Working Directory (/Users/x/proj) Files',
+      '(not shown)',
       '',
+      '# Current Mode',
       'ACT MODE',
       '</environment_details>',
     ].join('\n');
 
     render(<InjectedContextBody text={text} />);
 
-    expect(screen.getByText('Current Mode').tagName).toBe('H1');
+    expect(screen.getByText('/Users/x/proj')).toBeDefined();
+    expect(screen.getByText('ACT MODE')).toBeDefined();
     expect(screen.queryByText(/environment_details/u)).toBeNull();
   });
 

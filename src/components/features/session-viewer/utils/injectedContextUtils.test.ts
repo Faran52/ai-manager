@@ -112,6 +112,45 @@ describe('parseInjectedContext', () => {
     expect(parsed?.rest).toContain('<environment_context>');
   });
 
+  test('takes the working directory and mode out of a Cline environment_details', () => {
+    const parsed = parseInjectedContext(lines(
+      '<environment_details>',
+      '# Visual Studio Code Open Tabs',
+      '(No open tabs)',
+      '',
+      '# Current Working Directory (/Users/x/Desktop) Files',
+      '(Desktop files not shown automatically.)',
+      '',
+      '# Context Window Usage',
+      '0 / 1,310.72K tokens used (0%)',
+      '',
+      '# Current Mode',
+      'ACT MODE',
+      '</environment_details>',
+    ));
+
+    expect(parsed?.environment).toEqual([
+      {
+        label: 'cwd',
+        value: '/Users/x/Desktop',
+      },
+      {
+        label: 'mode',
+        value: 'ACT MODE',
+      },
+    ]);
+    expect(parsed?.rest).toBeUndefined();
+  });
+
+  test('drops a Cline environment_details with no directory and a blank mode', () => {
+    expect(parseInjectedContext(lines(
+      '<environment_details>',
+      '# Current Mode',
+      '   ',
+      '</environment_details>',
+    ))).toBeUndefined();
+  });
+
   test('takes environment fields with no instructions or plugins', () => {
     const parsed = parseInjectedContext('<environment_context><cwd>/only</cwd></environment_context>');
 

@@ -4,9 +4,10 @@ export interface ParsedInjectedContext {
   // The AGENTS.md body Codex wraps in <INSTRUCTIONS>, kept as markdown.
   readonly instructions?: string | undefined;
   /**
-   * cwd, shell, date and timezone from <environment_context>. The <filesystem>
-   * permission tree that block also carries is dropped: it is long and says
-   * nothing a reader of the transcript needs.
+   * cwd, shell, date and timezone from Codex's <environment_context>, or cwd and
+   * mode from Cline's <environment_details>. The parts of either block that a
+   * transcript reader does not need (the <filesystem> permission tree, the file
+   * list, the open tabs) are dropped.
    */
   readonly environment?: readonly ToolInputRow[] | undefined;
   // Display names from <recommended_plugins>, without the trailing `(id@source)`.
@@ -139,6 +140,38 @@ const environmentRows = (block: string): readonly ToolInputRow[] => {
   });
 };
 
+/*
+ * Cline's <environment_details> is a run of "# Section" blocks. The working
+ * directory and the mode are the two a transcript reader needs; the file list,
+ * the open tabs, the detected-tools dump and the context-window gauge are the
+ * same noise as Codex's <filesystem> tree, so they go with the rest of the
+ * block.
+ */
+const CLINE_FIELDS: readonly (readonly [string, RegExp])[] = [
+  ['cwd', /^# Current Working Directory \(([^)]+)\) Files$/mu],
+  ['mode', /^# Current Mode\r?\n(.+)$/mu],
+];
+
+const clineEnvironmentRows = (block: string): readonly ToolInputRow[] => {
+  return CLINE_FIELDS.flatMap(([label, pattern]) => {
+    const match = pattern.exec(block);
+
+    if (match === null) {
+      return [];
+    }
+
+    /* v8 ignore next -- every CLINE_FIELDS pattern has a mandatory capture group */
+    const value = (match[1] ?? '').trim();
+
+    return value.length > 0
+      ? [{
+          label,
+          value,
+        }]
+      : [];
+  });
+};
+
 // "Airtable (airtable@openai-curated-remote)" -> "Airtable". The id in the
 // trailing parenthesis is noise once the name is on its own line.
 const pluginName = (line: string): string => {
@@ -158,17 +191,22 @@ const pluginNames = (block: string): readonly string[] => {
 /*
  * Injected context arrives as a run of pseudo-XML blocks and header lines: an
  * instruction body (Codex's <INSTRUCTIONS>, or a Claude skill's SKILL.md under
- * its "Base directory" line), an <environment_context>, a <recommended_plugins>
- * list. Split them so each reads as what it is, rather than as one wall of
- * tags. Returns undefined when none of the markers are present, so every other
- * agent's injected context falls through unchanged.
+ * its "Base directory" line), an <environment_context> or Cline's
+ * <environment_details>, a <recommended_plugins> list. Split them so each reads
+ * as what it is, rather than as one wall of tags. Returns undefined when none of
+ * the markers are present, so every other agent's injected context falls
+ * through unchanged.
  */
 export const parseInjectedContext = (text: string): ParsedInjectedContext | undefined => {
   const env = carve(text, '<environment_context>', '</environment_context>');
-  const plugin = carve(env.rest, '<recommended_plugins>', '</recommended_plugins>');
+  const details = carve(env.rest, '<environment_details>', '</environment_details>');
+  const plugin = carve(details.rest, '<recommended_plugins>', '</recommended_plugins>');
   const wrapped = carve(plugin.rest, '<INSTRUCTIONS>', '</INSTRUCTIONS>');
 
-  const environment = environmentRows(env.inner);
+  const environment = [
+    ...environmentRows(env.inner),
+    ...clineEnvironmentRows(details.inner),
+  ];
   const plugins = pluginNames(plugin.inner);
   // With no <INSTRUCTIONS> wrapper the body is whatever follows a header line at
   // the very start; the header itself is then just a label the section replaces.
