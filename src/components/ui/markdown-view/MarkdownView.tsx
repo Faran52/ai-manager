@@ -1,8 +1,13 @@
-import { useMemo, useState } from 'react';
+import {
+  useCallback,
+  useMemo,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatePresence, motion } from 'motion/react';
 
+import { cn } from '@utils/cnUtils';
 import { hasMarkdownMarkup } from '@utils/markdownUtils';
 
 import { CodeLine } from '../code-line/CodeLine';
@@ -25,6 +30,12 @@ export interface MarkdownViewProps {
    * present, so a one line answer never grows a toggle.
    */
   readonly trusted?: boolean;
+  /*
+   * Drop the card's own border and fill. Set it when a parent already frames
+   * this (a Disclosure around thinking or injected context), where the card's
+   * border would otherwise sit a few pixels inside the parent's as a second rule.
+   */
+  readonly bare?: boolean;
 }
 
 const VIEWS: readonly View[] = ['parsed', 'raw'];
@@ -36,12 +47,32 @@ const LABEL_KEYS: Record<View, string> = {
 
 const INSTANT = { duration: 0 };
 
-export const MarkdownView: FC<MarkdownViewProps> = ({ text, trusted = false }) => {
+/*
+ * The transcript is virtualised, so a card scrolled out of the window unmounts
+ * and its toggle would snap back to Parsed on return. Keep the last choice per
+ * body text at module scope: no id has to be threaded through the turn
+ * components, and two identical blocks sharing a toggle is harmless. Bounded in
+ * practice (one transcript's blocks) and cleared on reload.
+ * ponytail: plain Map, no eviction. Swap for LruCache if a heap snapshot cares.
+ */
+const rememberedView = new Map<string, View>();
+
+export const MarkdownView: FC<MarkdownViewProps> = ({
+  text,
+  trusted = false,
+  bare = false,
+}) => {
   const { t } = useTranslation('common');
-  const [view, setView] = useState<View>('parsed');
+  const [view, setView] = useState<View>(() => {
+    return rememberedView.get(text) ?? 'parsed';
+  });
   const reduceMotion = useReducedMotion();
   const structured = useMemo(() => {
     return hasMarkdownMarkup(text);
+  }, [text]);
+  const selectView = useCallback((next: View): void => {
+    setView(next);
+    rememberedView.set(text, next);
   }, [text]);
 
   if (!structured) {
@@ -49,8 +80,16 @@ export const MarkdownView: FC<MarkdownViewProps> = ({ text, trusted = false }) =
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-card/40" data-markdown-view>
-      <div className="flex justify-end border-b border-border px-2 py-1">
+    <div
+      className={cn('overflow-hidden', !bare && `
+        rounded-lg border border-border bg-card/40
+      `)}
+      data-markdown-view
+    >
+      <div className={cn('flex justify-end', bare
+        ? 'pb-1'
+        : 'border-b border-border px-2 py-1')}
+      >
         <SegmentedControl
           label={t('viewToggle')}
           value={view}
@@ -60,10 +99,10 @@ export const MarkdownView: FC<MarkdownViewProps> = ({ text, trusted = false }) =
               label: t(LABEL_KEYS[option]),
             };
           })}
-          onChange={setView}
+          onChange={selectView}
         />
       </div>
-      <div className="px-3 py-2">
+      <div className={cn(!bare && 'px-3 py-2')}>
         <AnimatePresence initial={false} mode="wait">
           <motion.div
             key={view}

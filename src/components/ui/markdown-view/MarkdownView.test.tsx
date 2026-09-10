@@ -73,4 +73,29 @@ describe('MarkdownView', () => {
 
     expect(screen.getByText('Report').tagName).toBe('H1');
   });
+
+  test('still toggles when bare, with the parent left to frame it', async () => {
+    reducedMotion(false);
+    render(<MarkdownView text={'# Bare\n\nbody'} trusted bare />);
+
+    expect(screen.getByText('Bare').tagName).toBe('H1');
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Raw' }));
+
+    expect(codeLine()).toContain('# Bare');
+  });
+
+  test('keeps the chosen view when the card remounts', async () => {
+    reducedMotion(false);
+    const first = render(<MarkdownView text={'# Remount\n\nbody'} trusted />);
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Raw' }));
+    expect(codeLine()).toContain('# Remount');
+
+    first.unmount();
+    render(<MarkdownView text={'# Remount\n\nbody'} trusted />);
+
+    expect(codeLine()).toContain('# Remount');
+    expect(screen.getByRole('radio', { name: 'Raw' })).toHaveProperty('checked', true);
+  });
 });

@@ -21,6 +21,66 @@ interface Carved {
 }
 
 /**
+ * An attribute-free lowercase tag name: every framing wrapper the agents emit
+ * (<environment_details>, <system-reminder>, <path>/<type>/<content>) and almost
+ * no real prose.
+ */
+const WRAPPER_NAME = /^[a-z][a-z\d_-]*$/u;
+// A line that is nothing but one such tag: an unclosed opener, or a stray closer.
+const LONE_WRAPPER = /^[ \t]*<\/?[a-z][\w-]*>[ \t]*\r?\n?/gmu;
+
+/*
+ * One sweep that replaces every <tag>...</tag> pair with its trimmed body. An
+ * indexOf walk, the way carve() and the Cline reader read tags, because a lazy
+ * `[\s\S]*?` between a tag and its backreferenced close is the shape that
+ * backtracks super-linearly.
+ */
+const unwrapOnce = (text: string): string => {
+  let result = '';
+  let cursor = 0;
+
+  for (let open = text.indexOf('<', cursor); open !== -1; open = text.indexOf('<', cursor)) {
+    const nameEnd = text.indexOf('>', open);
+    const name = nameEnd === -1 ? '' : text.slice(open + 1, nameEnd);
+    const close = WRAPPER_NAME.test(name) ? text.indexOf(`</${name}>`, nameEnd) : -1;
+
+    if (close === -1) {
+      result += text.slice(cursor, open + 1);
+      cursor = open + 1;
+      continue;
+    }
+
+    result += text.slice(cursor, open) + text.slice(nameEnd + 1, close).trim();
+    cursor = close + name.length + 3;
+  }
+
+  return result + text.slice(cursor);
+};
+
+/**
+ * Peel every framing wrapper off a blob of injected context so no raw tag
+ * reaches the Markdown renderer, where a hyphen tag renders as an invisible
+ * node and an underscore tag prints its angle brackets. Repeats because one
+ * pair can hide another (a <system-reminder> around more markup); injected
+ * context never nests deeper than a couple.
+ */
+export const stripEnvelopes = (text: string): string => {
+  let current = text;
+
+  for (let pass = 0; pass < 3; pass += 1) {
+    const next = unwrapOnce(current);
+
+    if (next === current) {
+      break;
+    }
+
+    current = next;
+  }
+
+  return current.replace(LONE_WRAPPER, '').replace(/\n{3,}/gu, '\n\n').trim();
+};
+
+/**
  * The line an instruction payload is filed under, at the very start of the
  * block: the "# AGENTS.md/CLAUDE.md instructions for <path>" an agent prints
  * above its rules, or the "Base directory for this skill: <path>" Claude Code

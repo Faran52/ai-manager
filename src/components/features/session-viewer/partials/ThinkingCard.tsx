@@ -30,7 +30,7 @@ export const ThinkingCard: FC<ThinkingCardProps> = ({ thinking }) => {
         border-t border-primary/20 px-3 py-2 text-muted-foreground
       "
       >
-        <MarkdownView text={thinking} trusted />
+        <MarkdownView text={thinking} trusted bare />
       </div>
     </Disclosure>
   );

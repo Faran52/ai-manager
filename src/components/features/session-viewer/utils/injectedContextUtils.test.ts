@@ -4,7 +4,7 @@ import {
   test,
 } from 'vitest';
 
-import { parseInjectedContext } from './injectedContextUtils';
+import { parseInjectedContext, stripEnvelopes } from './injectedContextUtils';
 
 const lines = (...parts: readonly string[]): string => {
   return parts.join('\n');
@@ -146,5 +146,34 @@ describe('parseInjectedContext', () => {
 
     expect(parsed?.instructions).toBe('real');
     expect(parsed?.rest).toContain('Base directory for this skill');
+  });
+});
+
+describe('stripEnvelopes', () => {
+  test('unwraps a single wrapper and keeps the body', () => {
+    expect(stripEnvelopes(lines('<environment_details>', '# Current Mode', 'ACT MODE', '</environment_details>')))
+      .toBe('# Current Mode\nACT MODE');
+  });
+
+  test('unwraps stacked wrappers and collapses the gap between them', () => {
+    const text = '<system-reminder>first</system-reminder>\n\n\n<system-reminder>second</system-reminder>';
+
+    expect(stripEnvelopes(text)).toBe('first\n\nsecond');
+  });
+
+  test('unwraps wrappers nested three deep', () => {
+    expect(stripEnvelopes('<a><b><c>x</c></b></a>')).toBe('x');
+  });
+
+  test('strips a leftover unclosed wrapper tag', () => {
+    expect(stripEnvelopes(lines('<environment_context>', '  <cwd>/repo</cwd>'))).toBe('/repo');
+  });
+
+  test('leaves text with no wrapper untouched', () => {
+    expect(stripEnvelopes('# Heading\n\nplain prose')).toBe('# Heading\n\nplain prose');
+  });
+
+  test('leaves stray angle brackets that are not a wrapper pair', () => {
+    expect(stripEnvelopes('compare a <Foo> node and a < b test')).toBe('compare a <Foo> node and a < b test');
   });
 });

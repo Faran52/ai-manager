@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Disclosure, MarkdownView } from '@ui/index';
 
-import { parseInjectedContext } from '../utils/injectedContextUtils';
+import { parseInjectedContext, stripEnvelopes } from '../utils/injectedContextUtils';
 
 import { RowsList } from './RowsList';
 
@@ -27,7 +27,7 @@ export const InjectedContextBody: FC<InjectedContextBodyProps> = ({ text }) => {
   const parsed = parseInjectedContext(text);
 
   if (parsed == null) {
-    return <MarkdownView text={text} />;
+    return <MarkdownView text={stripEnvelopes(text)} bare />;
   }
 
   return (
@@ -35,7 +35,7 @@ export const InjectedContextBody: FC<InjectedContextBodyProps> = ({ text }) => {
       {parsed.instructions != null && (
         <div className="space-y-1">
           <p className={LABEL_CLASS}>{t('injectedInstructions')}</p>
-          <MarkdownView text={parsed.instructions} trusted />
+          <MarkdownView text={parsed.instructions} trusted bare />
         </div>
       )}
       {parsed.environment != null && (
@@ -64,7 +64,7 @@ export const InjectedContextBody: FC<InjectedContextBodyProps> = ({ text }) => {
           </ul>
         </Disclosure>
       )}
-      {parsed.rest != null && <MarkdownView text={parsed.rest} />}
+      {parsed.rest != null && <MarkdownView text={stripEnvelopes(parsed.rest)} bare />}
     </div>
   );
 };

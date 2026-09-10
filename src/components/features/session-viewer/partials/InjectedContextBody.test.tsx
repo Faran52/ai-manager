@@ -17,7 +17,7 @@ describe('InjectedContextBody', () => {
     expect(document.querySelector('[data-code-line]')).toBeNull();
   });
 
-  test('renders a system-reminder wrapper without choking on the tags', () => {
+  test('unwraps a system-reminder wrapper instead of printing its tags', () => {
     const text = [
       '<system-reminder>',
       'Contents of /repo/CLAUDE.md (project instructions):',
@@ -32,6 +32,22 @@ describe('InjectedContextBody', () => {
 
     expect(screen.getByText('LintelJS project').tagName).toBe('H1');
     expect(screen.getByText('Follow the rules')).toBeDefined();
+    expect(screen.queryByText(/system-reminder/u)).toBeNull();
+  });
+
+  test('unwraps an environment_details block instead of printing its tags', () => {
+    const text = [
+      '<environment_details>',
+      '# Current Mode',
+      '',
+      'ACT MODE',
+      '</environment_details>',
+    ].join('\n');
+
+    render(<InjectedContextBody text={text} />);
+
+    expect(screen.getByText('Current Mode').tagName).toBe('H1');
+    expect(screen.queryByText(/environment_details/u)).toBeNull();
   });
 
   test('renders codex instructions as markdown and the environment as rows', () => {
