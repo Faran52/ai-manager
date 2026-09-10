@@ -34,11 +34,13 @@ const ROW_LABEL: Partial<Record<(typeof ROW_KEYS)[number], string>> = {
 };
 
 /**
- * The grid takes the whole card, in both directions.
+ * A fixed height, not the whole card.
  *
- * A day is a cell of whatever size that leaves, rather than a fixed square with
- * the rest of the card empty around it. How coarse the picture is comes from
- * how many weeks are shown, which is decided in one place.
+ * The grid filled the panel with flex-1, but a panel's height is set by whichever
+ * sibling in its row is taller. An agent with a long tool list drew tall cells
+ * and one with a short list drew flat pills, so the same heatmap looked different
+ * per agent. A fixed height keeps a cell one shape for everyone; WEEKS_SHOWN
+ * pins the width the same way.
  */
 export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
   const { t } = useTranslation('analytics');
@@ -52,7 +54,7 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
 
   return (
     <AnalyticsPanel title={t('activity')}>
-      <div className="mt-3 flex min-h-0 flex-1 gap-2" data-activity-heatmap>
+      <div className="mt-3 flex h-52 gap-2" data-activity-heatmap>
         <div className="grid shrink-0 grid-rows-7 gap-1 pt-4">
           {ROW_KEYS.map((weekday) => {
             const label = ROW_LABEL[weekday];
