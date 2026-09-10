@@ -703,23 +703,27 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
               )}
         </AnimatePresence>
       </motion.section>
-      {projectsOpen && (
-        <PaneDivider
-          label={t('resize')}
-          value={projectsWidth}
-          min={MIN_PROJECTS_WIDTH}
-          max={MAX_PROJECTS_WIDTH}
-          orientation="horizontal"
-          onResize={(delta) => {
-            setProjectsWidth((width) => {
-              return Math.min(
-                Math.max(width + delta, MIN_PROJECTS_WIDTH),
-                MAX_PROJECTS_WIDTH,
-              );
-            });
-          }}
-        />
-      )}
+      {/* Folded, the strip has no width to resize, but the 8px still has to be
+          here or its card border lands flush against the next one's. */}
+      {projectsOpen
+        ? (
+            <PaneDivider
+              label={t('resize')}
+              value={projectsWidth}
+              min={MIN_PROJECTS_WIDTH}
+              max={MAX_PROJECTS_WIDTH}
+              orientation="horizontal"
+              onResize={(delta) => {
+                setProjectsWidth((width) => {
+                  return Math.min(
+                    Math.max(width + delta, MIN_PROJECTS_WIDTH),
+                    MAX_PROJECTS_WIDTH,
+                  );
+                });
+              }}
+            />
+          )
+        : <div className="w-2 shrink-0" />}
       {/* The session list rides with the Sessions view alone: Health and
             Archive read the projects column, and a list of sessions under a
             report it cannot open is one more thing to look past. */}
@@ -1036,23 +1040,25 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
           </motion.section>
         )}
       </AnimatePresence>
-      {showSessions && sessionsOpen && (
-        <PaneDivider
-          label={t('resizeSidebar')}
-          value={sessionsWidth}
-          min={MIN_SESSIONS_WIDTH}
-          max={MAX_SESSIONS_WIDTH}
-          orientation="horizontal"
-          onResize={(delta) => {
-            setSessionsWidth((width) => {
-              return Math.min(
-                Math.max(width + delta, MIN_SESSIONS_WIDTH),
-                MAX_SESSIONS_WIDTH,
-              );
-            });
-          }}
-        />
-      )}
+      {showSessions && (sessionsOpen
+        ? (
+            <PaneDivider
+              label={t('resizeSidebar')}
+              value={sessionsWidth}
+              min={MIN_SESSIONS_WIDTH}
+              max={MAX_SESSIONS_WIDTH}
+              orientation="horizontal"
+              onResize={(delta) => {
+                setSessionsWidth((width) => {
+                  return Math.min(
+                    Math.max(width + delta, MIN_SESSIONS_WIDTH),
+                    MAX_SESSIONS_WIDTH,
+                  );
+                });
+              }}
+            />
+          )
+        : <div className="w-2 shrink-0" />)}
       {menuTarget != null && !selectionMode && (
         <SidebarContextMenu
           target={menuTarget}
