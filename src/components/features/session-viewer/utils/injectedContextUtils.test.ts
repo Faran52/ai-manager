@@ -77,6 +77,22 @@ describe('parseInjectedContext', () => {
     ]);
   });
 
+  test('drops the Codex apps, plugins and skills catalog boilerplate', () => {
+    const parsed = parseInjectedContext(lines(
+      '<INSTRUCTIONS>',
+      '# Rules',
+      '</INSTRUCTIONS>',
+      '<skills_instructions>',
+      '## Skills',
+      'A skill is a set of instructions.',
+      '</skills_instructions>',
+      'and a real note',
+    ));
+
+    expect(parsed?.instructions).toBe('# Rules');
+    expect(parsed?.rest).toBe('and a real note');
+  });
+
   test('keeps leftover text after the parsed blocks as rest', () => {
     const parsed = parseInjectedContext(lines(
       '<INSTRUCTIONS>',

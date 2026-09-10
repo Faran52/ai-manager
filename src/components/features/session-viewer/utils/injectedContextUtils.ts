@@ -119,6 +119,21 @@ const carve = (source: string, open: string, close: string): Carved => {
   };
 };
 
+/*
+ * Codex opens the turn with catalog prose on how apps, plugins and skills work
+ * in general. It is the same boilerplate every session and describes none of
+ * this one, so it is dropped the way the <filesystem> tree is. A carve per tag
+ * rather than one regex: a lazy match between a tag and its backreferenced
+ * close backtracks super-linearly on a long turn.
+ */
+const NOISE_BLOCKS = ['apps_instructions', 'plugins_instructions', 'skills_instructions'];
+
+const dropNoise = (source: string): string => {
+  return NOISE_BLOCKS.reduce((acc, tag) => {
+    return carve(acc, `<${tag}>`, `</${tag}>`).rest;
+  }, source);
+};
+
 const fieldValue = (block: string, tag: string): string => {
   const open = `<${tag}>`;
   const start = block.indexOf(open);
@@ -208,12 +223,13 @@ export const parseInjectedContext = (text: string): ParsedInjectedContext | unde
     ...clineEnvironmentRows(details.inner),
   ];
   const plugins = pluginNames(plugin.inner);
+  const remainder = dropNoise(wrapped.rest);
   // With no <INSTRUCTIONS> wrapper the body is whatever follows a header line at
   // the very start; the header itself is then just a label the section replaces.
   let instructions = wrapped.inner.trim();
-  let rest = wrapped.rest.replace(HEADER, '').trim();
+  let rest = remainder.replace(HEADER, '').trim();
 
-  if (instructions.length === 0 && HEADER.test(wrapped.rest)) {
+  if (instructions.length === 0 && HEADER.test(remainder)) {
     instructions = rest;
     rest = '';
   }
