@@ -63,7 +63,7 @@ export const EditedFileList: FC<EditedFileListProps> = ({
         const { name, directory } = splitPath(file.path, projectPath);
 
         return (
-          <li key={file.path} className="rounded-md">
+          <li key={file.path} className="min-w-0 rounded-md">
             <Disclosure
               open={open}
               onOpenChange={(next) => {
@@ -107,7 +107,7 @@ export const EditedFileList: FC<EditedFileListProps> = ({
                   return (
                     <li
                       key={`${edit.sessionId}-${String(edit.timestampMs)}`}
-                      className="flex items-center gap-1"
+                      className="flex min-w-0 items-center gap-1"
                     >
                       <button
                         type="button"
