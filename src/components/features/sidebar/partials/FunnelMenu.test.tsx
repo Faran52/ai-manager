@@ -62,7 +62,7 @@ describe('FunnelMenu', () => {
     expect(screen.queryByRole('menuitem', { name: /Agents/u })).toBeNull();
   });
 
-  test('offers only the agents the column actually holds', async () => {
+  test('offers the whole agent set, with the empty ones inert', async () => {
     const onToggle = vi.fn();
     const onClear = vi.fn();
 
@@ -78,7 +78,12 @@ describe('FunnelMenu', () => {
     await open();
     await openSub(/Agents/u);
 
-    expect(screen.queryByRole('menuitemcheckbox', { name: /Gemini/u })).toBeNull();
+    // An agent with no project here is shown but cannot be toggled.
+    const gemini = await screen.findByRole('menuitemcheckbox', { name: /Gemini/u });
+
+    expect(gemini.getAttribute('aria-disabled')).toBe('true');
+    await userEvent.click(gemini);
+    expect(onToggle).not.toHaveBeenCalled();
 
     await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: /Claude Code/u }));
     expect(onToggle).toHaveBeenCalledWith('claude');
@@ -87,7 +92,7 @@ describe('FunnelMenu', () => {
     expect(onClear).toHaveBeenCalledTimes(1);
   });
 
-  test('shows every offered agent checked while nothing narrows the list', async () => {
+  test('checks every agent, empty ones included, while nothing narrows the list', async () => {
     renderMenu({
       agents: {
         counts: new Map([['claude', 4], ['codex', 2]]),
@@ -105,9 +110,9 @@ describe('FunnelMenu', () => {
       checked: true,
     })).toBeDefined();
     expect(screen.getByRole('menuitemcheckbox', {
-      name: /Codex CLI/u,
+      name: /Gemini/u,
       checked: true,
-    })).toBeDefined();
+    }).getAttribute('aria-disabled')).toBe('true');
   });
 
   test('marks its trigger once a filter is narrowing the list', () => {

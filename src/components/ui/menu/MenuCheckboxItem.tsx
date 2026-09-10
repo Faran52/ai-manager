@@ -9,6 +9,9 @@ export interface MenuCheckboxItemProps {
   readonly onChange: (checked: boolean) => void;
   // A count reading as what the list would show if this row were the filter.
   readonly hint?: ReactNode;
+  // Shown but inert: the row belongs to the full set yet has nothing to filter
+  // to. Radix takes it out of the arrow-key order and blocks the toggle.
+  readonly disabled?: boolean | undefined;
 }
 
 export const MenuCheckboxItem: FC<MenuCheckboxItemProps> = ({
@@ -16,11 +19,13 @@ export const MenuCheckboxItem: FC<MenuCheckboxItemProps> = ({
   checked,
   onChange,
   hint,
+  disabled = false,
 }) => {
   return (
     <DropdownMenuCheckboxItem
       className="menu-item"
       checked={checked}
+      disabled={disabled}
       /*
        * A filter list is read as a set, so ticking one row keeps the menu open
        * rather than closing it and making the reader reopen it per agent.

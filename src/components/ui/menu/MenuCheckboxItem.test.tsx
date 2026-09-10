@@ -9,10 +9,14 @@ import {
 import { Menu } from './Menu';
 import { MenuCheckboxItem } from './MenuCheckboxItem';
 
-const open = async (checked: boolean, onChange = vi.fn()): Promise<void> => {
+const open = async (
+  checked: boolean,
+  onChange = vi.fn(),
+  disabled = false,
+): Promise<void> => {
   render(
     <Menu label="Filters" trigger={<button type="button">Open</button>}>
-      <MenuCheckboxItem checked={checked} hint={12} onChange={onChange}>
+      <MenuCheckboxItem checked={checked} hint={12} onChange={onChange} disabled={disabled}>
         Claude Code
       </MenuCheckboxItem>
     </Menu>,
@@ -47,4 +51,18 @@ test('keeps the menu open after a tick', async () => {
   await userEvent.click(screen.getByRole('menuitemcheckbox', { name: /Claude Code/ }));
 
   expect(screen.getByRole('menu')).toBeDefined();
+});
+
+test('a disabled row shows its state but does not tick', async () => {
+  const onChange = vi.fn();
+
+  await open(true, onChange, true);
+  const item = screen.getByRole('menuitemcheckbox', { name: /Claude Code/ });
+
+  expect(item.getAttribute('aria-disabled')).toBe('true');
+  expect(item.getAttribute('aria-checked')).toBe('true');
+
+  await userEvent.click(item);
+
+  expect(onChange).not.toHaveBeenCalled();
 });

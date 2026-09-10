@@ -68,22 +68,27 @@ export const FunnelMenu: FC<FunnelMenuProps> = ({
   const allAgents = active.length === 0;
   const narrowed = !allAgents || dateFilter !== 'all';
 
-  // Only agents this column can actually offer; an absent row beats a greyed one.
+  /*
+   * The whole supported set, so the menu reads as what the app knows about. An
+   * agent with no project in this column is offered disabled rather than hidden,
+   * and the ones that can be filtered to sort ahead of the ones that cannot.
+   */
   const offered = agents == null
     ? []
-    : agentOptions.flatMap((option) => {
-        const count = agents.counts.get(option.id);
-
-        return count == null
-          ? []
-          : [{
-              option,
-              count,
-            }];
-      });
+    : agentOptions
+        .map((option) => {
+          return {
+            option,
+            count: agents.counts.get(option.id) ?? 0,
+          };
+        })
+        .sort((left, right) => {
+          return Number(right.count > 0) - Number(left.count > 0);
+        });
   const totalCount = offered.reduce((total, entry) => {
     return total + entry.count;
   }, 0);
+  // Both groups are always populated: offered is the whole supported set.
   const agentGroups = [
     {
       label: t('popularAgents'),
@@ -97,9 +102,7 @@ export const FunnelMenu: FC<FunnelMenuProps> = ({
         return entry.option.popular !== true;
       }),
     },
-  ].filter((group) => {
-    return group.options.length > 0;
-  });
+  ];
 
   return (
     <div className="shrink-0" data-funnel>
@@ -121,7 +124,7 @@ export const FunnelMenu: FC<FunnelMenuProps> = ({
         )}
       >
         <MenuLabel>{t('filterBy')}</MenuLabel>
-        {agents != null && agentGroups.length > 0 && (
+        {agents != null && (
           <MenuSub
             label={t('agents')}
             icon={<Users className="size-3.5" />}
@@ -141,6 +144,7 @@ export const FunnelMenu: FC<FunnelMenuProps> = ({
                         <MenuCheckboxItem
                           key={option.id}
                           checked={allAgents || active.includes(option.id)}
+                          disabled={count === 0}
                           hint={count}
                           onChange={() => {
                             agents.onToggle(option.id);
