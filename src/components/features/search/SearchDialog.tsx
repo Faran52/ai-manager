@@ -95,7 +95,7 @@ export const SearchDialog: FC<SearchDialogProps> = ({
               setTerm(event.currentTarget.value);
             }}
             className="
-              w-full bg-transparent text-sm text-foreground outline-none
+              w-full min-w-0 bg-transparent text-sm text-foreground outline-none
               placeholder:text-muted-foreground
             "
           />

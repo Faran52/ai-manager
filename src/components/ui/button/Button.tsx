@@ -53,7 +53,7 @@ export const Button: FC<ButtonProps> = ({
       className={cn(
         `
           inline-flex items-center justify-center rounded-md font-medium
-          transition-colors
+          whitespace-nowrap transition-colors
         `,
         `
           focus-visible:ring-2 focus-visible:ring-ring
