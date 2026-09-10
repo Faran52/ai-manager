@@ -11,7 +11,7 @@ import { cn } from '@utils/cnUtils';
 import { hasMarkdownMarkup } from '@utils/markdownUtils';
 
 import { CodeLine } from '../code-line/CodeLine';
-import { fadeTransition } from '../constants';
+import { collapseTransition, fadeTransition } from '../constants';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { MarkdownText } from '../markdown-text/MarkdownText';
 import { SegmentedControl } from '../segmented-control/SegmentedControl';
@@ -102,8 +102,19 @@ export const MarkdownView: FC<MarkdownViewProps> = ({
           onChange={selectView}
         />
       </div>
-      <div className={cn(!bare && 'px-3 py-2')}>
-        <AnimatePresence initial={false} mode="wait">
+      {/*
+        popLayout drops the outgoing view to absolute the moment it starts to
+        leave, so the box takes the incoming view's height at once rather than
+        holding the old one until the fade ends. layout then glides that height
+        change on collapseTransition, the bounded-region exception a Disclosure
+        already takes, so Raw and Parsed swap without the container snapping.
+      */}
+      <motion.div
+        layout
+        transition={reduceMotion ? INSTANT : collapseTransition}
+        className={cn('overflow-hidden', !bare && 'px-3 py-2')}
+      >
+        <AnimatePresence initial={false} mode="popLayout">
           <motion.div
             key={view}
             initial={{ opacity: 0 }}
@@ -114,7 +125,7 @@ export const MarkdownView: FC<MarkdownViewProps> = ({
             {view === 'parsed' ? <MarkdownText text={text} /> : <CodeLine text={text} />}
           </motion.div>
         </AnimatePresence>
-      </div>
+      </motion.div>
     </div>
   );
 };
