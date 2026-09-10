@@ -296,8 +296,11 @@
     transition: background-color 120ms ease, border-color 120ms ease;
   }
 
+  /* Keep the inline margin the list cards carry so the pinned card sits at the
+     same width as the eight below it. The pin owns the block spacing. */
   .all-projects-pin .project-card {
-    margin: 0;
+    margin-block: 0;
+    margin-inline: 0.25rem;
   }
 
   .project-card:hover {
