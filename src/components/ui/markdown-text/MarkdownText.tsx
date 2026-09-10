@@ -2,7 +2,10 @@ import ReactMarkdown from 'react-markdown';
 
 import remarkGfm from 'remark-gfm';
 
+import { isBoxArt, normalizeBoxDrawing } from '@utils/markdownUtils';
+
 import { CodeBlock } from '../code-block/CodeBlock';
+import { CodeLine } from '../code-line/CodeLine';
 
 import type { FC, ReactNode } from 'react';
 
@@ -47,7 +50,16 @@ const components = {
       );
     }
 
-    return <CodeBlock code={textOf(children).replace(/\n$/u, '')} language={languageOf(className)} />;
+    const code = raw.replace(/\n$/u, '');
+
+    /**
+     * A fenced file tree or loose box art (a box table is already a GFM table
+     * by here) lines up only in a monospace grid, so it skips the syntax
+     * highlighter and renders on a plain scrolling line.
+     */
+    return isBoxArt(code)
+      ? <CodeLine text={code} />
+      : <CodeBlock code={code} language={languageOf(className)} />;
   },
   a: ({ children, href }: AnchorProps) => {
     return (
@@ -77,8 +89,8 @@ export const MarkdownText: FC<MarkdownTextProps> = ({ text }) => {
         [&_li]:ms-4 [&_li]:text-ui [&_li]:leading-[1.6]
         [&_ol]:list-decimal
         [&_p]:text-ui [&_p]:leading-[1.62]
-        [&_table]:my-2 [&_table]:block [&_table]:max-w-full
-        [&_table]:overflow-x-auto [&_table]:text-figure
+        [&_table]:my-2 [&_table]:w-full [&_table]:table-fixed
+        [&_table]:border-collapse [&_table]:text-figure
         [&_td]:border [&_td]:border-border [&_td]:px-2 [&_td]:py-1
         [&_td]:align-top
         [&_th]:border [&_th]:border-border [&_th]:bg-muted/40 [&_th]:px-2
@@ -88,7 +100,7 @@ export const MarkdownText: FC<MarkdownTextProps> = ({ text }) => {
       data-markdown
     >
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
-        {text}
+        {normalizeBoxDrawing(text)}
       </ReactMarkdown>
     </div>
   );

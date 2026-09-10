@@ -4,7 +4,15 @@ import {
   test,
 } from 'vitest';
 
-import { hasMarkdownMarkup } from './markdownUtils';
+import {
+  hasMarkdownMarkup,
+  isBoxArt,
+  normalizeBoxDrawing,
+} from './markdownUtils';
+
+const lines = (...parts: readonly string[]): string => {
+  return parts.join('\n');
+};
 
 describe('hasMarkdownMarkup', () => {
   test('flags a heading', () => {
@@ -23,6 +31,10 @@ describe('hasMarkdownMarkup', () => {
     expect(hasMarkdownMarkup('above the line\n\n---\n\nbelow the line')).toBe(true);
   });
 
+  test('flags a box-drawing table', () => {
+    expect(hasMarkdownMarkup('┌───┬───┐\n│ a │ b │\n└───┴───┘')).toBe(true);
+  });
+
   test('flags a list of two or more items', () => {
     expect(hasMarkdownMarkup('Findings\n- first issue\n- second issue')).toBe(true);
   });
@@ -37,5 +49,144 @@ describe('hasMarkdownMarkup', () => {
 
   test('treats an empty string as plain text', () => {
     expect(hasMarkdownMarkup('')).toBe(false);
+  });
+});
+
+describe('normalizeBoxDrawing', () => {
+  test('rewrites a two-column box-drawing table as a gfm table', () => {
+    const table = lines(
+      '┌──────┬──────┐',
+      '│ Name │ Kind │',
+      '├──────┼──────┤',
+      '│ foo  │ bar  │',
+      '└──────┴──────┘',
+    );
+
+    expect(normalizeBoxDrawing(table)).toBe(lines(
+      '',
+      '| Name | Kind |',
+      '| --- | --- |',
+      '| foo | bar |',
+      '',
+    ));
+  });
+
+  test('joins a cell that wrapped across several lines of one row', () => {
+    const table = lines(
+      '┌────────┬───────────┐',
+      '│ Piece  │ Role      │',
+      '├────────┼───────────┤',
+      '│ parser │ reads the │',
+      '│        │ raw text  │',
+      '└────────┴───────────┘',
+    );
+
+    expect(normalizeBoxDrawing(table)).toContain('| parser | reads the raw text |');
+  });
+
+  test('ignores a block-element line sitting inside a table run', () => {
+    const table = lines(
+      '┌──────┬──────┐',
+      '│ a    │ b    │',
+      '████████████████',
+      '│ c    │ d    │',
+      '└──────┴──────┘',
+    );
+
+    expect(normalizeBoxDrawing(table)).toContain('| a | b |');
+  });
+
+  test('reads a table drawn with only an outer border, one row per line', () => {
+    const table = lines(
+      '┌──────┬──────┐',
+      '│ a    │ b    │',
+      '│ c    │ d    │',
+      '└──────┴──────┘',
+    );
+
+    expect(normalizeBoxDrawing(table)).toBe(lines(
+      '',
+      '| a | b |',
+      '| --- | --- |',
+      '| c | d |',
+      '',
+    ));
+  });
+
+  test('keeps a box character inside a cell from splitting the column', () => {
+    const table = lines(
+      '┌────────────┬──────┐',
+      '│ a ┌│─ b    │ c    │',
+      '├────────────┼──────┤',
+      '│ x          │ y    │',
+      '└────────────┴──────┘',
+    );
+
+    expect(normalizeBoxDrawing(table)).toContain('| a ┌│─ b | c |');
+  });
+
+  test('escapes a pipe that appears in cell text', () => {
+    const table = lines(
+      '┌─────────┬──────┐',
+      '│ a || b  │ c    │',
+      '├─────────┼──────┤',
+      '│ d       │ e    │',
+      '└─────────┴──────┘',
+    );
+
+    expect(normalizeBoxDrawing(table)).toContain('| a \\|\\| b | c |');
+  });
+
+  test('fences a one-column box, which is not a table', () => {
+    const box = lines('┌──┐', '│ a │', '└──┘');
+
+    expect(normalizeBoxDrawing(`intro\n${box}\noutro`)).toBe(`intro\n\`\`\`\n${box}\n\`\`\`\noutro`);
+  });
+
+  test('fences a single-row box rather than making a one-row table', () => {
+    const box = lines('┌──────┬──────┐', '│ a    │ b    │', '└──────┴──────┘');
+
+    expect(normalizeBoxDrawing(box)).toContain('```');
+  });
+
+  test('fences file-tree output that trails off the end of the text', () => {
+    const input = lines('src/', '├── lib/', '│   └── util.ts', '└── index.ts');
+    const expected = lines('src/', '```', '├── lib/', '│   └── util.ts', '└── index.ts', '```');
+
+    expect(normalizeBoxDrawing(input)).toBe(expected);
+  });
+
+  test('fences bare pipe rows with no border to read a rule from', () => {
+    const rows = lines('│ a │ b │', '│ c │ d │');
+
+    expect(normalizeBoxDrawing(rows)).toBe(lines('```', '│ a │ b │', '│ c │ d │', '```'));
+  });
+
+  test('leaves a single box-drawing line as prose', () => {
+    expect(normalizeBoxDrawing('the │ splits the two columns')).toBe('the │ splits the two columns');
+  });
+
+  test('does not fence a table that already sits inside a code block', () => {
+    const input = lines('```', '┌──┐', '└──┘', '```');
+
+    expect(normalizeBoxDrawing(input)).toBe(input);
+  });
+
+  test('leaves text with no box-drawing untouched', () => {
+    expect(normalizeBoxDrawing('# Heading\n\nplain prose\n')).toBe('# Heading\n\nplain prose\n');
+  });
+});
+
+describe('isBoxArt', () => {
+  test('flags a box-drawing table', () => {
+    expect(isBoxArt('┌──┐\n│ a │\n└──┘')).toBe(true);
+  });
+
+  test('flags file-tree output', () => {
+    expect(isBoxArt('src/\n└── index.ts')).toBe(true);
+  });
+
+  test('does not flag plain code', () => {
+    expect(isBoxArt('const total = a - b;')).toBe(false);
   });
 });

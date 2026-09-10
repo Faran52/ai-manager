@@ -44,6 +44,39 @@ describe('MarkdownText', () => {
     expect(link.getAttribute('target')).toBe('_blank');
     expect(link.getAttribute('rel')).toContain('noreferrer');
   });
+
+  test('renders a pipe table as a table element', () => {
+    render(<MarkdownText text={'| Name | Kind |\n| --- | --- |\n| foo | bar |\n'} />);
+
+    expect(document.querySelector('table')).not.toBeNull();
+    expect(screen.getByText('foo').closest('td')).not.toBeNull();
+    expect(screen.getByText('Name').closest('th')).not.toBeNull();
+  });
+
+  test('renders a two-column box-drawing table as a table element', () => {
+    const table = [
+      '┌──────┬──────┐',
+      '│ Name │ Kind │',
+      '├──────┼──────┤',
+      '│ foo  │ bar  │',
+      '└──────┴──────┘',
+    ].join('\n');
+
+    render(<MarkdownText text={table} />);
+
+    expect(document.querySelector('table')).not.toBeNull();
+    expect(screen.getByText('foo').closest('td')).not.toBeNull();
+    expect(screen.getByText('Name').closest('th')).not.toBeNull();
+  });
+
+  test('renders a single-column box on a plain code line, not in a paragraph', () => {
+    render(<MarkdownText text={'The decoder:\n\n┌────┐\n│ a  │\n└────┘'} />);
+
+    const codeLine = document.querySelector('[data-code-line]');
+
+    expect(codeLine?.textContent).toContain('┌────┐');
+    expect(screen.getByText('The decoder:').tagName).toBe('P');
+  });
 });
 
 describe('textOf fallbacks', () => {
