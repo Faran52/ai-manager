@@ -69,6 +69,14 @@ describe('MarkdownText', () => {
     expect(screen.getByText('Name').closest('th')).not.toBeNull();
   });
 
+  test('renders an attached file as its path over its body', () => {
+    render(<MarkdownText text={'<path>/x/a.ts</path>\n<type>file</type>\n<content>\n1: const a = 1;\n</content>'} />);
+
+    expect(screen.getByText('/x/a.ts')).toBeDefined();
+    expect(document.querySelector('pre')?.textContent).toContain('const a = 1;');
+    expect(screen.queryByText(/<path>/u)).toBeNull();
+  });
+
   test('renders a single-column box on a plain code line, not in a paragraph', () => {
     render(<MarkdownText text={'The decoder:\n\n┌────┐\n│ a  │\n└────┘'} />);
 

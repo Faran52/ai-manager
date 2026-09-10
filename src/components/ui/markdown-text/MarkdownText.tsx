@@ -2,7 +2,11 @@ import ReactMarkdown from 'react-markdown';
 
 import remarkGfm from 'remark-gfm';
 
-import { isBoxArt, normalizeBoxDrawing } from '@utils/markdownUtils';
+import {
+  isBoxArt,
+  normalizeBoxDrawing,
+  unwrapFileRefs,
+} from '@utils/markdownUtils';
 
 import { CodeBlock } from '../code-block/CodeBlock';
 import { CodeLine } from '../code-line/CodeLine';
@@ -100,7 +104,7 @@ export const MarkdownText: FC<MarkdownTextProps> = ({ text }) => {
       data-markdown
     >
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
-        {normalizeBoxDrawing(text)}
+        {normalizeBoxDrawing(unwrapFileRefs(text))}
       </ReactMarkdown>
     </div>
   );

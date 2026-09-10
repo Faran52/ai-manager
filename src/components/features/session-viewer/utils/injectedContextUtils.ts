@@ -1,3 +1,5 @@
+import { unwrapFileRefs } from '@utils/markdownUtils';
+
 import type { ToolInputRow } from '@services/history/historyService';
 
 export interface ParsedInjectedContext {
@@ -61,12 +63,14 @@ const unwrapOnce = (text: string): string => {
 /**
  * Peel every framing wrapper off a blob of injected context so no raw tag
  * reaches the Markdown renderer, where a hyphen tag renders as an invisible
- * node and an underscore tag prints its angle brackets. Repeats because one
- * pair can hide another (a <system-reminder> around more markup); injected
- * context never nests deeper than a couple.
+ * node and an underscore tag prints its angle brackets. An attached-file
+ * envelope is rewritten to its path and body first, before the generic peel
+ * shreds it into a stray path, the word "file" and a wall of content. Repeats
+ * because one pair can hide another (a <system-reminder> around more markup);
+ * injected context never nests deeper than a couple.
  */
 export const stripEnvelopes = (text: string): string => {
-  let current = text;
+  let current = unwrapFileRefs(text);
 
   for (let pass = 0; pass < 3; pass += 1) {
     const next = unwrapOnce(current);

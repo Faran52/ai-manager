@@ -29,6 +29,17 @@ const BOX_ART = /[─-▟]/u;
 const BOX_TABLE = /^[ \t]*[┌╔╭┏╒╓]/mu;
 
 /*
+ * A file OpenCode attaches to a message, or a read tool result that reached the
+ * renderer with its wrapper intact: <path>..</path> <type>file</type>
+ * <content>..</content>, the body often line-numbered. FILE_REF only tests for
+ * the shape, FILE_REF_PARTS carves the path and body out to rewrite it.
+ */
+const FILE_REF = /<path>[^\n<]+<\/path>\s*<type>[^\n<]*<\/type>\s*<content>[\s\S]*?<\/content>/u;
+const FILE_REF_PARTS = /<path>([^\n<]+)<\/path>\s*<type>[^\n<]*<\/type>\s*<content>\n?([\s\S]*?)\n?<\/content>/gu;
+const LINE_GUTTER = /^ *\d+:[ \t]?/gmu;
+const MARKDOWN_FILE = /\.(?:markdown|mdx?)$/iu;
+
+/*
  * The pieces of a box-drawing grid, split by the job each does when the grid is
  * rewritten as a GFM table: the vertical rule, the connector a rule crosses a
  * border at, and a full border line (dashes and connectors, nothing else).
@@ -44,12 +55,30 @@ export const hasMarkdownMarkup = (text: string): boolean => {
     || BLOCKQUOTE.test(text)
     || THEMATIC_BREAK.test(text)
     || BOX_TABLE.test(text)
+    || FILE_REF.test(text)
   ) {
     return true;
   }
 
   // A single "- item" line is a dash, not a list.
   return (text.match(LIST_ITEM) ?? []).length >= 2;
+};
+
+/**
+ * Rewrite an attached-file envelope as its path over its body, the line-number
+ * gutter trimmed. A markdown file renders as itself; any other file is fenced so
+ * its own punctuation does not turn into markup. remark has no construct for the
+ * envelope, so left alone the three tags print and the body reads as one wall.
+ */
+export const unwrapFileRefs = (text: string): string => {
+  return text.replace(FILE_REF_PARTS, (_match, rawPath: string, rawBody: string) => {
+    const path = rawPath.trim();
+    const body = rawBody.replace(LINE_GUTTER, '').trim();
+
+    return MARKDOWN_FILE.test(path)
+      ? `\`${path}\`\n\n${body}`
+      : `\`${path}\`\n\n\`\`\`\n${body}\n\`\`\``;
+  });
 };
 
 /**

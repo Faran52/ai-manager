@@ -8,6 +8,7 @@ import {
   hasMarkdownMarkup,
   isBoxArt,
   normalizeBoxDrawing,
+  unwrapFileRefs,
 } from './markdownUtils';
 
 const lines = (...parts: readonly string[]): string => {
@@ -33,6 +34,10 @@ describe('hasMarkdownMarkup', () => {
 
   test('flags a box-drawing table', () => {
     expect(hasMarkdownMarkup('┌───┬───┐\n│ a │ b │\n└───┴───┘')).toBe(true);
+  });
+
+  test('flags an attached-file envelope', () => {
+    expect(hasMarkdownMarkup('<path>/x/a.ts</path>\n<type>file</type>\n<content>\ncode\n</content>')).toBe(true);
   });
 
   test('flags a list of two or more items', () => {
@@ -174,6 +179,37 @@ describe('normalizeBoxDrawing', () => {
 
   test('leaves text with no box-drawing untouched', () => {
     expect(normalizeBoxDrawing('# Heading\n\nplain prose\n')).toBe('# Heading\n\nplain prose\n');
+  });
+});
+
+describe('unwrapFileRefs', () => {
+  test('rewrites a markdown file to its path over its rendered body', () => {
+    const ref = lines(
+      '<path>/x/notes.md</path>',
+      '<type>file</type>',
+      '<content>',
+      '1: # Title',
+      '2: body',
+      '</content>',
+    );
+
+    expect(unwrapFileRefs(ref)).toBe('`/x/notes.md`\n\n# Title\nbody');
+  });
+
+  test('fences a non-markdown file so its punctuation stays literal', () => {
+    const ref = lines(
+      '<path>/x/a.ts</path>',
+      '<type>file</type>',
+      '<content>',
+      '1: const a = 1;',
+      '</content>',
+    );
+
+    expect(unwrapFileRefs(ref)).toBe('`/x/a.ts`\n\n```\nconst a = 1;\n```');
+  });
+
+  test('leaves text with no envelope untouched', () => {
+    expect(unwrapFileRefs('just a sentence with <angle> brackets')).toBe('just a sentence with <angle> brackets');
   });
 });
 

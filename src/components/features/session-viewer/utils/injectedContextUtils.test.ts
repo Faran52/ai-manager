@@ -228,6 +228,12 @@ describe('stripEnvelopes', () => {
     expect(stripEnvelopes('# Heading\n\nplain prose')).toBe('# Heading\n\nplain prose');
   });
 
+  test('rewrites an attached-file envelope before the generic peel shreds it', () => {
+    const text = lines('<path>/x/readme.md</path>', '<type>file</type>', '<content>', '1: # Readme', '</content>');
+
+    expect(stripEnvelopes(text)).toBe('`/x/readme.md`\n\n# Readme');
+  });
+
   test('leaves stray angle brackets that are not a wrapper pair', () => {
     expect(stripEnvelopes('compare a <Foo> node and a < b test')).toBe('compare a <Foo> node and a < b test');
   });
