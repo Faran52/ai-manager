@@ -519,10 +519,12 @@ export const SettingsView: FC<SettingsViewProps> = ({
             {/*
               Sticky so it stays reachable: four rule lists and the environment
               editor sit above it, and a rule added at the top used to need a
-              scroll to the bottom to commit it.
+              scroll to the bottom to commit it. -bottom-4 cancels the scroller's
+              own pb-4, so the opaque bar reaches the true bottom edge instead of
+              leaving a 1rem strip where the row behind it shows through.
             */}
             <div className="
-              sticky bottom-0 -mx-4 -mb-4 flex items-center gap-3 rounded-b-xl
+              sticky -bottom-4 -mx-4 -mb-4 flex items-center gap-3 rounded-b-lg
               border-t border-border bg-card px-4 py-3
             "
             >
