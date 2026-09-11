@@ -13,6 +13,8 @@ const session: SessionTokenTotals = {
   tokens: 900,
   messages: 5,
   lastTimestampMs: 0,
+  projectId: 'p',
+  agent: 'claude',
 };
 
 test('opens a ranked session and falls back to its id', async () => {

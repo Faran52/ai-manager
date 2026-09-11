@@ -480,6 +480,8 @@ describe('HistoryApp cross-view flows', () => {
               tokens: 5,
               messages: 1,
               lastTimestampMs: Date.UTC(2026, 0, 2),
+              projectId: 'proj-b',
+              agent: 'claude',
             }],
             rhythm: {
               hours: [],
@@ -524,6 +526,109 @@ describe('HistoryApp cross-view flows', () => {
     await userEvent.click(betaHit);
 
     expect(await screen.findByText('the question')).toBeDefined();
+  });
+
+  test('scopes the global report to one agent, and clears it on toggle-off or a project pick', async () => {
+    const projectStats = (tools: readonly { tool: string;
+      count: number; }[] = []) => {
+      return {
+        projectId: 'global',
+        totals: {
+          usageRecorded: true,
+          sessions: 2,
+          messages: 4,
+          inputTokens: 10,
+          outputTokens: 10,
+          cacheCreationTokens: 0,
+          cacheReadTokens: 0,
+          costUsd: 0,
+          durationMs: 0,
+        },
+        models: [],
+        tools,
+        skills: [],
+        subagents: [],
+        activity: [],
+        topSessions: [],
+        rhythm: {
+          hours: [],
+          weekdays: [],
+          activeDays: 0,
+          spanDays: 0,
+          currentStreak: 0,
+          longestStreak: 0,
+        },
+        effort: {
+          userMessages: 0,
+          userChars: 0,
+          userWords: 0,
+          codeEdits: 0,
+          commandsRun: 0,
+          searches: 0,
+          webActions: 0,
+        },
+      };
+    };
+    const fetchMock = vi.fn((url: RequestInfo | URL) => {
+      const path = toPath(url);
+
+      if (path.endsWith('/projects')) {
+        return Response.json(projectPayload);
+      }
+      if (path.endsWith('/global-stats')) {
+        return Response.json({
+          stats: {
+            ...projectStats(),
+            agents: [{
+              agent: 'claude',
+              tokens: 20,
+              sessions: 2,
+              projects: 2,
+            }],
+            perAgent: {
+              claude: projectStats([{
+                tool: 'AgentOnlyTool',
+                count: 1,
+              }]),
+            },
+          },
+        });
+      }
+      if (path.endsWith('/stats')) {
+        return Response.json({ stats: null });
+      }
+      return Response.json({
+        sessions: [],
+        hits: [],
+        truncated: false,
+      });
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+    render(<HistoryApp />);
+
+    await screen.findByText('alpha');
+    expect(screen.queryByText('AgentOnlyTool')).toBeNull();
+
+    const chip = await screen.findByRole('button', { name: 'Claude Code, 2 sessions' });
+
+    await userEvent.click(chip);
+    expect(await screen.findByText('AgentOnlyTool')).toBeDefined();
+
+    // Clicking the same chip again clears back to the full, unfiltered rollup.
+    await userEvent.click(chip);
+    await waitFor(() => {
+      expect(screen.queryByText('AgentOnlyTool')).toBeNull();
+    });
+
+    // Picking a project clears it too, same as leaving the whole machine for
+    // one project already does to the analytics scope.
+    await userEvent.click(chip);
+    expect(await screen.findByText('AgentOnlyTool')).toBeDefined();
+    await openProject('alpha');
+    await waitFor(() => {
+      expect(screen.queryByText('AgentOnlyTool')).toBeNull();
+    });
   });
 
   test('sets the chosen theme in one step and persists it', async () => {

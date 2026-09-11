@@ -35,6 +35,8 @@ export interface AnalyticsViewProps {
   readonly onOpenSession: (session: SessionTokenTotals) => void;
   // Named in the report's own panels, so it stays even now the board has left.
   readonly sessions: readonly SessionSummary[];
+  // The one agent a global report is scoped to, from the All Projects card.
+  readonly reportAgent: AgentId | null;
 }
 
 interface GlobalStatsResponse {
@@ -102,11 +104,15 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
   projectAgent,
   onOpenSession,
   sessions,
+  reportAgent,
 }) => {
   const global = useGlobalStats();
   const { t } = useTranslation('analytics');
   const effectiveScope = scope === 'global' && global.status !== 'error' ? 'global' : 'project';
-  const selectedStats = effectiveScope === 'global' ? global.data : stats;
+  // A missing entry (still loading, or a stale selection) falls through to the
+  // same empty state a `null` project's stats already show below.
+  const globalStats = reportAgent != null ? global.data?.perAgent[reportAgent] : global.data;
+  const selectedStats = effectiveScope === 'global' ? globalStats : stats;
   const selectedStatus = effectiveScope === 'global' ? global.status : status;
   const globalAgents = global.data?.agents ?? [];
 
@@ -147,6 +153,7 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
         storage={storage}
         globalAgents={globalAgents}
         wholeMachine={effectiveScope === 'global'}
+        reportAgent={reportAgent ?? undefined}
         projectAgent={projectAgent}
         sessions={sessions}
         onOpenSession={onOpenSession}

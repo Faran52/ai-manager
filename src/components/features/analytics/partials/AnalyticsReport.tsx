@@ -43,6 +43,9 @@ export interface AnalyticsReportProps {
   readonly storage: AsyncResource<StorageReport>;
   readonly globalAgents: readonly AgentStatsUsage[];
   readonly wholeMachine: boolean;
+  // The one agent `stats` is already scoped to, when `wholeMachine` and a
+  // report agent are both active.
+  readonly reportAgent?: AgentId | undefined;
   readonly projectAgent?: AgentId | undefined;
   readonly sessions: readonly SessionSummary[];
   readonly onOpenSession: (session: SessionTokenTotals) => void;
@@ -132,6 +135,7 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
   storage,
   globalAgents,
   wholeMachine,
+  reportAgent,
   projectAgent,
   sessions,
   onOpenSession,
@@ -158,7 +162,7 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
           * An agent's name, its session count and its share all sit on one
           * line, so the row needs the width: shared, the names were cut short.
           */}
-        {wholeMachine && <ProviderDistribution agents={globalAgents} />}
+        {wholeMachine && reportAgent == null && <ProviderDistribution agents={globalAgents} />}
 
         <ModelDistribution models={selectedStats.models} />
       </Section>
@@ -206,12 +210,12 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
       <Section title={t('sectionStorage')}>
         <StoragePanel
           storage={storage}
-          agent={wholeMachine ? undefined : projectAgent}
+          agent={wholeMachine ? reportAgent : projectAgent}
           projectSessions={wholeMachine ? undefined : sessions}
         />
       </Section>
 
-      {!wholeMachine && (
+      {(!wholeMachine || reportAgent != null) && (
         <Section title={t('sectionSessions')}>
           <TopSessions
             sessions={selectedStats.topSessions}

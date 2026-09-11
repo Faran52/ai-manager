@@ -292,6 +292,18 @@ describe('foldAggregate', () => {
     expect(accumulator.perSession[0]?.title).toBe('First line');
   });
 
+  test('carries the owning project and agent, so a top session can be reopened from outside it', () => {
+    const accumulator = createAccumulator();
+
+    foldAggregate(accumulator, aggregateSession([], true), session({
+      agent: 'codex',
+      projectId: 'proj-x',
+    }));
+
+    expect(accumulator.perSession[0]?.agent).toBe('codex');
+    expect(accumulator.perSession[0]?.projectId).toBe('proj-x');
+  });
+
   test('carries the unavailable split through to the report', () => {
     const accumulator = createAccumulator();
 

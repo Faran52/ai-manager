@@ -91,6 +91,12 @@ export interface AgentStatsUsage {
 export interface GlobalStats extends ProjectStats {
   readonly totals: CompleteStatsTotals;
   readonly agents: readonly AgentStatsUsage[];
+  /**
+   * The full report `computeGlobalStats` already builds per agent, keyed for a
+   * single-agent, every-project view rather than reduced to `AgentStatsUsage`'s
+   * four numbers.
+   */
+  readonly perAgent: Readonly<Partial<Record<AgentId, ProjectStats>>>;
 }
 
 interface AgentAccumulator {
@@ -310,8 +316,10 @@ export const computeGlobalStats = async (roots: AgentRoots): Promise<GlobalStats
     }
   }
 
+  const costs = await readModelCosts();
+
   return {
-    ...projectStatsFrom('global', globalAccumulator, await readModelCosts()),
+    ...projectStatsFrom('global', globalAccumulator, costs),
     agents: [...byAgent.entries()].map(([agent, value]) => {
       return {
         agent,
@@ -322,5 +330,8 @@ export const computeGlobalStats = async (roots: AgentRoots): Promise<GlobalStats
     }).sort((left, right) => {
       return right.tokens - left.tokens;
     }),
+    perAgent: Object.fromEntries([...byAgent.entries()].map(([agent, value]) => {
+      return [agent, projectStatsFrom(agent, value.accumulator, costs)];
+    })),
   };
 };

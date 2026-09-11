@@ -62,6 +62,10 @@ const base = {
   onSelectAllProjects: () => {
     return undefined;
   },
+  reportAgent: null,
+  onSelectReportAgent: () => {
+    return undefined;
+  },
   projectsStatus: 'ready',
   sessionsStatus: 'ready',
   selectedProject: project('p', 'selected'),

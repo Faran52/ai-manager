@@ -47,8 +47,8 @@ const renderCard = (props: Partial<AllProjectsCardProps> = {}): AllProjectsCardP
     projects: PROJECTS,
     selected: false,
     onSelect: vi.fn(),
-    activeAgents: [],
-    onToggleAgent: vi.fn(),
+    selectedAgent: null,
+    onSelectAgent: vi.fn(),
     ...props,
   };
 
@@ -92,8 +92,8 @@ describe('AllProjectsCard', () => {
     expect(onSelect).toHaveBeenCalledTimes(1);
   });
 
-  test('toggles an agent in the filter when its tally is clicked', async () => {
-    const { onToggleAgent } = renderCard({ activeAgents: ['codex'] });
+  test('selects an agent to scope the report to when its tally is clicked', async () => {
+    const { onSelectAgent } = renderCard({ selectedAgent: 'codex' });
 
     expect(screen.getByRole('button', {
       name: /Codex CLI/u,
@@ -106,7 +106,7 @@ describe('AllProjectsCard', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /Claude Code/u }));
 
-    expect(onToggleAgent).toHaveBeenCalledWith('claude');
+    expect(onSelectAgent).toHaveBeenCalledWith('claude');
   });
 
   test('says nothing about agents before any project has loaded', () => {

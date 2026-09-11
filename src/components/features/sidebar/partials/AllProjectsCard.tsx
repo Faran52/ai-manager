@@ -12,9 +12,9 @@ export interface AllProjectsCardProps {
   readonly projects: readonly ProjectSummary[];
   readonly selected: boolean;
   readonly onSelect: () => void;
-  // The agents narrowing the list below, and a toggle for each tally chip.
-  readonly activeAgents: readonly AgentId[];
-  readonly onToggleAgent: (agent: AgentId) => void;
+  // The agent a tally chip is currently scoping the report to, if any.
+  readonly selectedAgent: AgentId | null;
+  readonly onSelectAgent: (agent: AgentId) => void;
 }
 
 interface AgentTally {
@@ -44,15 +44,15 @@ const talliedBy = (projects: readonly ProjectSummary[]): readonly AgentTally[] =
  *
  * It is not a project, so it must not read as one of the eight: it sits outside
  * the scroller and the rule under it runs the full width of the drawer. Its
- * agent tallies are branches like a project card's, and picking one narrows the
- * list to what that agent has touched.
+ * agent tallies are branches like a project card's, and picking one scopes the
+ * report to that agent's activity across every project it has touched.
  */
 export const AllProjectsCard: FC<AllProjectsCardProps> = ({
   projects,
   selected,
   onSelect,
-  activeAgents,
-  onToggleAgent,
+  selectedAgent,
+  onSelectAgent,
 }) => {
   const { t } = useTranslation('sidebar');
   const tallies = talliedBy(projects);
@@ -85,7 +85,7 @@ export const AllProjectsCard: FC<AllProjectsCardProps> = ({
         {tallies.length > 0 && (
           <div className="project-providers">
             {tallies.map((tally) => {
-              const active = activeAgents.includes(tally.agent);
+              const active = tally.agent === selectedAgent;
 
               return (
                 <button
@@ -98,7 +98,7 @@ export const AllProjectsCard: FC<AllProjectsCardProps> = ({
                     count: tally.sessions,
                   })}`}
                   onClick={() => {
-                    onToggleAgent(tally.agent);
+                    onSelectAgent(tally.agent);
                   }}
                   className="project-provider"
                 >

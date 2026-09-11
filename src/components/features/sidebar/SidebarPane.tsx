@@ -87,6 +87,10 @@ export interface SidebarPaneProps {
   // True while the report is reading every project rather than one.
   readonly wholeMachine: boolean;
   readonly onSelectAllProjects: () => void;
+  // The agent the All Projects card's report is scoped to, distinct from the
+  // Funnel's own multi-select Projects-tree filter below.
+  readonly reportAgent: AgentId | null;
+  readonly onSelectReportAgent: (agent: AgentId) => void;
   readonly onSelectSession: (session: SessionSummary) => void;
   readonly onDeleteProject: (project: ProjectSummary) => Promise<void>;
   readonly onRenameSession: (session: SessionSummary, title: string) => Promise<void>;
@@ -149,6 +153,8 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
   onSelectProject,
   wholeMachine,
   onSelectAllProjects,
+  reportAgent,
+  onSelectReportAgent,
   onSelectSession,
   onDeleteProject,
   onRenameSession,
@@ -656,8 +662,8 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                         exitSelectionMode();
                         onSelectAllProjects();
                       }}
-                      activeAgents={activeAgents}
-                      onToggleAgent={toggleProjectAgent}
+                      selectedAgent={reportAgent}
+                      onSelectAgent={onSelectReportAgent}
                     />
                   )}
                   <ProjectTree

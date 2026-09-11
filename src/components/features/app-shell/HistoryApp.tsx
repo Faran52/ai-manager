@@ -77,6 +77,9 @@ export const HistoryApp: FC = () => {
   const projects = useProjects();
   const [selectedProject, setSelectedProject] = useState<ProjectSummary | null>(null);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
+  // The one agent a global report is scoped to, distinct from the Funnel's
+  // multi-select Projects-tree filter.
+  const [reportAgent, setReportAgent] = useState<AgentId | null>(null);
   const [view, setView] = useState<AppView>('analytics');
   const projectKey = selectedProject == null
     ? ''
@@ -225,7 +228,20 @@ export const HistoryApp: FC = () => {
     setSelectedFilePath(null);
     setHighlightTimestamp(undefined);
     setArchivedSession(null);
+    setReportAgent(null);
   }, []);
+
+  /**
+   * Toggling twice, or reaching for "All Projects" itself, clears back to the
+   * unfiltered global report. Picking an agent always means the whole machine:
+   * there is no per-project, per-agent report to ask for.
+   */
+  const selectReportAgent = useCallback((agent: AgentId) => {
+    setAnalyticsScope('global');
+    setReportAgent((current) => {
+      return current === agent ? null : agent;
+    });
+  }, [setAnalyticsScope]);
 
   // Every way of opening a transcript lands on the Sessions view.
   const showSession = useCallback(() => {
@@ -325,10 +341,13 @@ export const HistoryApp: FC = () => {
   const openStatsSession = useCallback(
     (session: SessionTokenTotals) => {
       showSession();
+      // A top session can come from a per-agent global rollup, so it is not
+      // necessarily under the project already selected.
+      setSelectedProject(findAgentProject(projects.data, session.projectId, session.agent));
       setSelectedFilePath(session.filePath);
       setHighlightTimestamp(new Date(session.lastTimestampMs).toISOString());
     },
-    [showSession],
+    [projects.data, showSession],
   );
 
   const openAgent = archivedSession?.agent
@@ -374,6 +393,7 @@ export const HistoryApp: FC = () => {
         scope={analyticsScope}
         projectAgent={selectedProject?.agent}
         sessions={sessionList}
+        reportAgent={reportAgent}
         onOpenSession={openStatsSession}
       />
     ),
@@ -476,8 +496,11 @@ export const HistoryApp: FC = () => {
             <SidebarPane
               wholeMachine={analyticsScope === 'global'}
               onSelectAllProjects={() => {
+                setReportAgent(null);
                 setAnalyticsScope('global');
               }}
+              reportAgent={reportAgent}
+              onSelectReportAgent={selectReportAgent}
               showSessions={view === 'sessions'}
               showAllProjects={view === 'sessions' || view === 'analytics'}
               projects={visibleProjects}

@@ -1,5 +1,6 @@
 import { LruCache } from '@utils/lruCacheUtils';
 
+import type { AgentId } from '@config/agents';
 import type {
   HistoryEntry,
   SessionSummary,
@@ -25,6 +26,10 @@ export interface SessionTokenTotals {
   readonly tokens: number;
   readonly messages: number;
   readonly lastTimestampMs: number;
+  // A top session can come from a per-agent global rollup, not just the
+  // project already on screen, so opening one needs to resolve its own project.
+  readonly projectId: string;
+  readonly agent: AgentId;
 }
 
 interface DayCount {
@@ -367,6 +372,8 @@ export const foldAggregate = (
     tokens: aggregate.billingTokens,
     messages: aggregate.messages,
     lastTimestampMs: session.lastTimestampMs,
+    projectId: session.projectId,
+    agent: session.agent,
   });
 };
 

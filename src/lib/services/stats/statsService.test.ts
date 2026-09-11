@@ -534,6 +534,18 @@ describe('global statistics', () => {
       },
     ]);
     expect(stats.models[0]?.basis).toBe('estimated');
+
+    // The full per-agent report `agents` reduces away is kept alongside it, for
+    // a single agent's own report across every project it touched.
+    expect(stats.perAgent.claude?.totals.billingTokens).toBe(20);
+    expect(stats.perAgent.claude?.topSessions).toEqual([
+      expect.objectContaining({
+        agent: 'claude',
+        projectId: 'alpha',
+        tokens: 20,
+      }),
+    ]);
+    expect(stats.perAgent.codebuddy?.totals.billingTokens).toBe(30);
   });
 
   test('exposes global statistics through the endpoint handler', async () => {

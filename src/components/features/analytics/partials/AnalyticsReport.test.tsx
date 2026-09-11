@@ -8,6 +8,7 @@ import {
 
 import { AnalyticsReport } from './AnalyticsReport';
 
+import type { AgentId } from '@config/agents';
 import type { AsyncResource } from '@features/history-data';
 import type { ProjectStats } from '@services/stats/statsService';
 import type { StorageReport } from '@services/storage/storageService';
@@ -59,6 +60,8 @@ const STATS: ProjectStats = {
     tokens: 900,
     messages: 5,
     lastTimestampMs: Date.UTC(2026, 0, 1),
+    projectId: 'p',
+    agent: 'claude',
   }],
   rhythm: {
     hours: Array.from({ length: 24 }, () => {
@@ -85,8 +88,23 @@ const STATS: ProjectStats = {
 const STORAGE: AsyncResource<StorageReport> = {
   status: 'ready',
   data: {
-    agents: [],
-    totalBytes: 0,
+    agents: [
+      {
+        agent: 'claude',
+        label: 'Claude Code',
+        bytes: 100,
+        entries: [],
+        reclaimableBytes: 0,
+      },
+      {
+        agent: 'codex',
+        label: 'Codex CLI',
+        bytes: 50,
+        entries: [],
+        reclaimableBytes: 0,
+      },
+    ],
+    totalBytes: 150,
     reclaimableBytes: 0,
     partial: false,
   },
@@ -98,6 +116,7 @@ const STORAGE: AsyncResource<StorageReport> = {
 const report = (
   wholeMachine: boolean,
   stats: ProjectStats = STATS,
+  reportAgent?: AgentId,
 ): ReturnType<typeof render> => {
   return render(
     <AnalyticsReport
@@ -112,6 +131,7 @@ const report = (
       stats={stats}
       storage={STORAGE}
       wholeMachine={wholeMachine}
+      reportAgent={reportAgent}
     />,
   );
 };
@@ -139,6 +159,15 @@ describe('AnalyticsReport', () => {
     report(false);
 
     expect(screen.getByRole('heading', { name: 'Sessions' })).toBeDefined();
+  });
+
+  test('scopes the whole machine to one report agent', () => {
+    report(true, STATS, 'claude');
+
+    expect(screen.getByRole('heading', { name: 'Sessions' })).toBeDefined();
+    expect(screen.queryByText('Provider distribution')).toBeNull();
+    expect(screen.getByText('Claude Code')).toBeDefined();
+    expect(screen.queryByText('Codex CLI')).toBeNull();
   });
 
   test('says so instead of drawing a heatmap with nothing behind it', () => {

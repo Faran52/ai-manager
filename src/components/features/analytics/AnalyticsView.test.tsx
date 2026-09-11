@@ -14,6 +14,7 @@ import {
 
 import { AnalyticsView } from './AnalyticsView';
 
+import type { AgentId } from '@config/agents';
 import type { AsyncResource } from '@features/history-data';
 import type { GlobalStats, ProjectStats } from '@services/stats/statsService';
 import type { StorageReport } from '@services/storage/storageService';
@@ -74,6 +75,8 @@ const stats: ProjectStats = {
     tokens: 900,
     messages: 5,
     lastTimestampMs: Date.UTC(2026, 0, 1),
+    projectId: 'p',
+    agent: 'claude',
   }],
   rhythm: {
     hours: Array.from({ length: 24 }, (_unused, hour) => {
@@ -115,6 +118,7 @@ const globalStats: GlobalStats = {
     sessions: 3,
     projects: 2,
   }],
+  perAgent: { claude: stats },
 };
 
 const globalResponse = (): Response => {
@@ -149,6 +153,7 @@ const renderView = (
   status: 'loading' | 'ready' | 'error' = 'ready',
   onOpenSession = vi.fn(),
   scope: 'global' | 'project' = 'project',
+  reportAgent: AgentId | null = null,
 ) => {
   const view = render(
     <AnalyticsView
@@ -158,6 +163,7 @@ const renderView = (
       status={status}
       projectName="webapp"
       scope={scope}
+      reportAgent={reportAgent}
       onOpenSession={onOpenSession}
     />,
   );
@@ -187,6 +193,25 @@ test('reports on the whole machine in the global scope', async () => {
   expect(screen.queryByText('Big one')).toBeNull();
 });
 
+test('scopes the global report to one agent across every project', async () => {
+  const onOpenSession = vi.fn();
+
+  renderView(stats, 'ready', onOpenSession, 'global', 'claude');
+
+  expect(await screen.findByText('Big one')).toBeDefined();
+  expect(screen.queryByText('Provider distribution')).toBeNull();
+
+  await userEvent.click(screen.getByText('Big one'));
+
+  expect(onOpenSession).toHaveBeenCalledWith(globalStats.perAgent.claude?.topSessions[0]);
+});
+
+test('falls back to the empty state for a report agent missing from the payload', async () => {
+  await settled(renderView(stats, 'ready', vi.fn(), 'global', 'codex'));
+
+  expect(screen.getByText(/No analytics for webapp/)).toBeDefined();
+});
+
 test('shows project loading and empty states', async () => {
   const view = await settled(renderView(null, 'loading'));
 
@@ -200,6 +225,7 @@ test('shows project loading and empty states', async () => {
       status="ready"
       projectName="webapp"
       scope="project"
+      reportAgent={null}
       onOpenSession={vi.fn()}
     />,
   );
@@ -278,6 +304,8 @@ test('shows the session id when a ranked session has no title', async () => {
       tokens: 1,
       messages: 1,
       lastTimestampMs: 0,
+      projectId: 'p',
+      agent: 'claude',
     }],
   }));
 
