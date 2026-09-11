@@ -1,3 +1,4 @@
+export * from './hooks/useAgentSessions';
 export * from './hooks/useAgentSetup';
 export * from './hooks/useArchives';
 export * from './hooks/useFileHistory';

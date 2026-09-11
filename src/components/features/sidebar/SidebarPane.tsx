@@ -40,7 +40,7 @@ import {
   SectionHeader,
   Spinner,
   TextInput,
-  Toast,
+  useToast,
 } from '@ui/index';
 
 import {
@@ -78,6 +78,9 @@ import type { RecencyBucket } from './utils/sessionGroupUtils';
 export interface SidebarPaneProps {
   readonly projects: readonly ProjectSummary[];
   readonly projectsStatus: 'loading' | 'ready' | 'error';
+  // Looked up for a session row's project badge, shown only once sessions can
+  // span more than one project (a report agent's own, across every project).
+  readonly projectNames: ReadonlyMap<string, string>;
   readonly selectedProject: ProjectSummary | null;
   readonly sessions: readonly SessionSummary[];
   readonly sessionsStatus: 'loading' | 'ready' | 'error';
@@ -145,6 +148,7 @@ const storedWidth = (key: string, fallback: number, min: number, max: number): n
 export const SidebarPane: FC<SidebarPaneProps> = ({
   projects,
   projectsStatus,
+  projectNames,
   selectedProject,
   sessions,
   sessionsStatus,
@@ -163,6 +167,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
   showAllProjects = true,
 }) => {
   const { t, i18n } = useTranslation('sidebar');
+  const { push: pushToast } = useToast();
   const [projectFilter, setProjectFilter] = useState('');
   const [sessionFilter, setSessionFilter] = useState('');
   const [projectDateFilter, setProjectDateFilter] = useState<DateFilter>('all');
@@ -204,7 +209,6 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
   const [expandedThreads, setExpandedThreads] = useState<readonly string[]>([]);
   const [collapsedGroups, setCollapsedGroups] = useState<readonly RecencyBucket[]>([]);
   const [bulkBusy, setBulkBusy] = useState(false);
-  const [bulkNotice, setBulkNotice] = useState<string | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedSessionPaths, setSelectedSessionPaths] = useState<readonly string[]>([]);
   const [mutationBusy, setMutationBusy] = useState(false);
@@ -343,10 +347,10 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
           }),
         });
 
-        setBulkNotice(t('bulkArchived', { count: archive.sessionCount }));
+        pushToast(t('bulkArchived', { count: archive.sessionCount }));
       }
       catch (cause) {
-        setBulkNotice(toErrorMessage(cause));
+        pushToast(toErrorMessage(cause), 'error');
       }
       finally {
         setBulkBusy(false);
@@ -357,13 +361,22 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
   const exportSelected = (): void => {
     setBulkBusy(true);
     void (async (): Promise<void> => {
-      const result = await exportSessions(selectedSessions, selectedProject?.name ?? '', Date.now());
+      /**
+       * A project names the export same as always; with none selected, a report
+       * agent's own sessions are named for that agent rather than the generic
+       * fallback both call sites otherwise use.
+       */
+      const scopeName = selectedProject?.name
+        ?? (reportAgent != null ? agentOption(reportAgent).label : undefined);
+      const result = await exportSessions(selectedSessions, scopeName ?? '', Date.now());
 
       if (result.markdown.length > 0) {
-        saveTextFile(`${selectedProject?.name ?? 'sessions'}.md`, result.markdown, 'text/markdown');
+        saveTextFile(`${scopeName ?? 'sessions'}.md`, result.markdown, 'text/markdown');
       }
 
-      setBulkNotice(result.failed > 0 ? t('bulkExportFailed') : null);
+      if (result.failed > 0) {
+        pushToast(t('bulkExportFailed'), 'error');
+      }
       setBulkBusy(false);
     })();
   };
@@ -378,6 +391,10 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
     && selectableSessions.every((session) => {
       return selectedSessionPaths.includes(session.filePath);
     });
+
+  // "All Projects" plus one report agent scopes the session list the same way
+  // a single project does; only picking neither leaves it unscoped.
+  const sessionsScoped = selectedProject != null || reportAgent != null;
 
   useEffect(() => {
     localStorage.setItem(projectsPaneStorageKey, String(projectsWidth));
@@ -800,7 +817,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                           onInput={setSessionFilter}
                           label={t('filterSessions')}
                           placeholder={t('filterSessions')}
-                          disabled={selectedProject == null}
+                          disabled={!sessionsScoped}
                           className="min-w-0 flex-1"
                         />
                         <FunnelMenu
@@ -974,9 +991,23 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                                             {preview}
                                           </span>
                                         )}
-                                        <span>
+                                        <span className="
+                                          flex min-w-0 items-center gap-1
+                                        "
+                                        >
+                                          {reportAgent != null && (
+                                            <span className="
+                                              min-w-0 truncate rounded-xs border
+                                              border-border px-1 font-mono
+                                              text-figure text-faint
+                                            "
+                                            >
+                                              {projectNames.get(`${row.session.agent}:${row.session.projectId}`)
+                                                ?? row.session.projectId}
+                                            </span>
+                                          )}
                                           <span className="
-                                            inline-block rounded-xs border
+                                            shrink-0 rounded-xs border
                                             border-border px-1 font-mono
                                             text-figure text-faint
                                           "
@@ -997,14 +1028,14 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                             <Spinner />
                           </li>
                         )}
-                        {sessionsStatus === 'ready' && selectedProject == null && (
+                        {sessionsStatus === 'ready' && !sessionsScoped && (
                           <EmptyState
                             icon={<FolderClosed className="size-8" />}
                             title={t('selectProject')}
                             hint={t('selectProjectHint')}
                           />
                         )}
-                        {sessionsStatus === 'ready' && selectedProject != null && sessions.length === 0
+                        {sessionsStatus === 'ready' && sessionsScoped && sessions.length === 0
                           && sessionFilter.trim().length === 0 && (
                           <EmptyState
                             icon={<MessagesSquare className="size-8" />}
@@ -1012,7 +1043,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                             hint={t('noStoredSessions')}
                           />
                         )}
-                        {sessionsStatus === 'ready' && selectedProject != null && visibleSessions.length === 0
+                        {sessionsStatus === 'ready' && sessionsScoped && visibleSessions.length === 0
                           && (sessions.length > 0 || sessionFilter.trim().length > 0) && (
                           <EmptyState
                             icon={<Search className="size-8" />}
@@ -1111,7 +1142,6 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
           void runDelete(targets);
         }}
       />
-      <Toast message={bulkNotice} />
       {copiedLabel.length > 0 && <span className="sr-only" role="status">{copiedLabel}</span>}
       {mutationError.length > 0 && <span className="sr-only" role="alert">{mutationError}</span>}
     </aside>

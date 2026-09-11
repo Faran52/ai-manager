@@ -56,6 +56,7 @@
   "refresh": "会話履歴を更新",
   "refreshing": "会話履歴を更新中",
   "refreshingToast": "会話履歴を更新中…",
+  "closeToast": "通知を閉じる",
   "accentSky": "スカイ",
   "navSessions": "セッション",
   "navAnalytics": "分析",

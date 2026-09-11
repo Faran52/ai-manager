@@ -33,5 +33,6 @@ export * from './tabs/Tabs';
 export * from './tabs/TabsPanel';
 export * from './text-input/TextInput';
 export * from './toast/Toast';
+export * from './toast/ToastProvider';
 export * from './tooltip/Tooltip';
 export * from './utils/patchUtils';

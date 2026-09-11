@@ -56,6 +56,7 @@
   "refresh": "Refresh conversation history",
   "refreshing": "Refreshing conversation history",
   "refreshingToast": "Refreshing conversation history…",
+  "closeToast": "Close notification",
   "accentSky": "Sky",
   "navSessions": "Sessions",
   "navAnalytics": "Analytics",

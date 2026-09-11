@@ -1,21 +1,31 @@
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import {
-  render,
-  screen,
-  waitFor,
-} from '@testing-library/react';
+  expect,
+  test,
+  vi,
+} from 'vitest';
 
 import { Toast } from './Toast';
 
-test('announces its message through a permanent live region', async () => {
-  const { rerender } = render(<Toast message="Updated" />);
+test('shows its own text', () => {
+  render(<Toast text="Saved" variant="info" onClose={vi.fn()} />);
 
-  expect(screen.getByRole('status').textContent).toBe('Updated');
+  expect(screen.getByText('Saved')).toBeDefined();
+});
 
-  rerender(<Toast message={null} />);
+test('marks the surface with the variant it was given', () => {
+  render(<Toast text="Could not save" variant="error" onClose={vi.fn()} />);
 
-  expect(screen.getByRole('status')).toBeDefined();
+  expect(document.querySelector('[data-toast][data-variant="error"]')).not.toBeNull();
+});
 
-  await waitFor(() => {
-    expect(screen.queryByText('Updated')).toBeNull();
-  });
+test('closes on request', async () => {
+  const onClose = vi.fn();
+
+  render(<Toast text="Heads up" variant="warning" onClose={onClose} />);
+
+  await userEvent.click(screen.getByRole('button', { name: 'Close notification' }));
+
+  expect(onClose).toHaveBeenCalledTimes(1);
 });

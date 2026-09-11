@@ -21,12 +21,17 @@ import {
 import { findAgentProject } from '@services/history/historyService';
 import { isTypingTarget, matchesShortcut } from '@utils/shortcutUtils';
 
-import { fadeTransition, Toast } from '@ui/index';
+import {
+  fadeTransition,
+  ToastProvider,
+  useToast,
+} from '@ui/index';
 import { AgentSetupPanel, usePluginToggle } from '@features/agent-setup';
 import { AnalyticsView, useAnalyticsScope } from '@features/analytics';
 import { AppHeader, CommandBar } from '@features/app-header';
 import { ArchiveView } from '@features/archive';
 import {
+  useAgentSessions,
   useAgentSetup,
   useArchives,
   useProjects,
@@ -71,10 +76,11 @@ const EMPTY_PROJECTS: readonly ProjectSummary[] = [];
 
 initI18n();
 
-export const HistoryApp: FC = () => {
+const HistoryAppView: FC = () => {
   const { t } = useTranslation('sidebar');
   const { t: tArchive } = useTranslation('archive');
   const projects = useProjects();
+  const visibleProjects = projects.data ?? EMPTY_PROJECTS;
   const [selectedProject, setSelectedProject] = useState<ProjectSummary | null>(null);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   // The one agent a global report is scoped to, distinct from the Funnel's
@@ -88,7 +94,7 @@ export const HistoryApp: FC = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const [retentionNotice, setRetentionNotice] = useState<string | null>(null);
+  const { push: pushToast } = useToast();
   const [highlightTimestamp, setHighlightTimestamp] = useState<string | undefined>(undefined);
   const [archivedSession, setArchivedSession] = useState<ArchivedSession | null>(null);
   // The transcript the viewer has loaded, lifted here so the command bar's
@@ -97,7 +103,9 @@ export const HistoryApp: FC = () => {
   const [nowMs] = useState(() => {
     return Date.now();
   });
-  const sessions = useSessions(selectedProject, view === 'sessions');
+  const projectSessions = useSessions(selectedProject, view === 'sessions');
+  const agentSessions = useAgentSessions(reportAgent, visibleProjects, view === 'sessions');
+  const sessions = reportAgent != null ? agentSessions : projectSessions;
   const stats = useProjectStats(view === 'analytics' ? selectedProject : null);
   const projectPath = selectedProject?.actualPath ?? '';
   const agentSetup = useAgentSetup(view === 'health' ? projectPath : '');
@@ -124,7 +132,6 @@ export const HistoryApp: FC = () => {
   const search = useSearch();
   const sessionList = sessions.data ?? [];
   const theme = useTheme();
-  const visibleProjects = projects.data ?? EMPTY_PROJECTS;
   const reloadProjects = projects.reload;
 
   const selectedSession = useMemo(
@@ -160,7 +167,7 @@ export const HistoryApp: FC = () => {
         const { result } = await runRetention();
 
         if (mounted.current && result.archived > 0) {
-          setRetentionNotice(tArchive('retentionArchived', { count: result.archived }));
+          pushToast(tArchive('retentionArchived', { count: result.archived }));
         }
       }
       catch {
@@ -171,7 +178,7 @@ export const HistoryApp: FC = () => {
     return () => {
       mounted.current = false;
     };
-  }, [tArchive]);
+  }, [pushToast, tArchive]);
 
   // One listener for every global binding, so a shortcut is added by adding a
   // row here and to `appShortcuts` rather than by growing another effect.
@@ -308,8 +315,8 @@ export const HistoryApp: FC = () => {
     await createArchive({
       sessionKeys: [`${selectedSession.agent}:${selectedSession.actualSessionId}`],
     });
-    setRetentionNotice(t('sessionArchived', { ns: 'common' }));
-  }, [selectedSession, t]);
+    pushToast(t('sessionArchived', { ns: 'common' }));
+  }, [pushToast, selectedSession, t]);
 
   const jumpToHit = useCallback(
     (hit: SearchHit) => {
@@ -453,7 +460,9 @@ export const HistoryApp: FC = () => {
           onArchiveSession={view === 'sessions' && selectedSession?.actualSessionId != null
             ? archiveOpenSession
             : null}
-          onNotice={setRetentionNotice}
+          onNotice={(message) => {
+            pushToast(message, 'error');
+          }}
           actions={transcriptOpen
             ? (
                 <CopyTranscriptButton
@@ -505,6 +514,7 @@ export const HistoryApp: FC = () => {
               showAllProjects={view === 'sessions' || view === 'analytics'}
               projects={visibleProjects}
               projectsStatus={projects.status}
+              projectNames={projectNames}
               selectedProject={selectedProject}
               sessions={sessionList}
               sessionsStatus={sessions.status}
@@ -530,8 +540,6 @@ export const HistoryApp: FC = () => {
             </motion.div>
           </div>
         </div>
-
-        <Toast message={retentionNotice} />
 
         <ShortcutsDialog
           open={shortcutsOpen}
@@ -564,5 +572,15 @@ export const HistoryApp: FC = () => {
         />
       </div>
     </MotionConfig>
+  );
+};
+
+// The one Toast stack the whole app shares lives above everything that can
+// report through it, so two unrelated notices never land on top of each other.
+export const HistoryApp: FC = () => {
+  return (
+    <ToastProvider>
+      <HistoryAppView />
+    </ToastProvider>
   );
 };

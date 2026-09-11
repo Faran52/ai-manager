@@ -1,6 +1,6 @@
 import {
   fireEvent,
-  render,
+  render as rtlRender,
   screen,
   waitFor,
   within,
@@ -20,10 +20,20 @@ import {
   sessionsListStorageKey,
 } from '@config/storageKeys';
 
+import { ToastProvider } from '@ui/index';
+
 import { SidebarPane } from './SidebarPane';
 
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
+import type { ReactElement } from 'react';
 import type { SidebarPaneProps } from './SidebarPane';
+
+// Every SidebarPane render needs a ToastProvider ancestor now that bulk
+// actions report through useToast(); wrapping render() here means every
+// existing call site keeps working unchanged.
+const render = (ui: ReactElement): ReturnType<typeof rtlRender> => {
+  return rtlRender(<ToastProvider>{ui}</ToastProvider>);
+};
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -66,6 +76,7 @@ const base = {
   onSelectReportAgent: () => {
     return undefined;
   },
+  projectNames: new Map<string, string>(),
   projectsStatus: 'ready',
   sessionsStatus: 'ready',
   selectedProject: project('p', 'selected'),
@@ -211,7 +222,11 @@ describe('SidebarPane', () => {
     await openProject('webapp');
     expect(screen.getAllByText('1 session').length).toBeGreaterThan(0);
     expect(screen.getByText('No sessions yet')).toBeDefined();
-    rerender(<SidebarPane {...base} projects={[selected]} sessions={[]} />);
+    rerender(
+      <ToastProvider>
+        <SidebarPane {...base} projects={[selected]} sessions={[]} />
+      </ToastProvider>,
+    );
   });
 });
 
@@ -590,7 +605,10 @@ describe('SidebarPane agent and mutation actions', () => {
     fireEvent.contextMenu(screen.getByText('app'));
     await userEvent.click(screen.getByText('Delete project history'));
     await userEvent.click(screen.getByRole('button', { name: 'Delete permanently' }));
-    expect((await screen.findByRole('alert')).textContent).toBe('project delete denied');
+    // Radix hides the rest of the page from assistive tech while its dialog
+    // portal is open, and this alert sits outside that portal; `hidden: true`
+    // reads through it the way it would for a sighted user behind the modal.
+    expect((await screen.findByRole('alert', { hidden: true })).textContent).toBe('project delete denied');
     await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).toBeNull();
@@ -600,7 +618,7 @@ describe('SidebarPane agent and mutation actions', () => {
     fireEvent.contextMenu(screen.getByText('Old title'));
     await userEvent.click(screen.getByText('Rename session in Claude Code'));
     await userEvent.click(screen.getByRole('button', { name: 'Rename' }));
-    expect((await screen.findByRole('alert')).textContent).toBe('rename denied');
+    expect((await screen.findByRole('alert', { hidden: true })).textContent).toBe('rename denied');
     await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).toBeNull();
@@ -609,7 +627,7 @@ describe('SidebarPane agent and mutation actions', () => {
     fireEvent.contextMenu(screen.getByText('Old title'));
     await userEvent.click(screen.getByText('Delete session'));
     await userEvent.click(screen.getByRole('button', { name: 'Delete permanently' }));
-    expect((await screen.findByRole('alert')).textContent).toBe('delete denied');
+    expect((await screen.findByRole('alert', { hidden: true })).textContent).toBe('delete denied');
     await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).toBeNull();
@@ -747,6 +765,50 @@ describe('SidebarPane bulk actions', () => {
 
     await waitFor(() => {
       expect(names).toEqual(['sessions.md']);
+    });
+
+    vi.restoreAllMocks();
+  });
+
+  test('names the export file for the report agent when no project is selected', async () => {
+    const names: string[] = [];
+
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return Response.json({
+        entries: [],
+        total: 0,
+        messageCount: 0,
+        hasMore: false,
+        nextOffset: 0,
+      });
+    }));
+    vi.stubGlobal('URL', {
+      createObjectURL: () => {
+        return 'blob:x';
+      },
+      revokeObjectURL: () => {
+        return undefined;
+      },
+    });
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function capture(this: HTMLAnchorElement) {
+      names.push(this.download);
+    });
+
+    render(
+      <SidebarPane
+        {...base}
+        selectedProject={null}
+        reportAgent="claude"
+        projects={[project('p', 'webapp')]}
+        sessions={[session('a', 'Login fix')]}
+      />,
+    );
+    await enterSelection();
+    await userEvent.click(screen.getByRole('button', { name: 'Select all sessions' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Export the selected sessions' }));
+
+    await waitFor(() => {
+      expect(names).toEqual(['Claude Code.md']);
     });
 
     vi.restoreAllMocks();
@@ -1013,6 +1075,75 @@ describe('SidebarPane view scope', () => {
 
     expect(screen.queryByRole('button', { name: /All projects/u })).toBeNull();
     expect(screen.getByText('webapp')).toBeDefined();
+  });
+
+  test('scopes the session list to a report agent, and badges each row with its project', () => {
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p', 'webapp')]}
+        selectedProject={null}
+        reportAgent="claude"
+        projectNames={new Map([['claude:p', 'webapp']])}
+        sessions={[session('a', 'Login fix', 'p')]}
+      />,
+    );
+
+    expect(screen.queryByText('Select a project')).toBeNull();
+
+    const row = screen.getByRole('button', { name: /Login fix/u }).closest('li');
+
+    expect(row).not.toBeNull();
+    expect(within(row as HTMLElement).getByText('webapp')).toBeDefined();
+  });
+
+  test('falls back to the raw project id when the name lookup misses', () => {
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p', 'webapp')]}
+        selectedProject={null}
+        reportAgent="claude"
+        projectNames={new Map()}
+        sessions={[session('a', 'Login fix', 'p')]}
+      />,
+    );
+
+    const row = screen.getByRole('button', { name: /Login fix/u }).closest('li');
+
+    expect(row).not.toBeNull();
+    expect(within(row as HTMLElement).getByText('p')).toBeDefined();
+  });
+
+  test('leaves session rows without a project badge when no report agent is active', () => {
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p', 'webapp')]}
+        sessions={[session('a', 'Login fix', 'p')]}
+      />,
+    );
+
+    const row = screen.getByRole('button', { name: /Login fix/u }).closest('li');
+
+    expect(row).not.toBeNull();
+    expect(within(row as HTMLElement).queryByText('webapp')).toBeNull();
+  });
+
+  test('shows the no-sessions state, not the pick-a-project one, for an empty report-agent scope', () => {
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p', 'webapp')]}
+        selectedProject={null}
+        reportAgent="claude"
+        projectNames={new Map()}
+        sessions={[]}
+      />,
+    );
+
+    expect(screen.queryByText('Select a project')).toBeNull();
+    expect(screen.getByText('No sessions yet')).toBeDefined();
   });
 
   test('leaves the scope card out of the folded strip where the view hides it', () => {

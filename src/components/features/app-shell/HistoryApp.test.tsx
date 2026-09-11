@@ -631,6 +631,52 @@ describe('HistoryApp cross-view flows', () => {
     });
   });
 
+  test("shows a report agent's sessions across every project on the Sessions tab", async () => {
+    const fetchMock = vi.fn((url: RequestInfo | URL, init?: RequestInit) => {
+      const path = toPath(url);
+
+      if (path.endsWith('/projects')) {
+        return Response.json(projectPayload);
+      }
+      if (path.endsWith('/sessions')) {
+        const body: unknown = JSON.parse(typeof init?.body === 'string' ? init.body : '{}');
+        const projectId = (body as { projectId: string }).projectId;
+
+        return Response.json(sessionsPayload(projectId === 'proj-a' ? 'a' : 'b'));
+      }
+      return Response.json({
+        stats: null,
+        hits: [],
+        truncated: false,
+      });
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+    render(<HistoryApp />);
+
+    await screen.findByText('alpha');
+
+    const chip = await screen.findByRole('button', { name: 'Claude Code, 2 sessions' });
+
+    await userEvent.click(chip);
+    await userEvent.click(screen.getByRole('button', { name: /^Sessions/u }));
+
+    const rows = await screen.findAllByText('The chosen one');
+
+    expect(rows).toHaveLength(2);
+
+    const rowText = rows.map((row) => {
+      return row.closest('li')?.textContent ?? '';
+    });
+
+    expect(rowText.some((text) => {
+      return text.includes('alpha');
+    })).toBe(true);
+    expect(rowText.some((text) => {
+      return text.includes('beta');
+    })).toBe(true);
+  });
+
   test('sets the chosen theme in one step and persists it', async () => {
     vi.stubGlobal(
       'fetch',
@@ -777,6 +823,44 @@ describe('HistoryApp header actions', () => {
     expect(fetchMock.mock.calls.some(([url]) => {
       return toPath(url).endsWith('/archive-create');
     })).toBe(true);
+  });
+
+  test('reports a failed archive from the command bar as an error toast', async () => {
+    const fetchMock = vi.fn((url: RequestInfo | URL) => {
+      const path = toPath(url);
+
+      if (path.endsWith('/projects')) {
+        return Response.json(projectPayload);
+      }
+      if (path.endsWith('/sessions')) {
+        return Response.json(sessionsPayload('a'));
+      }
+      if (path.endsWith('/messages')) {
+        return Response.json(messagesPayload);
+      }
+      if (path.endsWith('/archive-create')) {
+        return new Response('{"error":"archive denied"}', { status: 500 });
+      }
+
+      return Response.json({ stats: null });
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+    await openProject('alpha');
+    await userEvent.click(screen.getByRole('button', { name: /^Sessions/ }));
+    await userEvent.click(await screen.findByText('The chosen one'));
+
+    const commandBar = document.querySelector('[data-command-bar]');
+
+    if (commandBar == null) {
+      throw new Error('the command bar never rendered');
+    }
+
+    await userEvent.click(within(commandBar as HTMLElement).getByRole('button', { name: 'Archive' }));
+
+    expect(await screen.findByText('archive denied')).toBeDefined();
   });
 
   test('closes search via the backdrop close control', async () => {

@@ -13,6 +13,8 @@ import {
   vi,
 } from 'vitest';
 
+import { ToastProvider } from '@ui/index';
+
 import { AppHeader } from './AppHeader';
 
 import type { AppHeaderProps } from './AppHeader';
@@ -29,7 +31,11 @@ const mount = (overrides?: Partial<Parameters<typeof AppHeader>[0]>) => {
     ...overrides,
   } satisfies AppHeaderProps;
 
-  render(<AppHeader {...props} />);
+  render(
+    <ToastProvider>
+      <AppHeader {...props} />
+    </ToastProvider>,
+  );
 
   return props;
 };

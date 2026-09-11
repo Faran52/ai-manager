@@ -9,7 +9,7 @@ import {
 
 import { cn } from '@utils/cnUtils';
 
-import { Toast, Tooltip } from '@ui/index';
+import { Tooltip, useToast } from '@ui/index';
 
 import type { FC } from 'react';
 
@@ -32,6 +32,7 @@ export const AppHeader: FC<AppHeaderProps> = ({
   onOpenSettings,
 }) => {
   const { t } = useTranslation('common');
+  const { push } = useToast();
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -49,53 +50,51 @@ export const AppHeader: FC<AppHeaderProps> = ({
   }, [refreshing]);
 
   return (
-    <>
-      <header className="titlebar" data-app-header>
-        <button
-          type="button"
-          onClick={onOpenSearch}
-          aria-label={t('searchAllChats')}
-          className="titlebar-search"
+    <header className="titlebar" data-app-header>
+      <button
+        type="button"
+        onClick={onOpenSearch}
+        aria-label={t('searchAllChats')}
+        className="titlebar-search"
+      >
+        <Search className="size-3" />
+        {t('searchPlaceholder')}
+        <kbd className="
+          ms-1 rounded-xs border border-border px-1 font-mono text-eyebrow
+          text-faint
+        "
         >
-          <Search className="size-3" />
-          {t('searchPlaceholder')}
-          <kbd className="
-            ms-1 rounded-xs border border-border px-1 font-mono text-eyebrow
-            text-faint
-          "
-          >
-            /
-          </kbd>
-        </button>
+          /
+        </kbd>
+      </button>
 
-        <div className="ms-auto flex items-center gap-1">
-          <Tooltip content={refreshing ? t('refreshing') : t('refresh')}>
-            <button
-              type="button"
-              disabled={refreshing}
-              onClick={() => {
-                setRefreshing(true);
-                onReload();
-              }}
-              aria-label={refreshing ? t('refreshing') : t('refresh')}
-              className="chrome-icon-button"
-            >
-              <RefreshCw className={cn('size-3.5', refreshing && 'animate-spin')} />
-            </button>
-          </Tooltip>
-          <Tooltip content={t('navSettings')}>
-            <button
-              type="button"
-              onClick={onOpenSettings}
-              aria-label={t('navSettings')}
-              className="chrome-icon-button"
-            >
-              <Settings className="size-3.5" />
-            </button>
-          </Tooltip>
-        </div>
-      </header>
-      <Toast message={refreshing ? t('refreshingToast') : null} />
-    </>
+      <div className="ms-auto flex items-center gap-1">
+        <Tooltip content={refreshing ? t('refreshing') : t('refresh')}>
+          <button
+            type="button"
+            disabled={refreshing}
+            onClick={() => {
+              setRefreshing(true);
+              onReload();
+              push(t('refreshingToast'));
+            }}
+            aria-label={refreshing ? t('refreshing') : t('refresh')}
+            className="chrome-icon-button"
+          >
+            <RefreshCw className={cn('size-3.5', refreshing && 'animate-spin')} />
+          </button>
+        </Tooltip>
+        <Tooltip content={t('navSettings')}>
+          <button
+            type="button"
+            onClick={onOpenSettings}
+            aria-label={t('navSettings')}
+            className="chrome-icon-button"
+          >
+            <Settings className="size-3.5" />
+          </button>
+        </Tooltip>
+      </div>
+    </header>
   );
 };
