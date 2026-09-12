@@ -239,6 +239,20 @@ const HistoryAppView: FC = () => {
   }, []);
 
   /**
+   * The sidebar's "All Projects" card is a sibling of the project list, so
+   * picking it has to clear the previous pick the same way selectProject does,
+   * not just flip the Analytics scope and leave the old project marked selected.
+   */
+  const selectAllProjects = useCallback(() => {
+    setSelectedProject(null);
+    setSelectedFilePath(null);
+    setHighlightTimestamp(undefined);
+    setArchivedSession(null);
+    setReportAgent(null);
+    setAnalyticsScope('global');
+  }, [setAnalyticsScope]);
+
+  /**
    * Toggling twice, or reaching for "All Projects" itself, clears back to the
    * unfiltered global report. Picking an agent always means the whole machine:
    * there is no per-project, per-agent report to ask for.
@@ -504,10 +518,7 @@ const HistoryAppView: FC = () => {
           <div className="flex min-h-0 min-w-0 flex-1 p-2">
             <SidebarPane
               wholeMachine={analyticsScope === 'global'}
-              onSelectAllProjects={() => {
-                setReportAgent(null);
-                setAnalyticsScope('global');
-              }}
+              onSelectAllProjects={selectAllProjects}
               reportAgent={reportAgent}
               onSelectReportAgent={selectReportAgent}
               showSessions={view === 'sessions'}

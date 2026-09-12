@@ -1354,6 +1354,32 @@ describe('HistoryApp settings', () => {
       .toBe('true');
   });
 
+  test('deselects the previous project once All projects is chosen', async () => {
+    vi.stubGlobal('fetch', vi.fn((url: RequestInfo | URL) => {
+      const path = toPath(url);
+
+      if (path.endsWith('/projects')) {
+        return Response.json(projectPayload);
+      }
+      return Response.json({
+        sessions: [],
+        stats: null,
+      });
+    }));
+
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+    await openProject('alpha');
+
+    expect(screen.getByRole('button', { name: /^alpha, Claude Code/u }).getAttribute('aria-pressed'))
+      .toBe('true');
+
+    await userEvent.click(screen.getByRole('button', { name: /All projects/u }));
+
+    expect(screen.getByRole('button', { name: /^alpha, Claude Code/u }).getAttribute('aria-pressed'))
+      .toBe('false');
+  });
+
   test('opens settings as a sheet and closes it again', async () => {
     vi.stubGlobal(
       'fetch',
