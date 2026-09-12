@@ -230,13 +230,23 @@ const HistoryAppView: FC = () => {
     };
   }, [reloadProjects]);
 
-  const selectProject = useCallback((project: ProjectSummary) => {
-    setSelectedProject(project);
+  /**
+   * The three ways to change what the sidebar is scoped to (a project, All
+   * Projects, or one report agent) are mutually exclusive: picking one always
+   * means leaving whichever of the other two was open. Sharing this reset is
+   * what keeps a future caller from repeating the bug where it was missed.
+   */
+  const clearOpenSession = useCallback(() => {
     setSelectedFilePath(null);
     setHighlightTimestamp(undefined);
     setArchivedSession(null);
-    setReportAgent(null);
   }, []);
+
+  const selectProject = useCallback((project: ProjectSummary) => {
+    setSelectedProject(project);
+    clearOpenSession();
+    setReportAgent(null);
+  }, [clearOpenSession]);
 
   /**
    * The sidebar's "All Projects" card is a sibling of the project list, so
@@ -245,24 +255,26 @@ const HistoryAppView: FC = () => {
    */
   const selectAllProjects = useCallback(() => {
     setSelectedProject(null);
-    setSelectedFilePath(null);
-    setHighlightTimestamp(undefined);
-    setArchivedSession(null);
+    clearOpenSession();
     setReportAgent(null);
     setAnalyticsScope('global');
-  }, [setAnalyticsScope]);
+  }, [clearOpenSession, setAnalyticsScope]);
 
   /**
    * Toggling twice, or reaching for "All Projects" itself, clears back to the
    * unfiltered global report. Picking an agent always means the whole machine:
-   * there is no per-project, per-agent report to ask for.
+   * there is no per-project, per-agent report to ask for, so a project picked
+   * before this agent chip has to clear the same way it does for
+   * selectAllProjects.
    */
   const selectReportAgent = useCallback((agent: AgentId) => {
+    setSelectedProject(null);
+    clearOpenSession();
     setAnalyticsScope('global');
     setReportAgent((current) => {
       return current === agent ? null : agent;
     });
-  }, [setAnalyticsScope]);
+  }, [clearOpenSession, setAnalyticsScope]);
 
   // Every way of opening a transcript lands on the Sessions view.
   const showSession = useCallback(() => {

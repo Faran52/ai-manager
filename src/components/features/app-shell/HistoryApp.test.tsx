@@ -1380,6 +1380,32 @@ describe('HistoryApp settings', () => {
       .toBe('false');
   });
 
+  test('deselects the previous project once a report agent chip is chosen', async () => {
+    vi.stubGlobal('fetch', vi.fn((url: RequestInfo | URL) => {
+      const path = toPath(url);
+
+      if (path.endsWith('/projects')) {
+        return Response.json(projectPayload);
+      }
+      return Response.json({
+        sessions: [],
+        stats: null,
+      });
+    }));
+
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+    await openProject('alpha');
+
+    expect(screen.getByRole('button', { name: /^alpha, Claude Code/u }).getAttribute('aria-pressed'))
+      .toBe('true');
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Claude Code, 2 sessions' }));
+
+    expect(screen.getByRole('button', { name: /^alpha, Claude Code/u }).getAttribute('aria-pressed'))
+      .toBe('false');
+  });
+
   test('opens settings as a sheet and closes it again', async () => {
     vi.stubGlobal(
       'fetch',
