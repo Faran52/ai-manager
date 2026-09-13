@@ -1,3 +1,4 @@
+import { readdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, sep } from 'node:path';
 
@@ -30,6 +31,44 @@ const withoutNested = (roots: readonly string[]): readonly string[] => {
       return root.startsWith(`${earlier}${sep}`);
     });
   });
+};
+
+/**
+ * CLAUDE_CONFIG_DIR (or CODEX_HOME) only reaches this process when whatever
+ * launched it set the variable, which a shell alias wrapping just the
+ * `claude` binary never does: the value lives in that one subprocess's own
+ * environment and nowhere this app can read it from, on any OS. A second
+ * profile is found by name instead, so nothing needs configuring on any
+ * machine and it works whatever the sibling is called, as long as it still
+ * starts with the default's own name. Case-insensitive, because NTFS does
+ * not distinguish them and a user typing the name by hand would not either.
+ */
+const siblingRoots = (home: string, defaultName: string): readonly string[] => {
+  const needle = defaultName.toLowerCase();
+
+  try {
+    return readdirSync(home, { withFileTypes: true })
+      .filter((entry) => {
+        return entry.isDirectory() && entry.name.toLowerCase().startsWith(needle);
+      })
+      .map((entry) => {
+        return join(home, entry.name);
+      })
+      .sort((left, right) => {
+        return left.localeCompare(right, undefined, { sensitivity: 'base' });
+      });
+  }
+  catch {
+    return [];
+  }
+};
+
+// The default stays first: a rename or delete always targets index 0, so it
+// can never be displaced by a sibling found this way.
+const withSiblings = (primary: string, home: string, defaultName: string): readonly [string, ...string[]] => {
+  return [primary, ...siblingRoots(home, defaultName).filter((root) => {
+    return root !== primary;
+  })];
 };
 
 const envPath = (
@@ -101,14 +140,14 @@ export const resolveAgentPaths = ({
       join(home, '.gemini', 'antigravity-cli'),
       join(home, '.gemini', 'antigravity'),
     ],
-    'claude': [envPath(env, 'CLAUDE_CONFIG_DIR', join(home, '.claude'))],
+    'claude': withSiblings(envPath(env, 'CLAUDE_CONFIG_DIR', join(home, '.claude')), home, '.claude'),
     'cline': [
       join(vscode, 'globalStorage', 'saoudrizwan.claude-dev', 'tasks'),
       join(vscode, 'globalStorage', 'rooveterinaryinc.roo-cline', 'tasks'),
       join(vscode, 'globalStorage', 'kilocode.kilo-code', 'tasks'),
     ],
     'codebuddy': [join(home, '.codebuddy')],
-    'codex': [envPath(env, 'CODEX_HOME', join(home, '.codex'))],
+    'codex': withSiblings(envPath(env, 'CODEX_HOME', join(home, '.codex')), home, '.codex'),
     'continue': [envPath(env, 'CONTINUE_GLOBAL_DIR', join(home, '.continue', 'sessions'))],
     'copilot': [join(vscode, 'workspaceStorage')],
     'crush': commonProjects,

@@ -1,4 +1,12 @@
 import {
+  mkdir,
+  mkdtemp,
+  writeFile,
+} from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import {
   expect,
   test,
   vi,
@@ -69,4 +77,56 @@ test('uses platform-specific editor locations and default paths', () => {
   expect(windows.cursor[1]).toContain('AppData/Roaming/Cursor/User/workspaceStorage');
   expect(mac.claude[0]).toBe('/Users/me/.claude');
   expect(mac.codex[0]).toBe('/Users/me/.codex');
+});
+
+test('finds a differently named sibling profile and keeps the default first', async () => {
+  const home = await mkdtemp(join(tmpdir(), 'roots-'));
+
+  await mkdir(join(home, '.claude'));
+  await mkdir(join(home, '.claude-work'));
+  await mkdir(join(home, '.Claude-Personal'));
+  await mkdir(join(home, '.codex-alt'));
+
+  const paths = resolveAgentPaths({
+    home,
+    platform: 'linux',
+    env: {},
+  });
+
+  expect(paths.claude).toEqual([
+    join(home, '.claude'),
+    join(home, '.Claude-Personal'),
+    join(home, '.claude-work'),
+  ]);
+  expect(paths.codex).toEqual([join(home, '.codex'), join(home, '.codex-alt')]);
+});
+
+test('leaves a file that merely shares the prefix out of the sibling scan', async () => {
+  const home = await mkdtemp(join(tmpdir(), 'roots-'));
+
+  await mkdir(join(home, '.claude'));
+  await writeFile(join(home, '.claude.json'), '{}');
+
+  const paths = resolveAgentPaths({
+    home,
+    platform: 'linux',
+    env: {},
+  });
+
+  expect(paths.claude).toEqual([join(home, '.claude')]);
+});
+
+test('finds a sibling even where an explicit CLAUDE_CONFIG_DIR points elsewhere', async () => {
+  const home = await mkdtemp(join(tmpdir(), 'roots-'));
+
+  await mkdir(join(home, '.claude'));
+  await mkdir(join(home, '.claude-work'));
+
+  const paths = resolveAgentPaths({
+    home,
+    platform: 'linux',
+    env: { CLAUDE_CONFIG_DIR: join(home, '.claude-work') },
+  });
+
+  expect(paths.claude).toEqual([join(home, '.claude-work'), join(home, '.claude')]);
 });

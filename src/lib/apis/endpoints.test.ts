@@ -59,6 +59,11 @@ import type {
 beforeEach(() => {
   vi.stubEnv('XDG_DATA_HOME', tmpdir());
   vi.stubEnv('XDG_CONFIG_HOME', tmpdir());
+  // Unset, not a real path: a developer running this suite from a shell that
+  // sets either for their own CLAUDE_CONFIG_DIR-style profile must not have
+  // that profile's real sessions leak into a test that only controls `home`.
+  vi.stubEnv('CLAUDE_CONFIG_DIR', '');
+  vi.stubEnv('CODEX_HOME', '');
 });
 
 afterEach(() => {

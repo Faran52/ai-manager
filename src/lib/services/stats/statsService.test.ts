@@ -11,6 +11,7 @@ import {
   describe,
   expect,
   test,
+  vi,
 } from 'vitest';
 
 import { handleGlobalStats } from '@lib/apis/endpoints';
@@ -550,7 +551,17 @@ describe('global statistics', () => {
 
   test('exposes global statistics through the endpoint handler', async () => {
     const home = await newDir();
+
+    // Unlike computeGlobalStats above, the endpoint handler resolves roots
+    // from process.env: a developer running this suite from a shell with
+    // their own CLAUDE_CONFIG_DIR-style profile set must not have that
+    // profile's real sessions scanned instead of the empty `home` here.
+    vi.stubEnv('CLAUDE_CONFIG_DIR', '');
+    vi.stubEnv('CODEX_HOME', '');
+
     const response = await handleGlobalStats({ home });
+
+    vi.unstubAllEnvs();
 
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
