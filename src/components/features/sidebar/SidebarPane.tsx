@@ -33,6 +33,7 @@ import { formatTimeAgo } from '@utils/formatUtils';
 
 import {
   AgentMark,
+  collapseTransition,
   EmptyState,
   fadeTransition,
   foldTransition,
@@ -40,6 +41,8 @@ import {
   SectionHeader,
   Spinner,
   TextInput,
+  Tooltip,
+  useReducedMotion,
   useToast,
 } from '@ui/index';
 
@@ -59,7 +62,7 @@ import { exportSessions } from './utils/bulkExportUtils';
 import { withinDateFilter } from './utils/dateFilterUtils';
 import { buildProjectTree } from './utils/projectTreeUtils';
 import { groupSessionsByRecency } from './utils/sessionGroupUtils';
-import { buildSessionThreads } from './utils/sessionThreadUtils';
+import { buildSessionThreads, groupThreadRuns } from './utils/sessionThreadUtils';
 
 import type { AgentId } from '@config/agents';
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
@@ -67,6 +70,7 @@ import type { PopupPosition } from '@ui/index';
 import type {
   FC,
   MouseEvent,
+  ReactElement,
   ReactNode,
 } from 'react';
 import type { SidebarMenuTarget } from './partials';
@@ -74,6 +78,7 @@ import type { StripItem } from './partials/CollapsedStrip';
 import type { FunnelOrder } from './partials/FunnelMenu';
 import type { DateFilter } from './utils/dateFilterUtils';
 import type { RecencyBucket } from './utils/sessionGroupUtils';
+import type { SessionRow } from './utils/sessionThreadUtils';
 
 export interface SidebarPaneProps {
   readonly projects: readonly ProjectSummary[];
@@ -116,6 +121,8 @@ const MAX_SESSIONS_WIDTH = 520;
 const DEFAULT_SESSIONS_WIDTH = 320;
 // The width a column folds to: its strip of marks, w-14 in the tailwind scale.
 const COLLAPSED_WIDTH = '3.5rem';
+// A reduced-motion reader gets the end state with no travel, same as Disclosure.
+const INSTANT = { duration: 0 };
 
 // A session is named by whatever it carries, and every agent carries a different one of these.
 const titleOf = (session: SessionSummary): string => {
@@ -168,6 +175,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
 }) => {
   const { t, i18n } = useTranslation('sidebar');
   const { push: pushToast } = useToast();
+  const reduceMotion = useReducedMotion();
   const [projectFilter, setProjectFilter] = useState('');
   const [sessionFilter, setSessionFilter] = useState('');
   const [projectDateFilter, setProjectDateFilter] = useState<DateFilter>('all');
@@ -250,7 +258,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
    * work arrives as several files. They are shown as one row that opens to its
    * parts rather than as unrelated neighbours in the list.
    */
-  const sessionRows = useMemo(() => {
+  const sessionRows = useMemo((): readonly SessionRow[] => {
     return buildSessionThreads(visibleSessions, sessionOrder).flatMap((thread) => {
       const head = {
         session: thread.head,
@@ -601,6 +609,213 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
     );
   }
 
+  const rowClassName = (row: SessionRow, isContinuation: boolean): string => {
+    const active = row.session.filePath === selectedFilePath;
+    const selectedForDelete = selectedSessionPaths.includes(row.session.filePath);
+
+    return cn('sidebar-row', isContinuation && 'ps-4', (selectedForDelete
+      || (!selectionMode && active)) && 'is-active');
+  };
+
+  /**
+   * One row's inner content, shared by a thread's head and each of its parts
+   * so a card can group them without duplicating the row markup. Excludes
+   * the `<li>` itself: a plain row supplies it directly, an animated part
+   * supplies it through `motion.li` instead.
+   */
+  const renderRowContent = (row: SessionRow): ReactNode => {
+    const session = row.session;
+    const active = session.filePath === selectedFilePath;
+    const canDelete = agentOption(session.agent).canDelete;
+    const selectedForDelete = selectedSessionPaths.includes(session.filePath);
+    const title = titleOf(session);
+    const preview = previewOf(session);
+    const threaded = row.partCount > 1;
+    const open = expandedThreads.includes(row.threadKey);
+    // Selection mode borrows the leading gutter for a
+    // checkbox; otherwise it carries the agent circle.
+    let leadMark: ReactNode = (
+      <AgentMark
+        agent={session.agent}
+        className="size-7 text-figure"
+      />
+    );
+
+    if (selectionMode) {
+      leadMark = selectedForDelete
+        ? (
+            <CheckSquare2 className="size-4 shrink-0 text-primary" />
+          )
+        : (
+            <Square className="size-4 shrink-0 text-muted-foreground" />
+          );
+    }
+
+    return (
+      <>
+        {leadMark}
+        {/*
+          Reserved on every row, threaded or not: a chevron that only exists
+          some of the time shifts the title only some of the time, and a row
+          with no thread reads as broken rather than as carrying one fewer
+          control. Same size as .sidebar-thread-toggle, empty when unused.
+        */}
+        <div className="flex size-4 shrink-0 items-center justify-center">
+          {threaded && (
+            <Tooltip content={t('threadParts', { count: row.partCount })}>
+              <button
+                type="button"
+                aria-expanded={open}
+                aria-label={t('threadParts', { count: row.partCount })}
+                data-thread-toggle={row.threadKey}
+                onClick={() => {
+                  toggleThread(row.threadKey);
+                }}
+                className="sidebar-thread-toggle"
+              >
+                <ChevronDown className="size-3" />
+              </button>
+            </Tooltip>
+          )}
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <button
+            type="button"
+            onClick={() => {
+              if (selectionMode) {
+                toggleSessionSelection(session);
+              }
+              else {
+                onSelectSession(session);
+              }
+            }}
+            disabled={selectionMode && !canDelete}
+            onContextMenu={(event) => {
+              if (selectionMode) {
+                event.preventDefault();
+              }
+              else {
+                openMenu(event, {
+                  kind: 'session',
+                  session,
+                });
+              }
+            }}
+            aria-current={selectionMode ? undefined : active}
+            aria-pressed={selectionMode ? selectedForDelete : undefined}
+            data-session-item={session.filePath}
+            className="flex min-w-0 flex-col gap-0.5 text-start"
+          >
+            <span className="flex w-full items-baseline gap-2">
+              <span className="
+                min-w-0 flex-1 truncate text-sm font-medium text-foreground
+              "
+              >
+                {title}
+              </span>
+              <span className="shrink-0 font-mono text-figure text-faint">
+                {formatTimeAgo(
+                  session.lastTimestampMs,
+                  nowMs,
+                  i18n.language,
+                )}
+              </span>
+            </span>
+            {preview != null && (
+              <span className="w-full truncate text-body text-muted-foreground">
+                {preview}
+              </span>
+            )}
+          </button>
+          <span className="flex min-w-0 items-center gap-1">
+            {reportAgent != null && (
+              <span className="
+                min-w-0 truncate rounded-xs border border-border px-1 font-mono
+                text-figure text-faint
+              "
+              >
+                {projectNames.get(`${row.session.agent}:${row.session.projectId}`)
+                  ?? row.session.projectId}
+              </span>
+            )}
+            <span className="
+              shrink-0 rounded-xs border border-border px-1 font-mono
+              text-figure text-faint
+            "
+            >
+              {t('messageCount', { count: row.messageCount })}
+            </span>
+          </span>
+        </div>
+      </>
+    );
+  };
+
+  // The whole `<li>`: nested in a thread's own `<ul>` or standing directly in
+  // the session list, a row is styled the same either way.
+  const renderSessionRow = (row: SessionRow, isContinuation: boolean): ReactElement => {
+    return (
+      <li key={row.session.filePath} className={rowClassName(row, isContinuation)}>
+        {renderRowContent(row)}
+      </li>
+    );
+  };
+
+  /**
+   * One card around a thread's fullest transcript and the parts revealed by
+   * expanding it: a part reads as belonging to the thread, not as a row that
+   * happens to sit under the one above it. The `<ul>` and its head row stay
+   * mounted whether or not it is open, so the group animates into and out of
+   * a stable parent instead of cutting between two shapes.
+   *
+   * One motion element gated by the open boolean, exactly Disclosure's own
+   * shape, rather than one per part: AnimatePresence animating a list that
+   * starts genuinely empty does not reliably play an enter transition the
+   * first time it gains children, only on every diff after that.
+   */
+  const renderThreadGroup = (head: SessionRow, parts: readonly SessionRow[]): ReactElement => {
+    const open = expandedThreads.includes(head.threadKey);
+
+    return (
+      <li key={head.threadKey} className={cn(open && 'sidebar-thread-group')}>
+        <ul>
+          {renderSessionRow(head, false)}
+          <AnimatePresence initial={false}>
+            {open && (
+              <motion.li
+                key="parts"
+                initial={{
+                  height: 0,
+                  opacity: 0,
+                }}
+                animate={{
+                  height: 'auto',
+                  opacity: 1,
+                }}
+                exit={{
+                  height: 0,
+                  opacity: 0,
+                }}
+                transition={reduceMotion ? INSTANT : collapseTransition}
+                className="overflow-hidden"
+              >
+                <ul>
+                  {parts.map((row) => {
+                    return (
+                      <li key={row.session.filePath} className={rowClassName(row, true)}>
+                        {renderRowContent(row)}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </motion.li>
+            )}
+          </AnimatePresence>
+        </ul>
+      </li>
+    );
+  };
+
   return (
     <aside className="flex min-h-0 shrink-0 overflow-hidden" data-sidebar>
       {/*
@@ -862,163 +1077,15 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                                   </span>
                                 </button>
                               </li>
-                              {!shut && group.rows.map((row) => {
-                                const session = row.session;
-                                const active = session.filePath === selectedFilePath;
-                                const canDelete = agentOption(session.agent).canDelete;
-                                const selectedForDelete = selectedSessionPaths
-                                  .includes(session.filePath);
-                                const title = titleOf(session);
-                                const preview = previewOf(session);
-                                const threaded = row.partCount > 1;
-                                const open = expandedThreads.includes(row.threadKey);
-                                // Selection mode borrows the leading gutter for a
-                                // checkbox; otherwise it carries the agent circle.
-                                let leadMark: ReactNode = (
-                                  <AgentMark
-                                    agent={session.agent}
-                                    className="size-7 text-figure"
-                                  />
-                                );
-
-                                if (selectionMode) {
-                                  leadMark = selectedForDelete
-                                    ? (
-                                        <CheckSquare2 className="
-                                          size-4 shrink-0 text-primary
-                                        "
-                                        />
-                                      )
-                                    : (
-                                        <Square className="
-                                          size-4 shrink-0 text-muted-foreground
-                                        "
-                                        />
-                                      );
-                                }
-
-                                return (
-                                  <li
-                                    key={session.filePath}
-                                    className={cn(row.continuation && 'ps-4')}
-                                  >
-                                    {threaded && (
-                                      <button
-                                        type="button"
-                                        aria-expanded={open}
-                                        aria-label={t('threadParts', { count: row.partCount })}
-                                        data-thread-toggle={row.threadKey}
-                                        onClick={() => {
-                                          toggleThread(row.threadKey);
-                                        }}
-                                        className="
-                                          flex w-full items-center gap-1.5 px-2
-                                          pt-1 text-body text-muted-foreground
-                                          hover:text-foreground
-                                        "
-                                      >
-                                        <ChevronDown className={cn(`
-                                          size-3 transition-transform
-                                        `, !open && '-rotate-90')}
-                                        />
-                                        {t('threadParts', { count: row.partCount })}
-                                      </button>
-                                    )}
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        if (selectionMode) {
-                                          toggleSessionSelection(session);
-                                        }
-                                        else {
-                                          onSelectSession(session);
-                                        }
-                                      }}
-                                      disabled={selectionMode && !canDelete}
-                                      onContextMenu={(event) => {
-                                        if (selectionMode) {
-                                          event.preventDefault();
-                                        }
-                                        else {
-                                          openMenu(event, {
-                                            kind: 'session',
-                                            session,
-                                          });
-                                        }
-                                      }}
-                                      aria-current={selectionMode ? undefined : active}
-                                      aria-pressed={selectionMode ? selectedForDelete : undefined}
-                                      data-session-item={session.filePath}
-                                      className={cn('sidebar-row', (selectedForDelete
-                                        || (!selectionMode && active)) && `
-                                          is-active
-                                        `)}
-                                    >
-                                      {leadMark}
-                                      <span className="
-                                        flex min-w-0 flex-1 flex-col gap-0.5
-                                      "
-                                      >
-                                        <span className="
-                                          flex items-baseline gap-2
-                                        "
-                                        >
-                                          <span className="
-                                            min-w-0 flex-1 truncate text-sm
-                                            font-medium text-foreground
-                                          "
-                                          >
-                                            {title}
-                                          </span>
-                                          <span className="
-                                            shrink-0 font-mono text-figure
-                                            text-faint
-                                          "
-                                          >
-                                            {formatTimeAgo(
-                                              session.lastTimestampMs,
-                                              nowMs,
-                                              i18n.language,
-                                            )}
-                                          </span>
-                                        </span>
-                                        {preview != null && (
-                                          <span className="
-                                            truncate text-body
-                                            text-muted-foreground
-                                          "
-                                          >
-                                            {preview}
-                                          </span>
-                                        )}
-                                        <span className="
-                                          flex min-w-0 items-center gap-1
-                                        "
-                                        >
-                                          {reportAgent != null && (
-                                            <span className="
-                                              min-w-0 truncate rounded-xs border
-                                              border-border px-1 font-mono
-                                              text-figure text-faint
-                                            "
-                                            >
-                                              {projectNames.get(`${row.session.agent}:${row.session.projectId}`)
-                                                ?? row.session.projectId}
-                                            </span>
-                                          )}
-                                          <span className="
-                                            shrink-0 rounded-xs border
-                                            border-border px-1 font-mono
-                                            text-figure text-faint
-                                          "
-                                          >
-                                            {t('messageCount', { count: row.messageCount })}
-                                          </span>
-                                        </span>
-                                      </span>
-                                    </button>
-                                  </li>
-                                );
+                              {!shut && groupThreadRuns(group.rows).map(({ head, parts }) => {
+                                /**
+                                 * partCount, not parts.length: a collapsed thread has
+                                 * no parts to render yet but still needs the stable,
+                                 * animatable wrapper so expanding it can transition in.
+                                 */
+                                return head.partCount > 1
+                                  ? renderThreadGroup(head, parts)
+                                  : renderSessionRow(head, false);
                               })}
                             </Fragment>
                           );

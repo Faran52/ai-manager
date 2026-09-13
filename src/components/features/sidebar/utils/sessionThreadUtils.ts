@@ -17,6 +17,21 @@ interface Run {
 
 export type SessionThreadOrder = 'newest' | 'oldest';
 
+// One flattened row of a thread: its fullest transcript (continuation false)
+// or a part revealed by expanding it (continuation true).
+export interface SessionRow {
+  readonly session: SessionSummary;
+  readonly threadKey: string;
+  readonly partCount: number;
+  readonly messageCount: number;
+  readonly continuation: boolean;
+}
+
+export interface ThreadRun {
+  readonly head: SessionRow;
+  readonly parts: readonly SessionRow[];
+}
+
 /**
  * Rewinding a session writes the messages up to that point into a fresh file,
  * so one conversation ends up as several transcripts that all begin with the
@@ -86,4 +101,31 @@ export const buildSessionThreads = (
       ? right.lastTimestampMs - left.lastTimestampMs
       : left.lastTimestampMs - right.lastTimestampMs;
   });
+};
+
+/**
+ * The card an expanded thread's parts render inside: a head row and the
+ * continuation rows immediately after it, together, so a part reads as
+ * belonging to its thread instead of just sitting under it. A standalone
+ * row, threaded or not yet expanded, is a run of its own with no parts.
+ */
+export const groupThreadRuns = (rows: readonly SessionRow[]): readonly ThreadRun[] => {
+  const runs: { head: SessionRow;
+    parts: SessionRow[]; }[] = [];
+
+  for (const row of rows) {
+    const current = row.continuation ? runs.at(-1) : undefined;
+
+    if (current == null) {
+      runs.push({
+        head: row,
+        parts: [],
+      });
+    }
+    else {
+      current.parts.push(row);
+    }
+  }
+
+  return runs;
 };

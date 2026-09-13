@@ -161,7 +161,82 @@
     border-radius: 0 3px 3px 0;
   }
 
-  .sidebar-row:focus-visible {
+  /* Stretches the title button's click target to the whole row: the avatar,
+     the badges below the title, and every empty pixel between them select
+     the session too, not just the title text itself. The thread toggle sits
+     above this layer (see its own z-index) so it stays independently
+     clickable rather than getting covered by the stretch. */
+  .sidebar-row [data-session-item]::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+  }
+
+  /* Groups a thread's fullest transcript with the parts an expand reveals,
+     the same card a project uses for its agent branches: one border around
+     the run so a part reads as belonging to it, not as a row that happens to
+     sit under the one above. */
+  .sidebar-thread-group {
+    padding: 0.25rem;
+    margin-block: 0.125rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+
+  /* A control nested inside another control takes the next radius down. */
+  .sidebar-thread-group .sidebar-row {
+    margin-block: 0.0625rem;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Separates the head from its parts; the group's own border already marks
+     the thread off from its neighbours in the list. */
+  .sidebar-thread-group li + li {
+    border-top: 1px solid var(--border);
+  }
+
+  /* A mark near the size of the badges beside it (project id, message
+     count), not a full icon button: the row's own chevron, not a toolbar
+     action. Positioned above the title button's stretched click target
+     (z-index, not DOM order, decides that), or the stretch would swallow
+     its clicks and only the title button's own text would still toggle. */
+  .sidebar-thread-toggle {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    color: var(--muted-foreground);
+    background: color-mix(in srgb, var(--muted) 55%, transparent);
+    border-radius: var(--radius-xs);
+    transition: color 120ms ease, background-color 120ms ease;
+  }
+
+  .sidebar-thread-toggle:hover {
+    color: var(--foreground);
+    background: var(--accent);
+  }
+
+  .sidebar-thread-toggle:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
+  }
+
+  .sidebar-thread-toggle svg {
+    transition: transform 120ms ease;
+  }
+
+  .sidebar-thread-toggle[aria-expanded="false"] svg {
+    transform: rotate(-90deg);
+  }
+
+  /* .sidebar-row is the li now, not the button: the row carries the hover
+     background and active bar, but focus lands on the button inside it. */
+  .sidebar-row:has(button:focus-visible) {
     outline: 2px solid var(--ring);
     outline-offset: -2px;
   }

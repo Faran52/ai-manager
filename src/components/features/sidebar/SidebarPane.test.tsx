@@ -900,6 +900,30 @@ describe('SidebarPane session threads', () => {
     expect(screen.queryByText('Part b')).toBeNull();
   });
 
+  test('opens to its parts for a reduced-motion reader too', async () => {
+    vi.stubGlobal('matchMedia', () => {
+      return {
+        matches: true,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      };
+    });
+
+    render(
+      <SidebarPane
+        {...base}
+        projects={[project('p', 'webapp')]}
+        sessions={[
+          part('a', START, START + 10 * MINUTE, 'root-1'),
+          part('b', START + 11 * MINUTE, START + 20 * MINUTE, 'root-1'),
+        ]}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: '2 parts' }));
+    expect(screen.getByText('Part b')).toBeDefined();
+  });
+
   test('leaves transcripts with different roots as their own rows', () => {
     render(
       <SidebarPane
