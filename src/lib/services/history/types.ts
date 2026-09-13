@@ -214,6 +214,9 @@ export interface ProjectSummary {
   readonly agent: AgentId;
   readonly id: string;
   readonly name: string;
+  // Which of a same-agent sibling roots (".claude-personal") this came from.
+  // Undefined for the plain default root, so a badge adds nothing for it.
+  readonly profile?: string | undefined;
   readonly actualPath?: string | undefined;
   /*
    * The repository this folder is a linked worktree of. Set only when the two
@@ -227,6 +230,9 @@ export interface ProjectSummary {
 
 export interface SessionSummary {
   readonly agent: AgentId;
+  // Which of a same-agent sibling roots (".claude-personal") this came from.
+  // Undefined for the plain default root, so a badge adds nothing for it.
+  readonly profile?: string | undefined;
   readonly actualSessionId: string;
   readonly id: string;
   readonly filePath: string;

@@ -25,6 +25,22 @@ test('mounts closed without a dialog', () => {
   expect(screen.queryByRole('dialog')).toBeNull();
 });
 
+test('names the profile the project came from', () => {
+  render(
+    <ConfirmDeleteProjectDialog
+      project={{
+        ...PROJECT,
+        profile: 'Personal',
+      }}
+      busy={false}
+      onClose={vi.fn()}
+      onConfirm={vi.fn()}
+    />,
+  );
+
+  expect(screen.getByText(/Everything Claude Code Personal has stored for/u)).toBeDefined();
+});
+
 test('confirms permanent project history deletion and preserves source wording', async () => {
   const onConfirm = vi.fn();
   const onClose = vi.fn();

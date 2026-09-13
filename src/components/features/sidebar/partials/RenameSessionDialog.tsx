@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { agentOption } from '@config/agents';
+import { agentBadgeLabel } from '@config/agents';
 
 import {
   Button,
@@ -54,7 +54,7 @@ export const RenameSessionDialog: FC<RenameSessionDialogProps> = ({
               }}
             >
               <h2 className="text-base font-semibold">
-                {`Rename in ${agentOption(target.agent).label}`}
+                {`Rename in ${agentBadgeLabel(target.agent, target.profile)}`}
               </h2>
               <div className="mt-4">
                 <TextInput value={title} onInput={setTitle} label={t('sessionTitle')} placeholder={t('sessionTitle')} />

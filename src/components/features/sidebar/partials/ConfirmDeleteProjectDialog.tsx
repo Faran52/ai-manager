@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import { FolderX, TriangleAlert } from 'lucide-react';
 
-import { agentOption } from '@config/agents';
+import { agentBadgeLabel } from '@config/agents';
 
 import { ConfirmDialog, useLastPresent } from '@ui/index';
 
@@ -25,7 +25,7 @@ export const ConfirmDeleteProjectDialog: FC<ConfirmDeleteProjectDialogProps> = (
   const { t } = useTranslation('sidebar');
   const open = project != null;
   const target = useLastPresent(project);
-  const agentLabel = target == null ? 'the agent' : agentOption(target.agent).label;
+  const agentLabel = target == null ? 'the agent' : agentBadgeLabel(target.agent, target.profile);
 
   return (
     <ConfirmDialog

@@ -12,7 +12,7 @@ import {
   vi,
 } from 'vitest';
 
-import { resolveAgentPaths } from './rootsUtils';
+import { resolveAgentPaths, rootProfileLabel } from './rootsUtils';
 
 test('resolves every agent path on Linux with environment overrides', () => {
   vi.spyOn(process, 'cwd').mockReturnValue('/home/me/work');
@@ -114,6 +114,25 @@ test('leaves a file that merely shares the prefix out of the sibling scan', asyn
   });
 
   expect(paths.claude).toEqual([join(home, '.claude')]);
+});
+
+test('labels a sibling by the name that sets it apart from the default', () => {
+  expect(rootProfileLabel('/Users/me/.claude-personal', '.claude')).toBe('Personal');
+  expect(rootProfileLabel('/Users/me/.Claude-Personal', '.claude')).toBe('Personal');
+  expect(rootProfileLabel('/Users/me/.claude_WORK', '.claude')).toBe('Work');
+});
+
+test('gives the plain default root no profile label', () => {
+  expect(rootProfileLabel('/Users/me/.claude', '.claude')).toBeUndefined();
+  expect(rootProfileLabel('/Users/me/.CLAUDE', '.claude')).toBeUndefined();
+});
+
+test('gives a root outside the naming convention no profile label', () => {
+  expect(rootProfileLabel('/Users/me/custom-claude-dir', '.claude')).toBeUndefined();
+});
+
+test('gives a sibling with nothing left after the separator no profile label', () => {
+  expect(rootProfileLabel('/Users/me/.claude---', '.claude')).toBeUndefined();
 });
 
 test('finds a sibling even where an explicit CLAUDE_CONFIG_DIR points elsewhere', async () => {

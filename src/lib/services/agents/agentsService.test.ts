@@ -90,6 +90,47 @@ test('aggregates projects and dispatches session discovery by agent', async () =
   expect(await listAgentSessions(roots, 'codex')).toHaveLength(1);
 });
 
+test('carries a sibling profile through to its projects and sessions', async () => {
+  const home = await mkdtemp(join(tmpdir(), 'agents-profile-'));
+  const primary = join(home, '.claude');
+  const personal = join(home, '.claude-personal');
+
+  await mkdir(join(primary, 'projects', 'p'), { recursive: true });
+  await writeFile(join(primary, 'projects', 'p', 's.jsonl'), JSON.stringify({
+    type: 'user',
+    uuid: 'u',
+    timestamp: '2026-01-01T00:00:00Z',
+    message: {
+      role: 'user',
+      content: 'Hi',
+    },
+  }));
+  await mkdir(join(personal, 'projects', 'q'), { recursive: true });
+  await writeFile(join(personal, 'projects', 'q', 's.jsonl'), JSON.stringify({
+    type: 'user',
+    uuid: 'u2',
+    timestamp: '2026-01-01T00:00:00Z',
+    message: {
+      role: 'user',
+      content: 'Hi personal',
+    },
+  }));
+
+  const roots = rootsWith(home, { claude: [primary, personal] });
+  const projects = await listAgentProjects(roots);
+
+  expect(projects.find((project) => {
+    return project.id === 'p';
+  })?.profile).toBeUndefined();
+  expect(projects.find((project) => {
+    return project.id === 'q';
+  })?.profile).toBe('Personal');
+
+  const sessions = await listAgentSessions(roots, 'claude', 'q');
+
+  expect(sessions[0]?.profile).toBe('Personal');
+});
+
 test('routes compatible, structured, SQLite, and OpenCode agent families', async () => {
   const root = await mkdtemp(join(tmpdir(), 'agent-families-'));
   const codebuddy = join(root, 'codebuddy');

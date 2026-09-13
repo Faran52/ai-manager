@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest';
 
 import {
+  agentBadgeLabel,
   agentOption,
   agentOptions,
   isAgentId,
@@ -59,4 +60,9 @@ test('defines every reference agent and its capabilities', () => {
   expect(() => {
     agentOption('unknown');
   }).toThrow('Unknown agent: unknown');
+});
+
+test('adds a profile qualifier to the badge only when one is set', () => {
+  expect(agentBadgeLabel('claude')).toBe('Claude Code');
+  expect(agentBadgeLabel('claude', 'Personal')).toBe('Claude Code Personal');
 });

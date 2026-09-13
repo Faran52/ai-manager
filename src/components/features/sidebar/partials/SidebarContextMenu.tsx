@@ -10,7 +10,7 @@ import {
   Trash2,
 } from 'lucide-react';
 
-import { agentOption } from '@config/agents';
+import { agentBadgeLabel, agentOption } from '@config/agents';
 
 import { copyTextToClipboard } from '@utils/browserFilesUtils';
 import { shellQuote } from '@utils/shellQuoteUtils';
@@ -140,7 +140,7 @@ export const SidebarContextMenu: FC<SidebarContextMenuProps> = ({
           },
           ...(sessionAgent?.canRename === true
             ? [{
-                label: t('renameSessionIn', { agent: sessionAgent.label }),
+                label: t('renameSessionIn', { agent: agentBadgeLabel(target.session.agent, target.session.profile) }),
                 icon: <Pencil className="size-3.5" />,
                 onSelect: () => {
                   onClose();

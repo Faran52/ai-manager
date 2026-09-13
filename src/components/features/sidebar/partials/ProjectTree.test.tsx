@@ -110,6 +110,20 @@ describe('ProjectTree', () => {
     expect(onOpenMenu).toHaveBeenNthCalledWith(2, expect.anything(), PROJECT);
   });
 
+  test('adds a profile qualifier to the badge when the project carries one', () => {
+    const personalProject: ProjectSummary = {
+      ...PROJECT,
+      id: 'personal-project',
+      name: 'Side Project',
+      actualPath: '/repo/side-project',
+      profile: 'Personal',
+    };
+
+    render(<ProjectTree {...base} projects={[personalProject]} />);
+
+    expect(screen.getByRole('button', { name: 'Side Project, Claude Code Personal, 1 session' })).toBeDefined();
+  });
+
   test('shows the empty state when navigation filters have no match', () => {
     render(<ProjectTree {...base} textFilter="missing" />);
 

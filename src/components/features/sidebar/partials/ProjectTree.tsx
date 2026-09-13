@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { FolderSearch } from 'lucide-react';
 
-import { agentOption } from '@config/agents';
+import { agentBadgeLabel } from '@config/agents';
 
 import { formatTimeAgo, tildePath } from '@utils/formatUtils';
 import { initialsOf } from '@utils/initialsUtils';
@@ -122,7 +122,7 @@ export const ProjectTree: FC<ProjectTreeProps> = ({
               {group.agents.map((branch) => {
                 const selected = selectedProject?.agent === branch.agent
                   && selectedProject.id === branch.projectId;
-                const label = agentOption(branch.agent).label;
+                const label = agentBadgeLabel(branch.agent, branch.source.profile);
                 // A worktree makes the same agent appear twice in one group, so
                 // the row is named and keyed by the project it reads, not the agent.
                 const branchName = branch.worktree == null

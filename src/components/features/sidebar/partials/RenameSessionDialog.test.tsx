@@ -54,6 +54,23 @@ test('submits a new native Claude title', async () => {
   expect(onClose).toHaveBeenCalled();
 });
 
+test('names the profile the session came from', () => {
+  render(
+    <RenameSessionDialog
+      open
+      session={{
+        ...session('claude'),
+        profile: 'Personal',
+      }}
+      busy={false}
+      onClose={vi.fn()}
+      onConfirm={vi.fn()}
+    />,
+  );
+
+  expect(screen.getByText('Rename in Claude Code Personal')).toBeDefined();
+});
+
 test('mounts closed without a dialog', () => {
   render(<RenameSessionDialog open={false} session={null} busy={false} onClose={vi.fn()} onConfirm={vi.fn()} />);
 

@@ -142,6 +142,42 @@ test('runs Codex resume, rename, and delete actions', async () => {
   expect(onDeleteSession).toHaveBeenCalledWith(target);
 });
 
+test('names the profile a session came from in the rename action', () => {
+  const target: SessionSummary = {
+    agent: 'claude',
+    actualSessionId: 'thread',
+    id: '/s.jsonl',
+    filePath: '/s.jsonl',
+    projectId: '/repo',
+    messageCount: 1,
+    firstTimestampMs: 0,
+    lastTimestampMs: 0,
+    modifiedMs: 0,
+    sizeBytes: 1,
+    profile: 'Personal',
+  };
+
+  render(
+    <SidebarContextMenu
+      target={{
+        kind: 'session',
+        session: target,
+      }}
+      position={{
+        x: 0,
+        y: 0,
+      }}
+      onClose={vi.fn()}
+      onCopied={vi.fn()}
+      onDeleteProject={vi.fn()}
+      onRenameSession={vi.fn()}
+      onDeleteSession={vi.fn()}
+    />,
+  );
+
+  expect(screen.getByText('Rename session in Claude Code Personal')).toBeDefined();
+});
+
 test('hides native mutation actions for read-only agents', () => {
   render(
     <SidebarContextMenu

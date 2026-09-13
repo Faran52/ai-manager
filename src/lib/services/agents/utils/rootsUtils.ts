@@ -71,6 +71,32 @@ const withSiblings = (primary: string, home: string, defaultName: string): reado
   })];
 };
 
+export const CLAUDE_HOME_NAME = '.claude';
+export const CODEX_HOME_NAME = '.codex';
+
+/*
+ * The label a badge adds for a root beyond the plain default: ".claude-personal"
+ * reads as "Personal", so a project or session found there is not shown as
+ * indistinguishable "Claude Code". Undefined for the plain default name itself,
+ * and for a root that does not follow the naming convention at all (a custom
+ * CLAUDE_CONFIG_DIR with nothing to derive from), so this can be called on
+ * every root uniformly rather than only the ones known to be siblings.
+ */
+export const rootProfileLabel = (root: string, defaultName: string): string | undefined => {
+  const name = root.slice(root.lastIndexOf(sep) + 1);
+  const needle = defaultName.toLowerCase();
+
+  if (name.toLowerCase() === needle || !name.toLowerCase().startsWith(needle)) {
+    return undefined;
+  }
+
+  const suffix = name.slice(defaultName.length).replace(/^[-_.\s]+/, '');
+
+  return suffix.length === 0
+    ? undefined
+    : `${suffix.charAt(0).toUpperCase()}${suffix.slice(1).toLowerCase()}`;
+};
+
 const envPath = (
   env: Readonly<Record<string, string | undefined>>,
   key: string,
@@ -140,14 +166,14 @@ export const resolveAgentPaths = ({
       join(home, '.gemini', 'antigravity-cli'),
       join(home, '.gemini', 'antigravity'),
     ],
-    'claude': withSiblings(envPath(env, 'CLAUDE_CONFIG_DIR', join(home, '.claude')), home, '.claude'),
+    'claude': withSiblings(envPath(env, 'CLAUDE_CONFIG_DIR', join(home, CLAUDE_HOME_NAME)), home, CLAUDE_HOME_NAME),
     'cline': [
       join(vscode, 'globalStorage', 'saoudrizwan.claude-dev', 'tasks'),
       join(vscode, 'globalStorage', 'rooveterinaryinc.roo-cline', 'tasks'),
       join(vscode, 'globalStorage', 'kilocode.kilo-code', 'tasks'),
     ],
     'codebuddy': [join(home, '.codebuddy')],
-    'codex': withSiblings(envPath(env, 'CODEX_HOME', join(home, '.codex')), home, '.codex'),
+    'codex': withSiblings(envPath(env, 'CODEX_HOME', join(home, CODEX_HOME_NAME)), home, CODEX_HOME_NAME),
     'continue': [envPath(env, 'CONTINUE_GLOBAL_DIR', join(home, '.continue', 'sessions'))],
     'copilot': [join(vscode, 'workspaceStorage')],
     'crush': commonProjects,

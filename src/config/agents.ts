@@ -188,6 +188,17 @@ export const isAgentId = (value: string): value is AgentId => {
 };
 
 /*
+ * A project or session found under a sibling root (".claude-personal") carries
+ * that root's profile name, so its badge says which one instead of reading the
+ * same as the default root's "Claude Code".
+ */
+export const agentBadgeLabel = (agent: AgentId, profile?: string): string => {
+  const label = agentOption(agent).label;
+
+  return profile == null ? label : `${label} ${profile}`;
+};
+
+/*
  * The agents that keep a settings file of their own, in the order the picker
  * offers them. Here rather than in settingsService because the picker is client
  * code and that module reads the filesystem, so importing a value from it would
