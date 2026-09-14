@@ -387,6 +387,8 @@ const HistoryAppView: FC = () => {
     ?? selectedSession?.agent
     ?? selectedProject?.agent
     ?? 'claude';
+  // The archive reads a separate ArchivedSession type with no profile of its own.
+  const openProfile = selectedSession?.profile ?? selectedProject?.profile;
   const openTitle = archivedSession?.title
     ?? selectedSession?.title
     ?? selectedSession?.summary
@@ -403,6 +405,7 @@ const HistoryAppView: FC = () => {
         <SessionViewer
           filePath={selectedFilePath}
           agent={openAgent}
+          profile={openProfile}
           sessionTitle={openTitle}
           gitBranch={selectedSession?.gitBranch}
           highlightTimestamp={highlightTimestamp}

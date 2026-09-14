@@ -73,6 +73,23 @@ describe('MessageTimeline', () => {
     expect(wrappers[2]?.className).toContain('opacity-60');
   });
 
+  test('passes the profile through to an assistant turn', () => {
+    const soloEntries: HistoryEntry[] = [{
+      kind: 'assistant',
+      uuid: 'solo',
+      timestamp: 't1',
+      sidechain: false,
+      blocks: [{
+        blockType: 'text',
+        text: 'answer',
+      }],
+    }];
+
+    render(<MessageTimeline agent="claude" profile="Personal" entries={soloEntries} />);
+
+    expect(screen.getByText('Claude Code Personal')).toBeDefined();
+  });
+
   test('pairs tool results onto their calls inside the timeline', async () => {
     render(<MessageTimeline agent="claude" entries={entries} />);
     const button = screen.getAllByRole<HTMLButtonElement>('button').at(0);

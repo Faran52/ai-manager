@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import { EyeOff } from 'lucide-react';
 
-import { agentOption } from '@config/agents';
+import { agentBadgeLabel } from '@config/agents';
 
 import { MarkdownView } from '@ui/index';
 
@@ -23,6 +23,7 @@ export interface AssistantTurnProps {
   readonly entry: AssistantTurnEntry;
   // The session's agent, so the turn's mark carries its hue.
   readonly agent: AgentId;
+  readonly profile?: string | undefined;
   readonly visibleBlocks?: readonly AssistantBlock[];
   readonly outcomeFor: (toolUseId: string) => ToolOutcome | undefined;
   readonly hiddenCount?: number;
@@ -32,6 +33,7 @@ export interface AssistantTurnProps {
 export const AssistantTurn: FC<AssistantTurnProps> = ({
   entry,
   agent,
+  profile,
   visibleBlocks = entry.blocks,
   outcomeFor,
   hiddenCount = 0,
@@ -46,7 +48,7 @@ export const AssistantTurn: FC<AssistantTurnProps> = ({
           {entry.blocks.length > 0 && showHeader && (
             <MessageHeader
               roleKey="assistant"
-              name={agentOption(agent).label}
+              name={agentBadgeLabel(agent, profile)}
               timestamp={entry.timestamp}
               sidechain={entry.sidechain}
               model={entry.model}

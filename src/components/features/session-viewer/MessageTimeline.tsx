@@ -38,6 +38,7 @@ export interface MessageTimelineProps {
   readonly entries: readonly HistoryEntry[];
   // The session's agent, so each assistant turn's mark carries its hue.
   readonly agent: AgentId;
+  readonly profile?: string | undefined;
   readonly filters?: MessageFilters;
   readonly scrollElement?: HTMLDivElement | null;
   readonly highlightTimestamp?: string | undefined;
@@ -91,6 +92,7 @@ const renderRow = (
   filters: MessageFilters,
   nowMs: number,
   agent: AgentId,
+  profile: string | undefined,
 ) => {
   if (row.kind === 'date') {
     return <DateDivider timestampMs={row.timestampMs} nowMs={nowMs} />;
@@ -116,6 +118,7 @@ const renderRow = (
         <AssistantTurn
           entry={entry}
           agent={agent}
+          profile={profile}
           visibleBlocks={visible.blocks}
           hiddenCount={visible.hiddenCount}
           outcomeFor={(toolUseId) => {
@@ -135,6 +138,7 @@ const renderRow = (
 export const MessageTimeline: FC<MessageTimelineProps> = ({
   entries,
   agent,
+  profile,
   filters = defaultMessageFilters(),
   scrollElement,
   highlightTimestamp,
@@ -280,7 +284,7 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
               )}
               style={{ transform: `translateY(${String(item.start - scrollMarginRef.current)}px)` }}
             >
-              {renderRow(row, model.pairs, model.orphans, filters, nowMs, agent)}
+              {renderRow(row, model.pairs, model.orphans, filters, nowMs, agent, profile)}
             </div>
           );
         })}

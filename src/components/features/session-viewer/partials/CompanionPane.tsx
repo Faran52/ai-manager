@@ -25,6 +25,7 @@ export interface CompanionPaneProps {
   readonly width: number;
   // The session's agent, for the navigator's assistant rows.
   readonly agent: AgentId;
+  readonly profile?: string | undefined;
   readonly entries: readonly HistoryEntry[];
   readonly filters: MessageFilters;
   readonly editedFiles: readonly EditedFile[];
@@ -49,6 +50,7 @@ export const CompanionPane: FC<CompanionPaneProps> = ({
   panel,
   width,
   agent,
+  profile,
   entries,
   filters,
   editedFiles,
@@ -97,6 +99,7 @@ export const CompanionPane: FC<CompanionPaneProps> = ({
                 <MessageNavigator
                   entries={entries}
                   agent={agent}
+                  profile={profile}
                   filters={filters}
                   width={width}
                   onNavigate={onNavigate}

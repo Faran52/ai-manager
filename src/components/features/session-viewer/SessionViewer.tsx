@@ -9,7 +9,7 @@ import {
   Users,
 } from 'lucide-react';
 
-import { agentOption } from '@config/agents';
+import { agentBadgeLabel, agentOption } from '@config/agents';
 import { appShortcuts } from '@config/shortcuts';
 import {
   messageFiltersStorageKey,
@@ -53,6 +53,7 @@ import type { CompanionPanel } from './partials';
 export interface SessionViewerProps {
   readonly filePath: string | null;
   readonly agent?: AgentId | undefined;
+  readonly profile?: string | undefined;
   readonly sessionTitle: string | undefined;
   // Named beside the project, since it says which line of work this session is on.
   readonly gitBranch?: string | undefined;
@@ -163,6 +164,7 @@ const PanelTab: FC<{
 export const SessionViewer: FC<SessionViewerProps> = ({
   filePath,
   agent = 'claude',
+  profile,
   sessionTitle,
   gitBranch,
   highlightTimestamp,
@@ -284,6 +286,7 @@ export const SessionViewer: FC<SessionViewerProps> = ({
         <MessageTimeline
           entries={feed.entries}
           agent={agent}
+          profile={profile}
           filters={filters}
           scrollElement={scrollElement}
           highlightTimestamp={highlightTimestamp}
@@ -388,7 +391,7 @@ export const SessionViewer: FC<SessionViewerProps> = ({
             className="agent-dot size-1.5 shrink-0 rounded-full"
             aria-hidden
           />
-          <span className="shrink-0">{agentOption(agent).label}</span>
+          <span className="shrink-0">{agentBadgeLabel(agent, profile)}</span>
           {model != null && (
             <>
               <span className="text-dim">/</span>
@@ -434,6 +437,7 @@ export const SessionViewer: FC<SessionViewerProps> = ({
           panel={panel}
           width={navigatorWidth}
           agent={agent}
+          profile={profile}
           entries={feed.entries}
           filters={filters}
           editedFiles={editedFiles}

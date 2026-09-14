@@ -101,11 +101,12 @@ const entries: readonly HistoryEntry[] = [
   },
 ];
 
-const renderNavigator = (onNavigate = noop): void => {
+const renderNavigator = (onNavigate = noop, profile?: string): void => {
   render(
     <MessageNavigator
       entries={entries}
       agent="claude"
+      profile={profile}
       filters={defaultMessageFilters()}
       width={280}
       onNavigate={onNavigate}
@@ -132,6 +133,12 @@ test('labels an entry with no preview by its kind', () => {
 
   expect(screen.getByLabelText('Claude Code 5')).toBeDefined();
   expect(screen.getByLabelText('User 8')).toBeDefined();
+});
+
+test('names the profile a session came from', () => {
+  renderNavigator(noop, 'Personal');
+
+  expect(screen.getByLabelText('Claude Code Personal 5')).toBeDefined();
 });
 
 test('jumps to the row it was asked for, counting the day separator', async () => {

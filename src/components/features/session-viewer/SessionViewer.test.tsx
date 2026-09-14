@@ -80,6 +80,20 @@ describe('SessionViewer', () => {
     expect(screen.getByText('Claude Code')).toBeDefined();
   });
 
+  test('names the profile a session came from', async () => {
+    stubPage();
+    render(
+      <SessionViewer
+        filePath="/sessions/s.jsonl"
+        sessionTitle="Login fix"
+        profile="Personal"
+        highlightTimestamp={undefined}
+      />,
+    );
+
+    expect(await screen.findByText('Claude Code Personal')).toBeDefined();
+  });
+
   test('loads a feed with toolbar metadata and load-more', async () => {
     stubPage();
     render(

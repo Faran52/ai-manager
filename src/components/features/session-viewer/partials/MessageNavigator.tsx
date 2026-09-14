@@ -7,7 +7,7 @@ import {
   X,
 } from 'lucide-react';
 
-import { agentOption } from '@config/agents';
+import { agentBadgeLabel } from '@config/agents';
 
 import { cn } from '@utils/cnUtils';
 
@@ -23,6 +23,9 @@ export interface MessageNavigatorProps {
   // The session's agent, so an assistant row reads in its hue and by its name,
   // the way the session list marks it.
   readonly agent: AgentId;
+  // Which sibling root the session came from, so the name carries the same
+  // qualifier the session list badge does.
+  readonly profile?: string | undefined;
   readonly filters: MessageFilters;
   readonly width: number;
   readonly onNavigate: (index: number) => void;
@@ -69,6 +72,7 @@ const previewOf = (entry: HistoryEntry): string => {
 export const MessageNavigator: FC<MessageNavigatorProps> = ({
   entries,
   agent,
+  profile,
   filters,
   width,
   onNavigate,
@@ -102,7 +106,7 @@ export const MessageNavigator: FC<MessageNavigatorProps> = ({
   const visibleRows = needle.length === 0
     ? rows
     : rows.filter((row) => {
-        const label = row.kind === 'assistant' ? agentOption(agent).label : t(row.kind);
+        const label = row.kind === 'assistant' ? agentBadgeLabel(agent, profile) : t(row.kind);
 
         return row.preview.toLowerCase().includes(needle)
           || label.toLowerCase().includes(needle);
@@ -180,7 +184,7 @@ export const MessageNavigator: FC<MessageNavigatorProps> = ({
                   // The assistant reads by its agent's name and hue, the way the
                   // session list marks it; every other kind keeps its plain word.
                   const roleLabel = row.kind === 'assistant'
-                    ? agentOption(agent).label
+                    ? agentBadgeLabel(agent, profile)
                     : t(row.kind);
 
                   return (

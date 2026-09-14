@@ -52,6 +52,24 @@ describe('AssistantTurn', () => {
     expect(screen.getByText('hello')).toBeDefined();
   });
 
+  test('names the profile a session came from', () => {
+    render(
+      <AssistantTurn
+        agent="claude"
+        profile="Personal"
+        entry={turn([{
+          blockType: 'text',
+          text: 'hello',
+        }])}
+        outcomeFor={() => {
+          return undefined;
+        }}
+      />,
+    );
+
+    expect(screen.getByText('Claude Code Personal')).toBeDefined();
+  });
+
   test('dispatches thinking, redacted and tool-use blocks', () => {
     render(
       <AssistantTurn

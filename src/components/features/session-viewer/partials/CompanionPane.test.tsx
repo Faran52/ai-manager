@@ -9,6 +9,7 @@ import {
 import { CompanionPane } from './CompanionPane';
 
 import type { EditedFile } from '@services/edits/editsService';
+import type { HistoryEntry } from '@services/history/historyService';
 import type { MessageFilters } from '../utils/messageFilterUtils';
 import type { CompanionPaneProps } from './CompanionPane';
 
@@ -85,6 +86,27 @@ test('shows the navigator instead, never both', () => {
 
   expect(screen.getByRole('complementary', { name: 'Message navigator' })).toBeDefined();
   expect(screen.queryByRole('complementary', { name: 'File edits' })).toBeNull();
+});
+
+test('passes the profile through to the navigator', () => {
+  const entries: readonly HistoryEntry[] = [{
+    kind: 'assistant',
+    uuid: 'a1',
+    timestamp: 't1',
+    sidechain: false,
+    blocks: [{
+      blockType: 'text',
+      text: 'answer',
+    }],
+  }];
+
+  pane({
+    panel: 'navigator',
+    entries,
+    profile: 'Personal',
+  });
+
+  expect(screen.getByLabelText('Claude Code Personal 1')).toBeDefined();
 });
 
 test('says so when the session changed no files', () => {
