@@ -7,6 +7,7 @@ import {
 } from 'vitest';
 
 import {
+  checkAgentInstalls,
   createArchive,
   deleteArchive,
   deleteProject,
@@ -23,6 +24,7 @@ import {
   fetchSettings,
   fetchStats,
   fetchStorage,
+  postAgentInstall,
   postPluginAction,
   renameSession,
   runRetention,
@@ -489,5 +491,45 @@ describe('plugin endpoints', () => {
         alwaysOnTokens: 449,
       }],
     });
+  });
+});
+
+describe('agent install endpoints', () => {
+  test('reads which installable agents are already on this machine', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return jsonResponse({
+        agents: {
+          crush: {
+            installed: true,
+            command: 'npm install -g @charmland/crush',
+          },
+          llm: {
+            installed: false,
+            command: 'pip install -U llm',
+          },
+        },
+      });
+    }));
+
+    await expect(checkAgentInstalls()).resolves.toEqual({
+      agents: {
+        crush: {
+          installed: true,
+          command: 'npm install -g @charmland/crush',
+        },
+        llm: {
+          installed: false,
+          command: 'pip install -U llm',
+        },
+      },
+    });
+  });
+
+  test('posts an install request and reads the acknowledgement', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return jsonResponse({ ok: true });
+    }));
+
+    await expect(postAgentInstall({ agent: 'crush' })).resolves.toEqual({ ok: true });
   });
 });

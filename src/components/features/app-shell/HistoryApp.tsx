@@ -26,7 +26,11 @@ import {
   ToastProvider,
   useToast,
 } from '@ui/index';
-import { AgentSetupPanel, usePluginToggle } from '@features/agent-setup';
+import {
+  AgentInstallSection,
+  AgentSetupPanel,
+  usePluginToggle,
+} from '@features/agent-setup';
 import { AnalyticsView, useAnalyticsScope } from '@features/analytics';
 import { AppHeader, CommandBar } from '@features/app-header';
 import { ArchiveView } from '@features/archive';
@@ -443,6 +447,7 @@ const HistoryAppView: FC = () => {
     ),
     health: (
       <div className="h-full overflow-y-auto p-4">
+        <AgentInstallSection />
         <AgentSetupPanel
           projectSelected={selectedProject != null}
           projectPath={selectedProject?.actualPath ?? ''}

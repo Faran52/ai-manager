@@ -69,5 +69,11 @@
   "colProblem": "Problem",
   "noSessions": "no sessions",
   "sessionCount_one": "{{count}} session",
-  "sessionCount_other": "{{count}} sessions"
+  "sessionCount_other": "{{count}} sessions",
+  "installAgentsTitle": "Install agents",
+  "agentInstalled": "Installed",
+  "install": "Install",
+  "installing": "Installing…",
+  "confirmInstallHeading": "Install {{agent}}?",
+  "confirmInstallBody": "This runs the following command on your machine:"
 }

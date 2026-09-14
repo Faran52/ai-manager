@@ -20,6 +20,8 @@ import {
 } from 'vitest';
 
 import {
+  handleAgentInstall,
+  handleAgentInstallCheck,
   handleAgentSetup,
   handleCreateArchive,
   handleDeleteArchive,
@@ -723,6 +725,84 @@ describe('handlePluginCosts', () => {
   test('rejects a request without a project path', async () => {
     expect((await handlePluginCosts(post({}))).status).toBe(400);
     expect((await handlePluginCosts(post({ projectPath: '' }))).status).toBe(400);
+  });
+});
+
+describe('handleAgentInstallCheck', () => {
+  test('checks every installable agent and names its command, keyed by id', async () => {
+    const resolve = vi.fn((bin: string) => {
+      return Promise.resolve(bin === 'crush');
+    });
+
+    const response = await handleAgentInstallCheck({ agentInstallCheck: resolve });
+    const body = await jsonOf(response);
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      agents: {
+        crush: {
+          installed: true,
+          command: 'npm install -g @charmland/crush',
+        },
+        llm: {
+          installed: false,
+          command: 'pip install -U llm',
+        },
+      },
+    });
+    expect(resolve).toHaveBeenCalledWith('crush');
+  });
+});
+
+describe('handleAgentInstall', () => {
+  test('rejects a body naming no installable agent', async () => {
+    expect((await handleAgentInstall(post('"not an object"'))).status).toBe(400);
+    expect((await handleAgentInstall(post({}))).status).toBe(400);
+    // A real agent id, but not one with a verified install command.
+    expect((await handleAgentInstall(post({ agent: 'kimi' }))).status).toBe(400);
+  });
+
+  test('runs the install command for a supported agent', async () => {
+    const run = vi.fn(() => {
+      return Promise.resolve({
+        ok: true,
+        output: 'added 1 package',
+      });
+    });
+
+    const response = await handleAgentInstall(post({ agent: 'crush' }), { agentInstall: run });
+
+    expect(response.status).toBe(200);
+    expect(await jsonOf(response)).toEqual({ ok: true });
+    expect(run).toHaveBeenCalledWith('npm', ['install', '-g', '@charmland/crush']);
+  });
+
+  test('reports a failed install with its output', async () => {
+    const run = vi.fn(() => {
+      return Promise.resolve({
+        ok: false,
+        output: 'network error',
+      });
+    });
+
+    const response = await handleAgentInstall(post({ agent: 'crush' }), { agentInstall: run });
+
+    expect(response.status).toBe(502);
+    expect(await response.text()).toContain('network error');
+  });
+
+  test('falls back to a message when a failed install printed nothing', async () => {
+    const run = vi.fn(() => {
+      return Promise.resolve({
+        ok: false,
+        output: '',
+      });
+    });
+
+    const response = await handleAgentInstall(post({ agent: 'crush' }), { agentInstall: run });
+
+    expect(response.status).toBe(502);
+    expect(await response.text()).toContain('The install command failed.');
   });
 });
 

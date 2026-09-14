@@ -77,6 +77,19 @@ interface FormatRoutes {
 }
 
 export { managedAgents } from './constants';
+export type {
+  AgentBinaryResolver,
+  AgentBinaryRunner,
+  AgentInstallCommand,
+  AgentInstallInfo,
+} from './utils/installUtils';
+export {
+  AGENT_INSTALLS,
+  checkAgentInstalled,
+  installableAgents,
+  installCommandText,
+  runAgentInstall,
+} from './utils/installUtils';
 export type { ModelAuthState } from './utils/modelAuthUtils';
 export type {
   PluginActionName,

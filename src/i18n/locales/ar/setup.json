@@ -93,5 +93,11 @@
   "sessionCount_two": "جلستان",
   "sessionCount_few": "{{count}} جلسات",
   "sessionCount_many": "{{count}} جلسة",
-  "sessionCount_other": "{{count}} جلسة"
+  "sessionCount_other": "{{count}} جلسة",
+  "installAgentsTitle": "تثبيت الوكلاء",
+  "agentInstalled": "مثبَّت",
+  "install": "تثبيت",
+  "installing": "جارٍ التثبيت…",
+  "confirmInstallHeading": "تثبيت {{agent}}؟",
+  "confirmInstallBody": "سيؤدي هذا إلى تشغيل الأمر التالي على جهازك:"
 }

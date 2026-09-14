@@ -69,5 +69,11 @@
   "colProblem": "問題",
   "noSessions": "セッションなし",
   "sessionCount_one": "{{count}} セッション",
-  "sessionCount_other": "{{count}} セッション"
+  "sessionCount_other": "{{count}} セッション",
+  "installAgentsTitle": "エージェントをインストール",
+  "agentInstalled": "インストール済み",
+  "install": "インストール",
+  "installing": "インストール中…",
+  "confirmInstallHeading": "{{agent}} をインストールしますか？",
+  "confirmInstallBody": "このマシンで次のコマンドを実行します:"
 }

@@ -1,4 +1,6 @@
 import type {
+  AgentInstallBody,
+  AgentInstallCheckResponse,
   AgentSetupBody,
   AgentSetupResponse,
   ArchiveBody,
@@ -51,6 +53,10 @@ const isObject = (value: unknown): value is object => {
 
 const isAgentSetupResponse = (value: object): value is AgentSetupResponse => {
   return 'setups' in value && Array.isArray(value.setups);
+};
+
+const isAgentInstallCheckResponse = (value: object): value is AgentInstallCheckResponse => {
+  return 'agents' in value && typeof value.agents === 'object' && value.agents !== null;
 };
 
 const hasCosts = (value: object): value is PluginCostsResponse => {
@@ -178,6 +184,16 @@ const PLUGIN_ACTION: EndpointDefinition<MutationResponse> = {
   path: '/api/plugin-action',
   accepts: isMutationResponse,
   label: 'plugin action',
+};
+const AGENT_INSTALL_CHECK: EndpointDefinition<AgentInstallCheckResponse> = {
+  path: '/api/agent-install-check',
+  accepts: isAgentInstallCheckResponse,
+  label: 'agent install check',
+};
+const AGENT_INSTALL: EndpointDefinition<MutationResponse> = {
+  path: '/api/agent-install',
+  accepts: isMutationResponse,
+  label: 'agent install',
 };
 const PLUGIN_COSTS: EndpointDefinition<PluginCostsResponse> = {
   path: '/api/plugin-costs',
@@ -410,6 +426,14 @@ export const fetchAgentSetup = (body: AgentSetupBody): Promise<AgentSetupRespons
 
 export const postPluginAction = (body: PluginActionBody): Promise<MutationResponse> => {
   return requestEndpoint(PLUGIN_ACTION, body);
+};
+
+export const checkAgentInstalls = (): Promise<AgentInstallCheckResponse> => {
+  return requestEndpoint(AGENT_INSTALL_CHECK, {});
+};
+
+export const postAgentInstall = (body: AgentInstallBody): Promise<MutationResponse> => {
+  return requestEndpoint(AGENT_INSTALL, body);
 };
 
 export const fetchPluginCosts = (body: PluginCostsBody): Promise<PluginCostsResponse> => {

@@ -2,6 +2,9 @@ import { isAgentId } from '@config/agents';
 
 import {
   attributePluginCosts,
+  checkAgentInstalled,
+  installableAgents,
+  installCommandText,
   listAgentProjects,
   listAgentSessions,
   managedAgents,
@@ -13,6 +16,7 @@ import {
   readProjectTrust,
   readProjectUsage,
   resolveAgentPaths,
+  runAgentInstall,
   runPluginAction,
   validateAgentSetup,
 } from '@services/agents/agentsService';
@@ -58,6 +62,8 @@ import {
 
 import type { AgentId } from '@config/agents';
 import type {
+  AgentBinaryResolver,
+  AgentBinaryRunner,
   AgentRoots,
   PluginActionName,
   PluginActionRequest,
@@ -66,6 +72,7 @@ import type {
 import type { EnvEntry } from '@services/settings/settingsService';
 import type { UpdateConfig } from '@services/updates';
 import type {
+  AgentInstallBody,
   AgentSetupBody,
   ArchiveBody,
   CreateArchiveBody,
@@ -88,6 +95,8 @@ export interface EndpointDeps {
   readonly home?: string;
   readonly pluginAction?: Parameters<typeof runPluginAction>[1];
   readonly pluginDetails?: Parameters<typeof readPluginCosts>[1];
+  readonly agentInstallCheck?: AgentBinaryResolver;
+  readonly agentInstall?: AgentBinaryRunner;
 }
 
 export interface UpdateEndpointDeps {
@@ -739,6 +748,57 @@ export const handlePluginCosts = async (request: Request, deps?: EndpointDeps): 
     }, deps?.pluginDetails);
 
     return jsonOk({ costs: attributePluginCosts(usage, estimates, blendedRate) });
+  });
+};
+
+/*
+ * Whether a CLI is on PATH is a fact about this machine, not about whichever
+ * project happens to be selected, so this checks every installable agent at
+ * once rather than taking a projectPath the way the setup endpoints do.
+ */
+export const handleAgentInstallCheck = (deps?: EndpointDeps): Promise<Response> => {
+  return withJsonErrors(async () => {
+    const entries = await Promise.all(installableAgents.map(async (agent) => {
+      return [agent, {
+        installed: await checkAgentInstalled(agent, deps?.agentInstallCheck),
+        /**
+         * installableAgents is built from AGENT_INSTALLS' own keys, so every
+         * entry here always has a command; the fallback exists only because
+         * installCommandText's signature admits any AgentId, not just these.
+         */
+        /* v8 ignore next */
+        command: installCommandText(agent) ?? '',
+      }] as const;
+    }));
+
+    return jsonOk({ agents: Object.fromEntries(entries) });
+  });
+};
+
+const parseAgentInstallBody = (body: object): AgentInstallBody | undefined => {
+  if (!('agent' in body) || !isAgent(body.agent) || !installableAgents.includes(body.agent)) {
+    return undefined;
+  }
+
+  return { agent: body.agent };
+};
+
+export const handleAgentInstall = async (request: Request, deps?: EndpointDeps): Promise<Response> => {
+  return withJsonErrors(async () => {
+    const body = await readJsonObject(request);
+    const target = body == null ? undefined : parseAgentInstallBody(body);
+
+    if (target == null) {
+      return jsonError(BAD_REQUEST, 'A supported agent is required.');
+    }
+
+    const result = await runAgentInstall(target.agent, deps?.agentInstall);
+
+    if (!result.ok) {
+      return jsonError(502, result.output.length > 0 ? result.output : 'The install command failed.');
+    }
+
+    return jsonOk({ ok: true });
   });
 };
 

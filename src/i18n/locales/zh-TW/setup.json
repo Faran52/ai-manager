@@ -69,5 +69,11 @@
   "colProblem": "問題",
   "noSessions": "無工作階段",
   "sessionCount_one": "{{count}} 個工作階段",
-  "sessionCount_other": "{{count}} 個工作階段"
+  "sessionCount_other": "{{count}} 個工作階段",
+  "installAgentsTitle": "安裝代理",
+  "agentInstalled": "已安裝",
+  "install": "安裝",
+  "installing": "安裝中…",
+  "confirmInstallHeading": "安裝 {{agent}}？",
+  "confirmInstallBody": "這將在您的電腦上執行以下指令："
 }

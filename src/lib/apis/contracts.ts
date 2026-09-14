@@ -197,6 +197,22 @@ export interface PluginCostsResponse {
   readonly costs: readonly PluginCostAttribution[];
 }
 
+export interface AgentInstallStatus {
+  readonly installed: boolean;
+  // Shown before a reader ever approves running it.
+  readonly command: string;
+}
+
+// Installed-ness is a machine-wide fact, not a per-project one, so this body
+// carries nothing beyond the request itself.
+export interface AgentInstallCheckResponse {
+  readonly agents: Partial<Record<AgentId, AgentInstallStatus>>;
+}
+
+export interface AgentInstallBody {
+  readonly agent: AgentId;
+}
+
 export interface UpdateCheckResponse {
   readonly update: {
     readonly notes?: string | undefined;
