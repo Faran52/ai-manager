@@ -67,21 +67,23 @@ export const BarRow: FC<BarRowProps> = ({
         * animating it reflows every row below on each frame, and an analytics
         * pane holds dozens of these. A transform stays on the compositor.
         */}
-      <span className="block h-1.5 overflow-hidden rounded-full bg-recess">
-        <motion.span
-          animate={{ scaleX: percent / 100 }}
-          className="
-            block h-full origin-left bg-primary
-            rtl:origin-right
-          "
-          data-bar-fill={percent}
-          initial={{ scaleX: 0 }}
-          transition={{
-            ...fillTransition,
-            delay: index * MOTION_STAGGER,
-          }}
-        />
-      </span>
+      <Tooltip content={`${label}: ${formatValue(value)}`}>
+        <span className="block h-1.5 overflow-hidden rounded-full bg-recess">
+          <motion.span
+            animate={{ scaleX: percent / 100 }}
+            className="
+              block h-full origin-left bg-primary
+              rtl:origin-right
+            "
+            data-bar-fill={percent}
+            initial={{ scaleX: 0 }}
+            transition={{
+              ...fillTransition,
+              delay: index * MOTION_STAGGER,
+            }}
+          />
+        </span>
+      </Tooltip>
       <span className="
         shrink-0 text-end font-mono text-figure whitespace-nowrap
         text-muted-foreground tabular-nums
