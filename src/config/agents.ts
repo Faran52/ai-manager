@@ -40,7 +40,7 @@ export interface AgentOption {
   readonly id: AgentId;
   readonly label: string;
   readonly format: 'antigravity' | 'claude' | 'codex' | 'copilot'
-    | 'files' | 'gemini' | 'grok' | 'sqlite' | 'opencode';
+    | 'files' | 'gemini' | 'grok' | 'openhands' | 'sqlite' | 'opencode';
   readonly artifact: SessionArtifact;
   readonly canDelete: boolean;
   readonly canDeleteProject: boolean;
@@ -165,7 +165,7 @@ export const agentOptions: readonly AgentOption[] = [
   readOnlyAgent('ompi', 'oh-my-pi', 'files'),
   readOnlyAgent('vibe', 'Mistral Vibe', 'files'),
   readOnlyAgent('zed', 'Zed', 'sqlite', false, true),
-  readOnlyAgent('openhands', 'OpenHands', 'files'),
+  readOnlyAgent('openhands', 'OpenHands', 'openhands'),
   readOnlyAgent('trae', 'Trae', 'sqlite'),
 ];
 

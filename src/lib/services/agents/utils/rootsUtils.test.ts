@@ -40,7 +40,7 @@ test('resolves every agent path on Linux with environment overrides', () => {
   expect(paths.gemini).toEqual(['/gemini/tmp']);
   expect(paths.openinterpreter).toEqual(['/interpreter']);
   expect(paths.qwen).toEqual(['/qwen']);
-  expect(paths.vibe).toContain('/vibe');
+  expect(paths.vibe).toContain('/vibe/sessions');
   expect(paths.aider).toContain('/home/me/work');
   expect(paths.trae).toContain('/config/Trae/User/workspaceStorage');
 });

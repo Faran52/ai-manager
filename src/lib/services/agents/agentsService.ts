@@ -31,6 +31,11 @@ import {
   loadOpenCodeEntries,
 } from '../history/utils/openCodeUtils';
 import {
+  listOpenHandsProjects,
+  listOpenHandsSessions,
+  loadOpenHandsEntries,
+} from '../history/utils/openHandsUtils';
+import {
   listSqliteProjects,
   listSqliteSessions,
   loadSqliteEntries,
@@ -334,6 +339,11 @@ const ROUTES_BY_FORMAT: Record<AgentOption['format'], FormatRoutes> = {
     projects: listOpenCodeProjects,
     sessions: listOpenCodeSessions,
     entries: loadOpenCodeEntries,
+  },
+  openhands: {
+    projects: listOpenHandsProjects,
+    sessions: listOpenHandsSessions,
+    entries: loadOpenHandsEntries,
   },
   grok: {
     projects: listStructuredProjects,

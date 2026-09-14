@@ -220,6 +220,12 @@ describe('readModelAuth', () => {
     expect(await readModelAuth('cursor', home)).toEqual({ format: 'sqlite' });
   });
 
+  test('collapses to a format tag for an openhands-format agent', async () => {
+    const home = await workspace();
+
+    expect(await readModelAuth('openhands', home)).toEqual({ format: 'openhands' });
+  });
+
   test('reads the model from Grok TOML config', async () => {
     const home = await workspace();
 

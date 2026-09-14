@@ -50,7 +50,8 @@ export type ModelAuthState
     readonly authMethod: 'api-key' | 'env';
   }
   | { readonly format: 'files' }
-  | { readonly format: 'sqlite' };
+  | { readonly format: 'sqlite' }
+  | { readonly format: 'openhands' };
 
 const readJson = async (file: string): Promise<JsonValue> => {
   try {
@@ -233,5 +234,7 @@ export const readModelAuth = async (
       return { format: 'files' };
     case 'sqlite':
       return { format: 'sqlite' };
+    case 'openhands':
+      return { format: 'openhands' };
   }
 };

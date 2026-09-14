@@ -152,6 +152,7 @@ export const resolveAgentPaths = ({
   const apps = appData(home, platform);
   const vscode = editorStorage(home, platform, 'Code');
   const cursor = editorStorage(home, platform, 'Cursor');
+  const pearai = editorStorage(home, platform, 'PearAI');
   const commonProjects = withoutNested([
     ...workingRoot(home),
     join(home, 'Projects'),
@@ -187,18 +188,39 @@ export const resolveAgentPaths = ({
     'gemini': [join(envPath(env, 'GEMINI_CLI_HOME', join(home, '.gemini')), 'tmp')],
     'goose': [join(data, 'goose', 'sessions', 'sessions.db')],
     'grok': [join(home, '.grok', 'sessions')],
-    'kimi': [join(home, '.kimi')],
+    // Real config lives at .kimi-code (KIMI_CODE_HOME); .kimi is a different,
+    // unrelated product sharing the display name.
+    'kimi': [envPath(env, 'KIMI_CODE_HOME', join(home, '.kimi-code'))],
     'kiro': [join(apps, 'kiro-cli', 'data.sqlite3'), join(data, 'kiro-cli', 'data.sqlite3')],
-    'llm': [join(data, 'io.datasette.llm', 'logs.db')],
+    // click.get_app_dir("io.datasette.llm"): platform app-data, not XDG on
+    // every OS (macOS is Library/Application Support, not .local/share).
+    'llm': [join(apps, 'io.datasette.llm', 'logs.db')],
     'ompi': [join(home, '.omp', 'agent', 'sessions')],
     'opencode': [join(data, 'opencode'), join(apps, 'ai.opencode.desktop', 'opencode')],
-    'openhands': [join(home, '.openhands', 'sessions')],
+    /**
+     * Root, not .../sessions: V0 nests conversations/<id>/events under
+     * "sessions", V1 renamed that segment to "conversations". The base dir
+     * ($OPENHANDS_PERSISTENCE_DIR, default ~/.openhands) covers either.
+     */
+    'openhands': [envPath(env, 'OPENHANDS_PERSISTENCE_DIR', join(home, '.openhands'))],
     'openinterpreter': [envPath(env, 'INTERPRETER_HOME', join(home, '.openinterpreter'))],
-    'pearai': [join(home, '.pearai', 'sessions')],
+    /**
+     * PearAI is a VS Code fork (dataFolderName ".pearai", confirmed from its
+     * own product.json) whose AI chat is a Continue fork, so its real data is
+     * most likely VS Code's own globalStorage layout, not a CLI-style
+     * dotfile; kept alongside the original guess since neither is confirmed
+     * against a real install.
+     */
+    'pearai': [join(home, '.pearai', 'sessions'), join(pearai, 'globalStorage')],
     'pi': [join(home, '.pi', 'agent', 'sessions')],
     'qwen': [envPath(env, 'QWEN_CODE_HOME', join(home, '.qwen', 'projects'))],
     'trae': [join(apps, 'Trae', 'User', 'workspaceStorage'), join(config, 'Trae', 'User', 'workspaceStorage')],
-    'vibe': [envPath(env, 'VIBE_HOME', join(home, '.vibe')), join(home, '.vibe', 'logs', 'session')],
+    /**
+     * logs/session was the config doc's example for a project-local override
+     * (a ./.vibe under a project directory), not the global default; the
+     * global default session_logging.save_dir is plain <VIBE_HOME>/sessions.
+     */
+    'vibe': [join(envPath(env, 'VIBE_HOME', join(home, '.vibe')), 'sessions')],
     'zed': [join(apps, 'Zed', 'threads', 'threads.db'), join(data, 'zed', 'threads', 'threads.db')],
   };
 };
