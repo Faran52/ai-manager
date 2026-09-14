@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import {
   describe,
   expect,
@@ -80,5 +81,41 @@ describe('ActivityHeatmap reference points', () => {
 
     expect(screen.getByText('Less')).toBeDefined();
     expect(screen.getByText('More')).toBeDefined();
+  });
+});
+
+describe('ActivityHeatmap hover', () => {
+  test('shows one shared tooltip for whichever cell is under the pointer', async () => {
+    const user = userEvent.setup();
+    const today = new Date();
+    const date = new Date(today);
+
+    date.setUTCDate(date.getUTCDate() - 1);
+    const iso = date.toISOString().slice(0, 10);
+
+    render(
+      <ActivityHeatmap activity={[{
+        date: iso,
+        messages: 1,
+        tokens: 400,
+      }]}
+      />,
+    );
+
+    const cell = document.querySelector(`[data-date="${iso}"]`);
+
+    expect(cell).not.toBeNull();
+    if (cell == null) {
+      throw new Error('cell not found');
+    }
+
+    await user.hover(cell);
+    expect((await screen.findByRole('tooltip')).textContent).toBe(`${iso} · 400 tokens`);
+
+    // Leaving the grid, not just the one cell, is what closes it: moving between
+    // adjacent cells must not flicker the shared tooltip shut and open again.
+    await user.unhover(screen.getByRole('img', { name: 'daily activity heatmap' }));
+
+    expect(screen.queryByRole('tooltip')).toBeNull();
   });
 });

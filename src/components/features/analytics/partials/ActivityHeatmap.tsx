@@ -5,7 +5,11 @@ import { motion } from 'motion/react';
 
 import { formatTokens } from '@utils/formatUtils';
 
-import { MOTION_STAGGER, riseTransition } from '@ui/index';
+import {
+  MOTION_STAGGER,
+  riseTransition,
+  Tooltip,
+} from '@ui/index';
 
 import {
   levelClass,
@@ -18,7 +22,14 @@ import {
 import { AnalyticsPanel } from './AnalyticsPanel';
 
 import type { DayActivity } from '@services/stats/statsService';
-import type { FC } from 'react';
+import type { FC, PointerEvent } from 'react';
+
+interface HoveredDay {
+  readonly date: string;
+  readonly tokens: number;
+  readonly x: number;
+  readonly y: number;
+}
 
 export interface ActivityHeatmapProps {
   readonly activity: readonly DayActivity[];
@@ -47,10 +58,30 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
   const [todayMs] = useState(() => {
     return Date.now();
   });
+  const [hovered, setHovered] = useState<HoveredDay | null>(null);
   const peak = activity.reduce((best, day) => {
     return Math.max(best, day.tokens);
   }, 0);
   const months = monthsOf(weeksTo(activity, todayMs));
+
+  /*
+   * One shared tooltip for every cell instead of one Tooltip (Provider+Root+
+   * Portal each) per cell: staggering 365 of those is the same cost the
+   * comment above already rejects for animation, worse since each also
+   * carries Radix state. The cell just reports its own rect on entry.
+   */
+  const hoverDay = (day: DayActivity) => {
+    return (event: PointerEvent<HTMLSpanElement>): void => {
+      const rect = event.currentTarget.getBoundingClientRect();
+
+      setHovered({
+        date: day.date,
+        tokens: day.tokens,
+        x: rect.left + (rect.width / 2),
+        y: rect.top,
+      });
+    };
+  };
 
   return (
     <AnalyticsPanel title={t('activity')}>
@@ -73,7 +104,14 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
           })}
         </div>
 
-        <div className="flex min-w-0 flex-1 gap-3" role="img" aria-label={t('dailyHeatmap')}>
+        <div
+          className="flex min-w-0 flex-1 gap-3"
+          role="img"
+          aria-label={t('dailyHeatmap')}
+          onPointerLeave={() => {
+            setHovered(null);
+          }}
+        >
           {months.map((month, index) => {
             return (
               <motion.div
@@ -116,10 +154,8 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
                           return (
                             <span
                               key={day.date}
-                              title={t('heatmapDay', {
-                                date: day.date,
-                                tokens: formatTokens(day.tokens),
-                              })}
+                              onPointerEnter={hoverDay(day)}
+                              data-date={day.date}
                               data-level={String(levelFor(day.tokens, peak))}
                               className={`
                                 size-full rounded-sm
@@ -136,6 +172,21 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
             );
           })}
         </div>
+        {hovered != null && (
+          <Tooltip
+            content={t('heatmapDay', {
+              date: hovered.date,
+              tokens: formatTokens(hovered.tokens),
+            })}
+            position={{
+              x: hovered.x,
+              y: hovered.y,
+            }}
+            open
+          >
+            <span aria-hidden />
+          </Tooltip>
+        )}
       </div>
 
       <div className="
