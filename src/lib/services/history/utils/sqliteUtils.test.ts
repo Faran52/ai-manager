@@ -361,6 +361,342 @@ describe('SQLite history discovery', () => {
     }]);
   });
 
+  test('reads text parts from a Crush message and skips a tool-role row', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'crush-history-'));
+    const filePath = join(root, 'crush.db');
+    const database = new DatabaseSync(filePath);
+
+    // Columns match charmbracelet/crush's initial migration verbatim.
+    database.exec(`
+      CREATE TABLE sessions (
+        id TEXT PRIMARY KEY, title TEXT, message_count INTEGER,
+        updated_at INTEGER, created_at INTEGER
+      );
+      CREATE TABLE messages (
+        id TEXT PRIMARY KEY, session_id TEXT, role TEXT, parts TEXT,
+        model TEXT, created_at INTEGER, updated_at INTEGER
+      );
+    `);
+    database.prepare('INSERT INTO sessions VALUES (?, ?, ?, ?, ?)')
+      .run('sess-1', 'Fix the build', 3, 1_767_225_602, 1_767_225_600);
+    database.prepare('INSERT INTO messages VALUES (?, ?, ?, ?, ?, ?, ?)').run(
+      'm1',
+      'sess-1',
+      'user',
+      JSON.stringify([{
+        type: 'text',
+        data: { text: 'Question' },
+      }]),
+      null,
+      1_767_225_600,
+      1_767_225_600,
+    );
+    database.prepare('INSERT INTO messages VALUES (?, ?, ?, ?, ?, ?, ?)').run(
+      'm2',
+      'sess-1',
+      'assistant',
+      JSON.stringify([
+        {
+          type: 'tool_call',
+          data: { name: 'bash' },
+        },
+        {
+          type: 'text',
+          data: { text: 'Answer' },
+        },
+      ]),
+      'claude-sonnet-5',
+      1_767_225_601,
+      1_767_225_601,
+    );
+    database.prepare('INSERT INTO messages VALUES (?, ?, ?, ?, ?, ?, ?)').run(
+      'm3',
+      'sess-1',
+      'tool',
+      JSON.stringify([{
+        type: 'tool_result',
+        data: { text: 'ok' },
+      }]),
+      null,
+      1_767_225_602,
+      1_767_225_602,
+    );
+    database.close();
+
+    const sessions = await listSqliteSessions('crush', [filePath]);
+    const entries = await loadSqliteEntries(sessions[0]?.filePath ?? '', [filePath]);
+
+    expect(sessions).toMatchObject([{
+      actualSessionId: 'sess-1',
+      title: 'Fix the build',
+    }]);
+    expect(entries).toMatchObject([
+      {
+        kind: 'user',
+        text: 'Question',
+      },
+      {
+        kind: 'assistant',
+        model: 'claude-sonnet-5',
+        blocks: [{
+          blockType: 'text',
+          text: 'Answer',
+        }],
+      },
+    ]);
+  });
+
+  test('skips a Crush session left with no readable text', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'crush-empty-'));
+    const filePath = join(root, 'crush.db');
+    const database = new DatabaseSync(filePath);
+
+    database.exec(`
+      CREATE TABLE sessions (id TEXT PRIMARY KEY, title TEXT, updated_at INTEGER, created_at INTEGER);
+      CREATE TABLE messages (
+        id TEXT PRIMARY KEY, session_id TEXT, role TEXT, parts TEXT,
+        model TEXT, created_at INTEGER, updated_at INTEGER
+      );
+    `);
+    database.prepare('INSERT INTO sessions VALUES (?, ?, ?, ?)').run('empty', 'Untouched', 1, 1);
+    database.prepare('INSERT INTO messages VALUES (?, ?, ?, ?, ?, ?, ?)').run(
+      'm1',
+      'empty',
+      'assistant',
+      JSON.stringify([{
+        type: 'tool_call',
+        data: { name: 'bash' },
+      }]),
+      null,
+      1,
+      1,
+    );
+    // A malformed parts column (not a JSON array at all) reads as no text too.
+    database.prepare('INSERT INTO messages VALUES (?, ?, ?, ?, ?, ?, ?)').run(
+      'm2',
+      'empty',
+      'user',
+      JSON.stringify({ not: 'an array' }),
+      null,
+      2,
+      2,
+    );
+    database.close();
+
+    expect(await listSqliteSessions('crush', [filePath])).toEqual([]);
+  });
+
+  test('falls back on a blank Crush title, timestamp and unreadable text part', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'crush-fallbacks-'));
+    const filePath = join(root, 'crush.db');
+    const database = new DatabaseSync(filePath);
+
+    database.exec(`
+      CREATE TABLE sessions (id TEXT PRIMARY KEY, title TEXT, updated_at INTEGER, created_at INTEGER);
+      CREATE TABLE messages (
+        id TEXT PRIMARY KEY, session_id TEXT, role TEXT, parts TEXT,
+        model TEXT, created_at INTEGER, updated_at INTEGER
+      );
+    `);
+    database.prepare('INSERT INTO sessions VALUES (?, ?, ?, ?)').run('sess-1', '', 1, 1);
+    // A text part with nothing readable in its data, alongside a real one.
+    database.prepare('INSERT INTO messages VALUES (?, ?, ?, ?, ?, ?, ?)').run(
+      'm1',
+      'sess-1',
+      'user',
+      JSON.stringify([{
+        type: 'text',
+        data: {},
+      }, {
+        type: 'text',
+        data: { text: 'Question' },
+      }]),
+      null,
+      null,
+      null,
+    );
+    database.close();
+
+    const sessions = await listSqliteSessions('crush', [filePath]);
+
+    expect(sessions).toMatchObject([{
+      actualSessionId: 'sess-1',
+      title: undefined,
+    }]);
+  });
+
+  test('drops a stale Crush reference once its tables are gone', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'crush-stale-'));
+    const filePath = join(root, 'crush.db');
+    const database = new DatabaseSync(filePath);
+
+    database.exec(`
+      CREATE TABLE sessions (id TEXT PRIMARY KEY, title TEXT, updated_at INTEGER, created_at INTEGER);
+      CREATE TABLE messages (
+        id TEXT PRIMARY KEY, session_id TEXT, role TEXT, parts TEXT,
+        model TEXT, created_at INTEGER, updated_at INTEGER
+      );
+    `);
+    database.prepare('INSERT INTO sessions VALUES (?, ?, ?, ?)').run('sess-1', 'Title', 1, 1);
+    database.prepare('INSERT INTO messages VALUES (?, ?, ?, ?, ?, ?, ?)').run(
+      'm1', 'sess-1', 'user', JSON.stringify([{
+        type: 'text',
+        data: { text: 'Hi' },
+      }]), null, 1, 1,
+    );
+    database.close();
+
+    const sessions = await listSqliteSessions('crush', [filePath]);
+    const reopened = new DatabaseSync(filePath);
+
+    reopened.exec('DROP TABLE messages');
+    reopened.close();
+
+    expect(await loadSqliteEntries(sessions[0]?.filePath ?? '', [filePath])).toBeUndefined();
+  });
+
+  test('decodes an llm conversation from its prompt/response rows, one row per exchange', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'llm-history-'));
+    const filePath = join(root, 'logs.db');
+    const database = new DatabaseSync(filePath);
+
+    // Columns match llm/migrations.py verbatim, trimmed to the ones this reads.
+    database.exec(`
+      CREATE TABLE conversations (id TEXT PRIMARY KEY, name TEXT, model TEXT);
+      CREATE TABLE responses (
+        id TEXT PRIMARY KEY, conversation_id TEXT, model TEXT, resolved_model TEXT,
+        prompt TEXT, system TEXT, response TEXT, duration_ms INTEGER, datetime_utc TEXT
+      );
+    `);
+    database.prepare('INSERT INTO conversations VALUES (?, ?, ?)')
+      .run('conv-1', 'Question about llm', 'gpt-4o-mini');
+    database.prepare(`
+      INSERT INTO responses
+        (id, conversation_id, model, resolved_model, prompt, system, response, duration_ms, datetime_utc)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      'r1', 'conv-1', 'gpt-4o-mini', 'gpt-4o-mini-2026', 'Question', 'Be terse.', 'Answer', 500, '2026-01-01T00:00:00',
+    );
+    database.prepare(`
+      INSERT INTO responses
+        (id, conversation_id, model, resolved_model, prompt, system, response, duration_ms, datetime_utc)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      'r2', 'conv-1', 'gpt-4o-mini', 'gpt-4o-mini-2026', 'Follow-up', '', 'Second answer', 200, '2026-01-01T00:01:00',
+    );
+    database.close();
+
+    const sessions = await listSqliteSessions('llm', [filePath]);
+    const entries = await loadSqliteEntries(sessions[0]?.filePath ?? '', [filePath]);
+
+    expect(sessions).toMatchObject([{
+      actualSessionId: 'conv-1',
+      title: 'Question about llm',
+    }]);
+    // The system prompt is named once, on the first exchange, not repeated on the second.
+    expect(entries).toMatchObject([
+      {
+        kind: 'system',
+        text: 'Be terse.',
+      },
+      {
+        kind: 'user',
+        text: 'Question',
+      },
+      {
+        kind: 'assistant',
+        model: 'gpt-4o-mini-2026',
+        blocks: [{
+          blockType: 'text',
+          text: 'Answer',
+        }],
+      },
+      {
+        kind: 'user',
+        text: 'Follow-up',
+      },
+      {
+        kind: 'assistant',
+        blocks: [{
+          blockType: 'text',
+          text: 'Second answer',
+        }],
+      },
+    ]);
+  });
+
+  test('skips an llm conversation left with no responses', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'llm-empty-'));
+    const filePath = join(root, 'logs.db');
+    const database = new DatabaseSync(filePath);
+
+    database.exec(`
+      CREATE TABLE conversations (id TEXT PRIMARY KEY, name TEXT, model TEXT);
+      CREATE TABLE responses (
+        id TEXT PRIMARY KEY, conversation_id TEXT, model TEXT, resolved_model TEXT,
+        prompt TEXT, system TEXT, response TEXT, duration_ms INTEGER, datetime_utc TEXT
+      );
+    `);
+    database.prepare('INSERT INTO conversations VALUES (?, ?, ?)').run('empty', 'Untouched', 'gpt-4o-mini');
+    database.close();
+
+    expect(await listSqliteSessions('llm', [filePath])).toEqual([]);
+  });
+
+  test('falls back on a blank llm conversation name', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'llm-noname-'));
+    const filePath = join(root, 'logs.db');
+    const database = new DatabaseSync(filePath);
+
+    database.exec(`
+      CREATE TABLE conversations (id TEXT PRIMARY KEY, name TEXT, model TEXT);
+      CREATE TABLE responses (
+        id TEXT PRIMARY KEY, conversation_id TEXT, model TEXT, resolved_model TEXT,
+        prompt TEXT, system TEXT, response TEXT, duration_ms INTEGER, datetime_utc TEXT
+      );
+    `);
+    database.prepare('INSERT INTO conversations VALUES (?, ?, ?)').run('conv-1', null, 'gpt-4o-mini');
+    // An unparseable timestamp and a missing duration both fall back too.
+    database.prepare(`
+      INSERT INTO responses (id, conversation_id, prompt, response, duration_ms, datetime_utc)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run('r1', 'conv-1', 'Hi', 'Hello', null, 'not-a-date');
+    database.close();
+
+    expect(await listSqliteSessions('llm', [filePath])).toMatchObject([{
+      actualSessionId: 'conv-1',
+      title: undefined,
+    }]);
+  });
+
+  test('drops a stale llm reference once its tables are gone', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'llm-stale-'));
+    const filePath = join(root, 'logs.db');
+    const database = new DatabaseSync(filePath);
+
+    database.exec(`
+      CREATE TABLE conversations (id TEXT PRIMARY KEY, name TEXT, model TEXT);
+      CREATE TABLE responses (
+        id TEXT PRIMARY KEY, conversation_id TEXT, model TEXT, resolved_model TEXT,
+        prompt TEXT, system TEXT, response TEXT, duration_ms INTEGER, datetime_utc TEXT
+      );
+    `);
+    database.prepare('INSERT INTO conversations VALUES (?, ?, ?)').run('conv-1', 'Title', 'gpt-4o-mini');
+    database.prepare(`
+      INSERT INTO responses (id, conversation_id, prompt, response, duration_ms, datetime_utc)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run('r1', 'conv-1', 'Hi', 'Hello', 100, '2026-01-01T00:00:00');
+    database.close();
+
+    const sessions = await listSqliteSessions('llm', [filePath]);
+    const reopened = new DatabaseSync(filePath);
+
+    reopened.exec('DROP TABLE responses');
+    reopened.close();
+
+    expect(await loadSqliteEntries(sessions[0]?.filePath ?? '', [filePath])).toBeUndefined();
+  });
+
   test('decodes JSON and zstd Zed thread blobs', async () => {
     const root = await mkdtemp(join(tmpdir(), 'zed-history-'));
     const filePath = join(root, 'threads.db');

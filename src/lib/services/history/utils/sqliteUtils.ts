@@ -43,7 +43,7 @@ interface SqliteReference {
   readonly table: string;
 }
 
-type SqliteDecoder = 'cursor' | 'goose' | 'table' | 'zed';
+type SqliteDecoder = 'crush' | 'cursor' | 'goose' | 'llm' | 'table' | 'zed';
 type SqliteEntry = Exclude<HistoryEntry, { kind: 'summary' }>;
 
 interface DecodedSqliteSession {
@@ -90,8 +90,9 @@ const isSqliteReference = (value: unknown): value is SqliteReference => {
     && typeof value.databasePath === 'string'
     && 'table' in value
     && typeof value.table === 'string'
-    && (!('decoder' in value) || value.decoder === 'cursor' || value.decoder === 'goose'
-      || value.decoder === 'table' || value.decoder === 'zed')
+    && (!('decoder' in value) || value.decoder === 'crush' || value.decoder === 'cursor'
+      || value.decoder === 'goose' || value.decoder === 'llm' || value.decoder === 'table'
+      || value.decoder === 'zed')
     && (!('sessionId' in value) || typeof value.sessionId === 'string');
 };
 
@@ -529,6 +530,164 @@ const gooseSessions = (
   });
 };
 
+/*
+ * llm logs one row per exchange rather than one row per message: a response
+ * row carries both the prompt and the reply, with no role column at all
+ * (verified against llm/migrations.py, not guessed). Synthesised into the
+ * generic {role, content, timestamp} shape parseStructuredHistory already
+ * reads, same as entriesFromTable's fallback does for an unrecognised table.
+ * The reply is timestamped after its own duration, so a reader sorting by
+ * time sees the prompt before the answer it produced rather than a tie.
+ */
+const llmEntries = (
+  database: DatabaseSync,
+  conversationId: string,
+  fallbackMs: number,
+): readonly SqliteEntry[] => {
+  const rows = database.prepare(
+    `SELECT id, model, resolved_model, prompt, system, response, duration_ms, datetime_utc
+     FROM responses WHERE conversation_id = ? ORDER BY id ASC`,
+  ).all(conversationId);
+  const records: JsonObject[] = [];
+  let sawSystem = false;
+
+  for (const row of rows) {
+    const parsedMs = Date.parse(sqliteText(row.datetime_utc));
+    const startMs = Number.isFinite(parsedMs) ? parsedMs : fallbackMs;
+    const durationMs = typeof row.duration_ms === 'number' ? row.duration_ms : 0;
+    const system = sqliteText(row.system);
+
+    if (!sawSystem && system.length > 0) {
+      records.push({
+        id: `${String(row.id)}-system`,
+        role: 'system',
+        content: system,
+        timestamp: startMs,
+      });
+      sawSystem = true;
+    }
+
+    records.push({
+      id: `${String(row.id)}-prompt`,
+      role: 'user',
+      content: sqliteText(row.prompt),
+      timestamp: startMs,
+    });
+    records.push({
+      id: `${String(row.id)}-response`,
+      role: 'assistant',
+      content: sqliteText(row.response),
+      model: sqliteText(row.resolved_model) || sqliteText(row.model),
+      timestamp: startMs + durationMs,
+    });
+  }
+
+  return parseStructuredHistory(JSON.stringify(records), '.json', fallbackMs);
+};
+
+/*
+ * Crush's messages.parts is a discriminated union array, [{type, data}], not
+ * the flat {text: "..."} shape the generic reader checks for (verified
+ * against charmbracelet/crush's internal/message/content.go and
+ * internal/db/migrations/20250424200609_initial.sql, not guessed). Only the
+ * text parts are read; reasoning, tool_call, tool_result and finish parts are
+ * real but their exact field shapes are not verified against source the way
+ * text's is, so rendering them wrong would be worse than a plain-text turn
+ * that leaves them out.
+ */
+const crushText = (parts: JsonValue): string => {
+  if (!isJsonArray(parts)) {
+    return '';
+  }
+
+  return parts.flatMap((part) => {
+    if (!isJsonObject(part) || part.type !== 'text') {
+      return [];
+    }
+
+    const text = jsonString(objectAt(part, 'data')?.text);
+
+    return text == null ? [] : [text];
+  }).join('\n');
+};
+
+const crushEntries = (
+  database: DatabaseSync,
+  sessionId: string,
+  fallbackMs: number,
+): readonly SqliteEntry[] => {
+  const rows = database.prepare(
+    'SELECT id, role, parts, model, created_at FROM messages WHERE session_id = ? ORDER BY created_at ASC, id ASC',
+  ).all(sessionId);
+  const records = rows.map((row) => {
+    return {
+      id: sqliteText(row.id),
+      role: sqliteText(row.role),
+      content: crushText(parseJsonContainer(sqliteText(row.parts))),
+      model: sqliteText(row.model) || undefined,
+      created_at: typeof row.created_at === 'number' ? row.created_at : fallbackMs,
+    };
+  });
+
+  return parseStructuredHistory(JSON.stringify(records), '.json', fallbackMs);
+};
+
+const crushSessions = (
+  database: DatabaseSync,
+  fallbackMs: number,
+): readonly DecodedSqliteSession[] => {
+  const tables = tableSet(database);
+
+  if (!tables.has('sessions') || !tables.has('messages')) {
+    return [];
+  }
+
+  return database.prepare('SELECT id, title FROM sessions ORDER BY updated_at DESC').all().flatMap((row) => {
+    const sessionId = sqliteText(row.id);
+    const entries = crushEntries(database, sessionId, fallbackMs);
+
+    if (sessionId.length === 0 || entries.length === 0) {
+      return [];
+    }
+
+    return [{
+      actualSessionId: sessionId,
+      cwd: 'unknown',
+      entries,
+      ...timestampRange(entries),
+      title: sqliteText(row.title) || undefined,
+    }];
+  });
+};
+
+const llmSessions = (
+  database: DatabaseSync,
+  fallbackMs: number,
+): readonly DecodedSqliteSession[] => {
+  const tables = tableSet(database);
+
+  if (!tables.has('conversations') || !tables.has('responses')) {
+    return [];
+  }
+
+  return database.prepare('SELECT id, name FROM conversations').all().flatMap((row) => {
+    const conversationId = sqliteText(row.id);
+    const entries = llmEntries(database, conversationId, fallbackMs);
+
+    if (conversationId.length === 0 || entries.length === 0) {
+      return [];
+    }
+
+    return [{
+      actualSessionId: conversationId,
+      cwd: 'unknown',
+      entries,
+      ...timestampRange(entries),
+      title: sqliteText(row.name) || undefined,
+    }];
+  });
+};
+
 const zedData = (dataType: string, value: SQLOutputValue | undefined): string => {
   if (!(value instanceof Uint8Array)) {
     return sqliteText(value);
@@ -584,8 +743,16 @@ const decodedSessions = (
     return cursorSessions(database, databasePath, fallbackMs);
   }
 
+  if (agent === 'crush') {
+    return crushSessions(database, fallbackMs);
+  }
+
   if (agent === 'goose') {
     return gooseSessions(database, fallbackMs);
+  }
+
+  if (agent === 'llm') {
+    return llmSessions(database, fallbackMs);
   }
 
   return zedSessions(database, databasePath, fallbackMs);
@@ -596,8 +763,16 @@ const decoderFor = (agent: AgentId, tables: ReadonlySet<string>): SqliteDecoder 
     return 'cursor';
   }
 
+  if (agent === 'crush' && tables.has('sessions') && tables.has('messages')) {
+    return 'crush';
+  }
+
   if (agent === 'goose' && tables.has('sessions') && tables.has('messages')) {
     return 'goose';
+  }
+
+  if (agent === 'llm' && tables.has('conversations') && tables.has('responses')) {
+    return 'llm';
   }
 
   return agent === 'zed' && tables.has('threads') ? 'zed' : undefined;
@@ -608,7 +783,11 @@ const tableForDecoder = (decoder: SqliteDecoder): string => {
     return 'threads';
   }
 
-  return decoder === 'goose' ? 'messages' : 'cursorDiskKV';
+  if (decoder === 'llm') {
+    return 'responses';
+  }
+
+  return decoder === 'goose' || decoder === 'crush' ? 'messages' : 'cursorDiskKV';
 };
 
 const sessionsForReference = (
@@ -620,8 +799,16 @@ const sessionsForReference = (
     return cursorSessions(database, reference.databasePath, fallbackMs);
   }
 
+  if (reference.decoder === 'crush') {
+    return crushSessions(database, fallbackMs);
+  }
+
   if (reference.decoder === 'goose') {
     return gooseSessions(database, fallbackMs);
+  }
+
+  if (reference.decoder === 'llm') {
+    return llmSessions(database, fallbackMs);
   }
 
   return zedSessions(database, reference.databasePath, fallbackMs);
