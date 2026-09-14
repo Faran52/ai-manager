@@ -10,6 +10,7 @@ import {
   BarRow,
   fillTransition,
   MOTION_STAGGER,
+  Tooltip,
 } from '@ui/index';
 
 import { AnalyticsPanel } from './AnalyticsPanel';
@@ -91,29 +92,30 @@ const Strip: FC<{ readonly slots: readonly Slot[];
                   * Animating the height itself relaid out the row on every
                   * frame, and there are 24 of these beside a second chart.
                   */}
-                <motion.div
-                  title={`${slot.label}: ${formatTokens(slot.count)}`}
-                  data-rhythm-bar={slot.key}
-                  // A style is not something a test should have to parse.
-                  data-rhythm-height={percent}
-                  data-rhythm-peak={atPeak || undefined}
-                  className={cn(
-                    'w-full origin-bottom rounded-t-sm',
-                    atPeak ? 'bg-primary' : 'bg-primary/70',
-                  )}
-                  /*
-                   * An hour that recorded nothing keeps a hairline rather than
-                   * vanishing, so "quiet" and "nothing" stop looking alike and
-                   * the row does not appear to close its gap.
-                   */
-                  style={{ height: percent === 0 ? '2px' : `${String(percent)}%` }}
-                  initial={{ scaleY: 0 }}
-                  animate={{ scaleY: 1 }}
-                  transition={{
-                    ...fillTransition,
-                    delay: index * step,
-                  }}
-                />
+                <Tooltip content={`${slot.label}: ${formatTokens(slot.count)}`}>
+                  <motion.div
+                    data-rhythm-bar={slot.key}
+                    // A style is not something a test should have to parse.
+                    data-rhythm-height={percent}
+                    data-rhythm-peak={atPeak || undefined}
+                    className={cn(
+                      'w-full origin-bottom rounded-t-sm',
+                      atPeak ? 'bg-primary' : 'bg-primary/70',
+                    )}
+                    /*
+                     * An hour that recorded nothing keeps a hairline rather than
+                     * vanishing, so "quiet" and "nothing" stop looking alike and
+                     * the row does not appear to close its gap.
+                     */
+                    style={{ height: percent === 0 ? '2px' : `${String(percent)}%` }}
+                    initial={{ scaleY: 0 }}
+                    animate={{ scaleY: 1 }}
+                    transition={{
+                      ...fillTransition,
+                      delay: index * step,
+                    }}
+                  />
+                </Tooltip>
               </div>
               <span className="
                 overflow-hidden text-center text-figure leading-none
