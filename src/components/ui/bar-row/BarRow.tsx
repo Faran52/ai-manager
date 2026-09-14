@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 
 import { fillTransition, MOTION_STAGGER } from '../constants';
+import { Tooltip } from '../tooltip/Tooltip';
 
 import type { FC, ReactNode } from 'react';
 
@@ -54,9 +55,11 @@ export const BarRow: FC<BarRowProps> = ({
   return (
     <li className="contents" data-bar-row={label}>
       <span className="flex min-w-0 items-center gap-1.5">
-        <span className="min-w-0 truncate font-mono text-body text-foreground" title={label}>
-          {label}
-        </span>
+        <Tooltip content={label}>
+          <span className="min-w-0 truncate font-mono text-body text-foreground">
+            {label}
+          </span>
+        </Tooltip>
         {qualifier}
       </span>
       {/*
