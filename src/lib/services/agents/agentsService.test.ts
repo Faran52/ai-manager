@@ -149,26 +149,16 @@ test('routes compatible, structured, SQLite, and OpenCode agent families', async
       content: 'Buddy',
     },
   }));
-  await mkdir(join(interpreter, 'sessions'), { recursive: true });
-  await writeFile(join(interpreter, 'sessions', 'rollout-i.jsonl'), [
-    JSON.stringify({
-      type: 'session_meta',
-      timestamp: '2026-01-01T00:00:00Z',
-      payload: {
-        id: 'i',
-        cwd: '/i',
-      },
-    }),
-    JSON.stringify({
-      type: 'response_item',
-      timestamp: '2026-01-01T00:00:00Z',
-      payload: {
-        type: 'message',
-        role: 'user',
-        content: [{ text: 'Interpreter' }],
-      },
-    }),
-  ].join('\n'));
+  // Open Interpreter's own format: json.dump(self.messages, f), a plain
+  // [{role, content}] array, not a Codex-style rollout (verified against its
+  // source, not guessed).
+  await mkdir(join(interpreter, 'conversations'), { recursive: true });
+  await writeFile(join(interpreter, 'conversations', 'i.json'), JSON.stringify([
+    {
+      role: 'user',
+      content: 'Interpreter',
+    },
+  ]));
   await mkdir(join(continueDir, 'project'), { recursive: true });
   await writeFile(join(continueDir, 'project', 'chat.json'), JSON.stringify({
     messages: [{
@@ -258,7 +248,8 @@ test('routes compatible, structured, SQLite, and OpenCode agent families', async
     'codebuddy', 'openinterpreter', 'continue', 'goose', 'opencode',
   ]));
   expect(await listAgentSessions(roots, 'codebuddy', 'buddy')).toMatchObject([{ agent: 'codebuddy' }]);
-  expect(await listAgentSessions(roots, 'openinterpreter', '/i')).toMatchObject([{ agent: 'openinterpreter' }]);
+  expect(await listAgentSessions(roots, 'openinterpreter', 'conversations'))
+    .toMatchObject([{ agent: 'openinterpreter' }]);
 
   const structured = await listAgentSessions(roots, 'continue', continueProject?.id ?? '');
   const sqlite = await listAgentSessions(roots, 'goose', gooseProject?.id ?? '');

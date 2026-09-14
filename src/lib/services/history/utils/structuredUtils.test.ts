@@ -338,4 +338,60 @@ describe('structured history discovery', () => {
       return left.localeCompare(right);
     })).toEqual(['Kilo Code', 'Roo Code']);
   });
+
+  /*
+   * Confirms the generic reader over Pi's real, unmodified shape (verified
+   * against earendil-works/pi's own docs/session-format.md), rather than
+   * assuming it: role and text sit one level deeper, under .message, than the
+   * reader's own top-level fields, but it already falls back to that nesting.
+   */
+  test('reads a real Pi session tree without a dedicated agent branch', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'pi-session-'));
+    const project = join(root, 'workspace');
+
+    await mkdir(project, { recursive: true });
+    await writeFile(join(project, 'session.jsonl'), [
+      JSON.stringify({
+        type: 'message',
+        id: 'a1b2c3d4',
+        parentId: null,
+        timestamp: '2026-01-01T00:00:00.000Z',
+        message: {
+          role: 'user',
+          content: 'Question',
+        },
+      }),
+      JSON.stringify({
+        type: 'message',
+        id: 'b2c3d4e5',
+        parentId: 'a1b2c3d4',
+        timestamp: '2026-01-01T00:00:01.000Z',
+        message: {
+          role: 'assistant',
+          content: [{
+            type: 'text',
+            text: 'Answer',
+          }],
+        },
+      }),
+    ].join('\n'));
+
+    const sessions = await listStructuredSessions('pi', [root], 'workspace');
+    const entries = await loadStructuredEntries(sessions[0]?.filePath ?? '');
+
+    expect(sessions).toHaveLength(1);
+    expect(entries).toMatchObject([
+      {
+        kind: 'user',
+        text: 'Question',
+      },
+      {
+        kind: 'assistant',
+        blocks: [{
+          blockType: 'text',
+          text: 'Answer',
+        }],
+      },
+    ]);
+  });
 });

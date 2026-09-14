@@ -160,7 +160,7 @@ export const agentOptions: readonly AgentOption[] = [
   readOnlyAgent('pearai', 'PearAI', 'files'),
   readOnlyAgent('crush', 'Crush', 'sqlite'),
   readOnlyAgent('llm', 'LLM', 'sqlite'),
-  readOnlyAgent('openinterpreter', 'Open Interpreter', 'codex'),
+  readOnlyAgent('openinterpreter', 'Open Interpreter', 'files'),
   readOnlyAgent('pi', 'Pi', 'files'),
   readOnlyAgent('ompi', 'oh-my-pi', 'files'),
   readOnlyAgent('vibe', 'Mistral Vibe', 'files'),
