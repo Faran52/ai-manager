@@ -1,4 +1,8 @@
-import { useId, useState } from 'react';
+import {
+  Fragment,
+  useId,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -114,11 +118,22 @@ const FilePath: FC<{ readonly scope: ScopeSettings }> = ({ scope }) => {
       >
         {t('file')}
       </span>
+      {/* A break opportunity after each slash, so a long path wraps at a
+          segment boundary instead of splitting "settings.local.json" in two. */}
       <span className="
-        min-w-0 flex-1 font-mono text-body break-all text-foreground
+        min-w-0 flex-1 font-mono text-body wrap-break-word text-foreground
       "
       >
-        {scope.path}
+        {scope.path.split('/').map((segment, index, segments) => {
+          return (
+            // The path up to this segment is unique per position, unlike the segment.
+            <Fragment key={segments.slice(0, index + 1).join('/')}>
+              {segment}
+              {index < segments.length - 1 && '/'}
+              {index < segments.length - 1 && <wbr />}
+            </Fragment>
+          );
+        })}
       </span>
       {/*
         A read-only surface has no Save button, so promising it would be created
