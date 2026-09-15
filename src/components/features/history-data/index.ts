@@ -2,6 +2,7 @@ export * from './hooks/useAgentSessions';
 export * from './hooks/useAgentSetup';
 export * from './hooks/useArchives';
 export * from './hooks/useFileHistory';
+export * from './hooks/useLiveList';
 export * from './hooks/useMessages';
 export * from './hooks/useProjects';
 export * from './hooks/useProjectStats';
