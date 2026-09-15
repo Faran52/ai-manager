@@ -41,7 +41,7 @@ export const TurnFrame: FC<TurnFrameProps> = ({
       <span
         aria-hidden="true"
         className="
-          mt-px flex size-6 shrink-0 items-center justify-center rounded-full
+          flex size-6 shrink-0 items-center justify-center rounded-full
           bg-accent text-foreground-2
         "
       >
@@ -50,7 +50,7 @@ export const TurnFrame: FC<TurnFrameProps> = ({
     );
   }
   else {
-    mark = <AgentMark agent={agent} className="mt-px size-6 text-eyebrow" />;
+    mark = <AgentMark agent={agent} className="size-6 text-eyebrow" />;
   }
 
   return (

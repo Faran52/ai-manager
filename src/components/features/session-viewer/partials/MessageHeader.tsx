@@ -62,8 +62,10 @@ export const MessageHeader: FC<MessageHeaderProps> = ({
   });
 
   return (
+    // A size-6 line box, the height of the avatar beside it, so the name
+    // centres on the mark instead of sitting a few pixels above it.
     <div
-      className="flex items-baseline gap-2 text-body text-dim"
+      className="flex items-baseline gap-2 text-body/6 text-dim"
       data-message-header
     >
       <span className="font-semibold text-foreground-2">{name ?? t(roleKey)}</span>
