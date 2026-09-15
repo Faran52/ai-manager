@@ -196,6 +196,49 @@
     border-top: 1px solid var(--border);
   }
 
+  /* The selection checkbox in the row's leading gutter: an outlined box that
+     fills with the accent when the row is picked. */
+  .sidebar-check {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    color: transparent;
+    border: 1px solid var(--muted-foreground);
+    border-radius: 0.25rem;
+    transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease;
+  }
+
+  .sidebar-check[data-checked="true"] {
+    color: var(--primary-foreground);
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+
+  /* The header's one icon control: same footprint as the fold toggle. */
+  .sidebar-header-icon {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    color: var(--muted-foreground);
+    border-radius: 0.375rem;
+    transition: color 120ms ease, background-color 120ms ease;
+  }
+
+  .sidebar-header-icon:hover {
+    color: var(--foreground);
+    background: var(--accent);
+  }
+
+  .sidebar-header-icon:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+  }
+
   /* A mark near the size of the badges beside it (project id, message
      count), not a full icon button: the row's own chevron, not a toolbar
      action. Positioned above the title button's stretched click target
@@ -241,15 +284,6 @@
     outline-offset: -2px;
   }
 
-  .sidebar-section-action {
-    padding: 0.125rem 0.375rem;
-    font-size: 0.6875rem;
-    font-weight: 600;
-    color: var(--primary);
-    border-radius: 0.375rem;
-    transition: color 120ms ease, background-color 120ms ease;
-  }
-
   .sidebar-select-trigger {
     display: inline-flex;
     flex: none;
@@ -275,21 +309,17 @@
     outline-offset: 1px;
   }
 
-  .sidebar-section-action:hover {
-    color: var(--primary);
-    background: color-mix(in srgb, var(--primary) 10%, transparent);
-  }
-
   .sidebar-section-action:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 1px;
   }
 
+  /* Same inset as the header above it and the filter below it. */
   .session-selection-bar {
     display: flex;
     gap: 0.375rem;
     align-items: center;
-    padding: 0 0.5rem 0.5rem;
+    padding: 0 0.75rem 0.5rem;
   }
 
   .session-selection-count {

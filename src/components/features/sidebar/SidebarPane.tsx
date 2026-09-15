@@ -7,13 +7,14 @@ import {
 import { useTranslation } from 'react-i18next';
 
 import {
-  CheckSquare2,
+  Check,
   ChevronDown,
   FolderClosed,
   Layers,
+  ListChecks,
   MessagesSquare,
   Search,
-  Square,
+  X,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
@@ -34,6 +35,7 @@ import { formatTimeAgo } from '@utils/formatUtils';
 import {
   AgentMark,
   collapseTransition,
+  controlTransition,
   EmptyState,
   fadeTransition,
   foldTransition,
@@ -125,6 +127,71 @@ const COLLAPSED_WIDTH = '3.5rem';
 // A reduced-motion reader gets the end state with no travel, same as Disclosure.
 const INSTANT = { duration: 0 };
 
+// The two faces of the leading gutter: a small pop in and out, cross-faded.
+const MARK_SWAP = {
+  initial: {
+    opacity: 0,
+    scale: 0.8,
+  },
+  animate: {
+    opacity: 1,
+    scale: 1,
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.8,
+  },
+};
+
+/*
+ * Selection mode borrows a row's leading gutter for a checkbox; otherwise it
+ * carries the agent circle. The gutter is a fixed size-7 either way, so the
+ * two cross-fade in place and nothing beside them shifts.
+ */
+const LeadMark: FC<{
+  readonly agent: AgentId;
+  readonly selecting: boolean;
+  readonly checked: boolean;
+  readonly reduceMotion: boolean;
+}> = ({
+  agent,
+  selecting,
+  checked,
+  reduceMotion,
+}) => {
+  const transition = reduceMotion ? INSTANT : controlTransition;
+
+  return (
+    <span className="flex size-7 shrink-0 items-center justify-center">
+      <AnimatePresence mode="popLayout" initial={false}>
+        {selecting
+          ? (
+              <motion.span
+                key="check"
+                {...MARK_SWAP}
+                transition={transition}
+                className="sidebar-check"
+                data-checked={checked}
+                aria-hidden="true"
+              >
+                <Check className="size-3" strokeWidth={3} />
+              </motion.span>
+            )
+          : (
+              <motion.span
+                key="mark"
+                {...MARK_SWAP}
+                transition={transition}
+                className="flex"
+              >
+                <AgentMark agent={agent} className="size-7 text-figure" />
+              </motion.span>
+            )}
+      </AnimatePresence>
+    </span>
+  );
+};
+
 // A session is named by whatever it carries, and every agent carries a different one of these.
 const titleOf = (session: SessionSummary): string => {
   return session.title ?? session.summary ?? session.preview ?? session.id;
@@ -177,6 +244,8 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
   const { t, i18n } = useTranslation('sidebar');
   const { push: pushToast } = useToast();
   const reduceMotion = useReducedMotion();
+  // One disclosure timing for both the thread parts and the selection bar.
+  const collapse = reduceMotion ? INSTANT : collapseTransition;
   const [projectFilter, setProjectFilter] = useState('');
   const [sessionFilter, setSessionFilter] = useState('');
   const [projectDateFilter, setProjectDateFilter] = useState<DateFilter>('all');
@@ -580,33 +649,39 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
     });
   };
 
+  // An icon like the fold toggle beside it, not a word: the header has room
+  // for one control, and the tooltip carries the name.
   let sessionHeaderAction: ReactNode;
 
   if (selectionMode) {
     sessionHeaderAction = (
-      <button
-        type="button"
-        aria-label={t('cancelSelection')}
-        onClick={exitSelectionMode}
-        className="sidebar-section-action"
-      >
-        {t('cancel', { ns: 'common' })}
-      </button>
+      <Tooltip content={t('cancelSelection')}>
+        <button
+          type="button"
+          aria-label={t('cancelSelection')}
+          onClick={exitSelectionMode}
+          className="sidebar-header-icon"
+        >
+          <X className="size-3.5" />
+        </button>
+      </Tooltip>
     );
   }
   else if (selectableSessions.length > 0) {
     sessionHeaderAction = (
-      <button
-        type="button"
-        aria-label={t('selectSessions')}
-        onClick={() => {
-          setMenuTarget(null);
-          setSelectionMode(true);
-        }}
-        className="sidebar-section-action"
-      >
-        {t('select')}
-      </button>
+      <Tooltip content={t('selectSessions')}>
+        <button
+          type="button"
+          aria-label={t('selectSessions')}
+          onClick={() => {
+            setMenuTarget(null);
+            setSelectionMode(true);
+          }}
+          className="sidebar-header-icon"
+        >
+          <ListChecks className="size-3.5" />
+        </button>
+      </Tooltip>
     );
   }
 
@@ -633,28 +708,14 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
     const preview = previewOf(session);
     const threaded = row.partCount > 1;
     const open = expandedThreads.includes(row.threadKey);
-    // Selection mode borrows the leading gutter for a
-    // checkbox; otherwise it carries the agent circle.
-    let leadMark: ReactNode = (
-      <AgentMark
-        agent={session.agent}
-        className="size-7 text-figure"
-      />
-    );
-
-    if (selectionMode) {
-      leadMark = selectedForDelete
-        ? (
-            <CheckSquare2 className="size-4 shrink-0 text-primary" />
-          )
-        : (
-            <Square className="size-4 shrink-0 text-muted-foreground" />
-          );
-    }
-
     return (
       <>
-        {leadMark}
+        <LeadMark
+          agent={session.agent}
+          selecting={selectionMode}
+          checked={selectedForDelete}
+          reduceMotion={reduceMotion}
+        />
         {/*
           Reserved on every row, threaded or not: a chevron that only exists
           some of the time shifts the title only some of the time, and a row
@@ -797,7 +858,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                   height: 0,
                   opacity: 0,
                 }}
-                transition={reduceMotion ? INSTANT : collapseTransition}
+                transition={collapse}
                 className="overflow-hidden"
               >
                 <ul>
@@ -1007,19 +1068,41 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                           </span>
                         )}
                       />
-                      {selectionMode && (
-                        <SessionSelectionBar
-                          selectedCount={selectedSessions.length}
-                          allSelected={allSelectableSelected}
-                          onToggleAll={toggleAllSessions}
-                          busy={bulkBusy}
-                          onDelete={() => {
-                            setDeleteTargets(selectedSessions);
-                          }}
-                          onArchive={archiveSelected}
-                          onExport={exportSelected}
-                        />
-                      )}
+                      {/* Slides open under the header rather than popping the
+                          filter row down by its own height. */}
+                      <AnimatePresence initial={false}>
+                        {selectionMode && (
+                          <motion.div
+                            key="selection-bar"
+                            initial={{
+                              height: 0,
+                              opacity: 0,
+                            }}
+                            animate={{
+                              height: 'auto',
+                              opacity: 1,
+                            }}
+                            exit={{
+                              height: 0,
+                              opacity: 0,
+                            }}
+                            transition={collapse}
+                            className="shrink-0 overflow-hidden"
+                          >
+                            <SessionSelectionBar
+                              selectedCount={selectedSessions.length}
+                              allSelected={allSelectableSelected}
+                              onToggleAll={toggleAllSessions}
+                              busy={bulkBusy}
+                              onDelete={() => {
+                                setDeleteTargets(selectedSessions);
+                              }}
+                              onArchive={archiveSelected}
+                              onExport={exportSelected}
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                       <div className="
                         flex shrink-0 items-center gap-1.5 px-3 pb-2
                       "

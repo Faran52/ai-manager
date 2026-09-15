@@ -559,8 +559,10 @@ describe('SidebarPane agent and mutation actions', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Select sessions' }));
     await userEvent.click(screen.getByRole('button', { name: 'Select all sessions' }));
     expect(screen.getByText('2 selected')).toBeDefined();
+    expect(document.querySelectorAll('.sidebar-check[data-checked="true"]')).toHaveLength(2);
     await userEvent.click(screen.getByRole('button', { name: 'Clear selected sessions' }));
     expect(screen.getByText('0 selected')).toBeDefined();
+    expect(document.querySelectorAll('.sidebar-check[data-checked="false"]')).toHaveLength(2);
 
     await userEvent.click(screen.getByRole('button', { name: /First session/u }));
     await userEvent.click(screen.getByRole('button', { name: /First session/u }));
