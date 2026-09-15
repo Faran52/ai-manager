@@ -1,76 +1,137 @@
 import {
-  act,
-  fireEvent,
   render,
   screen,
+  waitFor,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
-  afterEach,
   describe,
   expect,
   test,
   vi,
 } from 'vitest';
 
-import { ToastProvider } from '@ui/index';
-
 import { AppHeader } from './AppHeader';
 
 import type { AppHeaderProps } from './AppHeader';
 
-afterEach(() => {
-  vi.useRealTimers();
-});
-
-const mount = (overrides?: Partial<Parameters<typeof AppHeader>[0]>) => {
-  const props = {
+const mount = (overrides: Partial<AppHeaderProps> = {}): AppHeaderProps => {
+  const props: AppHeaderProps = {
+    view: 'sessions',
+    projectName: 'alpha',
+    scope: 'project',
+    onScopeChange: vi.fn(),
     onOpenSearch: vi.fn(),
-    onReload: vi.fn(),
-    onOpenSettings: vi.fn(),
+    onArchiveSession: null,
+    onNotice: vi.fn(),
     ...overrides,
-  } satisfies AppHeaderProps;
+  };
 
-  render(
-    <ToastProvider>
-      <AppHeader {...props} />
-    </ToastProvider>,
-  );
+  render(<AppHeader {...props} />);
 
   return props;
 };
 
 describe('AppHeader', () => {
-  test('wires search and reload', async () => {
+  test('opens search', async () => {
     const props = mount();
 
     await userEvent.click(screen.getByRole('button', { name: 'Search all chats (press /)' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Refresh conversation history' }));
 
     expect(props.onOpenSearch).toHaveBeenCalledOnce();
-    expect(props.onReload).toHaveBeenCalledOnce();
   });
 
-  test('shows refresh progress for three seconds', async () => {
-    vi.useFakeTimers();
-    const props = mount();
+  test('names the project the columns are scoped to', () => {
+    mount({ projectName: 'alpha' });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Refresh conversation history' }));
+    expect(screen.getByText('alpha')).toBeDefined();
+  });
 
-    expect(props.onReload).toHaveBeenCalledOnce();
-    expect(screen.getByRole('status').textContent).toBe('Refreshing conversation history…');
-    expect(screen.getByRole('button', { name: 'Refreshing conversation history' })
-      .hasAttribute('disabled')).toBe(true);
+  test('falls back to all projects when nothing is selected', () => {
+    mount({ projectName: null });
 
-    act(() => {
-      vi.advanceTimersByTime(3000);
+    expect(screen.getByText('All projects')).toBeDefined();
+  });
+
+  test('reads Global on the chip when analytics is scoped to the whole machine', () => {
+    mount({
+      view: 'analytics',
+      projectName: null,
+      scope: 'global',
     });
 
-    await act(async () => {
-      await vi.runAllTimersAsync();
+    expect(screen.getByText('Global')).toBeDefined();
+  });
+
+  test('switches analytics between the project and the whole machine', async () => {
+    const { onScopeChange } = mount({
+      view: 'analytics',
+      projectName: 'alpha',
+      scope: 'project',
     });
-    expect(screen.queryByText('Refreshing conversation history…')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Refresh conversation history' })
-      .hasAttribute('disabled')).toBe(false);
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Global' }));
+
+    expect(onScopeChange).toHaveBeenCalledWith('global');
+  });
+
+  test('offers no archive action when there is no open session', () => {
+    mount({ onArchiveSession: null });
+
+    expect(screen.queryByRole('button', { name: /Archive/u })).toBeNull();
+  });
+
+  test('reads the promoted action, then archive, then the overflow', () => {
+    mount({
+      onArchiveSession: vi.fn(() => {
+        return Promise.resolve();
+      }),
+      actions: <button type="button">Copy</button>,
+      overflow: <button type="button">More</button>,
+    });
+
+    expect(screen.getAllByRole('button').filter((node) => {
+      return node.className !== 'titlebar-search';
+    }).map((node) => {
+      return node.textContent;
+    })).toEqual(['Copy', 'Archive', 'More']);
+  });
+
+  test('archives the open transcript and locks the button while it runs', async () => {
+    let release!: () => void;
+    const pending = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const onArchiveSession = vi.fn(() => {
+      return pending;
+    });
+    mount({ onArchiveSession });
+
+    const button = screen.getByRole<HTMLButtonElement>('button', { name: /Archive/u });
+
+    await userEvent.click(button);
+    expect(onArchiveSession).toHaveBeenCalledTimes(1);
+    expect(button.disabled).toBe(true);
+
+    release();
+    await waitFor(() => {
+      expect(button.disabled).toBe(false);
+    });
+  });
+
+  test('reports the reason when the archive fails', async () => {
+    const onNotice = vi.fn();
+    mount({
+      onNotice,
+      onArchiveSession: vi.fn(() => {
+        return Promise.reject(new Error('disk full'));
+      }),
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: /Archive/u }));
+
+    await waitFor(() => {
+      expect(onNotice).toHaveBeenCalledWith('disk full');
+    });
   });
 });

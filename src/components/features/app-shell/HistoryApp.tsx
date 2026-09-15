@@ -32,7 +32,7 @@ import {
   usePluginToggle,
 } from '@features/agent-setup';
 import { AnalyticsView, useAnalyticsScope } from '@features/analytics';
-import { AppHeader, CommandBar } from '@features/app-header';
+import { AppHeader } from '@features/app-header';
 import { ArchiveView } from '@features/archive';
 import {
   useAgentSessions,
@@ -105,7 +105,7 @@ const HistoryAppView: FC = () => {
   const { push: pushToast } = useToast();
   const [highlightTimestamp, setHighlightTimestamp] = useState<string | undefined>(undefined);
   const [archivedSession, setArchivedSession] = useState<ArchivedSession | null>(null);
-  // The transcript the viewer has loaded, lifted here so the command bar's
+  // The transcript the viewer has loaded, lifted here so the titlebar's
   // export menu can sit beside Archive rather than inside the viewer's header.
   const [openEntries, setOpenEntries] = useState<readonly HistoryEntry[]>([]);
   const [nowMs] = useState(() => {
@@ -345,7 +345,7 @@ const HistoryAppView: FC = () => {
   // Archives the open transcript on its own, the same copy-only operation the
   // sidebar's bulk select makes, so it survives the agent's next cleanup.
   const archiveOpenSession = useCallback(async () => {
-    /* v8 ignore next 3 -- the command bar only wires this in with a session open */
+    /* v8 ignore next 3 -- the titlebar only wires this in with a session open */
     if (selectedSession?.actualSessionId == null) {
       return;
     }
@@ -484,19 +484,13 @@ const HistoryAppView: FC = () => {
       "
       >
         <UpdateBanner />
-        {/* Titlebar and command bar run the full width, above the rail: the
-            chrome frames the window, the rail is a control inside it. */}
+        {/* The titlebar runs the full width, above the rail: the chrome
+            frames the window, the rail is a control inside it. */}
         <AppHeader
+          view={view}
           onOpenSearch={() => {
             setSearchOpen(true);
           }}
-          onOpenSettings={() => {
-            setSettingsOpen(true);
-          }}
-          onReload={projects.reload}
-        />
-        <CommandBar
-          view={view}
           projectName={selectedProject?.name ?? null}
           scope={analyticsScope}
           onScopeChange={setAnalyticsScope}
@@ -536,6 +530,10 @@ const HistoryAppView: FC = () => {
             flagged={(agentSetup.data?.findings ?? []).length}
             view={view}
             onViewChange={setView}
+            onReload={projects.reload}
+            onOpenSettings={() => {
+              setSettingsOpen(true);
+            }}
           />
           {/*
             * The columns are cards on a darker canvas, and the sidebar sizes

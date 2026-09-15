@@ -29,8 +29,8 @@
 }
 
 @layer components {
-  /* The window chrome: a titlebar for what the window is, a command bar for
-     what you are looking at and what you can do to it. */
+  /* The window chrome: one titlebar for what you are looking at, search, and
+     what you can do to the open thing. */
   .titlebar {
     position: relative;
     display: flex;
@@ -93,17 +93,6 @@
   .chrome-icon-button:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: -2px;
-  }
-
-  .command-bar {
-    display: flex;
-    flex: none;
-    gap: 0.5rem;
-    align-items: center;
-    height: 46px;
-    padding-inline: 0.75rem;
-    background: var(--chrome);
-    border-bottom: 1px solid var(--border);
   }
 
   .context-chip {

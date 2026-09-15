@@ -785,7 +785,7 @@ describe('HistoryApp header actions', () => {
     });
   });
 
-  test('archives the open transcript from the command bar', async () => {
+  test('archives the open transcript from the titlebar', async () => {
     const fetchMock = vi.fn((url: RequestInfo | URL) => {
       const path = toPath(url);
 
@@ -812,10 +812,10 @@ describe('HistoryApp header actions', () => {
     await userEvent.click(screen.getByRole('button', { name: /^Sessions/ }));
     await userEvent.click(await screen.findByText('The chosen one'));
 
-    const commandBar = document.querySelector('[data-command-bar]');
+    const commandBar = document.querySelector('[data-app-header]');
 
     if (commandBar == null) {
-      throw new Error('the command bar never rendered');
+      throw new Error('the titlebar never rendered');
     }
 
     await userEvent.click(within(commandBar as HTMLElement).getByRole('button', { name: 'Archive' }));
@@ -826,7 +826,7 @@ describe('HistoryApp header actions', () => {
     })).toBe(true);
   });
 
-  test('reports a failed archive from the command bar as an error toast', async () => {
+  test('reports a failed archive from the titlebar as an error toast', async () => {
     const fetchMock = vi.fn((url: RequestInfo | URL) => {
       const path = toPath(url);
 
@@ -853,10 +853,10 @@ describe('HistoryApp header actions', () => {
     await userEvent.click(screen.getByRole('button', { name: /^Sessions/ }));
     await userEvent.click(await screen.findByText('The chosen one'));
 
-    const commandBar = document.querySelector('[data-command-bar]');
+    const commandBar = document.querySelector('[data-app-header]');
 
     if (commandBar == null) {
-      throw new Error('the command bar never rendered');
+      throw new Error('the titlebar never rendered');
     }
 
     await userEvent.click(within(commandBar as HTMLElement).getByRole('button', { name: 'Archive' }));

@@ -1,56 +1,105 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
-  RefreshCw,
+  Archive,
+  FolderClosed,
+  Loader2,
   Search,
-  Settings,
 } from 'lucide-react';
 
-import { cn } from '@utils/cnUtils';
+import { toErrorMessage } from '@utils/errorUtils';
 
-import { Tooltip, useToast } from '@ui/index';
+import { SegmentedControl } from '@ui/index';
 
-import type { FC } from 'react';
+import type { Scope } from '@features/analytics';
+import type { FC, ReactNode } from 'react';
 
 export type AppView = 'sessions' | 'analytics' | 'health' | 'archive';
 
 export interface AppHeaderProps {
+  readonly view: AppView;
+  // The project the columns are scoped to, or null for the whole machine.
+  readonly projectName: string | null;
+  readonly scope: Scope;
+  readonly onScopeChange: (scope: Scope) => void;
   readonly onOpenSearch: () => void;
-  readonly onReload: () => void;
-  readonly onOpenSettings: () => void;
+  // Archives the open transcript; null when there is none to archive.
+  readonly onArchiveSession: (() => Promise<void>)
+    | null;
+  readonly onNotice: (message: string) => void;
+  // A promoted control for the open thing, shown before Archive (Copy markdown).
+  readonly actions?: ReactNode;
+  // The overflow menu, shown after Archive, for the less-used actions.
+  readonly overflow?: ReactNode;
 }
 
 /**
- * The titlebar: what the window is. A centred search field, and refresh and
- * settings as icons on the trailing edge. The window carries no wordmark; on the
- * desktop the OS draws the frame, and in the browser there is none to draw.
+ * The one bar of window chrome: what you are looking at on the left, search
+ * in the centre, what you can do to the open thing on the right. Refresh and
+ * settings live at the foot of the rail. The window carries no wordmark; on
+ * the desktop the OS draws the frame, and in the browser there is none to draw.
  */
 export const AppHeader: FC<AppHeaderProps> = ({
+  view,
+  projectName,
+  scope,
+  onScopeChange,
   onOpenSearch,
-  onReload,
-  onOpenSettings,
+  onArchiveSession,
+  onNotice,
+  actions,
+  overflow,
 }) => {
   const { t } = useTranslation('common');
-  const { push } = useToast();
-  const [refreshing, setRefreshing] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    if (!refreshing) {
-      return undefined;
-    }
-
-    const timeout = window.setTimeout(() => {
-      setRefreshing(false);
-    }, 3000);
-
-    return () => {
-      window.clearTimeout(timeout);
-    };
-  }, [refreshing]);
+  const runArchive = (archive: () => Promise<void>): void => {
+    setBusy(true);
+    void (async (): Promise<void> => {
+      try {
+        await archive();
+      }
+      catch (cause) {
+        onNotice(toErrorMessage(cause));
+      }
+      finally {
+        setBusy(false);
+      }
+    })();
+  };
 
   return (
     <header className="titlebar" data-app-header>
+      {view === 'analytics' && projectName != null
+        ? (
+            <SegmentedControl
+              label={t('analyticsScope')}
+              value={scope}
+              onChange={onScopeChange}
+              options={[
+                {
+                  value: 'global',
+                  label: t('scopeGlobal'),
+                },
+                {
+                  value: 'project',
+                  label: projectName,
+                },
+              ]}
+            />
+          )
+        : (
+            <span className="context-chip">
+              <FolderClosed className="size-3" />
+              <span className="max-w-40 truncate">
+                {view === 'analytics' && scope === 'global'
+                  ? t('scopeGlobal')
+                  : projectName ?? t('allProjects')}
+              </span>
+            </span>
+          )}
+
       <button
         type="button"
         onClick={onOpenSearch}
@@ -68,32 +117,24 @@ export const AppHeader: FC<AppHeaderProps> = ({
         </kbd>
       </button>
 
-      <div className="ms-auto flex items-center gap-1">
-        <Tooltip content={refreshing ? t('refreshing') : t('refresh')}>
+      <div className="ms-auto flex shrink-0 items-center gap-1">
+        {actions}
+        {onArchiveSession != null && (
           <button
             type="button"
-            disabled={refreshing}
+            disabled={busy}
             onClick={() => {
-              setRefreshing(true);
-              onReload();
-              push(t('refreshingToast'));
+              runArchive(onArchiveSession);
             }}
-            aria-label={refreshing ? t('refreshing') : t('refresh')}
-            className="chrome-icon-button"
+            className="command-action"
           >
-            <RefreshCw className={cn('size-3.5', refreshing && 'animate-spin')} />
+            {busy
+              ? <Loader2 className="size-3.5 animate-spin" />
+              : <Archive className="size-3.5" />}
+            {t('archiveAction')}
           </button>
-        </Tooltip>
-        <Tooltip content={t('navSettings')}>
-          <button
-            type="button"
-            onClick={onOpenSettings}
-            aria-label={t('navSettings')}
-            className="chrome-icon-button"
-          >
-            <Settings className="size-3.5" />
-          </button>
-        </Tooltip>
+        )}
+        {overflow}
       </div>
     </header>
   );

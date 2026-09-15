@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -5,11 +6,13 @@ import {
   BarChart3,
   HeartPulse,
   MessageSquare,
+  RefreshCw,
+  Settings,
 } from 'lucide-react';
 
 import { cn } from '@utils/cnUtils';
 
-import { Tooltip } from '@ui/index';
+import { Tooltip, useToast } from '@ui/index';
 
 import type { AppView } from '@features/app-header';
 import type { FC, ReactNode } from 'react';
@@ -19,6 +22,8 @@ export interface NavRailProps {
   readonly onViewChange: (view: AppView) => void;
   // Findings waiting in Health, shown as a count on its icon.
   readonly flagged: number;
+  readonly onReload: () => void;
+  readonly onOpenSettings: () => void;
 }
 
 interface Destination {
@@ -29,8 +34,8 @@ interface Destination {
 
 /*
  * Health sits last because it is where you go when something is wrong, not
- * where you work. Settings is not here at all: it opens as a sheet over
- * whatever you were doing.
+ * where you work. Refresh and Settings sit apart at the foot of the rail: they
+ * act on the app rather than take you somewhere in it.
  */
 const DESTINATIONS: readonly Destination[] = [
   {
@@ -55,12 +60,38 @@ const DESTINATIONS: readonly Destination[] = [
   },
 ];
 
+const RAIL_BUTTON = `
+  relative flex size-10 items-center justify-center rounded-lg text-faint
+  transition-colors
+  hover:text-foreground
+  focus-visible:ring-2 focus-visible:ring-ring
+  disabled:pointer-events-none
+`;
+
 export const NavRail: FC<NavRailProps> = ({
   view,
   onViewChange,
   flagged,
+  onReload,
+  onOpenSettings,
 }) => {
   const { t } = useTranslation('common');
+  const { push } = useToast();
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (!refreshing) {
+      return undefined;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setRefreshing(false);
+    }, 3000);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [refreshing]);
 
   return (
     <nav
@@ -85,12 +116,7 @@ export const NavRail: FC<NavRailProps> = ({
               onClick={() => {
                 onViewChange(destination.id);
               }}
-              className={cn(`
-                relative flex size-10 items-center justify-center rounded-lg
-                text-faint transition-colors
-                hover:text-foreground
-                focus-visible:ring-2 focus-visible:ring-ring
-              `, active && 'bg-accent text-primary')}
+              className={cn(RAIL_BUTTON, active && 'bg-accent text-primary')}
             >
               {destination.icon}
               {destination.id === 'health' && flagged > 0 && (
@@ -109,6 +135,32 @@ export const NavRail: FC<NavRailProps> = ({
           </Tooltip>
         );
       })}
+
+      <Tooltip content={refreshing ? t('refreshing') : t('refresh')} side="right">
+        <button
+          type="button"
+          disabled={refreshing}
+          onClick={() => {
+            setRefreshing(true);
+            onReload();
+            push(t('refreshingToast'));
+          }}
+          aria-label={refreshing ? t('refreshing') : t('refresh')}
+          className={cn(RAIL_BUTTON, 'mt-auto')}
+        >
+          <RefreshCw className={cn('size-4', refreshing && 'animate-spin')} />
+        </button>
+      </Tooltip>
+      <Tooltip content={t('navSettings')} side="right">
+        <button
+          type="button"
+          onClick={onOpenSettings}
+          aria-label={t('navSettings')}
+          className={RAIL_BUTTON}
+        >
+          <Settings className="size-4" />
+        </button>
+      </Tooltip>
     </nav>
   );
 };
