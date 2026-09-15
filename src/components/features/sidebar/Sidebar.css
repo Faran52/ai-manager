@@ -344,6 +344,16 @@
   .session-selection-delete:hover:not(:disabled) {
     background: color-mix(in srgb, var(--destructive) 16%, transparent);
   }
+
+  /*
+   * Icon-only once the sidebar column narrows: with all four actions carrying
+   * their own label, the selected-count text had nowhere left to shrink to
+   * and truncated to an ellipsis. The tooltip on each button already carries
+   * the label these used to print.
+   */
+  .session-selection-icon {
+    padding: 0.3125rem;
+  }
 }
 
 @layer components {

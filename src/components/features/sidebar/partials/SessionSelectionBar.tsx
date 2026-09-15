@@ -7,6 +7,8 @@ import {
   Trash2,
 } from 'lucide-react';
 
+import { Tooltip } from '@ui/index';
+
 import type { FC } from 'react';
 
 export interface SessionSelectionBarProps {
@@ -43,36 +45,39 @@ export const SessionSelectionBar: FC<SessionSelectionBarProps> = ({
         <CheckCheck className="size-3" />
         {allSelected ? t('clear', { ns: 'common' }) : t('all')}
       </button>
-      <button
-        type="button"
-        aria-label={t('archiveSelected')}
-        disabled={busy || selectedCount === 0}
-        onClick={onArchive}
-        className="session-selection-action"
-      >
-        <Archive className="size-3" />
-        {t('archiveAction')}
-      </button>
-      <button
-        type="button"
-        aria-label={t('exportSelected')}
-        disabled={busy || selectedCount === 0}
-        onClick={onExport}
-        className="session-selection-action"
-      >
-        <Download className="size-3" />
-        {t('exportAction')}
-      </button>
-      <button
-        type="button"
-        aria-label={t('deleteSelected')}
-        disabled={busy || selectedCount === 0}
-        onClick={onDelete}
-        className="session-selection-delete"
-      >
-        <Trash2 className="size-3" />
-        {t('delete', { ns: 'common' })}
-      </button>
+      <Tooltip content={t('archiveAction')}>
+        <button
+          type="button"
+          aria-label={t('archiveSelected')}
+          disabled={busy || selectedCount === 0}
+          onClick={onArchive}
+          className="session-selection-action session-selection-icon"
+        >
+          <Archive className="size-3" />
+        </button>
+      </Tooltip>
+      <Tooltip content={t('exportAction')}>
+        <button
+          type="button"
+          aria-label={t('exportSelected')}
+          disabled={busy || selectedCount === 0}
+          onClick={onExport}
+          className="session-selection-action session-selection-icon"
+        >
+          <Download className="size-3" />
+        </button>
+      </Tooltip>
+      <Tooltip content={t('delete', { ns: 'common' })}>
+        <button
+          type="button"
+          aria-label={t('deleteSelected')}
+          disabled={busy || selectedCount === 0}
+          onClick={onDelete}
+          className="session-selection-delete session-selection-icon"
+        >
+          <Trash2 className="size-3" />
+        </button>
+      </Tooltip>
     </div>
   );
 };
