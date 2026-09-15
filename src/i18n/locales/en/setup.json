@@ -43,6 +43,8 @@
   "trustNoRecord": "Claude Code has no record of this project, so nothing has been configured or trusted yet.",
   "viewPlugins": "View plugins",
   "pluginsTitle": "Plugins",
+  "viewConfiguration": "View configuration",
+  "configuration": "Config",
   "findingsCount_one": "{{count}} setup problem",
   "findingsCount_other": "{{count}} setup problems",
   "model": "Model",

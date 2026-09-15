@@ -193,14 +193,6 @@ export const projectScopedAgents: readonly AgentId[] = surfacedAgentsWith((specs
   });
 });
 
-// The agents this app writes rather than only reads, so the picker can say so
-// before a tab is opened.
-export const editableAgents: readonly AgentId[] = surfacedAgentsWith((specs) => {
-  return specs.some((spec) => {
-    return spec.editable;
-  });
-});
-
 export const hasAgentSettings = (agent: AgentId): boolean => {
   return SURFACES[agent] != null;
 };

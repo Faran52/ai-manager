@@ -13,14 +13,9 @@ import {
   test,
 } from 'vitest';
 
-import {
-  editableSettingsAgents,
-  projectScopedSettingsAgents,
-  settingsAgents,
-} from '@config/agents';
+import { projectScopedSettingsAgents, settingsAgents } from '@config/agents';
 
 import {
-  editableAgents,
   hasAgentSettings,
   isSettingsScope,
   projectScopedAgents,
@@ -70,14 +65,6 @@ test('the project prompt is offered to exactly the agents that read one', () => 
   expect([...projectScopedAgents].sort((left, right) => {
     return left.localeCompare(right);
   })).toEqual([...projectScopedSettingsAgents].sort((left, right) => {
-    return left.localeCompare(right);
-  }));
-});
-
-test('the picker marks as writable exactly the agents SURFACES lets it write', () => {
-  expect([...editableAgents].sort((left, right) => {
-    return left.localeCompare(right);
-  })).toEqual([...editableSettingsAgents].sort((left, right) => {
     return left.localeCompare(right);
   }));
 });

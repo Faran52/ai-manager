@@ -43,6 +43,8 @@
   "trustNoRecord": "Claude Code 沒有此專案的記錄，因此尚未設定或信任任何內容。",
   "viewPlugins": "查看外掛",
   "pluginsTitle": "外掛",
+  "viewConfiguration": "查看配置",
+  "configuration": "配置",
   "findingsCount_one": "{{count}} 個設定問題",
   "findingsCount_other": "{{count}} 個設定問題",
   "model": "模型",

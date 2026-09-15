@@ -9,29 +9,14 @@ import {
 
 import { SettingsSheet } from './SettingsSheet';
 
-import type { AsyncResource } from '@features/history-data';
-import type { ScopeSettings } from '@services/settings/settingsService';
-
 const user = userEvent.setup({ pointerEventsCheck: 0 });
-
-const SETTINGS: AsyncResource<readonly ScopeSettings[]> = {
-  status: 'ready',
-  data: [],
-  reload: () => {
-    return undefined;
-  },
-};
 
 const sheet = (open = true): ReturnType<typeof render> => {
   return render(
     <SettingsSheet
-      agent="claude"
       open={open}
-      projectPath="/repo"
-      settings={SETTINGS}
       themeMode="dark"
       onClose={vi.fn()}
-      onSelectAgent={vi.fn()}
       onThemeChange={vi.fn()}
     />,
   );
@@ -80,25 +65,14 @@ describe('SettingsSheet', () => {
     expect(screen.getByText('Version')).toBeDefined();
   });
 
-  test('reaches the agent settings it does not own', async () => {
-    sheet();
-    await user.click(screen.getByRole('button', { name: 'Agents' }));
-
-    expect(screen.queryByRole('heading', { name: 'Appearance' })).toBeNull();
-  });
-
   test('closes on Escape, like every other sheet', async () => {
     const onClose = vi.fn();
 
     render(
       <SettingsSheet
-        agent="claude"
         open
-        projectPath={null}
-        settings={SETTINGS}
         themeMode="dark"
         onClose={onClose}
-        onSelectAgent={vi.fn()}
         onThemeChange={vi.fn()}
       />,
     );

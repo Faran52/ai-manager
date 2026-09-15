@@ -1,11 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  Bot,
-  Info,
-  Palette,
-} from 'lucide-react';
+import { Info, Palette } from 'lucide-react';
 
 import { appConfig } from '@config/appConfig';
 
@@ -20,23 +16,14 @@ import {
 } from '@features/theme';
 import { UpdatePreference } from '@features/updates';
 
-import { SettingsView } from './SettingsView';
-
-import type { AgentId } from '@config/agents';
-import type { AsyncResource } from '@features/history-data';
 import type { ThemeMode } from '@features/theme';
-import type { ScopeSettings } from '@services/settings/settingsService';
 import type { FC, ReactNode } from 'react';
 
-export type SettingsPane = 'appearance' | 'agents' | 'about';
+export type SettingsPane = 'about' | 'appearance';
 
 export interface SettingsSheetProps {
   readonly open: boolean;
   readonly onClose: () => void;
-  readonly settings: AsyncResource<readonly ScopeSettings[]>;
-  readonly projectPath: string | null;
-  readonly agent: AgentId;
-  readonly onSelectAgent: (agent: AgentId) => void;
   readonly themeMode: ThemeMode;
   readonly onThemeChange: (mode: ThemeMode) => void;
 }
@@ -52,11 +39,6 @@ const PANES: readonly Destination[] = [
     id: 'appearance',
     labelKey: 'settingsAppearance',
     icon: <Palette className="size-4" />,
-  },
-  {
-    id: 'agents',
-    labelKey: 'settingsAgents',
-    icon: <Bot className="size-4" />,
   },
   {
     id: 'about',
@@ -102,10 +84,6 @@ const SettingRow: FC<{ readonly label: string;
 export const SettingsSheet: FC<SettingsSheetProps> = ({
   open,
   onClose,
-  settings,
-  projectPath,
-  agent,
-  onSelectAgent,
   themeMode,
   onThemeChange,
 }) => {
@@ -173,15 +151,6 @@ export const SettingsSheet: FC<SettingsSheetProps> = ({
                 </SettingRow>
               </div>
             </section>
-          )}
-
-          {pane === 'agents' && (
-            <SettingsView
-              agent={agent}
-              projectPath={projectPath}
-              settings={settings}
-              onSelectAgent={onSelectAgent}
-            />
           )}
 
           {pane === 'about' && (

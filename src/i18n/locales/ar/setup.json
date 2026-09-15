@@ -51,6 +51,8 @@
   "trustNoRecord": "لا يوجد لدى Claude Code أي سجل لهذا المشروع، لذا لم يُعد أو يُوثَّق أي شيء بعد.",
   "viewPlugins": "عرض الإضافات",
   "pluginsTitle": "الإضافات",
+  "viewConfiguration": "عرض التكوين",
+  "configuration": "التكوين",
   "findingsCount_zero": "لا توجد مشكلات إعداد",
   "findingsCount_one": "مشكلة إعداد واحدة",
   "findingsCount_two": "مشكلتا إعداد",

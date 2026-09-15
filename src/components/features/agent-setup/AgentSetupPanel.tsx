@@ -12,6 +12,8 @@ import {
   fadeTransition,
   Modal,
 } from '@ui/index';
+import { useSettings } from '@features/history-data';
+import { SettingsView } from '@features/settings';
 
 import {
   AgentRow,
@@ -66,6 +68,8 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
    */
   const [picked, setPicked] = useState<AgentId | null | undefined>(undefined);
   const [pluginsOpen, setPluginsOpen] = useState(false);
+  const [settingsAgent, setSettingsAgent] = useState<AgentId | null>(null);
+  const settings = useSettings(settingsAgent != null ? projectPath : null, settingsAgent ?? 'claude');
 
   if (!projectSelected) {
     return (
@@ -166,6 +170,9 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
                 onOpenPlugins={() => {
                   setPluginsOpen(true);
                 }}
+                onOpenSettings={() => {
+                  setSettingsAgent(setup.agent);
+                }}
               />
             );
           })}
@@ -237,6 +244,24 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
             />
           </div>
         </div>
+      </Modal>
+      <Modal
+        open={settingsAgent != null}
+        onClose={() => {
+          setSettingsAgent(null);
+        }}
+        title={t('configuration')}
+        widthClass="max-w-3xl"
+        variant="sheet"
+      >
+        {/* The sheet variant gives the view a definite height to fill and
+            scroll inside; a max-height wrapper alone left h-full nothing to
+            resolve against and clipped the Save bar off the bottom. */}
+        <SettingsView
+          settings={settings}
+          projectPath={projectPath}
+          agent={settingsAgent ?? 'claude'}
+        />
       </Modal>
     </motion.div>
   );

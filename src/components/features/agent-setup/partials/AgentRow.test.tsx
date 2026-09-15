@@ -55,6 +55,7 @@ const renderRow = (
         open={false}
         onToggle={noop}
         onOpenPlugins={noop}
+        onOpenSettings={noop}
         {...props}
       />
     </ul>,
@@ -315,4 +316,29 @@ test('hands the plugin table to the panel rather than nesting it', async () => {
   await userEvent.click(screen.getByRole('button', { name: /View plugins/u }));
 
   expect(onOpenPlugins).toHaveBeenCalledTimes(1);
+});
+
+test('offers configuration to an agent that keeps a settings file', () => {
+  renderRow(setup(), { open: true });
+
+  expect(screen.getByRole('button', { name: /View configuration/u })).toBeDefined();
+});
+
+test('offers no configuration to an agent with no settings file of its own', () => {
+  renderRow(setup({ agent: 'cursor' }), { open: true });
+
+  expect(screen.queryByRole('button', { name: /View configuration/u })).toBeNull();
+});
+
+test('hands the settings screen to the panel rather than nesting it', async () => {
+  const onOpenSettings = vi.fn();
+
+  renderRow(setup(), {
+    open: true,
+    onOpenSettings,
+  });
+
+  await userEvent.click(screen.getByRole('button', { name: /View configuration/u }));
+
+  expect(onOpenSettings).toHaveBeenCalledTimes(1);
 });

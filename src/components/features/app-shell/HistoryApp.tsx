@@ -44,7 +44,6 @@ import {
   useRetention,
   useSearch,
   useSessions,
-  useSettings,
   useStorage,
 } from '@features/history-data';
 import { SearchDialog } from '@features/search';
@@ -122,8 +121,6 @@ const HistoryAppView: FC = () => {
   const archives = useArchives(view === 'archive');
   const retention = useRetention(view === 'archive');
   const storage = useStorage(view === 'analytics');
-  const [settingsAgent, setSettingsAgent] = useState<AgentId>('claude');
-  const settings = useSettings(settingsOpen ? projectPath : null, settingsAgent);
   // The transcript's edits panel reads this list, narrowed to the open session.
   const edits = useRecentEdits(selectedProject, view === 'sessions');
   const sessionCounts = useMemo(() => {
@@ -593,15 +590,11 @@ const HistoryAppView: FC = () => {
         />
 
         <SettingsSheet
-          agent={settingsAgent}
           open={settingsOpen}
-          projectPath={selectedProject?.actualPath ?? null}
-          settings={settings}
           themeMode={theme.mode}
           onClose={() => {
             setSettingsOpen(false);
           }}
-          onSelectAgent={setSettingsAgent}
           onThemeChange={theme.setMode}
         />
 

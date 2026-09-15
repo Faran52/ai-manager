@@ -1,6 +1,6 @@
 {
-  "heading": "設定管理器",
-  "intro": "每個代理依各自的順序合併自己的設定檔。Claude Code 的可在此編輯，其餘按原樣讀取。",
+  "heading": "配置",
+  "intro": "按使用者、專案、本機的順序合併。",
   "scopes": "設定範圍",
   "scopeUser": "使用者",
   "scopeProject": "專案",

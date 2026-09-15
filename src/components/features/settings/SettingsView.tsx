@@ -11,12 +11,7 @@ import {
   SlidersHorizontal,
 } from 'lucide-react';
 
-import {
-  agentOption,
-  editableSettingsAgents,
-  projectScopedSettingsAgents,
-  settingsAgents,
-} from '@config/agents';
+import { projectScopedSettingsAgents } from '@config/agents';
 
 import { writeSettings } from '@lib/apis/apiClient';
 import { cn } from '@utils/cnUtils';
@@ -45,7 +40,6 @@ export interface SettingsViewProps {
   readonly settings: AsyncResource<readonly ScopeSettings[]>;
   readonly projectPath: string | null;
   readonly agent: AgentId;
-  readonly onSelectAgent: (agent: AgentId) => void;
 }
 
 interface Draft {
@@ -182,7 +176,6 @@ export const SettingsView: FC<SettingsViewProps> = ({
   settings,
   projectPath,
   agent,
-  onSelectAgent,
 }) => {
   const { t } = useTranslation('settings');
   const scopes = settings.data ?? [];
@@ -251,52 +244,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
           <p className="text-sm text-muted-foreground">{t('intro')}</p>
         </header>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <span
-            className="
-              text-figure font-semibold tracking-wider text-muted-foreground
-              uppercase
-            "
-            aria-hidden="true"
-          >
-            {t('agents')}
-          </span>
-          <nav
-            className="
-              flex w-fit flex-wrap items-center gap-1 rounded-lg bg-muted p-0.5
-            "
-            aria-label={t('agents')}
-          >
-            {settingsAgents.map((option) => {
-              const writable = editableSettingsAgents.includes(option);
-              return (
-                <Button
-                  key={option}
-                  size="sm"
-                  variant={option === agent ? 'primary' : 'ghost'}
-                  pressed={option === agent}
-                  {...writable ? {} : { title: t('readOnly') }}
-                  onClick={() => {
-                    onSelectAgent(option);
-                  }}
-                >
-                  {/*
-                    Four of the five are read-only, which used to take opening
-                    the tab to find out.
-                  */}
-                  {!writable && <Lock className="size-3 opacity-60" />}
-                  {agentOption(option).label}
-                </Button>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/*
-          Tabs on the file rather than a second pill bar: the agent picker above
-          chooses which product's settings, and these choose which of its files,
-          so the two used to look like peers when one nests inside the other.
-        */}
+        {/* Tabs on the file: the agent is fixed by the Health card this opened from. */}
         <nav
           className={cn(
             '-mb-2 flex items-center gap-1 border-b border-border',
@@ -387,12 +335,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
           "
           >
             <FilePath scope={current} />
-            {/*
-              Once. The picker already carries a lock on this agent, so a
-              full-width warning banner and a paragraph under it stated the same
-              fact a second and a third time, and the banner's colour claimed
-              something had gone wrong when nothing had.
-            */}
+            {/* One quiet line, not a warning banner: nothing has gone wrong. */}
             <p className="flex items-start gap-2 text-xs text-muted-foreground">
               <Lock className="mt-0.5 size-3.5 shrink-0" />
               <span>

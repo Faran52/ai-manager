@@ -43,6 +43,8 @@
   "trustNoRecord": "Claude Code にはこのプロジェクトの記録がないため、まだ何も設定も信頼もされていません。",
   "viewPlugins": "プラグインを表示",
   "pluginsTitle": "プラグイン",
+  "viewConfiguration": "構成を表示",
+  "configuration": "構成",
   "findingsCount_one": "セットアップの問題 {{count}} 件",
   "findingsCount_other": "セットアップの問題 {{count}} 件",
   "model": "モデル",

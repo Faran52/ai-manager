@@ -1,6 +1,6 @@
 {
-  "heading": "Settings manager",
-  "intro": "Each agent merges its own settings files, in the order it merges them. Claude Code’s are edited here; the rest are read as written.",
+  "heading": "Configuration",
+  "intro": "Merged from User, Project and Local scopes, in that order.",
   "scopes": "Settings scopes",
   "scopeUser": "User",
   "scopeProject": "Project",

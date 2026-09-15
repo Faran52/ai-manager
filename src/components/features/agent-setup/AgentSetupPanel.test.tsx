@@ -172,7 +172,8 @@ test('says when an agent has rules but no servers', async () => {
 
   expect(screen.getByText('AGENTS.md')).toBeDefined();
   expect(screen.queryByText('None')).toBeNull();
-  expect(document.querySelectorAll('[data-agent-detail] dt')).toHaveLength(1);
+  // Rules and Configuration (Codex keeps a settings file too); no MCP or Model.
+  expect(document.querySelectorAll('[data-agent-detail] dt')).toHaveLength(2);
 });
 
 test('shortens a user-wide rules path to the home tilde', async () => {
@@ -515,6 +516,41 @@ test('opens the plugin table in a dialog and closes it again', async () => {
 
   await waitFor(() => {
     expect(screen.queryByRole('switch', { name: 'review' })).toBeNull();
+  });
+});
+
+test('opens an agent\'s configuration in a dialog and closes it again', async () => {
+  vi.stubGlobal('fetch', vi.fn(() => {
+    return Promise.resolve(new Response(JSON.stringify({ scopes: [] }), { status: 200 }));
+  }));
+  render(
+    <AgentSetupPanel
+      projectSelected
+      trust={{
+        known: true,
+        trusted: true,
+        onboarded: true,
+      }}
+      sessionCounts={{}}
+      projectPath={PROJECT}
+      findings={[]}
+      usage={null}
+      plugins={[]}
+      nowMs={0}
+      onPluginToggle={noToggle}
+      setups={[setup('claude', { rules: [rule(`${PROJECT}/CLAUDE.md`)] })]}
+    />,
+  );
+
+  await expand(/Claude Code/u);
+  await userEvent.click(screen.getByRole('button', { name: 'View configuration' }));
+
+  expect(await screen.findByText(/no settings file of its own/u)).toBeDefined();
+
+  await userEvent.keyboard('{Escape}');
+
+  await waitFor(() => {
+    expect(screen.queryByText(/no settings file of its own/u)).toBeNull();
   });
 });
 

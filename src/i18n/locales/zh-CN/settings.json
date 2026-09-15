@@ -1,6 +1,6 @@
 {
-  "heading": "设置管理器",
-  "intro": "每个智能体按各自的顺序合并自己的设置文件。Claude Code 的可在此编辑，其余按原样读取。",
+  "heading": "配置",
+  "intro": "按用户、项目、本地的顺序合并。",
   "scopes": "设置作用域",
   "scopeUser": "用户",
   "scopeProject": "项目",

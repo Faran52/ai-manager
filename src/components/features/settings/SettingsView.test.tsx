@@ -61,7 +61,6 @@ test('shows the active scope with its path and rules', () => {
     <SettingsView
       settings={resource('ready', [scope('user'), scope('project'), scope('local')])}
       agent="claude"
-      onSelectAgent={noop}
       projectPath="/repo"
     />,
   );
@@ -76,7 +75,6 @@ test('switches to another scope and shows its own file', async () => {
   render(
     <SettingsView
       agent="claude"
-      onSelectAgent={noop}
       settings={resource('ready', [
         scope('user'),
         scope('project', {
@@ -105,7 +103,6 @@ test('parks an unsaved edit when the scope changes rather than discarding it', a
       settings={resource('ready', [scope('user'), scope('project')])}
       projectPath="/repo"
       agent="claude"
-      onSelectAgent={noop}
     />,
   );
 
@@ -130,7 +127,6 @@ test('nudges towards a project when only the user scope is available', () => {
       settings={resource('ready', [scope('user')])}
       projectPath={null}
       agent="claude"
-      onSelectAgent={noop}
     />,
   );
 
@@ -141,7 +137,6 @@ test('names a file that does not exist yet and the keys it will keep', () => {
   render(
     <SettingsView
       agent="claude"
-      onSelectAgent={noop}
       settings={resource('ready', [scope('user', {
         exists: false,
         preservedKeys: ['hooks', 'statusLine'],
@@ -160,7 +155,6 @@ test('refuses to save over a file it could not parse', () => {
     <SettingsView
       settings={resource('ready', [scope('user', { readable: false })])}
       agent="claude"
-      onSelectAgent={noop}
       projectPath="/repo"
     />,
   );
@@ -175,7 +169,6 @@ test('waits while loading and reports a read failure', () => {
       settings={resource('loading', undefined)}
       projectPath="/repo"
       agent="claude"
-      onSelectAgent={noop}
     />,
   );
 
@@ -190,7 +183,6 @@ test('waits while loading and reports a read failure', () => {
       }}
       projectPath="/repo"
       agent="claude"
-      onSelectAgent={noop}
     />,
   );
   expect(screen.getByText('denied')).toBeDefined();
@@ -202,7 +194,6 @@ test('says so when the chosen scope is not among the loaded ones', () => {
       settings={resource('ready', [scope('project')])}
       projectPath="/repo"
       agent="claude"
-      onSelectAgent={noop}
     />,
   );
 
@@ -221,7 +212,6 @@ test('saves an edited rule list and reloads', async () => {
       settings={resource('ready', [scope('user')], reload)}
       projectPath="/repo"
       agent="claude"
-      onSelectAgent={noop}
     />,
   );
 
@@ -245,7 +235,6 @@ test('reports a failed save', async () => {
       settings={resource('ready', [scope('user')])}
       projectPath={null}
       agent="claude"
-      onSelectAgent={noop}
     />,
   );
   await userEvent.click(screen.getByText('Save settings'));
@@ -263,7 +252,6 @@ test('edits directories and environment variables before saving', async () => {
       settings={resource('ready', [scope('user')])}
       projectPath="/repo"
       agent="claude"
-      onSelectAgent={noop}
     />,
   );
 
@@ -281,27 +269,6 @@ test('edits directories and environment variables before saving', async () => {
   expect(screen.getByText('A')).toBeDefined();
 });
 
-test('offers only the agents that keep a settings file, and reports the pick', async () => {
-  const onSelectAgent = vi.fn();
-
-  render(
-    <SettingsView
-      settings={resource('ready', [scope('user')])}
-      projectPath="/repo"
-      agent="claude"
-      onSelectAgent={onSelectAgent}
-    />,
-  );
-
-  expect(screen.getByRole('button', { name: 'Codex CLI' })).toBeDefined();
-  // Copilot configures MCP servers and rules, but keeps no settings file.
-  expect(screen.queryByRole('button', { name: 'GitHub Copilot' })).toBeNull();
-
-  await userEvent.click(screen.getByRole('button', { name: 'Codex CLI' }));
-
-  expect(onSelectAgent).toHaveBeenCalledWith('codex');
-});
-
 test('reads a surface it may not write instead of offering the editors', () => {
   render(
     <SettingsView
@@ -313,7 +280,6 @@ test('reads a surface it may not write instead of offering the editors', () => {
       })])}
       projectPath="/repo"
       agent="codex"
-      onSelectAgent={noop}
     />,
   );
 
@@ -336,7 +302,6 @@ test('says a read-only file that exists holds nothing yet', () => {
       })])}
       projectPath="/repo"
       agent="codex"
-      onSelectAgent={noop}
     />,
   );
 
@@ -354,7 +319,6 @@ test('never promises to create a file it has no way to write', () => {
       })])}
       projectPath="/repo"
       agent="codex"
-      onSelectAgent={noop}
     />,
   );
 
@@ -372,7 +336,6 @@ test('says an agent has no settings file of its own', () => {
       settings={resource('ready', [])}
       projectPath="/repo"
       agent="copilot"
-      onSelectAgent={noop}
     />,
   );
 

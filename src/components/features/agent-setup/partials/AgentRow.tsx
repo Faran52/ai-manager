@@ -3,11 +3,12 @@ import { useTranslation } from 'react-i18next';
 import {
   Blocks,
   ChevronRight,
+  SlidersHorizontal,
   TriangleAlert,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
-import { agentOption } from '@config/agents';
+import { agentOption, settingsAgents } from '@config/agents';
 
 import { cn } from '@utils/cnUtils';
 import {
@@ -41,6 +42,7 @@ export interface AgentRowProps {
   readonly open: boolean;
   readonly onToggle: () => void;
   readonly onOpenPlugins: () => void;
+  readonly onOpenSettings: () => void;
 }
 
 interface GroupProps {
@@ -110,6 +112,7 @@ export const AgentRow: FC<AgentRowProps> = ({
   open,
   onToggle,
   onOpenPlugins,
+  onOpenSettings,
 }) => {
   const { t, i18n } = useTranslation('setup');
   const isClaude = setup.agent === 'claude';
@@ -305,6 +308,14 @@ export const AgentRow: FC<AgentRowProps> = ({
                     <Button size="sm" onClick={onOpenPlugins}>
                       <Blocks className="size-3" />
                       {t('viewPlugins')}
+                    </Button>
+                  </Group>
+                )}
+                {settingsAgents.includes(setup.agent) && (
+                  <Group label={t('configuration')}>
+                    <Button size="sm" onClick={onOpenSettings}>
+                      <SlidersHorizontal className="size-3" />
+                      {t('viewConfiguration')}
                     </Button>
                   </Group>
                 )}
