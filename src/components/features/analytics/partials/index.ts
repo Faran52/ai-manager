@@ -5,6 +5,7 @@ export * from './BarList';
 export * from './BillingBreakdown';
 export * from './ModelDistribution';
 export * from './PricingCoverage';
+export * from './ProjectUsageCard';
 export * from './ProviderDistribution';
 export * from './StoragePanel';
 export * from './TopSessions';

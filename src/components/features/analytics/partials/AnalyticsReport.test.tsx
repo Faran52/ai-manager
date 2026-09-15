@@ -192,4 +192,47 @@ describe('AnalyticsReport', () => {
     expect(screen.queryByText('code-review')).toBeNull();
     expect(screen.queryByText('Explore')).toBeNull();
   });
+
+  test('shows the recorded usage in the project scope only', () => {
+    const usage = {
+      costUsd: 42,
+      inputTokens: 10,
+      outputTokens: 20,
+      cacheReadTokens: 30,
+      durationMs: 1000,
+      lastActiveMs: 0,
+      models: [],
+    };
+
+    const { unmount } = render(
+      <AnalyticsReport
+        globalAgents={[]}
+        onOpenSession={vi.fn()}
+        sessions={[]}
+        stats={STATS}
+        storage={STORAGE}
+        wholeMachine={false}
+        usage={usage}
+        nowMs={1000}
+      />,
+    );
+
+    expect(screen.getByText('Recorded usage')).toBeDefined();
+    unmount();
+
+    render(
+      <AnalyticsReport
+        globalAgents={[]}
+        onOpenSession={vi.fn()}
+        sessions={[]}
+        stats={STATS}
+        storage={STORAGE}
+        wholeMachine
+        usage={usage}
+        nowMs={1000}
+      />,
+    );
+
+    expect(screen.queryByText('Recorded usage')).toBeNull();
+  });
 });

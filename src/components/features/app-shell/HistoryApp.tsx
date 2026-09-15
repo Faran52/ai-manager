@@ -112,7 +112,8 @@ const HistoryAppView: FC = () => {
   const sessions = reportScope != null ? agentSessions : projectSessions;
   const stats = useProjectStats(view === 'analytics' ? selectedProject : null);
   const projectPath = selectedProject?.actualPath ?? '';
-  const agentSetup = useAgentSetup(view === 'health' ? projectPath : '');
+  // Analytics shows the recorded usage this call carries, so both views read it.
+  const agentSetup = useAgentSetup(view === 'health' || view === 'analytics' ? projectPath : '');
   const togglePlugin = usePluginToggle(projectPath, agentSetup.reload);
   const archives = useArchives(view === 'archive');
   const retention = useRetention(view === 'archive');
@@ -441,6 +442,8 @@ const HistoryAppView: FC = () => {
         projectAgent={selectedProject?.agent}
         sessions={sessionList}
         reportScope={reportScope}
+        usage={agentSetup.data?.usage ?? null}
+        nowMs={nowMs}
         onOpenSession={openStatsSession}
       />
     ),

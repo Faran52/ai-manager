@@ -9,6 +9,7 @@ import { AnalyticsReport } from './partials';
 
 import type { AgentId } from '@config/agents';
 import type { AsyncResource, ReportScope } from '@features/history-data';
+import type { ProjectUsage } from '@services/agents/agentsService';
 import type { SessionSummary } from '@services/history/historyService';
 import type {
   GlobalStats,
@@ -37,6 +38,9 @@ export interface AnalyticsViewProps {
   readonly sessions: readonly SessionSummary[];
   // The one agent (and profile) a global report is scoped to, from the All Projects card.
   readonly reportScope: ReportScope | null;
+  // Claude Code's own recorded usage for the project, for the project scope.
+  readonly usage?: ProjectUsage | null | undefined;
+  readonly nowMs?: number | undefined;
 }
 
 interface GlobalStatsResponse {
@@ -105,6 +109,8 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
   onOpenSession,
   sessions,
   reportScope,
+  usage,
+  nowMs,
 }) => {
   const global = useGlobalStats();
   const { t } = useTranslation('analytics');
@@ -161,6 +167,8 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
         projectAgent={projectAgent}
         sessions={sessions}
         onOpenSession={onOpenSession}
+        usage={usage}
+        nowMs={nowMs}
       />
     </div>
   );

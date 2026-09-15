@@ -21,6 +21,7 @@ import { BarList } from './BarList';
 import { BillingBreakdown } from './BillingBreakdown';
 import { ModelDistribution } from './ModelDistribution';
 import { PricingCoverage } from './PricingCoverage';
+import { ProjectUsageCard } from './ProjectUsageCard';
 import { ProviderDistribution } from './ProviderDistribution';
 import { StoragePanel } from './StoragePanel';
 import { TopSessions } from './TopSessions';
@@ -28,6 +29,7 @@ import { WorkRhythm } from './WorkRhythm';
 
 import type { AgentId } from '@config/agents';
 import type { AsyncResource } from '@features/history-data';
+import type { ProjectUsage } from '@services/agents/agentsService';
 import type { SessionSummary } from '@services/history/historyService';
 import type {
   AgentStatsUsage,
@@ -50,6 +52,10 @@ export interface AnalyticsReportProps {
   readonly projectAgent?: AgentId | undefined;
   readonly sessions: readonly SessionSummary[];
   readonly onOpenSession: (session: SessionTokenTotals) => void;
+  // What Claude Code itself recorded for this project, shown in the project
+  // scope beside the figures this app derives from the transcripts.
+  readonly usage?: ProjectUsage | null | undefined;
+  readonly nowMs?: number | undefined;
 }
 
 // The three usage lists read from the same ranked shape, and ten bars is as
@@ -145,6 +151,8 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
   projectAgent,
   sessions,
   onOpenSession,
+  usage,
+  nowMs = 0,
 }) => {
   const { t } = useTranslation('analytics');
 
@@ -163,6 +171,8 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
           <BillingBreakdown totals={selectedStats.totals} />
           <PricingCoverage totals={selectedStats.totals} />
         </div>
+
+        {!wholeMachine && usage != null && <ProjectUsageCard usage={usage} nowMs={nowMs} />}
 
         {/*
           * An agent's name, its session count and its share all sit on one

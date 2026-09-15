@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { HeartPulse } from 'lucide-react';
 import { motion } from 'motion/react';
 
-import { agentOption } from '@config/agents';
+import { agentBadgeLabel } from '@config/agents';
 
 import {
   Badge,
@@ -20,7 +20,6 @@ import {
   HealthHeader,
   PluginInventory,
   ProjectTrustCard,
-  ProjectUsageCard,
 } from './partials';
 import { agentIsConfigured, setupKey } from './utils/agentSetupUtils';
 
@@ -198,13 +197,13 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
             {unconfigured.map((setup) => {
               return (
                 <li
-                  key={setup.agent}
+                  key={setupKey(setup)}
                   data-agent={setup.agent}
                   className="
                     flex items-center gap-2 text-sm text-muted-foreground
                   "
                 >
-                  {agentOption(setup.agent).label}
+                  {agentBadgeLabel(setup.agent, setup.profile)}
                   <Badge>{t('notSetUp')}</Badge>
                 </li>
               );
@@ -212,7 +211,6 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
           </ul>
         </section>
       )}
-      {usage != null && <ProjectUsageCard usage={usage} nowMs={nowMs} />}
       <Modal
         open={pluginsOpen}
         onClose={() => {

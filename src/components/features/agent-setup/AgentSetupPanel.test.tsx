@@ -224,7 +224,7 @@ const USAGE = {
   models: [],
 };
 
-test('shows recorded spend alongside configured agents', () => {
+test('counts setup here and leaves recorded spend to the analytics tab', () => {
   render(
     <AgentSetupPanel
       projectSelected
@@ -244,11 +244,11 @@ test('shows recorded spend alongside configured agents', () => {
     />,
   );
 
-  expect(screen.getByText('Recorded usage')).toBeDefined();
+  expect(screen.queryByText('Recorded usage')).toBeNull();
   expect(screen.getByText(/1 of 1 set up/u)).toBeDefined();
 });
 
-test('shows recorded spend even when no agent is configured', () => {
+test('still counts setup when no agent is configured', () => {
   render(
     <AgentSetupPanel
       projectSelected
@@ -268,7 +268,7 @@ test('shows recorded spend even when no agent is configured', () => {
     />,
   );
 
-  expect(screen.getByText('Recorded usage')).toBeDefined();
+  expect(screen.queryByText('Recorded usage')).toBeNull();
   expect(screen.getByText(/0 of 1 set up/u)).toBeDefined();
 });
 
