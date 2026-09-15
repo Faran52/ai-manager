@@ -123,6 +123,31 @@ const journal = (...lines: readonly string[]): string => {
 };
 
 describe('parseCopilotHistory', () => {
+  const EXPECTED_ENTRIES_4 = {
+    kind: 'assistant',
+    uuid: 'r1',
+    model: 'copilot/kimi-k3',
+    blocks: [{
+      blockType: 'thinking',
+      thinking: 'Thinking about it.',
+    }],
+  };
+
+  const EXPECTED_ENTRIES_5 = {
+    kind: 'assistant',
+    uuid: 'r0',
+    model: 'kimi-k3',
+    costUsd: 12.5,
+    durationMs: 88_000,
+    usage: {
+      cacheCreationTokens: 0,
+      cacheReadTokens: 0,
+      inputTokens: 111,
+      outputTokens: 222,
+    },
+    blocks: [],
+  };
+
   test('replays set patches and appends rebuild turn records across nested paths', () => {
     const parsed = parseCopilotHistory(journal(
       setPatch(['requests', 0, 'promptTokens'], 999),
@@ -258,35 +283,43 @@ describe('parseCopilotHistory', () => {
       uuid: 'r0',
       text: 'First question',
     });
-    expect(parsed?.entries[1]).toMatchObject({
-      kind: 'assistant',
-      uuid: 'r0',
-      model: 'kimi-k3',
-      costUsd: 12.5,
-      durationMs: 88_000,
-      usage: {
-        cacheCreationTokens: 0,
-        cacheReadTokens: 0,
-        inputTokens: 111,
-        outputTokens: 222,
-      },
-      blocks: [],
-    });
+    expect(parsed?.entries[1]).toMatchObject(EXPECTED_ENTRIES_5);
     expect(parsed?.entries[2]).toMatchObject({
       kind: 'user',
       uuid: 'r1',
       text: 'Second question',
     });
-    expect(parsed?.entries[3]).toMatchObject({
-      kind: 'assistant',
-      uuid: 'r1',
-      model: 'copilot/kimi-k3',
-      blocks: [{
-        blockType: 'thinking',
-        thinking: 'Thinking about it.',
-      }],
-    });
+    expect(parsed?.entries[3]).toMatchObject(EXPECTED_ENTRIES_4);
   });
+
+  const EXPECTED_ENTRIES_3 = {
+    kind: 'assistant',
+    blocks: [
+      {
+        blockType: 'thinking',
+        thinking: 'The user wants me to refine the README',
+      },
+      {
+        blockType: 'text',
+        text: 'Intro sentence. ',
+      },
+      {
+        blockType: 'tool-use',
+        call: {
+          id: 'tc-1',
+          name: 'TodoWrite',
+        },
+      },
+      {
+        blockType: 'text',
+        text: '\n```diff\n-old\n+new\n```\n',
+      },
+      {
+        blockType: 'thinking',
+        thinking: 'Second thought starts\n\nSecond thought continues here',
+      },
+    ],
+  };
 
   test('merges progressive thinking runs and interleaved prose into ordered blocks', () => {
     const parsed = parseCopilotHistory(snapshot({
@@ -352,34 +385,7 @@ describe('parseCopilotHistory', () => {
     }));
 
     expect(parsed?.entries).toHaveLength(3);
-    expect(parsed?.entries[1]).toMatchObject({
-      kind: 'assistant',
-      blocks: [
-        {
-          blockType: 'thinking',
-          thinking: 'The user wants me to refine the README',
-        },
-        {
-          blockType: 'text',
-          text: 'Intro sentence. ',
-        },
-        {
-          blockType: 'tool-use',
-          call: {
-            id: 'tc-1',
-            name: 'TodoWrite',
-          },
-        },
-        {
-          blockType: 'text',
-          text: '\n```diff\n-old\n+new\n```\n',
-        },
-        {
-          blockType: 'thinking',
-          thinking: 'Second thought starts\n\nSecond thought continues here',
-        },
-      ],
-    });
+    expect(parsed?.entries[1]).toMatchObject(EXPECTED_ENTRIES_3);
     expect(parsed?.entries[2]).toMatchObject({
       kind: 'user',
       meta: true,
@@ -433,6 +439,160 @@ describe('parseCopilotHistory', () => {
       blocks: [],
     });
   });
+
+  const EXPECTED_CALLS = [
+    {
+      name: 'Read',
+      input: {
+        kind: 'file-read',
+        path: '/repo/spa ce/README.md',
+      },
+    },
+    {
+      name: 'Edit',
+      input: {
+        kind: 'file-edit',
+        path: '/repo/plain2.md',
+      },
+    },
+    {
+      name: 'MultiEdit',
+      input: {
+        kind: 'multi-edit',
+        edits: [],
+        path: '',
+      },
+    },
+    {
+      name: 'Bash',
+      input: {
+        kind: 'bash',
+        command: 'pnpm check',
+      },
+    },
+    {
+      name: 'Bash',
+      input: {
+        kind: 'bash',
+        command: 'pnpm fix --cached',
+      },
+    },
+    {
+      name: 'Bash',
+      input: {
+        kind: 'bash',
+        command: '',
+      },
+    },
+    {
+      name: 'Grep',
+      input: {
+        kind: 'search-files',
+        pattern: 'Licence',
+        searchPath: '**/*.md',
+        tool: 'grep',
+      },
+    },
+    {
+      name: 'Glob',
+      input: {
+        kind: 'search-files',
+        pattern: 'linteljs',
+        searchPath: 'packages/**/*.md',
+        tool: 'glob',
+      },
+    },
+    {
+      name: 'Grep',
+      input: {
+        kind: 'search-files',
+        pattern: 'npm 11',
+        searchPath: 'src/**',
+      },
+    },
+    {
+      name: 'Grep',
+      input: {
+        kind: 'search-files',
+        pattern: 'solo',
+      },
+    },
+    {
+      name: 'WebFetch',
+      input: {
+        kind: 'web-fetch',
+        url: 'https://example.com/docs',
+      },
+    },
+    {
+      name: 'WebFetch',
+      input: {
+        kind: 'web-fetch',
+        url: 'https://ext.example/page',
+      },
+    },
+    {
+      name: 'WebFetch',
+      input: {
+        kind: 'web-fetch',
+        url: '/expo/expo/issues/48091',
+      },
+    },
+    {
+      name: 'WebFetch',
+      input: {
+        kind: 'web-fetch',
+        url: '',
+      },
+    },
+    {
+      name: 'TodoWrite',
+      input: {
+        kind: 'todo-write',
+        todos: [
+          {
+            content: 'Write tests',
+            status: 'completed',
+          },
+          {
+            content: 'Pending task',
+            status: 'pending',
+          },
+          {
+            content: '3',
+            status: 'pending',
+          },
+        ],
+      },
+    },
+    {
+      name: 'Special thing',
+      input: {
+        kind: 'generic',
+        rows: [{
+          label: 'description',
+          value: 'Finished copilot_specialThing',
+        }],
+      },
+    },
+    {
+      name: 'Tool',
+      input: {
+        kind: 'generic',
+        rows: [],
+      },
+    },
+    {
+      name: 'Tool',
+      input: {
+        kind: 'generic',
+        rows: [{
+          label: 'description',
+          value: 'Broken link fallback [](broken-%zz',
+        }],
+      },
+    },
+  ];
 
   test('extracts file targets, commands, patterns, urls, and todos for each known tool', () => {
     const parsed = parseCopilotHistory(snapshot({
@@ -604,159 +764,7 @@ describe('parseCopilotHistory', () => {
       : [];
 
     expect(calls).toHaveLength(18);
-    expect(calls).toMatchObject([
-      {
-        name: 'Read',
-        input: {
-          kind: 'file-read',
-          path: '/repo/spa ce/README.md',
-        },
-      },
-      {
-        name: 'Edit',
-        input: {
-          kind: 'file-edit',
-          path: '/repo/plain2.md',
-        },
-      },
-      {
-        name: 'MultiEdit',
-        input: {
-          kind: 'multi-edit',
-          edits: [],
-          path: '',
-        },
-      },
-      {
-        name: 'Bash',
-        input: {
-          kind: 'bash',
-          command: 'pnpm check',
-        },
-      },
-      {
-        name: 'Bash',
-        input: {
-          kind: 'bash',
-          command: 'pnpm fix --cached',
-        },
-      },
-      {
-        name: 'Bash',
-        input: {
-          kind: 'bash',
-          command: '',
-        },
-      },
-      {
-        name: 'Grep',
-        input: {
-          kind: 'search-files',
-          pattern: 'Licence',
-          searchPath: '**/*.md',
-          tool: 'grep',
-        },
-      },
-      {
-        name: 'Glob',
-        input: {
-          kind: 'search-files',
-          pattern: 'linteljs',
-          searchPath: 'packages/**/*.md',
-          tool: 'glob',
-        },
-      },
-      {
-        name: 'Grep',
-        input: {
-          kind: 'search-files',
-          pattern: 'npm 11',
-          searchPath: 'src/**',
-        },
-      },
-      {
-        name: 'Grep',
-        input: {
-          kind: 'search-files',
-          pattern: 'solo',
-        },
-      },
-      {
-        name: 'WebFetch',
-        input: {
-          kind: 'web-fetch',
-          url: 'https://example.com/docs',
-        },
-      },
-      {
-        name: 'WebFetch',
-        input: {
-          kind: 'web-fetch',
-          url: 'https://ext.example/page',
-        },
-      },
-      {
-        name: 'WebFetch',
-        input: {
-          kind: 'web-fetch',
-          url: '/expo/expo/issues/48091',
-        },
-      },
-      {
-        name: 'WebFetch',
-        input: {
-          kind: 'web-fetch',
-          url: '',
-        },
-      },
-      {
-        name: 'TodoWrite',
-        input: {
-          kind: 'todo-write',
-          todos: [
-            {
-              content: 'Write tests',
-              status: 'completed',
-            },
-            {
-              content: 'Pending task',
-              status: 'pending',
-            },
-            {
-              content: '3',
-              status: 'pending',
-            },
-          ],
-        },
-      },
-      {
-        name: 'Special thing',
-        input: {
-          kind: 'generic',
-          rows: [{
-            label: 'description',
-            value: 'Finished copilot_specialThing',
-          }],
-        },
-      },
-      {
-        name: 'Tool',
-        input: {
-          kind: 'generic',
-          rows: [],
-        },
-      },
-      {
-        name: 'Tool',
-        input: {
-          kind: 'generic',
-          rows: [{
-            label: 'description',
-            value: 'Broken link fallback [](broken-%zz',
-          }],
-        },
-      },
-    ]);
+    expect(calls).toMatchObject(EXPECTED_CALLS);
 
     expect(calls[16]?.id.startsWith('rt-')).toBe(true);
     expect(calls[17]?.id.startsWith('rt-')).toBe(true);
@@ -780,6 +788,19 @@ describe('parseCopilotHistory', () => {
     });
     expect(outcomes.get(brokenId)?.filePath).toBeUndefined();
   });
+
+  const EXPECTED_ENTRIES_2 = {
+    kind: 'assistant',
+    model: 'copilot/gpt',
+    usage: {
+      inputTokens: 111,
+      outputTokens: 22,
+      cacheCreationTokens: 0,
+      cacheReadTokens: 0,
+    },
+    costUsd: 3.5,
+    durationMs: 1234,
+  };
 
   test('carries models, token usage, credits, durations, titles, previews, and identity', () => {
     const parsed = parseCopilotHistory(journal(
@@ -838,18 +859,7 @@ describe('parseCopilotHistory', () => {
       text: 'Do the thing',
       injectedText: '<environment_context>injected</environment_context>',
     });
-    expect(parsed?.entries[1]).toMatchObject({
-      kind: 'assistant',
-      model: 'copilot/gpt',
-      usage: {
-        inputTokens: 111,
-        outputTokens: 22,
-        cacheCreationTokens: 0,
-        cacheReadTokens: 0,
-      },
-      costUsd: 3.5,
-      durationMs: 1234,
-    });
+    expect(parsed?.entries[1]).toMatchObject(EXPECTED_ENTRIES_2);
     expect(parsed?.entries[2]).toMatchObject({
       kind: 'user',
       uuid: 'ra-outcomes',
@@ -868,6 +878,22 @@ describe('parseCopilotHistory', () => {
       blocks: [],
     });
   });
+
+  const EXPECTED_ENTRIES = {
+    kind: 'assistant',
+    usage: { outputTokens: 42 },
+    model: 'copilot/next',
+    blocks: [
+      {
+        blockType: 'thinking',
+        thinking: 'Fresh thinking',
+      },
+      {
+        blockType: 'text',
+        text: 'plain item',
+      },
+    ],
+  };
 
   test('skips pre-snapshot patches, rotates snapshots cleanly, and rejects snapshot-less files', () => {
     const rotated = parseCopilotHistory(journal(
@@ -929,21 +955,7 @@ describe('parseCopilotHistory', () => {
       'Replaced question',
       'assistant',
     ]);
-    expect(rotated?.entries[1]).toMatchObject({
-      kind: 'assistant',
-      usage: { outputTokens: 42 },
-      model: 'copilot/next',
-      blocks: [
-        {
-          blockType: 'thinking',
-          thinking: 'Fresh thinking',
-        },
-        {
-          blockType: 'text',
-          text: 'plain item',
-        },
-      ],
-    });
+    expect(rotated?.entries[1]).toMatchObject(EXPECTED_ENTRIES);
 
     expect(parseCopilotHistory(setPatch(['requests'], []))).toBeUndefined();
     expect(parseCopilotHistory('')).toBeUndefined();

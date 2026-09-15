@@ -17,6 +17,24 @@ const project = (agent: AgentId, sessionCount: number, profile?: string): Projec
   };
 };
 
+const EXPECTED_TALLIES = [
+  {
+    agent: 'claude',
+    profile: undefined,
+    sessions: 6,
+  },
+  {
+    agent: 'codex',
+    profile: undefined,
+    sessions: 5,
+  },
+  {
+    agent: 'claude',
+    profile: 'work',
+    sessions: 1,
+  },
+];
+
 test('tallies sessions per agent and profile, heaviest first', () => {
   const tallies = talliedBy([
     project('claude', 2),
@@ -25,21 +43,5 @@ test('tallies sessions per agent and profile, heaviest first', () => {
     project('claude', 1, 'work'),
   ]);
 
-  expect(tallies).toEqual([
-    {
-      agent: 'claude',
-      profile: undefined,
-      sessions: 6,
-    },
-    {
-      agent: 'codex',
-      profile: undefined,
-      sessions: 5,
-    },
-    {
-      agent: 'claude',
-      profile: 'work',
-      sessions: 1,
-    },
-  ]);
+  expect(tallies).toEqual(EXPECTED_TALLIES);
 });

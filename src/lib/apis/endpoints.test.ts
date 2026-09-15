@@ -729,6 +729,19 @@ describe('handlePluginCosts', () => {
 });
 
 describe('handleAgentInstallCheck', () => {
+  const EXPECTED_BODY = {
+    agents: {
+      crush: {
+        installed: true,
+        command: 'npm install -g @charmland/crush',
+      },
+      llm: {
+        installed: false,
+        command: 'pip install -U llm',
+      },
+    },
+  };
+
   test('checks every installable agent and names its command, keyed by id', async () => {
     const resolve = vi.fn((bin: string) => {
       return Promise.resolve(bin === 'crush');
@@ -738,18 +751,7 @@ describe('handleAgentInstallCheck', () => {
     const body = await jsonOf(response);
 
     expect(response.status).toBe(200);
-    expect(body).toMatchObject({
-      agents: {
-        crush: {
-          installed: true,
-          command: 'npm install -g @charmland/crush',
-        },
-        llm: {
-          installed: false,
-          command: 'pip install -U llm',
-        },
-      },
-    });
+    expect(body).toMatchObject(EXPECTED_BODY);
     expect(resolve).toHaveBeenCalledWith('crush');
   });
 });

@@ -496,6 +496,19 @@ describe('plugin endpoints', () => {
 });
 
 describe('agent install endpoints', () => {
+  const EXPECTED_INSTALL_CHECK = {
+    agents: {
+      crush: {
+        installed: true,
+        command: 'npm install -g @charmland/crush',
+      },
+      llm: {
+        installed: false,
+        command: 'pip install -U llm',
+      },
+    },
+  };
+
   test('reads which installable agents are already on this machine', async () => {
     vi.stubGlobal('fetch', vi.fn(() => {
       return jsonResponse({
@@ -512,18 +525,7 @@ describe('agent install endpoints', () => {
       });
     }));
 
-    await expect(checkAgentInstalls()).resolves.toEqual({
-      agents: {
-        crush: {
-          installed: true,
-          command: 'npm install -g @charmland/crush',
-        },
-        llm: {
-          installed: false,
-          command: 'pip install -U llm',
-        },
-      },
-    });
+    await expect(checkAgentInstalls()).resolves.toEqual(EXPECTED_INSTALL_CHECK);
   });
 
   test('posts an install request and reads the acknowledgement', async () => {

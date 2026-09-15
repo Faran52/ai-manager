@@ -36,6 +36,17 @@ describe('parseHistoryLine', () => {
     expect(parseFields({ type: 'summary' })).toBeUndefined();
   });
 
+  const EXPECTED_ENTRY_6 = {
+    kind: 'user',
+    uuid: 'u1',
+    timestamp: '2026-01-01T00:00:00Z',
+    sidechain: true,
+    meta: false,
+    text: 'hello there',
+    command: undefined,
+    outcomes: [],
+  };
+
   test('parses a plain user turn', () => {
     const entry = parseFields({
       type: 'user',
@@ -48,16 +59,7 @@ describe('parseHistoryLine', () => {
       },
     });
 
-    expect(entry).toEqual({
-      kind: 'user',
-      uuid: 'u1',
-      timestamp: '2026-01-01T00:00:00Z',
-      sidechain: true,
-      meta: false,
-      text: 'hello there',
-      command: undefined,
-      outcomes: [],
-    });
+    expect(entry).toEqual(EXPECTED_ENTRY_6);
   });
 
   test('extracts a slash command label and drops the tagged text', () => {
@@ -337,6 +339,25 @@ describe('parseHistoryLine', () => {
     });
   });
 
+  const EXPECTED_ENTRY_5 = {
+    outcomes: [
+      {
+        toolUseId: 'tu1',
+        status: 'interrupted',
+        filePath: '/srv/private/a.ts',
+        stdout: 'out',
+        stderr: 'err',
+        patch: [{
+          oldStart: 1,
+          oldLines: 2,
+          newStart: 1,
+          newLines: 3,
+          lines: ['-a', '+b'],
+        }],
+      },
+    ],
+  };
+
   test('enriches an outcome with the structured side channel', () => {
     const entry = parseFields({
       type: 'user',
@@ -373,25 +394,19 @@ describe('parseHistoryLine', () => {
       },
     });
 
-    expect(entry).toMatchObject({
-      outcomes: [
-        {
-          toolUseId: 'tu1',
-          status: 'interrupted',
-          filePath: '/srv/private/a.ts',
-          stdout: 'out',
-          stderr: 'err',
-          patch: [{
-            oldStart: 1,
-            oldLines: 2,
-            newStart: 1,
-            newLines: 3,
-            lines: ['-a', '+b'],
-          }],
-        },
-      ],
-    });
+    expect(entry).toMatchObject(EXPECTED_ENTRY_5);
   });
+
+  const EXPECTED_ENTRY_4 = {
+    outcomes: [{
+      toolUseId: 'tu1',
+      images: [{
+        mediaType: 'image/jpeg',
+        data: 'zzz',
+        url: undefined,
+      }],
+    }],
+  };
 
   test('keeps image parts and skips sources without a media type', () => {
     const entry = parseFields({
@@ -419,17 +434,22 @@ describe('parseHistoryLine', () => {
       },
     });
 
-    expect(entry).toMatchObject({
-      outcomes: [{
-        toolUseId: 'tu1',
-        images: [{
-          mediaType: 'image/jpeg',
-          data: 'zzz',
-          url: undefined,
-        }],
-      }],
-    });
+    expect(entry).toMatchObject(EXPECTED_ENTRY_4);
   });
+
+  const EXPECTED_ENTRY_3 = {
+    outcomes: [
+      {
+        toolUseId: 'tu1',
+        status: 'ok',
+        filePath: undefined,
+      },
+      {
+        toolUseId: 'tu2',
+        status: 'ok',
+      },
+    ],
+  };
 
   test('ignores the side channel when several results share one line', () => {
     const entry = parseFields({
@@ -457,23 +477,32 @@ describe('parseHistoryLine', () => {
       },
     });
 
-    expect(entry).toMatchObject({
-      outcomes: [
-        {
-          toolUseId: 'tu1',
-          status: 'ok',
-          filePath: undefined,
-        },
-        {
-          toolUseId: 'tu2',
-          status: 'ok',
-        },
-      ],
-    });
+    expect(entry).toMatchObject(EXPECTED_ENTRY_3);
   });
 });
 
 describe('assistant turns', () => {
+  const EXPECTED_ENTRY_2 = {
+    kind: 'assistant',
+    uuid: 'a1',
+    timestamp: 't1',
+    sidechain: false,
+    model: 'claude-sonnet-5',
+    stopReason: 'end_turn',
+    usage: {
+      inputTokens: 10,
+      outputTokens: 20,
+      cacheCreationTokens: 5,
+      cacheReadTokens: 7,
+    },
+    costUsd: 0.5,
+    durationMs: 1200,
+    blocks: [{
+      blockType: 'text',
+      text: 'answer',
+    }],
+  };
+
   test('maps usage metrics and cost fields', () => {
     const entry = parseFields({
       type: 'assistant',
@@ -498,26 +527,7 @@ describe('assistant turns', () => {
       },
     });
 
-    expect(entry).toEqual({
-      kind: 'assistant',
-      uuid: 'a1',
-      timestamp: 't1',
-      sidechain: false,
-      model: 'claude-sonnet-5',
-      stopReason: 'end_turn',
-      usage: {
-        inputTokens: 10,
-        outputTokens: 20,
-        cacheCreationTokens: 5,
-        cacheReadTokens: 7,
-      },
-      costUsd: 0.5,
-      durationMs: 1200,
-      blocks: [{
-        blockType: 'text',
-        text: 'answer',
-      }],
-    });
+    expect(entry).toEqual(EXPECTED_ENTRY_2);
   });
 
   test('drops blank text and thinking blocks but keeps redacted ones', () => {
@@ -572,6 +582,16 @@ describe('assistant turns', () => {
 });
 
 describe('system and summary lines', () => {
+  const EXPECTED_WITH_CONTENT = {
+    kind: 'system',
+    uuid: 's1',
+    timestamp: 't1',
+    sidechain: false,
+    level: 'info',
+    subtype: 'away_summary',
+    text: 'hooks finished',
+  };
+
   test('keeps a system line that carries content', () => {
     const withContent = parseFields({
       type: 'system',
@@ -582,15 +602,7 @@ describe('system and summary lines', () => {
       content: 'hooks finished',
     });
 
-    expect(withContent).toEqual({
-      kind: 'system',
-      uuid: 's1',
-      timestamp: 't1',
-      sidechain: false,
-      level: 'info',
-      subtype: 'away_summary',
-      text: 'hooks finished',
-    });
+    expect(withContent).toEqual(EXPECTED_WITH_CONTENT);
 
     expect(parseFields({
       type: 'system',
@@ -666,6 +678,22 @@ describe('system and summary lines', () => {
 });
 
 describe('todo and task parsing through full lines', () => {
+  const EXPECTED_BLOCK_2 = {
+    blockType: 'tool-use',
+    call: {
+      id: 'tu1',
+      name: 'TodoWrite',
+      input: {
+        kind: 'todo-write',
+        todos: [{
+          content: 'ship it',
+          status: 'in_progress',
+          activeForm: 'shipping',
+        }],
+      },
+    },
+  };
+
   test('maps TodoWrite todos and drops empty entries', () => {
     const entry = parseFields({
       type: 'assistant',
@@ -698,22 +726,35 @@ describe('todo and task parsing through full lines', () => {
 
     const block = entry?.kind === 'assistant' ? entry.blocks[0] : undefined;
 
-    expect(block).toMatchObject({
-      blockType: 'tool-use',
-      call: {
-        id: 'tu1',
-        name: 'TodoWrite',
-        input: {
-          kind: 'todo-write',
-          todos: [{
-            content: 'ship it',
-            status: 'in_progress',
-            activeForm: 'shipping',
-          }],
-        },
-      },
-    });
+    expect(block).toMatchObject(EXPECTED_BLOCK_2);
   });
+
+  const EXPECTED_BLOCK = {
+    call: {
+      input: {
+        kind: 'generic',
+        title: 'NotebookEdit',
+        rows: [
+          {
+            label: 'file',
+            value: '/n.ipynb',
+          },
+          {
+            label: 'query',
+            value: 'cell',
+          },
+          {
+            label: 'limit',
+            value: '5',
+          },
+          {
+            label: 'offset',
+            value: '10',
+          },
+        ],
+      },
+    },
+  };
 
   test('builds generic rows from recognised scalar fields plus numeric paging', () => {
     const entry = parseFields({
@@ -740,32 +781,7 @@ describe('todo and task parsing through full lines', () => {
 
     const block = entry?.kind === 'assistant' ? entry.blocks[0] : undefined;
 
-    expect(block).toMatchObject({
-      call: {
-        input: {
-          kind: 'generic',
-          title: 'NotebookEdit',
-          rows: [
-            {
-              label: 'file',
-              value: '/n.ipynb',
-            },
-            {
-              label: 'query',
-              value: 'cell',
-            },
-            {
-              label: 'limit',
-              value: '5',
-            },
-            {
-              label: 'offset',
-              value: '10',
-            },
-          ],
-        },
-      },
-    });
+    expect(block).toMatchObject(EXPECTED_BLOCK);
   });
 });
 
@@ -793,6 +809,23 @@ describe('every dedicated tool input kind through full lines', () => {
     const block = entry.blocks.at(0);
 
     return block?.blockType === 'tool-use' ? block.call.input : undefined;
+  };
+
+  const EXPECTED_CALL_INPUT = {
+    kind: 'multi-edit',
+    path: '/f',
+    edits: [
+      {
+        oldString: 'a',
+        newString: 'b',
+        replaceAll: false,
+      },
+      {
+        oldString: '',
+        newString: '',
+        replaceAll: true,
+      },
+    ],
   };
 
   test('routes each known tool name', () => {
@@ -831,22 +864,7 @@ describe('every dedicated tool input kind through full lines', () => {
           },
         ],
       }),
-    ).toEqual({
-      kind: 'multi-edit',
-      path: '/f',
-      edits: [
-        {
-          oldString: 'a',
-          newString: 'b',
-          replaceAll: false,
-        },
-        {
-          oldString: '',
-          newString: '',
-          replaceAll: true,
-        },
-      ],
-    });
+    ).toEqual(EXPECTED_CALL_INPUT);
     expect(callInput('Read', { file_path: '/r' })).toEqual({
       kind: 'file-read',
       path: '/r',
@@ -902,6 +920,20 @@ describe('every dedicated tool input kind through full lines', () => {
     });
   });
 
+  const EXPECTED_MAP = [
+    'file',
+    'path',
+    'pattern',
+    'query',
+    'url',
+    'command',
+    'description',
+    'prompt',
+    'skill',
+    'limit',
+    'offset',
+  ];
+
   test('generic rows cover every candidate slot and skip empties', () => {
     const filled = callInput('Mystery', {
       file_path: '/p',
@@ -923,19 +955,7 @@ describe('every dedicated tool input kind through full lines', () => {
 
     expect(filled.rows.map((row) => {
       return row.label;
-    })).toEqual([
-      'file',
-      'path',
-      'pattern',
-      'query',
-      'url',
-      'command',
-      'description',
-      'prompt',
-      'skill',
-      'limit',
-      'offset',
-    ]);
+    })).toEqual(EXPECTED_MAP);
 
     const empty = callInput('Mystery', {});
 
@@ -986,6 +1006,16 @@ describe('unknown assistant blocks', () => {
 });
 
 describe('parser fallback arms', () => {
+  const EXPECTED_ENTRY = {
+    kind: 'assistant',
+    usage: {
+      inputTokens: 5,
+      outputTokens: 0,
+      cacheCreationTokens: 0,
+      cacheReadTokens: 0,
+    },
+  };
+
   test('zero-fills partial usage payloads', () => {
     const entry = parseFields({
       type: 'assistant',
@@ -998,15 +1028,7 @@ describe('parser fallback arms', () => {
       },
     });
 
-    expect(entry).toMatchObject({
-      kind: 'assistant',
-      usage: {
-        inputTokens: 5,
-        outputTokens: 0,
-        cacheCreationTokens: 0,
-        cacheReadTokens: 0,
-      },
-    });
+    expect(entry).toMatchObject(EXPECTED_ENTRY);
   });
 
   test('treats string assistant content as having no blocks', () => {

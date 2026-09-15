@@ -38,6 +38,25 @@ const write = async (file: string, value: object): Promise<void> => {
 };
 
 describe('readClaudePlugins', () => {
+  const EXPECTED_PLUGINS = [
+    {
+      id: 'review@official',
+      marketplace: 'official',
+      scope: 'user',
+      enabled: true,
+      version: '1.2.0',
+      knownMarketplace: true,
+    },
+    {
+      id: 'sleeping@official',
+      marketplace: 'official',
+      scope: 'user',
+      enabled: false,
+      version: 'unknown',
+      knownMarketplace: true,
+    },
+  ];
+
   test('reports what applies here, and whether it is switched on', async () => {
     const { home, project } = await workspace();
 
@@ -61,24 +80,7 @@ describe('readClaudePlugins', () => {
     await write(join(home, '.claude', 'plugins', 'known_marketplaces.json'), { official: {} });
     await write(join(home, '.claude', 'settings.json'), { enabledPlugins: { 'review@official': true } });
 
-    expect(await readClaudePlugins(project, home)).toEqual([
-      {
-        id: 'review@official',
-        marketplace: 'official',
-        scope: 'user',
-        enabled: true,
-        version: '1.2.0',
-        knownMarketplace: true,
-      },
-      {
-        id: 'sleeping@official',
-        marketplace: 'official',
-        scope: 'user',
-        enabled: false,
-        version: 'unknown',
-        knownMarketplace: true,
-      },
-    ]);
+    expect(await readClaudePlugins(project, home)).toEqual(EXPECTED_PLUGINS);
   });
 
   test('prefers this project’s install over the user-wide one', async () => {

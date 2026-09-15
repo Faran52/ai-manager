@@ -35,6 +35,20 @@ const messageEvent = (n: number, role: string, content: JsonValue): [string, str
 };
 
 describe('OpenHands event-file discovery', () => {
+  const EXPECTED_ENTRIES = [
+    {
+      kind: 'user',
+      text: 'Question',
+    },
+    {
+      kind: 'assistant',
+      blocks: [{
+        blockType: 'text',
+        text: 'Answer',
+      }],
+    },
+  ];
+
   test('groups a conversation\'s event files into one session, oldest to newest', async () => {
     const root = await mkdtemp(join(tmpdir(), 'openhands-'));
     const eventsDir = join(root, 'conversations', 'abc123', 'events');
@@ -74,19 +88,7 @@ describe('OpenHands event-file discovery', () => {
       actualSessionId: 'abc123',
       projectId: 'unknown',
     }]);
-    expect(entries).toMatchObject([
-      {
-        kind: 'user',
-        text: 'Question',
-      },
-      {
-        kind: 'assistant',
-        blocks: [{
-          blockType: 'text',
-          text: 'Answer',
-        }],
-      },
-    ]);
+    expect(entries).toMatchObject(EXPECTED_ENTRIES);
   });
 
   test('reads the older sessions/<id>/events layout the same way', async () => {

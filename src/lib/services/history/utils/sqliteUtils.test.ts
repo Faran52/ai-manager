@@ -92,6 +92,28 @@ describe('SQLite history discovery', () => {
     expect(await listSqliteSessions('zed', [root])).toHaveLength(2);
   });
 
+  const EXPECTED_ENTRIES_5 = [
+    {
+      kind: 'user',
+      text: 'Question',
+      injectedText: '<environment_context>hidden</environment_context>',
+    },
+    {
+      kind: 'assistant',
+      model: 'cursor-model',
+      blocks: [
+        {
+          blockType: 'thinking',
+          thinking: 'Reasoning',
+        },
+        {
+          blockType: 'text',
+          text: 'Answer',
+        },
+      ],
+    },
+  ];
+
   test('decodes Cursor composers instead of exposing key-value tables', async () => {
     const root = await mkdtemp(join(tmpdir(), 'cursor-history-'));
     const filePath = join(root, 'state.vscdb');
@@ -153,28 +175,22 @@ describe('SQLite history discovery', () => {
       projectId: '/repo/cursor',
       messageCount: 2,
     }]);
-    expect(entries).toMatchObject([
-      {
-        kind: 'user',
-        text: 'Question',
-        injectedText: '<environment_context>hidden</environment_context>',
-      },
-      {
-        kind: 'assistant',
-        model: 'cursor-model',
-        blocks: [
-          {
-            blockType: 'thinking',
-            thinking: 'Reasoning',
-          },
-          {
-            blockType: 'text',
-            text: 'Answer',
-          },
-        ],
-      },
-    ]);
+    expect(entries).toMatchObject(EXPECTED_ENTRIES_5);
   });
+
+  const EXPECTED_SQLITE_ENTRIES = [
+    {
+      kind: 'user',
+      text: 'Legacy question',
+    },
+    {
+      kind: 'assistant',
+      blocks: [{
+        blockType: 'thinking',
+        thinking: 'Legacy thought',
+      }],
+    },
+  ];
 
   test('handles legacy, incomplete, and malformed Cursor records', async () => {
     const root = await mkdtemp(join(tmpdir(), 'cursor-legacy-'));
@@ -237,19 +253,7 @@ describe('SQLite history discovery', () => {
       title: undefined,
       messageCount: 1,
     }]);
-    expect(await loadSqliteEntries(sessions[0]?.filePath ?? '', [filePath])).toMatchObject([
-      {
-        kind: 'user',
-        text: 'Legacy question',
-      },
-      {
-        kind: 'assistant',
-        blocks: [{
-          blockType: 'thinking',
-          thinking: 'Legacy thought',
-        }],
-      },
-    ]);
+    expect(await loadSqliteEntries(sessions[0]?.filePath ?? '', [filePath])).toMatchObject(EXPECTED_SQLITE_ENTRIES);
   });
 
   test('accepts Cursor stores before the global header index exists', async () => {
@@ -270,6 +274,20 @@ describe('SQLite history discovery', () => {
     expect(await listSqliteSessions('cursor', [withoutTable])).toEqual([]);
     expect(await listSqliteSessions('cursor', [withoutRow])).toEqual([]);
   });
+
+  const EXPECTED_ENTRIES_4 = [
+    {
+      kind: 'user',
+      text: 'Question',
+    },
+    {
+      kind: 'assistant',
+      blocks: [{
+        blockType: 'text',
+        text: 'Answer',
+      }],
+    },
+  ];
 
   test('decodes Goose sessions and messages as one semantic session', async () => {
     const root = await mkdtemp(join(tmpdir(), 'goose-history-'));
@@ -309,19 +327,7 @@ describe('SQLite history discovery', () => {
       projectId: '/repo/goose',
       messageCount: 2,
     }]);
-    expect(entries).toMatchObject([
-      {
-        kind: 'user',
-        text: 'Question',
-      },
-      {
-        kind: 'assistant',
-        blocks: [{
-          blockType: 'text',
-          text: 'Answer',
-        }],
-      },
-    ]);
+    expect(entries).toMatchObject(EXPECTED_ENTRIES_4);
   });
 
   test('skips empty Goose sessions and tolerates missing message fields', async () => {
@@ -360,6 +366,21 @@ describe('SQLite history discovery', () => {
       messageCount: 1,
     }]);
   });
+
+  const EXPECTED_ENTRIES_3 = [
+    {
+      kind: 'user',
+      text: 'Question',
+    },
+    {
+      kind: 'assistant',
+      model: 'claude-sonnet-5',
+      blocks: [{
+        blockType: 'text',
+        text: 'Answer',
+      }],
+    },
+  ];
 
   test('reads text parts from a Crush message and skips a tool-role row', async () => {
     const root = await mkdtemp(join(tmpdir(), 'crush-history-'));
@@ -430,20 +451,7 @@ describe('SQLite history discovery', () => {
       actualSessionId: 'sess-1',
       title: 'Fix the build',
     }]);
-    expect(entries).toMatchObject([
-      {
-        kind: 'user',
-        text: 'Question',
-      },
-      {
-        kind: 'assistant',
-        model: 'claude-sonnet-5',
-        blocks: [{
-          blockType: 'text',
-          text: 'Answer',
-        }],
-      },
-    ]);
+    expect(entries).toMatchObject(EXPECTED_ENTRIES_3);
   });
 
   test('skips a Crush session left with no readable text', async () => {
@@ -555,6 +563,36 @@ describe('SQLite history discovery', () => {
     expect(await loadSqliteEntries(sessions[0]?.filePath ?? '', [filePath])).toBeUndefined();
   });
 
+  const EXPECTED_ENTRIES_2 = [
+    {
+      kind: 'system',
+      text: 'Be terse.',
+    },
+    {
+      kind: 'user',
+      text: 'Question',
+    },
+    {
+      kind: 'assistant',
+      model: 'gpt-4o-mini-2026',
+      blocks: [{
+        blockType: 'text',
+        text: 'Answer',
+      }],
+    },
+    {
+      kind: 'user',
+      text: 'Follow-up',
+    },
+    {
+      kind: 'assistant',
+      blocks: [{
+        blockType: 'text',
+        text: 'Second answer',
+      }],
+    },
+  ];
+
   test('decodes an llm conversation from its prompt/response rows, one row per exchange', async () => {
     const root = await mkdtemp(join(tmpdir(), 'llm-history-'));
     const filePath = join(root, 'logs.db');
@@ -594,35 +632,7 @@ describe('SQLite history discovery', () => {
       title: 'Question about llm',
     }]);
     // The system prompt is named once, on the first exchange, not repeated on the second.
-    expect(entries).toMatchObject([
-      {
-        kind: 'system',
-        text: 'Be terse.',
-      },
-      {
-        kind: 'user',
-        text: 'Question',
-      },
-      {
-        kind: 'assistant',
-        model: 'gpt-4o-mini-2026',
-        blocks: [{
-          blockType: 'text',
-          text: 'Answer',
-        }],
-      },
-      {
-        kind: 'user',
-        text: 'Follow-up',
-      },
-      {
-        kind: 'assistant',
-        blocks: [{
-          blockType: 'text',
-          text: 'Second answer',
-        }],
-      },
-    ]);
+    expect(entries).toMatchObject(EXPECTED_ENTRIES_2);
   });
 
   test('skips an llm conversation left with no responses', async () => {
@@ -828,6 +838,21 @@ describe('SQLite history discovery', () => {
 
     await chmod(locked, 0o700);
   });
+  const EXPECTED_ENTRIES = {
+    kind: 'assistant',
+    blocks: [{
+      blockType: 'tool-use',
+      call: {
+        id: 'call-1',
+        name: 'Read',
+        input: {
+          kind: 'file-read',
+          path: '/repo/README.md',
+        },
+      },
+    }],
+  };
+
   test('renders Cursor tool calls, their results and single thought bubbles', async () => {
     const root = await mkdtemp(join(tmpdir(), 'cursor-tools-'));
     const filePath = join(root, 'state.vscdb');
@@ -920,20 +945,7 @@ describe('SQLite history discovery', () => {
         thinking: 'Considering the request',
       }],
     });
-    expect(entries?.[2]).toMatchObject({
-      kind: 'assistant',
-      blocks: [{
-        blockType: 'tool-use',
-        call: {
-          id: 'call-1',
-          name: 'Read',
-          input: {
-            kind: 'file-read',
-            path: '/repo/README.md',
-          },
-        },
-      }],
-    });
+    expect(entries?.[2]).toMatchObject(EXPECTED_ENTRIES);
     expect(outcomes.get('call-1')).toMatchObject({
       status: 'ok',
       text: '# Title',

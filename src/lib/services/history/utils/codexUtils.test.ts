@@ -70,6 +70,16 @@ const history = (id: string, cwd: string): string => {
 };
 
 describe('parseCodexHistory', () => {
+  const EXPECTED_AT = {
+    kind: 'assistant',
+    usage: {
+      inputTokens: 10,
+      outputTokens: 3,
+      cacheCreationTokens: 2,
+      cacheReadTokens: 4,
+    },
+  };
+
   test('maps messages, tools, outcomes, compaction, and metadata', () => {
     const content = [
       '',
@@ -194,15 +204,7 @@ describe('parseCodexHistory', () => {
     expect(JSON.stringify(parsed.entries)).toContain('Checking the gate');
     expect(JSON.stringify(parsed.entries)).toContain('Conversation compacted');
     expect(JSON.stringify(parsed.entries)).toContain('raw');
-    expect(parsed.entries.at(-1)).toMatchObject({
-      kind: 'assistant',
-      usage: {
-        inputTokens: 10,
-        outputTokens: 3,
-        cacheCreationTokens: 2,
-        cacheReadTokens: 4,
-      },
-    });
+    expect(parsed.entries.at(-1)).toMatchObject(EXPECTED_AT);
   });
 
   test('uses fallbacks for incomplete history', () => {

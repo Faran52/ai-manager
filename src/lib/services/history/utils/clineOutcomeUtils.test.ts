@@ -10,24 +10,26 @@ Command executed.
 Output:
 one`;
 
+const EXPECTED_CLINE_OUTCOMES = {
+  text: '',
+  outcomes: [
+    {
+      toolUseId: 'turn-0',
+      status: 'ok',
+      text: '.DS_Store\nClaims/',
+      images: [],
+    },
+    {
+      toolUseId: 'turn-1',
+      status: 'ok',
+      text: 'Command executed.\nOutput:\none',
+      images: [],
+    },
+  ],
+};
+
 test('pairs each result with the call that ran it and keeps its output', () => {
-  expect(clineOutcomes(REAL, ['turn-0', 'turn-1'])).toEqual({
-    text: '',
-    outcomes: [
-      {
-        toolUseId: 'turn-0',
-        status: 'ok',
-        text: '.DS_Store\nClaims/',
-        images: [],
-      },
-      {
-        toolUseId: 'turn-1',
-        status: 'ok',
-        text: 'Command executed.\nOutput:\none',
-        images: [],
-      },
-    ],
-  });
+  expect(clineOutcomes(REAL, ['turn-0', 'turn-1'])).toEqual(EXPECTED_CLINE_OUTCOMES);
 });
 
 test('reads a result reported without the argument clause', () => {

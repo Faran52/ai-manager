@@ -210,6 +210,17 @@ describe('aggregateSession', () => {
     expect(aggregate.pricing[0]?.model).toBe('unknown');
   });
 
+  const EXPECTED_DAYS = {
+    '2026-07-01': {
+      messages: 2,
+      tokens: 3,
+    },
+    '2026-07-02': {
+      messages: 1,
+      tokens: 7,
+    },
+  };
+
   test('counts both sides of the conversation towards the day it happened on', () => {
     const aggregate = aggregateSession([
       user(),
@@ -220,16 +231,7 @@ describe('aggregateSession', () => {
       }),
     ], true);
 
-    expect(aggregate.days).toEqual({
-      '2026-07-01': {
-        messages: 2,
-        tokens: 3,
-      },
-      '2026-07-02': {
-        messages: 1,
-        tokens: 7,
-      },
-    });
+    expect(aggregate.days).toEqual(EXPECTED_DAYS);
   });
 
   test('ignores turns without a usable date and entries that are not turns', () => {

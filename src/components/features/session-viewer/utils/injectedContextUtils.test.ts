@@ -15,6 +15,25 @@ describe('parseInjectedContext', () => {
     expect(parseInjectedContext('<system-reminder>be good</system-reminder>')).toBeUndefined();
   });
 
+  const EXPECTED_ENVIRONMENT_2 = [
+    {
+      label: 'cwd',
+      value: '/repo',
+    },
+    {
+      label: 'shell',
+      value: 'zsh',
+    },
+    {
+      label: 'date',
+      value: '2026-08-28',
+    },
+    {
+      label: 'timezone',
+      value: 'Asia/Karachi',
+    },
+  ];
+
   test('splits a codex CLI first turn into instructions and environment', () => {
     const text = lines(
       '# AGENTS.md instructions for /repo',
@@ -35,24 +54,7 @@ describe('parseInjectedContext', () => {
     const parsed = parseInjectedContext(text);
 
     expect(parsed?.instructions).toBe('# Rules\n\n- one');
-    expect(parsed?.environment).toEqual([
-      {
-        label: 'cwd',
-        value: '/repo',
-      },
-      {
-        label: 'shell',
-        value: 'zsh',
-      },
-      {
-        label: 'date',
-        value: '2026-08-28',
-      },
-      {
-        label: 'timezone',
-        value: 'Asia/Karachi',
-      },
-    ]);
+    expect(parsed?.environment).toEqual(EXPECTED_ENVIRONMENT_2);
     expect(parsed?.plugins).toBeUndefined();
     expect(parsed?.rest).toBeUndefined();
   });
@@ -128,6 +130,17 @@ describe('parseInjectedContext', () => {
     expect(parsed?.rest).toContain('<environment_context>');
   });
 
+  const EXPECTED_ENVIRONMENT = [
+    {
+      label: 'cwd',
+      value: '/Users/x/Desktop',
+    },
+    {
+      label: 'mode',
+      value: 'ACT MODE',
+    },
+  ];
+
   test('takes the working directory and mode out of a Cline environment_details', () => {
     const parsed = parseInjectedContext(lines(
       '<environment_details>',
@@ -145,16 +158,7 @@ describe('parseInjectedContext', () => {
       '</environment_details>',
     ));
 
-    expect(parsed?.environment).toEqual([
-      {
-        label: 'cwd',
-        value: '/Users/x/Desktop',
-      },
-      {
-        label: 'mode',
-        value: 'ACT MODE',
-      },
-    ]);
+    expect(parsed?.environment).toEqual(EXPECTED_ENVIRONMENT);
     expect(parsed?.rest).toBeUndefined();
   });
 

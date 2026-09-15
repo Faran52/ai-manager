@@ -43,6 +43,18 @@ afterEach(() => {
 });
 
 describe('useAgentSetup', () => {
+  const EXPECTED_DATA = {
+    setups: [],
+    findings: [],
+    usage: null,
+    plugins: [],
+    trust: {
+      known: false,
+      trusted: false,
+      onboarded: false,
+    },
+  };
+
   test('skips fetching without a project path', async () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal('fetch', fetchSpy);
@@ -54,17 +66,7 @@ describe('useAgentSetup', () => {
     await waitFor(() => {
       expect(result.current.status).toBe('ready');
     });
-    expect(result.current.data).toEqual({
-      setups: [],
-      findings: [],
-      usage: null,
-      plugins: [],
-      trust: {
-        known: false,
-        trusted: false,
-        onboarded: false,
-      },
-    });
+    expect(result.current.data).toEqual(EXPECTED_DATA);
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 

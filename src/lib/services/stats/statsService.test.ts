@@ -84,6 +84,53 @@ describe('computeProjectStats', () => {
     await expect(computeProjectStats(dir, 'ghost')).resolves.toBeUndefined();
   });
 
+  const EXPECTED_ACTIVITY = [
+    {
+      date: '2026-07-01',
+      messages: 4,
+      tokens: 350,
+    },
+    {
+      date: '2026-07-02',
+      messages: 1,
+      tokens: 0,
+    },
+  ];
+
+  const EXPECTED_MODELS = [
+    {
+      model: 'claude-sonnet-5',
+      requests: 2,
+      inputTokens: 240,
+      outputTokens: 60,
+      costUsd: 1.5,
+      basis: 'estimated',
+    },
+    {
+      model: 'gpt-5.5',
+      requests: 1,
+      inputTokens: 40,
+      outputTokens: 10,
+      basis: 'unpriced',
+    },
+  ];
+
+  const EXPECTED_TOTALS = {
+    usageRecorded: true,
+    sessions: 2,
+    messages: 3,
+    inputTokens: 35,
+    outputTokens: 70,
+    cacheCreationTokens: 105,
+    cacheReadTokens: 140,
+    conversationTokens: 105,
+    nonConversationTokens: 245,
+    billingTokens: 350,
+    splitUnavailable: false,
+    costUsd: 1.5,
+    durationMs: 300,
+  };
+
   test('aggregates totals, models, tools, activity and top sessions', async () => {
     const dir = await newDir();
 
@@ -115,54 +162,13 @@ describe('computeProjectStats', () => {
 
     const stats = await computeProjectStats(dir, 'proj');
 
-    expect(stats?.totals).toMatchObject({
-      usageRecorded: true,
-      sessions: 2,
-      messages: 3,
-      inputTokens: 35,
-      outputTokens: 70,
-      cacheCreationTokens: 105,
-      cacheReadTokens: 140,
-      conversationTokens: 105,
-      nonConversationTokens: 245,
-      billingTokens: 350,
-      splitUnavailable: false,
-      costUsd: 1.5,
-      durationMs: 300,
-    });
-    expect(stats?.models).toEqual([
-      {
-        model: 'claude-sonnet-5',
-        requests: 2,
-        inputTokens: 240,
-        outputTokens: 60,
-        costUsd: 1.5,
-        basis: 'estimated',
-      },
-      {
-        model: 'gpt-5.5',
-        requests: 1,
-        inputTokens: 40,
-        outputTokens: 10,
-        basis: 'unpriced',
-      },
-    ]);
+    expect(stats?.totals).toMatchObject(EXPECTED_TOTALS);
+    expect(stats?.models).toEqual(EXPECTED_MODELS);
     expect(stats?.tools).toEqual([{
       tool: 'Bash',
       count: 3,
     }]);
-    expect(stats?.activity).toEqual([
-      {
-        date: '2026-07-01',
-        messages: 4,
-        tokens: 350,
-      },
-      {
-        date: '2026-07-02',
-        messages: 1,
-        tokens: 0,
-      },
-    ]);
+    expect(stats?.activity).toEqual(EXPECTED_ACTIVITY);
     expect(stats?.topSessions.map((session) => {
       return session.sessionId;
     })).toEqual(['big', 'small']);
@@ -317,6 +323,17 @@ describe('stats edge inputs', () => {
 });
 
 describe('tool comparator', () => {
+  const EXPECTED_TOOLS = [
+    {
+      tool: 'Read',
+      count: 2,
+    },
+    {
+      tool: 'Bash',
+      count: 1,
+    },
+  ];
+
   test('orders multiple tools by descending count', async () => {
     const dir = await newDir();
 
@@ -353,16 +370,7 @@ describe('tool comparator', () => {
 
     const stats = await computeProjectStats(dir, 'multi');
 
-    expect(stats?.tools).toEqual([
-      {
-        tool: 'Read',
-        count: 2,
-      },
-      {
-        tool: 'Bash',
-        count: 1,
-      },
-    ]);
+    expect(stats?.tools).toEqual(EXPECTED_TOOLS);
   });
 });
 
@@ -494,6 +502,21 @@ describe('structured and SQLite statistics', () => {
 });
 
 describe('global statistics', () => {
+  const EXPECTED_AGENTS = [
+    {
+      agent: 'codebuddy',
+      tokens: 30,
+      sessions: 1,
+      projects: 1,
+    },
+    {
+      agent: 'claude',
+      tokens: 20,
+      sessions: 1,
+      projects: 1,
+    },
+  ];
+
   test('aggregates every agent and project into matching agent totals', async () => {
     const home = await newDir();
     const claude = await newDir();
@@ -520,20 +543,7 @@ describe('global statistics', () => {
     expect(stats.totals.conversationTokens + stats.totals.nonConversationTokens)
       .toBe(stats.totals.billingTokens);
     expect(agentTokens).toBe(stats.totals.billingTokens);
-    expect(stats.agents).toEqual([
-      {
-        agent: 'codebuddy',
-        tokens: 30,
-        sessions: 1,
-        projects: 1,
-      },
-      {
-        agent: 'claude',
-        tokens: 20,
-        sessions: 1,
-        projects: 1,
-      },
-    ]);
+    expect(stats.agents).toEqual(EXPECTED_AGENTS);
     expect(stats.models[0]?.basis).toBe('estimated');
 
     // The full per-agent report `agents` reduces away is kept alongside it, for

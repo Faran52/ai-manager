@@ -562,6 +562,69 @@ describe('listOpenCodeProjects', () => {
 });
 
 describe('loadOpenCodeEntries', () => {
+  const EXPECTED_ENTRIES_3 = {
+    kind: 'assistant',
+    uuid: 'msg_3',
+    blocks: [{
+      blockType: 'tool-use',
+      call: {
+        id: 'call_10',
+        name: 'read',
+        input: {
+          kind: 'file-read',
+          path: '/x',
+        },
+      },
+    }],
+  };
+
+  const EXPECTED_ENTRIES_4 = {
+    kind: 'user',
+    uuid: 'msg_2-outcomes',
+    meta: true,
+    outcomes: [{
+      toolUseId: 'call_9',
+      status: 'ok',
+      text: 'out.txt',
+    }],
+  };
+
+  const EXPECTED_ENTRIES_5 = {
+    kind: 'assistant',
+    uuid: 'msg_2',
+    model: 'stealth/ox-alpha',
+    stopReason: 'tool-calls',
+    usage: {
+      inputTokens: 10,
+      outputTokens: 3,
+      cacheCreationTokens: 2,
+      cacheReadTokens: 4,
+    },
+    costUsd: 0.25,
+    blocks: [
+      {
+        blockType: 'thinking',
+        thinking: 'pondering',
+      },
+      {
+        blockType: 'tool-use',
+        call: {
+          id: 'call_9',
+          name: 'bash',
+          input: {
+            kind: 'bash',
+            command: 'ls -la',
+            description: undefined,
+          },
+        },
+      },
+      {
+        blockType: 'text',
+        text: 'Answer text',
+      },
+    ],
+  };
+
   it('maps text, reasoning, completed tools, and skips pending tools', async () => {
     const entries = await loadOpenCodeEntries(reference('ses_a'), [root]);
 
@@ -572,67 +635,114 @@ describe('loadOpenCodeEntries', () => {
       meta: false,
       text: 'First question',
     });
-    expect(entries?.[1]).toMatchObject({
-      kind: 'assistant',
-      uuid: 'msg_2',
-      model: 'stealth/ox-alpha',
-      stopReason: 'tool-calls',
-      usage: {
-        inputTokens: 10,
-        outputTokens: 3,
-        cacheCreationTokens: 2,
-        cacheReadTokens: 4,
+    expect(entries?.[1]).toMatchObject(EXPECTED_ENTRIES_5);
+    expect(entries?.[2]).toMatchObject(EXPECTED_ENTRIES_4);
+    expect(entries?.[3]).toMatchObject(EXPECTED_ENTRIES_3);
+  });
+
+  const EXPECTED_ENTRIES = {
+    kind: 'user',
+    outcomes: [
+      {
+        toolUseId: 'part_c1',
+        status: 'interrupted',
+        text: undefined,
       },
-      costUsd: 0.25,
-      blocks: [
-        {
-          blockType: 'thinking',
-          thinking: 'pondering',
-        },
-        {
-          blockType: 'tool-use',
-          call: {
-            id: 'call_9',
-            name: 'bash',
-            input: {
-              kind: 'bash',
-              command: 'ls -la',
-              description: undefined,
-            },
-          },
-        },
-        {
-          blockType: 'text',
-          text: 'Answer text',
-        },
-      ],
-    });
-    expect(entries?.[2]).toMatchObject({
-      kind: 'user',
-      uuid: 'msg_2-outcomes',
-      meta: true,
-      outcomes: [{
-        toolUseId: 'call_9',
+      {
+        toolUseId: 'part_c2',
+        status: 'error',
+        text: '42',
+      },
+      {
+        toolUseId: 'part_c4',
         status: 'ok',
-        text: 'out.txt',
-      }],
-    });
-    expect(entries?.[3]).toMatchObject({
-      kind: 'assistant',
-      uuid: 'msg_3',
-      blocks: [{
+        text: 'plain lines',
+      },
+      {
+        toolUseId: 'part_c5',
+        status: 'ok',
+        text: undefined,
+      },
+      {
+        toolUseId: 'call_30',
+        status: 'ok',
+        text: 'edited',
+      },
+    ],
+  };
+
+  const EXPECTED_ENTRIES_2 = {
+    kind: 'assistant',
+    uuid: 'msg_c',
+    blocks: [
+      {
         blockType: 'tool-use',
         call: {
-          id: 'call_10',
-          name: 'read',
+          id: 'part_c1',
+          name: 'tool',
           input: {
-            kind: 'file-read',
-            path: '/x',
+            kind: 'generic',
+            title: 'tool',
+            rows: [],
           },
         },
-      }],
-    });
-  });
+      },
+      {
+        blockType: 'tool-use',
+        call: {
+          id: 'part_c2',
+          name: 'custom_tool',
+          input: {
+            kind: 'generic',
+            title: 'custom_tool',
+            rows: [],
+          },
+        },
+      },
+      {
+        blockType: 'tool-use',
+        call: {
+          id: 'part_c4',
+          name: 'grep',
+          input: {
+            kind: 'search-files',
+            tool: 'grep',
+            pattern: 'y',
+            searchPath: undefined,
+          },
+        },
+      },
+      {
+        blockType: 'tool-use',
+        call: {
+          id: 'part_c5',
+          name: 'grep',
+          input: {
+            kind: 'search-files',
+            tool: 'grep',
+            pattern: 'z',
+            searchPath: undefined,
+          },
+        },
+      },
+      {
+        blockType: 'tool-use',
+        call: {
+          id: 'call_30',
+          name: 'multi-edit',
+          input: {
+            kind: 'multi-edit',
+            path: '/f',
+            edits: [{
+              oldString: 'a',
+              newString: 'b',
+              replaceAll: true,
+            }],
+          },
+        },
+      },
+    ],
+  };
 
   it('survives malformed tool parts and maps error outcomes with scalar output', async () => {
     const entries = await loadOpenCodeEntries(reference('ses_b'), [root]);
@@ -642,109 +752,50 @@ describe('loadOpenCodeEntries', () => {
       uuid: 'msg_d',
       text: 'No timestamp',
     });
-    expect(entries?.[2]).toMatchObject({
-      kind: 'assistant',
-      uuid: 'msg_c',
-      blocks: [
-        {
-          blockType: 'tool-use',
-          call: {
-            id: 'part_c1',
-            name: 'tool',
-            input: {
-              kind: 'generic',
-              title: 'tool',
-              rows: [],
-            },
-          },
-        },
-        {
-          blockType: 'tool-use',
-          call: {
-            id: 'part_c2',
-            name: 'custom_tool',
-            input: {
-              kind: 'generic',
-              title: 'custom_tool',
-              rows: [],
-            },
-          },
-        },
-        {
-          blockType: 'tool-use',
-          call: {
-            id: 'part_c4',
-            name: 'grep',
-            input: {
-              kind: 'search-files',
-              tool: 'grep',
-              pattern: 'y',
-              searchPath: undefined,
-            },
-          },
-        },
-        {
-          blockType: 'tool-use',
-          call: {
-            id: 'part_c5',
-            name: 'grep',
-            input: {
-              kind: 'search-files',
-              tool: 'grep',
-              pattern: 'z',
-              searchPath: undefined,
-            },
-          },
-        },
-        {
-          blockType: 'tool-use',
-          call: {
-            id: 'call_30',
-            name: 'multi-edit',
-            input: {
-              kind: 'multi-edit',
-              path: '/f',
-              edits: [{
-                oldString: 'a',
-                newString: 'b',
-                replaceAll: true,
-              }],
-            },
-          },
-        },
-      ],
-    });
-    expect(entries?.[3]).toMatchObject({
-      kind: 'user',
-      outcomes: [
-        {
-          toolUseId: 'part_c1',
-          status: 'interrupted',
-          text: undefined,
-        },
-        {
-          toolUseId: 'part_c2',
-          status: 'error',
-          text: '42',
-        },
-        {
-          toolUseId: 'part_c4',
-          status: 'ok',
-          text: 'plain lines',
-        },
-        {
-          toolUseId: 'part_c5',
-          status: 'ok',
-          text: undefined,
-        },
-        {
-          toolUseId: 'call_30',
-          status: 'ok',
-          text: 'edited',
-        },
-      ],
-    });
+    expect(entries?.[2]).toMatchObject(EXPECTED_ENTRIES_2);
+    expect(entries?.[3]).toMatchObject(EXPECTED_ENTRIES);
   });
+
+  const EXPECTED_GAMMA_ENTRIES = {
+    kind: 'user',
+    uuid: 'msg_f-outcomes',
+    outcomes: [
+      {
+        toolUseId: 'call_20',
+        status: 'ok',
+        text: undefined,
+      },
+      {
+        toolUseId: 'part_f2',
+        status: 'ok',
+        text: '{"bytes":5}',
+      },
+    ],
+  };
+
+  const EXPECTED_GAMMA_ENTRIES_2 = {
+    kind: 'assistant',
+    blocks: [
+      {
+        blockType: 'tool-use',
+        call: {
+          id: 'call_20',
+          name: 'webfetch',
+          input: {
+            kind: 'web-fetch',
+            url: 'https://x.dev',
+          },
+        },
+      },
+      {
+        blockType: 'tool-use',
+        call: {
+          id: 'part_f2',
+          name: 'grep',
+        },
+      },
+    ],
+  };
 
   it('truncates the folder name for previews when only meta text exists', async () => {
     const sessions = await listOpenCodeSessions('opencode', [join(root, 'data')]);
@@ -758,45 +809,8 @@ describe('loadOpenCodeEntries', () => {
     const gammaEntries = await loadOpenCodeEntries(reference('ses_e'), [root]);
 
     expect(gammaEntries).toHaveLength(3);
-    expect(gammaEntries?.[1]).toMatchObject({
-      kind: 'assistant',
-      blocks: [
-        {
-          blockType: 'tool-use',
-          call: {
-            id: 'call_20',
-            name: 'webfetch',
-            input: {
-              kind: 'web-fetch',
-              url: 'https://x.dev',
-            },
-          },
-        },
-        {
-          blockType: 'tool-use',
-          call: {
-            id: 'part_f2',
-            name: 'grep',
-          },
-        },
-      ],
-    });
-    expect(gammaEntries?.[2]).toMatchObject({
-      kind: 'user',
-      uuid: 'msg_f-outcomes',
-      outcomes: [
-        {
-          toolUseId: 'call_20',
-          status: 'ok',
-          text: undefined,
-        },
-        {
-          toolUseId: 'part_f2',
-          status: 'ok',
-          text: '{"bytes":5}',
-        },
-      ],
-    });
+    expect(gammaEntries?.[1]).toMatchObject(EXPECTED_GAMMA_ENTRIES_2);
+    expect(gammaEntries?.[2]).toMatchObject(EXPECTED_GAMMA_ENTRIES);
   });
 
   it('yields undefined when the referenced file is not a database', async () => {

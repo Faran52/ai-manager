@@ -62,6 +62,16 @@ describe('listSessions', () => {
     await expect(listSessions(dir, 'ghost')).resolves.toEqual([]);
   });
 
+  const EXPECTED_SESSIONS = {
+    id: 'aaa',
+    projectId: '-repo-main-app',
+    title: 'Login fix',
+    summary: 'Fixing the login flow',
+    preview: 'please fix the bug',
+    messageCount: 2,
+    cwd: '/repo/main-app',
+  };
+
   test('summarises sessions with titles, summaries and previews', async () => {
     const dir = await newDir();
 
@@ -104,15 +114,7 @@ describe('listSessions', () => {
     const sessions = await listSessions(dir, '-repo-main-app');
 
     expect(sessions).toHaveLength(1);
-    expect(sessions[0]).toMatchObject({
-      id: 'aaa',
-      projectId: '-repo-main-app',
-      title: 'Login fix',
-      summary: 'Fixing the login flow',
-      preview: 'please fix the bug',
-      messageCount: 2,
-      cwd: '/repo/main-app',
-    });
+    expect(sessions[0]).toMatchObject(EXPECTED_SESSIONS);
   });
 
   test('skips files without countable messages and orders by recency', async () => {

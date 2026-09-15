@@ -140,19 +140,21 @@ describe('parseStructuredHistory', () => {
     }), '.json', stamp)).toHaveLength(1);
   });
 
+  const EXPECTED_LABELLED = [
+    {
+      kind: 'user',
+      text: 'Question',
+    },
+    {
+      kind: 'assistant',
+      blocks: [{ text: 'Answer' }],
+    },
+  ];
+
   test('parses labelled Markdown and falls back to a user entry', () => {
     const labelled = parseStructuredHistory('# Human\nQuestion\n## Assistant\nAnswer', '.md', stamp);
 
-    expect(labelled).toMatchObject([
-      {
-        kind: 'user',
-        text: 'Question',
-      },
-      {
-        kind: 'assistant',
-        blocks: [{ text: 'Answer' }],
-      },
-    ]);
+    expect(labelled).toMatchObject(EXPECTED_LABELLED);
     expect(parseStructuredHistory('plain transcript', '.txt', stamp)).toMatchObject([{ kind: 'user' }]);
     expect(parseStructuredHistory('   ', '.md', stamp)).toEqual([]);
     expect(parseStructuredHistory('# User', '.md', stamp)).toEqual([]);
@@ -223,6 +225,16 @@ describe('structured history discovery', () => {
     expect(await scanStructuredSessions('aider', [join(root, 'other.md')])).toEqual([]);
   });
 
+  const EXPECTED_ANSWERED = {
+    text: '',
+    meta: true,
+    outcomes: [{
+      toolUseId: 'entry-2-0',
+      status: 'ok',
+      text: 'src/',
+    }],
+  };
+
   test('lands a Cline result on the call above it and leaves the checklist alone', () => {
     const entries = parseStructuredHistory(JSON.stringify([
       {
@@ -259,15 +271,7 @@ describe('structured history discovery', () => {
       outcomes: [],
     });
     expect(resumed?.kind).toBe('system');
-    expect(answered).toMatchObject({
-      text: '',
-      meta: true,
-      outcomes: [{
-        toolUseId: 'entry-2-0',
-        status: 'ok',
-        text: 'src/',
-      }],
-    });
+    expect(answered).toMatchObject(EXPECTED_ANSWERED);
   });
 
   test('reads one session per Cline task and names the extension that wrote it', async () => {
@@ -345,6 +349,20 @@ describe('structured history discovery', () => {
    * assuming it: role and text sit one level deeper, under .message, than the
    * reader's own top-level fields, but it already falls back to that nesting.
    */
+  const EXPECTED_ENTRIES = [
+    {
+      kind: 'user',
+      text: 'Question',
+    },
+    {
+      kind: 'assistant',
+      blocks: [{
+        blockType: 'text',
+        text: 'Answer',
+      }],
+    },
+  ];
+
   test('reads a real Pi session tree without a dedicated agent branch', async () => {
     const root = await mkdtemp(join(tmpdir(), 'pi-session-'));
     const project = join(root, 'workspace');
@@ -380,18 +398,6 @@ describe('structured history discovery', () => {
     const entries = await loadStructuredEntries(sessions[0]?.filePath ?? '');
 
     expect(sessions).toHaveLength(1);
-    expect(entries).toMatchObject([
-      {
-        kind: 'user',
-        text: 'Question',
-      },
-      {
-        kind: 'assistant',
-        blocks: [{
-          blockType: 'text',
-          text: 'Answer',
-        }],
-      },
-    ]);
+    expect(entries).toMatchObject(EXPECTED_ENTRIES);
   });
 });

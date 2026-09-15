@@ -131,6 +131,32 @@ describe('decodeCodexTool apply_patch', () => {
     }]);
   });
 
+  const EXPECTED_CHANGED = [
+    {
+      path: '/repo/a.ts',
+      added: false,
+    },
+    {
+      path: '/repo/b.ts',
+      added: false,
+    },
+  ];
+
+  const EXPECTED_INPUT_2 = {
+    kind: 'generic',
+    title: 'apply_patch',
+    rows: [
+      {
+        label: 'update',
+        value: 'a.ts',
+      },
+      {
+        label: 'update',
+        value: 'b.ts',
+      },
+    ],
+  };
+
   test('lists every file when a patch spans more than one', () => {
     const decoded = decodeCodexTool('exec', patchLiteral(
       '*** Update File: /repo/a.ts',
@@ -139,30 +165,8 @@ describe('decodeCodexTool apply_patch', () => {
       '-gone from b',
     ), 'p4');
 
-    expect(decoded.call.input).toMatchObject({
-      kind: 'generic',
-      title: 'apply_patch',
-      rows: [
-        {
-          label: 'update',
-          value: 'a.ts',
-        },
-        {
-          label: 'update',
-          value: 'b.ts',
-        },
-      ],
-    });
-    expect(decoded.changed).toEqual([
-      {
-        path: '/repo/a.ts',
-        added: false,
-      },
-      {
-        path: '/repo/b.ts',
-        added: false,
-      },
-    ]);
+    expect(decoded.call.input).toMatchObject(EXPECTED_INPUT_2);
+    expect(decoded.changed).toEqual(EXPECTED_CHANGED);
     expect(decoded.patch?.map((hunk) => {
       return hunk.file;
     })).toEqual(['/repo/a.ts', '/repo/b.ts']);
@@ -183,6 +187,18 @@ describe('decodeCodexTool apply_patch', () => {
 });
 
 describe('decodeCodexTool other helpers', () => {
+  const EXPECTED_CALL_3 = {
+    name: 'js',
+    serverName: 'node_repl',
+    input: {
+      kind: 'generic',
+      rows: [{
+        label: 'title',
+        value: 'Load guidance',
+      }],
+    },
+  };
+
   test('routes an mcp helper to a server and tool identity', () => {
     const decoded = decodeCodexTool(
       'exec',
@@ -190,17 +206,7 @@ describe('decodeCodexTool other helpers', () => {
       'm1',
     );
 
-    expect(decoded.call).toMatchObject({
-      name: 'js',
-      serverName: 'node_repl',
-      input: {
-        kind: 'generic',
-        rows: [{
-          label: 'title',
-          value: 'Load guidance',
-        }],
-      },
-    });
+    expect(decoded.call).toMatchObject(EXPECTED_CALL_3);
   });
 
   test('handles an mcp helper with no tool segment', () => {
@@ -211,6 +217,24 @@ describe('decodeCodexTool other helpers', () => {
       serverName: 'linear',
     });
   });
+
+  const EXPECTED_INPUT = {
+    kind: 'todo-write',
+    todos: [
+      {
+        content: 'Audit files',
+        status: 'completed',
+      },
+      {
+        content: 'Ship it',
+        status: 'in_progress',
+      },
+      {
+        content: 'No status yet',
+        status: 'pending',
+      },
+    ],
+  };
 
   test('reads update_plan into a checklist and tolerates a thin plan', () => {
     const full = decodeCodexTool(
@@ -225,28 +249,30 @@ describe('decodeCodexTool other helpers', () => {
     );
     const empty = decodeCodexTool('exec', 'await tools.update_plan({explanation:"nothing planned"});', 'u2');
 
-    expect(full.call.input).toEqual({
-      kind: 'todo-write',
-      todos: [
-        {
-          content: 'Audit files',
-          status: 'completed',
-        },
-        {
-          content: 'Ship it',
-          status: 'in_progress',
-        },
-        {
-          content: 'No status yet',
-          status: 'pending',
-        },
-      ],
-    });
+    expect(full.call.input).toEqual(EXPECTED_INPUT);
     expect(empty.call.input).toEqual({
       kind: 'todo-write',
       todos: [],
     });
   });
+
+  const EXPECTED_CALL_2 = {
+    name: 'write_stdin',
+    input: {
+      kind: 'generic',
+      title: 'write_stdin',
+      rows: [
+        {
+          label: 'session_id',
+          value: 's7',
+        },
+        {
+          label: 'path',
+          value: 'a\\b',
+        },
+      ],
+    },
+  };
 
   test('gives an unrecognised helper a titled card with the fields it can read', () => {
     const decoded = decodeCodexTool(
@@ -255,23 +281,7 @@ describe('decodeCodexTool other helpers', () => {
       'w1',
     );
 
-    expect(decoded.call).toMatchObject({
-      name: 'write_stdin',
-      input: {
-        kind: 'generic',
-        title: 'write_stdin',
-        rows: [
-          {
-            label: 'session_id',
-            value: 's7',
-          },
-          {
-            label: 'path',
-            value: 'a\\b',
-          },
-        ],
-      },
-    });
+    expect(decoded.call).toMatchObject(EXPECTED_CALL_2);
   });
 
   test('names an opaque call by whatever it can find', () => {
@@ -288,6 +298,17 @@ describe('decodeCodexTool other helpers', () => {
     expect(nameless.call.name).toBe('tool');
   });
 
+  const EXPECTED_CALL = {
+    name: 'wait',
+    input: {
+      kind: 'generic',
+      rows: [{
+        label: 'cell_id',
+        value: '16',
+      }],
+    },
+  };
+
   test('handles the older JSON function_call shape', () => {
     const shell = decodeCodexTool('shell', '{"command":"pwd"}', 'f1');
     const wait = decodeCodexTool('wait', '{"cell_id":"16"}', 'f2');
@@ -296,15 +317,6 @@ describe('decodeCodexTool other helpers', () => {
       kind: 'bash',
       command: 'pwd',
     });
-    expect(wait.call).toMatchObject({
-      name: 'wait',
-      input: {
-        kind: 'generic',
-        rows: [{
-          label: 'cell_id',
-          value: '16',
-        }],
-      },
-    });
+    expect(wait.call).toMatchObject(EXPECTED_CALL);
   });
 });

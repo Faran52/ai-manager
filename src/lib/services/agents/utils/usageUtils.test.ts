@@ -25,6 +25,33 @@ const homeWith = async (config: object): Promise<string> => {
 };
 
 describe('readProjectUsage', () => {
+  const EXPECTED_PROJECT_USAGE = {
+    costUsd: 12.5,
+    inputTokens: 100,
+    outputTokens: 200,
+    cacheReadTokens: 3000,
+    durationMs: 60000,
+    lastActiveMs: 1700000000000,
+    models: [
+      {
+        model: 'dear',
+        inputTokens: 90,
+        outputTokens: 180,
+        cacheReadTokens: 3000,
+        cacheCreationTokens: 7,
+        costUsd: 12,
+      },
+      {
+        model: 'cheap',
+        inputTokens: 10,
+        outputTokens: 20,
+        cacheReadTokens: 0,
+        cacheCreationTokens: 0,
+        costUsd: 0.5,
+      },
+    ],
+  };
+
   test('reads totals and orders models by what they cost', async () => {
     const home = await homeWith({
       projects: {
@@ -53,32 +80,7 @@ describe('readProjectUsage', () => {
       },
     });
 
-    expect(await readProjectUsage(PROJECT, home)).toEqual({
-      costUsd: 12.5,
-      inputTokens: 100,
-      outputTokens: 200,
-      cacheReadTokens: 3000,
-      durationMs: 60000,
-      lastActiveMs: 1700000000000,
-      models: [
-        {
-          model: 'dear',
-          inputTokens: 90,
-          outputTokens: 180,
-          cacheReadTokens: 3000,
-          cacheCreationTokens: 7,
-          costUsd: 12,
-        },
-        {
-          model: 'cheap',
-          inputTokens: 10,
-          outputTokens: 20,
-          cacheReadTokens: 0,
-          cacheCreationTokens: 0,
-          costUsd: 0.5,
-        },
-      ],
-    });
+    expect(await readProjectUsage(PROJECT, home)).toEqual(EXPECTED_PROJECT_USAGE);
   });
 
   test('reports nothing for a project with no recorded usage', async () => {

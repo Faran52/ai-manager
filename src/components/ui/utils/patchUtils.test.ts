@@ -19,21 +19,23 @@ const hunk = (lines: readonly string[]): PatchHunk => {
 };
 
 describe('rowsOf', () => {
+  const EXPECTED_ROWS = [
+    {
+      kind: 'add',
+      text: 'added',
+    },
+    {
+      kind: 'remove',
+      text: 'removed',
+    },
+    {
+      kind: 'context',
+      text: 'same',
+    },
+  ];
+
   test('classifies added, removed, and context lines by their marker', () => {
-    expect(rowsOf(hunk(['+added', '-removed', ' same']))).toEqual([
-      {
-        kind: 'add',
-        text: 'added',
-      },
-      {
-        kind: 'remove',
-        text: 'removed',
-      },
-      {
-        kind: 'context',
-        text: 'same',
-      },
-    ]);
+    expect(rowsOf(hunk(['+added', '-removed', ' same']))).toEqual(EXPECTED_ROWS);
   });
 
   test('treats an empty line as context', () => {
