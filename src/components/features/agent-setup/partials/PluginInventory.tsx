@@ -42,6 +42,12 @@ interface SortHeadProps {
   readonly children: ReactNode;
 }
 
+interface Column {
+  readonly key: SortKey;
+  readonly labelKey: string;
+  readonly className: string;
+}
+
 type CostField = 'alwaysOnTokens' | 'estimatedCostUsd' | 'onInvokeTokens';
 
 const CELL = 'truncate py-2 pe-4 text-start align-middle';
@@ -107,18 +113,6 @@ const DEFAULT_SORT: SortState = {
   direction: 'asc',
 };
 
-const compareText = (left: string, right: string): number => {
-  return left.localeCompare(right);
-};
-
-const compareNumber = (left: number, right: number): number => {
-  return left - right;
-};
-
-const stateValue = (plugin: InstalledPlugin): number => {
-  return plugin.enabled ? 1 : 0;
-};
-
 // A plugin the cost read never attributed anything to sorts as a plain zero.
 const costField = (
   byId: ReadonlyMap<string, PluginCostAttribution>,
@@ -130,27 +124,66 @@ const costField = (
 
 const COMPARATORS: Record<SortKey, Comparator> = {
   plugin: (left, right) => {
-    return compareText(left.id, right.id);
+    return left.id.localeCompare(right.id);
   },
   scope: (left, right) => {
-    return compareText(left.scope, right.scope);
+    return left.scope.localeCompare(right.scope);
   },
   version: (left, right) => {
-    return compareText(left.version, right.version);
+    return left.version.localeCompare(right.version);
   },
   alwaysOn: (left, right, byId) => {
-    return compareNumber(costField(byId, left, 'alwaysOnTokens'), costField(byId, right, 'alwaysOnTokens'));
+    return costField(byId, left, 'alwaysOnTokens') - costField(byId, right, 'alwaysOnTokens');
   },
   perInvoke: (left, right, byId) => {
-    return compareNumber(costField(byId, left, 'onInvokeTokens'), costField(byId, right, 'onInvokeTokens'));
+    return costField(byId, left, 'onInvokeTokens') - costField(byId, right, 'onInvokeTokens');
   },
   perTurns: (left, right, byId) => {
-    return compareNumber(costField(byId, left, 'estimatedCostUsd'), costField(byId, right, 'estimatedCostUsd'));
+    return costField(byId, left, 'estimatedCostUsd') - costField(byId, right, 'estimatedCostUsd');
   },
   state: (left, right) => {
-    return compareNumber(stateValue(left), stateValue(right));
+    return Number(left.enabled) - Number(right.enabled);
   },
 };
+
+// Head cells in table order; the widths sum to 100 of a table-fixed layout.
+const COLUMNS: readonly Column[] = [
+  {
+    key: 'plugin',
+    labelKey: 'plugin',
+    className: cn(HEAD, 'w-[26%] ps-2'),
+  },
+  {
+    key: 'scope',
+    labelKey: 'scope',
+    className: cn(HEAD, 'w-[10%]'),
+  },
+  {
+    key: 'version',
+    labelKey: 'version',
+    className: cn(HEAD, 'w-[13%]'),
+  },
+  {
+    key: 'alwaysOn',
+    labelKey: 'costsAlwaysOn',
+    className: cn(HEAD, NUMERIC, 'w-[13%]'),
+  },
+  {
+    key: 'perInvoke',
+    labelKey: 'costsPerInvoke',
+    className: cn(HEAD, NUMERIC, 'w-[13%]'),
+  },
+  {
+    key: 'perTurns',
+    labelKey: 'costsPerTurns',
+    className: cn(HEAD, NUMERIC, 'w-[15%]'),
+  },
+  {
+    key: 'state',
+    labelKey: 'state',
+    className: cn(HEAD, 'w-[10%]'),
+  },
+];
 
 /*
  * Position is identity, not status: a plugin keeps its row when it is toggled
@@ -283,62 +316,19 @@ export const PluginInventory: FC<PluginInventoryProps> = ({
       <table className={TABLE}>
         <thead>
           <tr>
-            <SortHead
-              sortKey="plugin"
-              sort={sort}
-              onSort={handleSort}
-              className={cn(HEAD, 'w-[26%] ps-2')}
-            >
-              {t('plugin')}
-            </SortHead>
-            <SortHead
-              sortKey="scope"
-              sort={sort}
-              onSort={handleSort}
-              className={cn(HEAD, 'w-[10%]')}
-            >
-              {t('scope')}
-            </SortHead>
-            <SortHead
-              sortKey="version"
-              sort={sort}
-              onSort={handleSort}
-              className={cn(HEAD, 'w-[13%]')}
-            >
-              {t('version')}
-            </SortHead>
-            <SortHead
-              sortKey="alwaysOn"
-              sort={sort}
-              onSort={handleSort}
-              className={cn(HEAD, NUMERIC, 'w-[13%]')}
-            >
-              {t('costsAlwaysOn')}
-            </SortHead>
-            <SortHead
-              sortKey="perInvoke"
-              sort={sort}
-              onSort={handleSort}
-              className={cn(HEAD, NUMERIC, 'w-[13%]')}
-            >
-              {t('costsPerInvoke')}
-            </SortHead>
-            <SortHead
-              sortKey="perTurns"
-              sort={sort}
-              onSort={handleSort}
-              className={cn(HEAD, NUMERIC, 'w-[15%]')}
-            >
-              {t('costsPerTurns')}
-            </SortHead>
-            <SortHead
-              sortKey="state"
-              sort={sort}
-              onSort={handleSort}
-              className={cn(HEAD, 'w-[10%]')}
-            >
-              {t('state')}
-            </SortHead>
+            {COLUMNS.map((column) => {
+              return (
+                <SortHead
+                  key={column.key}
+                  sortKey={column.key}
+                  sort={sort}
+                  onSort={handleSort}
+                  className={column.className}
+                >
+                  {t(column.labelKey)}
+                </SortHead>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
