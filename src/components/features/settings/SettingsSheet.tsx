@@ -16,6 +16,8 @@ import {
 } from '@features/theme';
 import { UpdatePreference } from '@features/updates';
 
+import { SettingRow } from './partials';
+
 import type { ThemeMode } from '@features/theme';
 import type { FC, ReactNode } from 'react';
 
@@ -53,28 +55,6 @@ const ROW = `
   hover:text-foreground
   focus-visible:ring-2 focus-visible:ring-ring
 `;
-
-const SettingRow: FC<{ readonly label: string;
-  readonly hint?: string | undefined;
-  readonly children: ReactNode; }> = ({
-  label,
-  hint,
-  children,
-}) => {
-  return (
-    <div className="
-      flex items-center gap-4 border-b border-border py-3
-      last:border-b-0
-    "
-    >
-      <div className="min-w-0 flex-1">
-        <p className="text-ui text-foreground">{label}</p>
-        {hint != null && <p className="mt-0.5 text-body text-dim">{hint}</p>}
-      </div>
-      {children}
-    </div>
-  );
-};
 
 /**
  * Settings is a sheet over what you were doing rather than a fifth

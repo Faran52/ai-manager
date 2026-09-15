@@ -1,47 +1,41 @@
-import {
-  Fragment,
-  useId,
-  useState,
-} from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
   Check,
-  FileCode2,
   Loader2,
   Lock,
   Save,
   SlidersHorizontal,
 } from 'lucide-react';
-import { motion } from 'motion/react';
 
 import { projectScopedSettingsAgents } from '@config/agents';
 
 import { writeSettings } from '@lib/apis/apiClient';
-import { cn } from '@utils/cnUtils';
 import { toErrorMessage } from '@utils/errorUtils';
 
 import {
-  Badge,
   Button,
-  controlTransition,
   EmptyState,
   Eyebrow,
   Notice,
   Spinner,
 } from '@ui/index';
 
-import { EnvEditor, RuleListEditor } from './partials';
+import {
+  EnvEditor,
+  KeyChips,
+  RuleListEditor,
+  ScopeTabs,
+  SettingsFilePath,
+} from './partials';
+import { draftOf } from './utils/settingsDraftUtils';
 
 import type { AgentId } from '@config/agents';
 import type { AsyncResource } from '@features/history-data';
-import type {
-  EnvEntry,
-  ScopeSettings,
-  SettingsPermissions,
-  SettingsScope,
-} from '@services/settings/settingsService';
+import type { ScopeSettings, SettingsScope } from '@services/settings/settingsService';
 import type { FC } from 'react';
+import type { Draft } from './utils/settingsDraftUtils';
 
 export interface SettingsViewProps {
   readonly settings: AsyncResource<readonly ScopeSettings[]>;
@@ -50,18 +44,6 @@ export interface SettingsViewProps {
   // Which Claude profile is being edited, so a save lands in that root.
   readonly profile?: string | undefined;
 }
-
-interface Draft {
-  readonly permissions: SettingsPermissions;
-  readonly env: readonly EnvEntry[];
-}
-
-// Keys, not text, the map lives outside the component where t is unavailable.
-const SCOPE_LABELS: Record<SettingsScope, string> = {
-  user: 'scopeUser',
-  project: 'scopeProject',
-  local: 'scopeLocal',
-};
 
 /**
  * The tone is the list: allow, deny and ask are opposites that used to render
@@ -87,95 +69,6 @@ const RULE_LISTS = [
   },
 ] as const;
 
-/**
- * What the scope tab counts: the rules and variables this screen manages, so a
- * file with nothing in it says so without being opened. Takes a Draft, because
- * a parked edit is counted too: reading the file while the section below it
- * showed the edited list had the tab say 0 beside a list saying 1.
- */
-const managedCount = (source: Draft): number => {
-  return source.permissions.allow.length
-    + source.permissions.deny.length
-    + source.permissions.ask.length
-    + source.permissions.additionalDirectories.length
-    + source.env.length;
-};
-
-const draftOf = (scope: ScopeSettings): Draft => {
-  return {
-    permissions: scope.permissions,
-    env: scope.env,
-  };
-};
-
-// The file path, above whichever body the scope earns. Both branches showed it,
-// and only one of them called it anything.
-const FilePath: FC<{ readonly scope: ScopeSettings }> = ({ scope }) => {
-  const { t } = useTranslation('settings');
-  return (
-    <div className="flex items-start gap-2 border-b border-border pb-3">
-      <FileCode2 className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-      <Eyebrow size="figure" className="pt-0.5">{t('file')}</Eyebrow>
-      <span className="grid min-w-0 flex-1 gap-1.5">
-        {/* A break opportunity after each slash, so a long path wraps at a
-            segment boundary instead of splitting "settings.local.json" in two. */}
-        <span className="font-mono text-body wrap-break-word text-foreground">
-          {scope.path.split('/').map((segment, index, segments) => {
-            return (
-              // The path up to this segment is unique per position, unlike the segment.
-              <Fragment key={segments.slice(0, index + 1).join('/')}>
-                {segment}
-                {index < segments.length - 1 && '/'}
-                {index < segments.length - 1 && <wbr />}
-              </Fragment>
-            );
-          })}
-        </span>
-        {/*
-          Under the path, not beside it, so the path keeps the whole row. A
-          read-only surface has no Save button, so promising it would be created
-          on save was a contradiction: three of the five agents opened on a file
-          that said it was about to be written and offered nothing to write it.
-        */}
-        {!scope.exists && (
-          <span>
-            <Badge tone="warn">
-              {scope.editable === true ? t('willBeCreated') : t('notPresent')}
-            </Badge>
-          </span>
-        )}
-      </span>
-    </div>
-  );
-};
-
-/**
- * The keys a surface reports, as chips rather than one comma-joined string: a
- * real Codex config names thirteen areas and Claude's user file sixteen keys,
- * which ran as an eleven-line paragraph of mono text.
- */
-const KeyChips: FC<{ readonly keys: readonly string[] }> = ({ keys }) => {
-  return (
-    <div className="flex flex-wrap gap-1">
-      {keys.map((key) => {
-        return <Badge key={key}>{key}</Badge>;
-      })}
-    </div>
-  );
-};
-
-const KeyList: FC<{
-  readonly label: string;
-  readonly keys: readonly string[];
-}> = ({ label, keys }) => {
-  return (
-    <div className="grid gap-1.5">
-      <span className="text-body text-muted-foreground">{label}</span>
-      <KeyChips keys={keys} />
-    </div>
-  );
-};
-
 export const SettingsView: FC<SettingsViewProps> = ({
   settings,
   projectPath,
@@ -185,9 +78,6 @@ export const SettingsView: FC<SettingsViewProps> = ({
   const { t } = useTranslation('settings');
   const scopes = settings.data ?? [];
   const [active, setActive] = useState<SettingsScope>('user');
-  // One underline for the strip, so it slides between files rather than
-  // vanishing under one tab and appearing under the next.
-  const markerId = useId();
   /**
    * Keyed by path, so switching scope parks an edit rather than discarding it.
    * A key present is the definition of unsaved: it is dropped once the file has
@@ -255,70 +145,15 @@ export const SettingsView: FC<SettingsViewProps> = ({
           <p className="text-sm text-muted-foreground">{t('intro')}</p>
         </header>
 
-        {/* Tabs on the file: the agent is fixed by the Health card this opened from. */}
-        <nav
-          className={cn(
-            'flex items-center gap-1 border-b border-border',
-            scopes.length === 0 && 'hidden',
-          )}
-          aria-label={t('scopes')}
-        >
-          {scopes.map((scope) => {
-            return (
-              <button
-                key={scope.scope}
-                type="button"
-                aria-current={scope.scope === active ? 'true' : undefined}
-                onClick={() => {
-                  setActive(scope.scope);
-                  setError(undefined);
-                }}
-                className={cn(
-                  `
-                    relative flex items-center gap-1.5 px-3 py-1.5 text-xs
-                    font-medium transition-colors
-                  `,
-                  scope.scope === active
-                    ? 'text-foreground'
-                    : `
-                      text-muted-foreground
-                      hover:text-foreground
-                    `,
-                )}
-              >
-                {scope.scope === active && (
-                  <motion.span
-                    className="absolute inset-x-0 -bottom-px h-0.5 bg-primary"
-                    layoutId={markerId}
-                    transition={controlTransition}
-                  />
-                )}
-                {t(SCOPE_LABELS[scope.scope])}
-                {/*
-                  What is in the file, so three scopes do not have to be opened
-                  one at a time to find which of them holds anything.
-                */}
-                {/*
-                  Only where the number means something: the count is of rules
-                  this screen manages, which is always zero on a read-only
-                  surface and so read as "empty" beside a file holding thirteen
-                  areas.
-                */}
-                {(!scope.exists || scope.editable === true) && (
-                  <span className="font-mono text-figure font-normal opacity-60">
-                    {scope.exists ? managedCount(drafts[scope.path] ?? scope) : t('absent')}
-                  </span>
-                )}
-                {drafts[scope.path] != null && (
-                  <span
-                    className="size-1.5 rounded-full bg-warn"
-                    title={t('unsaved')}
-                  />
-                )}
-              </button>
-            );
-          })}
-        </nav>
+        <ScopeTabs
+          scopes={scopes}
+          active={active}
+          drafts={drafts}
+          onSelect={(scope) => {
+            setActive(scope);
+            setError(undefined);
+          }}
+        />
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
@@ -348,7 +183,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
               grid gap-3 rounded-lg border border-border bg-card p-4
             "
             >
-              <FilePath scope={current} />
+              <SettingsFilePath scope={current} />
               {/* One quiet line, not a warning banner: nothing has gone wrong. */}
               <p className="
                 flex items-start gap-2 text-xs text-muted-foreground
@@ -371,7 +206,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
                         {current.exists ? t('holdsNothing') : t('notPresentHint')}
                       </p>
                     )
-                  : <KeyList label={t('holds')} keys={current.preservedKeys} />}
+                  : <KeyChips label={t('holds')} keys={current.preservedKeys} />}
               </div>
             </div>
           )}
@@ -381,7 +216,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
               grid gap-4 rounded-lg border border-border bg-card p-4
             "
             >
-              <FilePath scope={current} />
+              <SettingsFilePath scope={current} />
 
               {!current.readable && (
                 <Notice tone="warn">{t('unreadable')}</Notice>
