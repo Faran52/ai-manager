@@ -64,6 +64,7 @@ import { NavRail } from './partials/NavRail';
 import type { AgentId } from '@config/agents';
 import type { ShortcutSpec } from '@config/shortcuts';
 import type { AppView } from '@features/app-header';
+import type { ReportScope } from '@features/history-data';
 import type { ArchivedSession } from '@services/archive/archiveService';
 import type { FileEdit } from '@services/edits/editsService';
 import type {
@@ -86,14 +87,8 @@ const HistoryAppView: FC = () => {
   const visibleProjects = projects.data ?? EMPTY_PROJECTS;
   const [selectedProject, setSelectedProject] = useState<ProjectSummary | null>(null);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
-  /**
-   * The one agent a global report is scoped to, distinct from the Funnel's
-   * multi-select Projects-tree filter. `reportProfile` narrows it further to
-   * one same-agent sibling root when the agent has more than one; undefined
-   * for the plain default root, matching ProjectSummary.profile.
-   */
-  const [reportAgent, setReportAgent] = useState<AgentId | null>(null);
-  const [reportProfile, setReportProfile] = useState<string | undefined>(undefined);
+  // The one agent (and profile) a global report is scoped to; see ReportScope.
+  const [reportScope, setReportScope] = useState<ReportScope | null>(null);
   const [view, setView] = useState<AppView>('analytics');
   const projectKey = selectedProject == null
     ? ''
@@ -112,8 +107,8 @@ const HistoryAppView: FC = () => {
     return Date.now();
   });
   const projectSessions = useSessions(selectedProject, view === 'sessions');
-  const agentSessions = useAgentSessions(reportAgent, reportProfile, visibleProjects, view === 'sessions');
-  const sessions = reportAgent != null ? agentSessions : projectSessions;
+  const agentSessions = useAgentSessions(reportScope, visibleProjects, view === 'sessions');
+  const sessions = reportScope != null ? agentSessions : projectSessions;
   const stats = useProjectStats(view === 'analytics' ? selectedProject : null);
   const projectPath = selectedProject?.actualPath ?? '';
   const agentSetup = useAgentSetup(view === 'health' ? projectPath : '');
@@ -251,8 +246,7 @@ const HistoryAppView: FC = () => {
   const selectProject = useCallback((project: ProjectSummary) => {
     setSelectedProject(project);
     clearOpenSession();
-    setReportAgent(null);
-    setReportProfile(undefined);
+    setReportScope(null);
   }, [clearOpenSession]);
 
   /**
@@ -263,8 +257,7 @@ const HistoryAppView: FC = () => {
   const selectAllProjects = useCallback(() => {
     setSelectedProject(null);
     clearOpenSession();
-    setReportAgent(null);
-    setReportProfile(undefined);
+    setReportScope(null);
     setAnalyticsScope('global');
   }, [clearOpenSession, setAnalyticsScope]);
 
@@ -281,12 +274,15 @@ const HistoryAppView: FC = () => {
     setSelectedProject(null);
     clearOpenSession();
     setAnalyticsScope('global');
-
-    const same = reportAgent === agent && reportProfile === profile;
-
-    setReportAgent(same ? null : agent);
-    setReportProfile(same ? undefined : profile);
-  }, [clearOpenSession, reportAgent, reportProfile, setAnalyticsScope]);
+    setReportScope((current) => {
+      return current?.agent === agent && current.profile === profile
+        ? null
+        : {
+            agent,
+            profile,
+          };
+    });
+  }, [clearOpenSession, setAnalyticsScope]);
 
   // Every way of opening a transcript lands on the Sessions view.
   const showSession = useCallback(() => {
@@ -441,8 +437,7 @@ const HistoryAppView: FC = () => {
         scope={analyticsScope}
         projectAgent={selectedProject?.agent}
         sessions={sessionList}
-        reportAgent={reportAgent}
-        reportProfile={reportProfile}
+        reportScope={reportScope}
         onOpenSession={openStatsSession}
       />
     ),
@@ -549,8 +544,7 @@ const HistoryAppView: FC = () => {
             <SidebarPane
               wholeMachine={analyticsScope === 'global'}
               onSelectAllProjects={selectAllProjects}
-              reportAgent={reportAgent}
-              reportProfile={reportProfile}
+              reportScope={reportScope}
               onSelectReportAgent={selectReportAgent}
               showSessions={view === 'sessions'}
               showAllProjects={view === 'sessions' || view === 'analytics'}

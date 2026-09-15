@@ -47,7 +47,7 @@ const renderCard = (props: Partial<AllProjectsCardProps> = {}): AllProjectsCardP
     projects: PROJECTS,
     selected: false,
     onSelect: vi.fn(),
-    selectedAgent: null,
+    selectedScope: null,
     onSelectAgent: vi.fn(),
     ...props,
   };
@@ -93,7 +93,7 @@ describe('AllProjectsCard', () => {
   });
 
   test('selects an agent to scope the report to when its tally is clicked', async () => {
-    const { onSelectAgent } = renderCard({ selectedAgent: 'codex' });
+    const { onSelectAgent } = renderCard({ selectedScope: { agent: 'codex' } });
 
     expect(screen.getByRole('button', {
       name: /Codex CLI/u,
@@ -132,8 +132,10 @@ describe('AllProjectsCard', () => {
     ];
     const { onSelectAgent } = renderCard({
       projects,
-      selectedAgent: 'claude',
-      selectedProfile: 'Personal',
+      selectedScope: {
+        agent: 'claude',
+        profile: 'Personal',
+      },
     });
 
     expect(screen.getByRole('button', {

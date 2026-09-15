@@ -65,6 +65,7 @@ import { groupSessionsByRecency } from './utils/sessionGroupUtils';
 import { buildSessionThreads, groupThreadRuns } from './utils/sessionThreadUtils';
 
 import type { AgentId } from '@config/agents';
+import type { ReportScope } from '@features/history-data';
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
 import type { PopupPosition } from '@ui/index';
 import type {
@@ -95,13 +96,9 @@ export interface SidebarPaneProps {
   // True while the report is reading every project rather than one.
   readonly wholeMachine: boolean;
   readonly onSelectAllProjects: () => void;
-  /**
-   * The agent the All Projects card's report is scoped to, distinct from the
-   * Funnel's own multi-select Projects-tree filter below. `reportProfile`
-   * narrows it to one of that agent's same-agent sibling roots.
-   */
-  readonly reportAgent: AgentId | null;
-  readonly reportProfile?: string | undefined;
+  // The agent (and profile) the All Projects card's report is scoped to,
+  // distinct from the Funnel's own multi-select Projects-tree filter below.
+  readonly reportScope: ReportScope | null;
   readonly onSelectReportAgent: (agent: AgentId, profile?: string) => void;
   readonly onSelectSession: (session: SessionSummary) => void;
   readonly onDeleteProject: (project: ProjectSummary) => Promise<void>;
@@ -168,8 +165,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
   onSelectProject,
   wholeMachine,
   onSelectAllProjects,
-  reportAgent,
-  reportProfile,
+  reportScope,
   onSelectReportAgent,
   onSelectSession,
   onDeleteProject,
@@ -380,7 +376,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
        * fallback both call sites otherwise use.
        */
       const scopeName = selectedProject?.name
-        ?? (reportAgent != null ? agentBadgeLabel(reportAgent, reportProfile) : undefined);
+        ?? (reportScope != null ? agentBadgeLabel(reportScope.agent, reportScope.profile) : undefined);
       const result = await exportSessions(selectedSessions, scopeName ?? '', Date.now());
 
       if (result.markdown.length > 0) {
@@ -407,7 +403,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
 
   // "All Projects" plus one report agent scopes the session list the same way
   // a single project does; only picking neither leaves it unscoped.
-  const sessionsScoped = selectedProject != null || reportAgent != null;
+  const sessionsScoped = selectedProject != null || reportScope != null;
 
   useEffect(() => {
     localStorage.setItem(projectsPaneStorageKey, String(projectsWidth));
@@ -733,7 +729,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
             )}
           </button>
           <span className="flex min-w-0 items-center gap-1">
-            {reportAgent != null && (
+            {reportScope != null && (
               <span className="
                 min-w-0 truncate rounded-xs border border-border px-1 font-mono
                 text-figure text-faint
@@ -899,8 +895,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                         exitSelectionMode();
                         onSelectAllProjects();
                       }}
-                      selectedAgent={reportAgent}
-                      selectedProfile={reportProfile}
+                      selectedScope={reportScope}
                       onSelectAgent={onSelectReportAgent}
                     />
                   )}

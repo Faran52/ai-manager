@@ -5,6 +5,7 @@ import { Layers } from 'lucide-react';
 import { agentBadgeLabel } from '@config/agents';
 
 import type { AgentId } from '@config/agents';
+import type { ReportScope } from '@features/history-data';
 import type { ProjectSummary } from '@services/history/historyService';
 import type { FC } from 'react';
 
@@ -12,10 +13,8 @@ export interface AllProjectsCardProps {
   readonly projects: readonly ProjectSummary[];
   readonly selected: boolean;
   readonly onSelect: () => void;
-  // The agent a tally chip is currently scoping the report to, if any.
-  readonly selectedAgent: AgentId | null;
-  // Which of that agent's same-agent sibling roots, when it has more than one.
-  readonly selectedProfile?: string | undefined;
+  // The agent and profile a tally chip is currently scoping the report to.
+  readonly selectedScope: ReportScope | null;
   readonly onSelectAgent: (agent: AgentId, profile?: string) => void;
 }
 
@@ -61,8 +60,7 @@ export const AllProjectsCard: FC<AllProjectsCardProps> = ({
   projects,
   selected,
   onSelect,
-  selectedAgent,
-  selectedProfile,
+  selectedScope,
   onSelectAgent,
 }) => {
   const { t } = useTranslation('sidebar');
@@ -96,7 +94,9 @@ export const AllProjectsCard: FC<AllProjectsCardProps> = ({
         {tallies.length > 0 && (
           <div className="project-providers">
             {tallies.map((tally) => {
-              const active = tally.agent === selectedAgent && tally.profile === selectedProfile;
+              // An agent id is never undefined, so no scope can never match.
+              const active = tally.agent === selectedScope?.agent
+                && tally.profile === selectedScope.profile;
               const label = agentBadgeLabel(tally.agent, tally.profile);
 
               return (

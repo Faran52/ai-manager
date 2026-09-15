@@ -8,6 +8,17 @@ import type { AgentId } from '@config/agents';
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
 import type { AsyncResource } from '../utils/asyncResourceUtils';
 
+/**
+ * The one agent a global report is scoped to, distinct from the Funnel's
+ * multi-select Projects-tree filter. `profile` narrows it further to one
+ * same-agent sibling root when the agent has more than one; undefined for the
+ * plain default root, matching ProjectSummary.profile.
+ */
+export interface ReportScope {
+  readonly agent: AgentId;
+  readonly profile?: string | undefined;
+}
+
 const EMPTY: readonly SessionSummary[] = [];
 
 /*
@@ -22,11 +33,14 @@ const EMPTY: readonly SessionSummary[] = [];
  * `session.profile` afterward rather than trusted to come back pre-scoped.
  */
 export const useAgentSessions = (
-  agent: AgentId | null,
-  profile: string | undefined,
+  scope: ReportScope | null,
   projects: readonly ProjectSummary[],
   live = false,
 ): AsyncResource<readonly SessionSummary[]> => {
+  // Split out so a caller passing a fresh scope object each render (an inline
+  // literal) does not retrigger the load; only the values matter.
+  const agent = scope?.agent ?? null;
+  const profile = scope?.profile;
   const key = agent == null ? '' : `${agent}:${profile ?? ''}`;
   const agentProjects = useMemo(() => {
     return agent == null

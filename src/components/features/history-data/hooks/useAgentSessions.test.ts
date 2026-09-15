@@ -56,7 +56,7 @@ describe('useAgentSessions', () => {
     vi.stubGlobal('fetch', fetchSpy);
 
     const { result } = renderHook(() => {
-      return useAgentSessions(null, undefined, PROJECTS);
+      return useAgentSessions(null, PROJECTS);
     });
 
     await waitFor(() => {
@@ -77,7 +77,7 @@ describe('useAgentSessions', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const { result } = renderHook(() => {
-      return useAgentSessions('claude', undefined, PROJECTS);
+      return useAgentSessions({ agent: 'claude' }, PROJECTS);
     });
 
     await waitFor(() => {
@@ -123,7 +123,10 @@ describe('useAgentSessions', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const { result } = renderHook(() => {
-      return useAgentSessions('claude', 'Personal', projects);
+      return useAgentSessions({
+        agent: 'claude',
+        profile: 'Personal',
+      }, projects);
     });
 
     await waitFor(() => {
@@ -141,7 +144,7 @@ describe('useAgentSessions', () => {
     }));
 
     const { result } = renderHook(() => {
-      return useAgentSessions('claude', undefined, PROJECTS);
+      return useAgentSessions({ agent: 'claude' }, PROJECTS);
     });
 
     await waitFor(() => {

@@ -14,8 +14,7 @@ import {
 
 import { AnalyticsView } from './AnalyticsView';
 
-import type { AgentId } from '@config/agents';
-import type { AsyncResource } from '@features/history-data';
+import type { AsyncResource, ReportScope } from '@features/history-data';
 import type { GlobalStats, ProjectStats } from '@services/stats/statsService';
 import type { StorageReport } from '@services/storage/storageService';
 
@@ -156,8 +155,7 @@ const renderView = (
   status: 'loading' | 'ready' | 'error' = 'ready',
   onOpenSession = vi.fn(),
   scope: 'global' | 'project' = 'project',
-  reportAgent: AgentId | null = null,
-  reportProfile?: string,
+  reportScope: ReportScope | null = null,
 ) => {
   const view = render(
     <AnalyticsView
@@ -167,8 +165,7 @@ const renderView = (
       status={status}
       projectName="webapp"
       scope={scope}
-      reportAgent={reportAgent}
-      reportProfile={reportProfile}
+      reportScope={reportScope}
       onOpenSession={onOpenSession}
     />,
   );
@@ -201,7 +198,7 @@ test('reports on the whole machine in the global scope', async () => {
 test('scopes the global report to one agent across every project', async () => {
   const onOpenSession = vi.fn();
 
-  renderView(stats, 'ready', onOpenSession, 'global', 'claude');
+  renderView(stats, 'ready', onOpenSession, 'global', { agent: 'claude' });
 
   expect(await screen.findByText('Big one')).toBeDefined();
   expect(screen.queryByText('Provider distribution')).toBeNull();
@@ -242,14 +239,17 @@ test('scopes to one profile of an agent, not its sibling', async () => {
     }), { status: 200 }));
   }));
 
-  renderView(stats, 'ready', vi.fn(), 'global', 'claude', 'Personal');
+  renderView(stats, 'ready', vi.fn(), 'global', {
+    agent: 'claude',
+    profile: 'Personal',
+  });
 
   expect(await screen.findByText('Personal session')).toBeDefined();
   expect(screen.queryByText('Big one')).toBeNull();
 });
 
 test('falls back to the empty state for a report agent missing from the payload', async () => {
-  await settled(renderView(stats, 'ready', vi.fn(), 'global', 'codex'));
+  await settled(renderView(stats, 'ready', vi.fn(), 'global', { agent: 'codex' }));
 
   expect(screen.getByText(/No analytics for webapp/)).toBeDefined();
 });
@@ -267,7 +267,7 @@ test('shows project loading and empty states', async () => {
       status="ready"
       projectName="webapp"
       scope="project"
-      reportAgent={null}
+      reportScope={null}
       onOpenSession={vi.fn()}
     />,
   );

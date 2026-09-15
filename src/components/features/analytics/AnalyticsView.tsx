@@ -8,7 +8,7 @@ import { EmptyState, Spinner } from '@ui/index';
 import { AnalyticsReport } from './partials';
 
 import type { AgentId } from '@config/agents';
-import type { AsyncResource } from '@features/history-data';
+import type { AsyncResource, ReportScope } from '@features/history-data';
 import type { SessionSummary } from '@services/history/historyService';
 import type {
   GlobalStats,
@@ -35,10 +35,8 @@ export interface AnalyticsViewProps {
   readonly onOpenSession: (session: SessionTokenTotals) => void;
   // Named in the report's own panels, so it stays even now the board has left.
   readonly sessions: readonly SessionSummary[];
-  // The one agent a global report is scoped to, from the All Projects card.
-  readonly reportAgent: AgentId | null;
-  // Which of that agent's same-agent sibling roots, when it has more than one.
-  readonly reportProfile?: string | undefined;
+  // The one agent (and profile) a global report is scoped to, from the All Projects card.
+  readonly reportScope: ReportScope | null;
 }
 
 interface GlobalStatsResponse {
@@ -106,18 +104,17 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
   projectAgent,
   onOpenSession,
   sessions,
-  reportAgent,
-  reportProfile,
+  reportScope,
 }) => {
   const global = useGlobalStats();
   const { t } = useTranslation('analytics');
   const effectiveScope = scope === 'global' && global.status !== 'error' ? 'global' : 'project';
   // A missing entry (still loading, or a stale selection) falls through to the
   // same empty state a `null` project's stats already show below.
-  const globalStats = reportAgent == null
+  const globalStats = reportScope == null
     ? global.data
     : global.data?.perAgentProfile.find((entry) => {
-        return entry.agent === reportAgent && entry.profile === reportProfile;
+        return entry.agent === reportScope.agent && entry.profile === reportScope.profile;
       });
   const selectedStats = effectiveScope === 'global' ? globalStats : stats;
   const selectedStatus = effectiveScope === 'global' ? global.status : status;
@@ -160,7 +157,7 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
         storage={storage}
         globalAgents={globalAgents}
         wholeMachine={effectiveScope === 'global'}
-        reportAgent={reportAgent ?? undefined}
+        reportAgent={reportScope?.agent}
         projectAgent={projectAgent}
         sessions={sessions}
         onOpenSession={onOpenSession}

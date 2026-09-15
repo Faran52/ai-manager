@@ -72,7 +72,7 @@ const base = {
   onSelectAllProjects: () => {
     return undefined;
   },
-  reportAgent: null,
+  reportScope: null,
   onSelectReportAgent: () => {
     return undefined;
   },
@@ -798,7 +798,7 @@ describe('SidebarPane bulk actions', () => {
       <SidebarPane
         {...base}
         selectedProject={null}
-        reportAgent="claude"
+        reportScope={{ agent: 'claude' }}
         projects={[project('p', 'webapp')]}
         sessions={[session('a', 'Login fix')]}
       />,
@@ -1107,7 +1107,7 @@ describe('SidebarPane view scope', () => {
         {...base}
         projects={[project('p', 'webapp')]}
         selectedProject={null}
-        reportAgent="claude"
+        reportScope={{ agent: 'claude' }}
         projectNames={new Map([['claude:p', 'webapp']])}
         sessions={[session('a', 'Login fix', 'p')]}
       />,
@@ -1127,7 +1127,7 @@ describe('SidebarPane view scope', () => {
         {...base}
         projects={[project('p', 'webapp')]}
         selectedProject={null}
-        reportAgent="claude"
+        reportScope={{ agent: 'claude' }}
         projectNames={new Map()}
         sessions={[session('a', 'Login fix', 'p')]}
       />,
@@ -1160,7 +1160,7 @@ describe('SidebarPane view scope', () => {
         {...base}
         projects={[project('p', 'webapp')]}
         selectedProject={null}
-        reportAgent="claude"
+        reportScope={{ agent: 'claude' }}
         projectNames={new Map()}
         sessions={[]}
       />,
