@@ -19,13 +19,17 @@ export interface ToastContextValue {
   readonly push: (text: string, variant?: ToastVariant) => void;
 }
 
+export interface ToastProviderProps {
+  readonly children: ReactNode;
+}
+
 const ToastContext = createContext<ToastContextValue | null>(null);
 
 const AUTO_DISMISS_MS = 4_000;
 
 // The one place the stack lives: mounted once at the app root, so two
 // toasts from unrelated components never land on top of each other.
-export const ToastProvider: FC<{ readonly children: ReactNode }> = ({ children }) => {
+export const ToastProvider: FC<ToastProviderProps> = ({ children }) => {
   const [toasts, setToasts] = useState<readonly ActiveToast[]>([]);
   const nextIdRef = useRef(0);
 

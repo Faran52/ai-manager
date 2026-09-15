@@ -105,8 +105,12 @@ export interface UpdateEndpointDeps {
   readonly updateDeps?: Parameters<typeof checkForUpdate>[1] | undefined;
 }
 
+interface ProfileScoped {
+  readonly profile?: string | undefined;
+}
+
 // The request plus the profile it names, resolved to a config dir by the handler.
-type PluginActionInput = PluginActionRequest & { readonly profile?: string | undefined };
+type PluginActionInput = PluginActionRequest & ProfileScoped;
 
 const isAgent = (value: unknown): value is AgentId => {
   return typeof value === 'string' && isAgentId(value);
@@ -211,7 +215,7 @@ const isSettingsBody = (body: object): body is SettingsBody => {
  * reader and the CLI already assume, so nothing is passed down.
  */
 const claudeDirFor = (
-  body: { readonly profile?: string | undefined },
+  body: ProfileScoped,
   deps: EndpointDeps | undefined,
 ): string | undefined => {
   return body.profile == null

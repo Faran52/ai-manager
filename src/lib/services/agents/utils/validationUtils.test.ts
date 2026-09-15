@@ -15,8 +15,12 @@ import {
 
 import { validateAgentSetup } from './validationUtils';
 
-const workspace = async (): Promise<{ home: string;
-  project: string; }> => {
+interface Workspace {
+  home: string;
+  project: string;
+}
+
+const workspace = async (): Promise<Workspace> => {
   const root = await mkdtemp(join(tmpdir(), 'validate-'));
   const home = join(root, 'home');
   const project = join(root, 'project');

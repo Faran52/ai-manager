@@ -17,6 +17,11 @@ import {
 
 import { readStorageReport, reclaimStorage } from './storageService';
 
+interface ResolveOptions {
+  readonly env: Record<string, string>;
+  readonly home: string;
+}
+
 const fill = async (path: string, bytes: number): Promise<void> => {
   await mkdir(join(path, '..'), { recursive: true });
   await writeFile(path, 'x'.repeat(bytes), 'utf8');
@@ -26,8 +31,7 @@ const newHome = async (): Promise<string> => {
   return mkdtemp(join(tmpdir(), 'storage-'));
 };
 
-const options = (home: string): { readonly env: Record<string, string>;
-  readonly home: string; } => {
+const options = (home: string): ResolveOptions => {
   return {
     env: {},
     home,

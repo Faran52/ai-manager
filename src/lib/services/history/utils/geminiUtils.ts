@@ -51,6 +51,16 @@ interface ToolParts {
   readonly outcomes: readonly ToolOutcome[];
 }
 
+interface ChatRecords {
+  meta: JsonObject;
+  messages: readonly JsonObject[];
+}
+
+interface SessionFileRef {
+  dir: string;
+  file: string;
+}
+
 const CHATS_DIR = 'chats';
 const PROJECT_ROOT_FILE = '.project_root';
 const SESSION_PREFIX = 'session-';
@@ -211,8 +221,7 @@ const toolPartsOf = (record: JsonObject, fallbackId: string): ToolParts => {
  * with `{ "$set": {...} }` lines updating it and `{ "$rewindTo": ... }` markers
  * carrying nothing to show.
  */
-const readRecords = (content: string): { meta: JsonObject;
-  messages: readonly JsonObject[]; } => {
+const readRecords = (content: string): ChatRecords => {
   const whole = parseJsonContainer(content);
 
   if (isJsonObject(whole) && isJsonArray(whole.messages)) {
@@ -391,12 +400,10 @@ const projectRootOf = async (projectDir: string): Promise<string | undefined> =>
   }
 };
 
-const sessionFilesIn = async (root: string): Promise<readonly { dir: string;
-  file: string; }[]> => {
+const sessionFilesIn = async (root: string): Promise<readonly SessionFileRef[]> => {
   try {
     const projects = await readdir(root, { withFileTypes: true });
-    const found: { dir: string;
-      file: string; }[] = [];
+    const found: SessionFileRef[] = [];
 
     for (const project of projects) {
       if (!project.isDirectory()) {

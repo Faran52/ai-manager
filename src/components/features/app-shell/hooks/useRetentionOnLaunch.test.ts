@@ -13,9 +13,10 @@ import { ToastProvider } from '@ui/index';
 import { useRetentionOnLaunch } from './useRetentionOnLaunch';
 
 import type { RunRetentionResponse } from '@lib/apis/contracts';
+import type { ToastProviderProps } from '@ui/toast/ToastProvider';
 import type { ReactNode } from 'react';
 
-const wrapper = ({ children }: { readonly children: ReactNode }): ReactNode => {
+const wrapper = ({ children }: ToastProviderProps): ReactNode => {
   return createElement(ToastProvider, null, children);
 };
 

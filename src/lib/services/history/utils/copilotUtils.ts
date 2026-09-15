@@ -54,6 +54,17 @@ interface ToolInvocationParts {
   readonly outcome: ToolOutcome;
 }
 
+interface ToolParts {
+  readonly blocks: readonly AssistantBlock[];
+  readonly outcomes: readonly ToolOutcome[];
+}
+
+interface RequestEntries {
+  readonly entries: readonly HistoryEntry[];
+  readonly firstMs: number;
+  readonly lastMs: number;
+}
+
 interface ParsedCopilotHistory {
   readonly entries: readonly HistoryEntry[];
   readonly firstTimestampMs: number;
@@ -338,8 +349,7 @@ const invocationOf = (item: JsonObject, fallbackId: string): ToolInvocationParts
 const turnBlocks = (
   items: readonly JsonObject[],
   idPrefix: string,
-): { readonly blocks: readonly AssistantBlock[];
-  readonly outcomes: readonly ToolOutcome[]; } => {
+): ToolParts => {
   const blocks: AssistantBlock[] = [];
   const outcomes: ToolOutcome[] = [];
   let prose = '';
@@ -681,9 +691,7 @@ const replayJournal = (content: string): ReplayState | undefined => {
 
 const entriesFromRequests = (
   requests: readonly RequestDraft[],
-): { readonly entries: readonly HistoryEntry[];
-  readonly firstMs: number;
-  readonly lastMs: number; } => {
+): RequestEntries => {
   const entries: HistoryEntry[] = [];
   let firstMs = Number.POSITIVE_INFINITY;
   let lastMs = 0;

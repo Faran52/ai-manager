@@ -41,6 +41,15 @@ interface FixtureToolData {
   }[];
 }
 
+interface FixtureResultDetail {
+  readonly external?: string;
+  readonly path?: string;
+}
+
+interface FixtureUri {
+  readonly path?: string;
+}
+
 interface FixtureItem {
   readonly content?: FixturePart;
   readonly edits?: readonly JsonValue[];
@@ -51,14 +60,11 @@ interface FixtureItem {
   readonly name?: string;
   readonly pastTenseMessage?: string | FixturePart;
   readonly presentation?: string;
-  readonly resultDetails?: readonly {
-    readonly external?: string;
-    readonly path?: string;
-  }[];
+  readonly resultDetails?: readonly FixtureResultDetail[];
   readonly toolCallId?: string;
   readonly toolId?: string;
   readonly toolSpecificData?: FixtureToolData;
-  readonly uri?: { readonly path?: string };
+  readonly uri?: FixtureUri;
   readonly value?: string;
 }
 

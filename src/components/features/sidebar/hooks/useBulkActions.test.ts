@@ -19,9 +19,10 @@ import { ToastProvider } from '@ui/index';
 import { useBulkActions } from './useBulkActions';
 
 import type { SessionSummary } from '@services/history/historyService';
+import type { ToastProviderProps } from '@ui/toast/ToastProvider';
 import type { ReactNode } from 'react';
 
-const wrapper = ({ children }: { readonly children: ReactNode }): ReactNode => {
+const wrapper = ({ children }: ToastProviderProps): ReactNode => {
   return createElement(ToastProvider, null, children);
 };
 

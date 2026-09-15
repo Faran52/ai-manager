@@ -27,6 +27,11 @@ import {
 
 import type { ScopeSettings, SettingsPatch } from './settingsService';
 
+interface Workspace {
+  readonly home: string;
+  readonly project: string;
+}
+
 const EMPTY_PATCH: SettingsPatch = {
   permissions: {
     allow: [],
@@ -48,10 +53,7 @@ const claudeUser = async (project: string, home: string): Promise<ScopeSettings>
   return scope;
 };
 
-const newProject = async (): Promise<{
-  readonly home: string;
-  readonly project: string;
-}> => {
+const newProject = async (): Promise<Workspace> => {
   const home = await mkdtemp(join(tmpdir(), 'settings-home-'));
   const project = await mkdtemp(join(tmpdir(), 'settings-project-'));
 

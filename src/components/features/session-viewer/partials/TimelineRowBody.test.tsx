@@ -9,7 +9,11 @@ import type { HistoryEntry } from '@services/history/historyService';
 import type { FC } from 'react';
 import type { TimelineRow } from '../utils/timelineUtils';
 
-const Row: FC<{ readonly row: TimelineRow }> = ({ row }) => {
+interface RowProps {
+  readonly row: TimelineRow;
+}
+
+const Row: FC<RowProps> = ({ row }) => {
   return (
     <TimelineRowBody
       row={row}

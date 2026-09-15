@@ -15,6 +15,10 @@ import { Modal } from './Modal';
 
 import type { FC } from 'react';
 
+interface HostProps {
+  readonly tick: number;
+}
+
 const user = userEvent.setup({ pointerEventsCheck: 0 });
 
 const mount = (onClose: () => void): ReturnType<typeof render> => {
@@ -85,7 +89,7 @@ describe('Modal', () => {
   });
 
   test('keeps focus where the user put it when the parent rerenders', () => {
-    const Host: FC<{ readonly tick: number }> = ({ tick }) => {
+    const Host: FC<HostProps> = ({ tick }) => {
       return (
         <Modal
           open

@@ -20,6 +20,11 @@ import type {
 } from '../../history/types';
 import type { SessionAggregate } from './aggregateUtils';
 
+interface Counter {
+  readonly calls: () => number;
+  readonly compute: () => Promise<SessionAggregate>;
+}
+
 const usage = (input: number, output: number, creation = 0, read = 0): TokenUsage => {
   return {
     inputTokens: input,
@@ -330,8 +335,7 @@ describe('foldAggregate', () => {
   });
 });
 
-const counter = (): { readonly calls: () => number;
-  readonly compute: () => Promise<SessionAggregate>; } => {
+const counter = (): Counter => {
   let computed = 0;
 
   return {

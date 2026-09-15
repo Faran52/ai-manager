@@ -32,6 +32,11 @@ export interface ThreadRun {
   readonly parts: readonly SessionRow[];
 }
 
+interface MutableThreadRun {
+  head: SessionRow;
+  parts: SessionRow[];
+}
+
 /**
  * Rewinding a session writes the messages up to that point into a fresh file,
  * so one conversation ends up as several transcripts that all begin with the
@@ -110,8 +115,7 @@ export const buildSessionThreads = (
  * row, threaded or not yet expanded, is a run of its own with no parts.
  */
 export const groupThreadRuns = (rows: readonly SessionRow[]): readonly ThreadRun[] => {
-  const runs: { head: SessionRow;
-    parts: SessionRow[]; }[] = [];
+  const runs: MutableThreadRun[] = [];
 
   for (const row of rows) {
     const current = row.continuation ? runs.at(-1) : undefined;

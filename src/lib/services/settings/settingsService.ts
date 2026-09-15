@@ -74,6 +74,11 @@ export interface SettingsPatch {
   readonly env: readonly EnvEntry[];
 }
 
+interface SettingsFileRoot {
+  readonly root: JsonObject | undefined;
+  readonly exists: boolean;
+}
+
 export const settingsScopes: readonly SettingsScope[] = ['user', 'project', 'local'];
 
 const isScope = (value: string): value is SettingsScope => {
@@ -169,10 +174,7 @@ const permissionsFrom = (root: JsonObject): SettingsPermissions => {
   };
 };
 
-const readRoot = async (path: string): Promise<{
-  readonly root: JsonObject | undefined;
-  readonly exists: boolean;
-}> => {
+const readRoot = async (path: string): Promise<SettingsFileRoot> => {
   let text: string;
 
   try {

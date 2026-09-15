@@ -40,6 +40,11 @@ import type {
 } from '../types';
 import type { RawToolInput } from './claudeRawUtils';
 
+interface ToolParts {
+  readonly blocks: readonly AssistantBlock[];
+  readonly outcomes: readonly ToolOutcome[];
+}
+
 interface OpenCodeReference {
   readonly databasePath: string;
   readonly sessionId: string;
@@ -288,10 +293,7 @@ const userTextFrom = (parts: readonly PartRow[]): string => {
   }).filter(Boolean).join('\n\n');
 };
 
-const assistantBlocksFrom = (
-  parts: readonly PartRow[],
-): { readonly blocks: readonly AssistantBlock[];
-  readonly outcomes: readonly ToolOutcome[]; } => {
+const assistantBlocksFrom = (parts: readonly PartRow[]): ToolParts => {
   const blocks: AssistantBlock[] = [];
   const outcomes: ToolOutcome[] = [];
 

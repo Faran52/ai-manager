@@ -22,8 +22,12 @@ import {
   readAgentSetup,
 } from './setupUtils';
 
-const workspace = async (): Promise<{ home: string;
-  project: string; }> => {
+interface Workspace {
+  home: string;
+  project: string;
+}
+
+const workspace = async (): Promise<Workspace> => {
   const root = await mkdtemp(join(tmpdir(), 'setup-'));
   const home = join(root, 'home');
   const project = join(root, 'project');

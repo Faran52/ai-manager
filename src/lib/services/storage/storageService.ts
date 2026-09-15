@@ -57,6 +57,12 @@ interface Budget {
   remaining: number;
 }
 
+interface RootMeasurement {
+  readonly bytes: number;
+  readonly reclaimableBytes: number;
+  readonly entries: readonly StorageEntry[];
+}
+
 /**
  * Measuring 1.5 GB by walking every file would block the request for seconds,
  * and the answer only has to be good enough to point at what is large. Depth
@@ -138,11 +144,7 @@ const sizeOf = async (path: string, depth: number, budget: Budget): Promise<numb
  * is their sum, so a root is never traversed once for its size and again for
  * its contents.
  */
-const measureRoot = async (root: string, budget: Budget): Promise<{
-  readonly bytes: number;
-  readonly reclaimableBytes: number;
-  readonly entries: readonly StorageEntry[];
-}> => {
+const measureRoot = async (root: string, budget: Budget): Promise<RootMeasurement> => {
   let facts;
 
   try {

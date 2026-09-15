@@ -6,12 +6,16 @@ import {
 
 import { parseUpdateManifest, verifyManifestSignature } from './manifestUtils';
 
+interface SigningPair {
+  publicKey: string;
+  sign: (body: string) => Promise<string>;
+}
+
 const encodeBase64 = (bytes: Uint8Array): string => {
   return btoa(String.fromCharCode(...bytes));
 };
 
-const signingPair = async (): Promise<{ publicKey: string;
-  sign: (body: string) => Promise<string>; }> => {
+const signingPair = async (): Promise<SigningPair> => {
   const pair = await crypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify']);
   const raw = await crypto.subtle.exportKey('raw', pair.publicKey);
 

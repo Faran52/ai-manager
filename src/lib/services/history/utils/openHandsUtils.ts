@@ -23,6 +23,11 @@ interface EventGroup {
   readonly files: readonly string[];
 }
 
+interface OpenHandsSession {
+  readonly summary: SessionSummary;
+  readonly entries: readonly HistoryEntry[];
+}
+
 /*
  * OpenHands persists one JSON file per event rather than one file per
  * session: .../<conversation-id>/events/event-00001-<uuid>.json,
@@ -89,9 +94,7 @@ const conversationEntries = async (files: readonly string[], fallbackMs: number)
 const openHandsSession = async (
   agent: AgentId,
   group: EventGroup,
-): Promise<{ readonly summary: SessionSummary;
-  readonly entries: readonly HistoryEntry[]; }
-  | undefined> => {
+): Promise<OpenHandsSession | undefined> => {
   const newestFile = group.files.at(-1);
 
   /* v8 ignore next 3 -- eventGroups never produces an empty files array */

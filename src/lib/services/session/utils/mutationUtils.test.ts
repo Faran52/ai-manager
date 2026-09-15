@@ -26,6 +26,11 @@ import {
 
 import type { AgentRoots } from '@services/agents/agentsService';
 
+interface OpenCodeDataDir {
+  data: string;
+  home: string;
+}
+
 interface MutationFixtures {
   readonly roots: AgentRoots;
   readonly claudeFile: string;
@@ -236,8 +241,7 @@ describe('session deletion', () => {
 });
 
 describe('OpenCode session deletion', () => {
-  const dataDir = async (): Promise<{ data: string;
-    home: string; }> => {
+  const dataDir = async (): Promise<OpenCodeDataDir> => {
     const home = await mkdtemp(join(tmpdir(), 'mutations-opencode-home-'));
     const data = join(home, 'data');
 

@@ -8,6 +8,13 @@ export interface BinaryRunResult {
   readonly output: string;
 }
 
+export interface BinaryRunOptions {
+  readonly cwd?: string;
+  // Laid over the inherited environment, for a CLI steered by a variable.
+  readonly env?: Readonly<Record<string, string>> | undefined;
+  readonly timeoutMs: number;
+}
+
 /**
  * A binary lands wherever its installer put it (npm global, Homebrew,
  * ~/.local/bin), so its directory cannot be hardcoded. Walking PATH here keeps
@@ -42,10 +49,7 @@ export const resolveBinary = async (name: string): Promise<string | undefined> =
 export const runBinary = (
   binary: string,
   args: readonly string[],
-  options: { readonly cwd?: string;
-    // Laid over the inherited environment, for a CLI steered by a variable.
-    readonly env?: Readonly<Record<string, string>> | undefined;
-    readonly timeoutMs: number; },
+  options: BinaryRunOptions,
 ): Promise<BinaryRunResult> => {
   return new Promise((resolve) => {
     execFile(binary, [...args], {

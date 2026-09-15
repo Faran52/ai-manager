@@ -18,13 +18,18 @@ import { ToastProvider, useToast } from './ToastProvider';
 
 import type { ReactNode } from 'react';
 import type { ToastVariant } from './Toast';
+import type { ToastProviderProps } from './ToastProvider';
 
-const wrapper = ({ children }: { readonly children: ReactNode }): ReactNode => {
+interface PusherProps {
+  readonly text: string;
+  readonly variant?: ToastVariant;
+}
+
+const wrapper = ({ children }: ToastProviderProps): ReactNode => {
   return <ToastProvider>{children}</ToastProvider>;
 };
 
-const Pusher = ({ text, variant }: { readonly text: string;
-  readonly variant?: ToastVariant; }): ReactNode => {
+const Pusher = ({ text, variant }: PusherProps): ReactNode => {
   const { push } = useToast();
 
   return (

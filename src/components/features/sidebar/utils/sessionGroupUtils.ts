@@ -7,9 +7,19 @@ export interface RecencyGroup<T> {
   readonly count: number;
 }
 
+interface GroupableSession {
+  readonly lastTimestampMs: number;
+}
+
 interface GroupableRow {
-  readonly session: { readonly lastTimestampMs: number };
+  readonly session: GroupableSession;
   readonly continuation: boolean;
+}
+
+interface MutableRecencyGroup<T> {
+  bucket: RecencyBucket;
+  rows: T[];
+  count: number;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -36,11 +46,7 @@ export const groupSessionsByRecency = <T extends GroupableRow>(
   rows: readonly T[],
   nowMs: number,
 ): readonly RecencyGroup<T>[] => {
-  const groups: {
-    bucket: RecencyBucket;
-    rows: T[];
-    count: number;
-  }[] = [];
+  const groups: MutableRecencyGroup<T>[] = [];
 
   for (const row of rows) {
     const previous = groups.at(-1);
