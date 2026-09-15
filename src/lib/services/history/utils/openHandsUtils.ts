@@ -131,35 +131,6 @@ const openHandsSession = async (
   };
 };
 
-export const listOpenHandsProjects = async (
-  agent: AgentId,
-  roots: readonly string[],
-): Promise<readonly ProjectSummary[]> => {
-  const groups = (await Promise.all(roots.map(eventGroups))).flat();
-  const sessions = (await Promise.all(groups.map((group) => {
-    return openHandsSession(agent, group);
-  }))).filter((session) => {
-    return session != null;
-  });
-
-  if (sessions.length === 0) {
-    return [];
-  }
-
-  return [{
-    agent,
-    id: UNKNOWN_PROJECT,
-    name: UNKNOWN_PROJECT,
-    sessionCount: sessions.length,
-    messageCount: sessions.reduce((total, session) => {
-      return total + session.summary.messageCount;
-    }, 0),
-    lastActivityMs: sessions.reduce((latest, session) => {
-      return Math.max(latest, session.summary.lastTimestampMs);
-    }, 0),
-  }];
-};
-
 export const listOpenHandsSessions = async (
   agent: AgentId,
   roots: readonly string[],
@@ -176,6 +147,32 @@ export const listOpenHandsSessions = async (
   }))).filter((summary) => {
     return summary != null;
   });
+};
+
+// ponytail: one full parse per request, same as the sessions list it reuses;
+// a per-file mtime cache is the upgrade if an OpenHands history grows large.
+export const listOpenHandsProjects = async (
+  agent: AgentId,
+  roots: readonly string[],
+): Promise<readonly ProjectSummary[]> => {
+  const sessions = await listOpenHandsSessions(agent, roots);
+
+  if (sessions.length === 0) {
+    return [];
+  }
+
+  return [{
+    agent,
+    id: UNKNOWN_PROJECT,
+    name: UNKNOWN_PROJECT,
+    sessionCount: sessions.length,
+    messageCount: sessions.reduce((total, session) => {
+      return total + session.messageCount;
+    }, 0),
+    lastActivityMs: sessions.reduce((latest, session) => {
+      return Math.max(latest, session.lastTimestampMs);
+    }, 0),
+  }];
 };
 
 export const loadOpenHandsEntries = async (
