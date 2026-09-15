@@ -4,7 +4,7 @@ import {
   test,
 } from 'vitest';
 
-import { decodeCodexTool } from './codexToolCall';
+import { decodeCodexTool } from './codexToolCallUtils';
 
 const patchLiteral = (...lines: readonly string[]): string => {
   return `const patch = "${['*** Begin Patch', ...lines, '*** End Patch'].join('\\n')}";`;

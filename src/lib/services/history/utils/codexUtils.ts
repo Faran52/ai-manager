@@ -8,7 +8,7 @@ import { humanPreview } from '@utils/titleUtils';
 
 import { parseToolInput, splitUserText } from '../../session/utils/parserUtils';
 
-import { decodeCodexTool } from './codexToolCall';
+import { decodeCodexTool } from './codexToolCallUtils';
 import { fileFactsStore } from './fileFactsUtils';
 import { conversationMessageCount } from './outcomeUtils';
 
