@@ -46,6 +46,8 @@ export interface SettingsViewProps {
   readonly settings: AsyncResource<readonly ScopeSettings[]>;
   readonly projectPath: string | null;
   readonly agent: AgentId;
+  // Which Claude profile is being edited, so a save lands in that root.
+  readonly profile?: string | undefined;
 }
 
 interface Draft {
@@ -196,6 +198,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
   settings,
   projectPath,
   agent,
+  profile,
 }) => {
   const { t } = useTranslation('settings');
   const scopes = settings.data ?? [];
@@ -243,6 +246,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
           scope: active,
           patch: value,
           agent,
+          profile,
         });
         setDrafts(Object.fromEntries(Object.entries(drafts).filter(([key]) => {
           return key !== path;

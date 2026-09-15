@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import { isJsonObject, parseJsonContainer } from '@utils/jsonUtils';
 
 import { readModelAuth } from './modelAuthUtils';
+import { CLAUDE_HOME_NAME, rootProfileLabel } from './rootsUtils';
 
 import type { AgentId } from '@config/agents';
 import type { JsonObject, JsonValue } from '@utils/jsonUtils';
@@ -32,6 +33,9 @@ export interface RulesFileSummary {
 
 export interface AgentSetup {
   readonly agent: AgentId;
+  // Which Claude config dir this came from (".claude-personal" reads
+  // "Personal"); undefined for the default root and for every other agent.
+  readonly profile?: string | undefined;
   readonly mcpServers: readonly McpServerSummary[];
   readonly rules: readonly RulesFileSummary[];
   readonly modelAuth: ModelAuthState;
@@ -39,7 +43,7 @@ export interface AgentSetup {
 
 interface SetupLocation {
   readonly scope: SetupScope;
-  readonly path: (home: string, projectPath: string) => string;
+  readonly path: (home: string, projectPath: string, claudeDir: string) => string;
 }
 
 interface McpLocation extends SetupLocation {
@@ -125,21 +129,33 @@ const tomlMcpNames = async (file: string): Promise<readonly string[]> => {
   }
 };
 
+/*
+ * Claude Code keeps its config dir at ~/.claude unless CLAUDE_CONFIG_DIR
+ * points elsewhere, and the sibling profiles this app finds (.claude-personal)
+ * are exactly that case. The default root is the one exception that keeps
+ * its .claude.json beside the dir, in the home itself.
+ */
+export const defaultClaudeDir = (home: string): string => {
+  return join(home, CLAUDE_HOME_NAME);
+};
+
+const claudeUserConfig = (home: string, _project: string, claudeDir: string): string => {
+  return claudeDir === defaultClaudeDir(home)
+    ? join(home, '.claude.json')
+    : join(claudeDir, '.claude.json');
+};
+
 const SPECS: Partial<Record<AgentId, AgentSetupSpec>> = {
   'claude': {
     mcp: [
       {
         scope: 'user',
-        path: (home) => {
-          return join(home, '.claude.json');
-        },
+        path: claudeUserConfig,
         read: topLevel('mcpServers'),
       },
       {
         scope: 'project',
-        path: (home) => {
-          return join(home, '.claude.json');
-        },
+        path: claudeUserConfig,
         read: claudeProjectScoped,
       },
       {
@@ -159,8 +175,8 @@ const SPECS: Partial<Record<AgentId, AgentSetupSpec>> = {
       },
       {
         scope: 'user',
-        path: (home) => {
-          return join(home, '.claude', 'CLAUDE.md');
+        path: (_home, _project, claudeDir) => {
+          return join(claudeDir, 'CLAUDE.md');
         },
       },
     ],
@@ -394,8 +410,9 @@ const rulesPresent = async (
   location: SetupLocation,
   home: string,
   projectPath: string,
+  claudeDir: string,
 ): Promise<readonly RulesFileSummary[]> => {
-  const path = location.path(home, projectPath);
+  const path = location.path(home, projectPath, claudeDir);
 
   try {
     const facts = await stat(path);
@@ -439,8 +456,9 @@ const serversAt = async (
   location: McpLocation,
   home: string,
   projectPath: string,
+  claudeDir: string,
 ): Promise<readonly McpServerSummary[]> => {
-  const path = location.path(home, projectPath);
+  const path = location.path(home, projectPath, claudeDir);
   const read = location.read;
   const names = read == null ? await tomlMcpNames(path) : await jsonMcpNames(path, read, projectPath);
 
@@ -464,6 +482,7 @@ export const readAgentMcp = async (
   agent: AgentId,
   projectPath: string,
   home = homedir(),
+  claudeDir = defaultClaudeDir(home),
 ): Promise<readonly McpServerSummary[]> => {
   const spec = SPECS[agent];
 
@@ -472,7 +491,7 @@ export const readAgentMcp = async (
   }
 
   const servers = await Promise.all(spec.mcp.map((location) => {
-    return serversAt(location, home, projectPath);
+    return serversAt(location, home, projectPath, claudeDir);
   }));
 
   return servers.flat();
@@ -482,6 +501,7 @@ export const readAgentRules = async (
   agent: AgentId,
   projectPath: string,
   home = homedir(),
+  claudeDir = defaultClaudeDir(home),
 ): Promise<readonly RulesFileSummary[]> => {
   const spec = SPECS[agent];
 
@@ -490,25 +510,28 @@ export const readAgentRules = async (
   }
 
   const files = await Promise.all(spec.rules.map((location) => {
-    return rulesPresent(location, home, projectPath);
+    return rulesPresent(location, home, projectPath, claudeDir);
   }));
 
   return files.flat();
 };
 
+// `claudeDir` only matters for Claude; every other agent ignores it.
 export const readAgentSetup = async (
   agent: AgentId,
   projectPath: string,
   home = homedir(),
+  claudeDir = defaultClaudeDir(home),
 ): Promise<AgentSetup> => {
   const [mcpServers, rules, modelAuth] = await Promise.all([
-    readAgentMcp(agent, projectPath, home),
-    readAgentRules(agent, projectPath, home),
-    readModelAuth(agent, home),
+    readAgentMcp(agent, projectPath, home, claudeDir),
+    readAgentRules(agent, projectPath, home, claudeDir),
+    readModelAuth(agent, home, claudeDir),
   ]);
 
   return {
     agent,
+    profile: agent === 'claude' ? rootProfileLabel(claudeDir, CLAUDE_HOME_NAME) : undefined,
     mcpServers,
     rules,
     modelAuth,

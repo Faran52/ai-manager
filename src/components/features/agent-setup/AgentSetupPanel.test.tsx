@@ -587,3 +587,45 @@ test('shuts a card that is already open instead of leaving it stuck', async () =
     expect(screen.queryByText('AGENTS.md')).toBeNull();
   });
 });
+
+test('shows one card per Claude profile, each with its own findings and count', async () => {
+  render(
+    <AgentSetupPanel
+      projectSelected
+      trust={{
+        known: true,
+        trusted: true,
+        onboarded: true,
+      }}
+      sessionCounts={{
+        'claude:': 3,
+        'claude:Personal': 5,
+      }}
+      projectPath={PROJECT}
+      findings={[{
+        agent: 'claude',
+        profile: 'Personal',
+        kind: 'hook',
+        summary: 'Hook script missing',
+        detail: '/gone.sh',
+      }]}
+      usage={null}
+      plugins={[]}
+      nowMs={0}
+      onPluginToggle={noToggle}
+      setups={[
+        setup('claude', { rules: [rule(`${PROJECT}/CLAUDE.md`)] }),
+        setup('claude', {
+          profile: 'Personal',
+          rules: [rule('/home/.claude-personal/CLAUDE.md')],
+        }),
+      ]}
+    />,
+  );
+
+  expect(screen.getByText('Claude Code')).toBeDefined();
+  expect(screen.getByText('Claude Code Personal')).toBeDefined();
+  // The flagged profile card opens itself, the default one stays shut.
+  expect(await screen.findByText('Hook script missing')).toBeDefined();
+  expect(screen.getByText('5 sessions')).toBeDefined();
+});

@@ -13,11 +13,16 @@ import {
   parseJsonContainer,
 } from '@utils/jsonUtils';
 
+import { CLAUDE_HOME_NAME, rootProfileLabel } from './rootsUtils';
+import { defaultClaudeDir } from './setupUtils';
+
 import type { AgentId } from '@config/agents';
 import type { JsonObject, JsonValue } from '@utils/jsonUtils';
 
 export interface SetupFinding {
   readonly agent: AgentId;
+  // The Claude profile the finding belongs to; see AgentSetup.profile.
+  readonly profile?: string | undefined;
   readonly kind: 'hook' | 'marketplace' | 'plugin' | 'mcp';
   readonly summary: string;
   readonly detail: string;
@@ -320,12 +325,16 @@ const brokenCodexMcp = async (file: string): Promise<readonly SetupFinding[]> =>
 const validateClaudeSetup = async (
   projectPath: string,
   home: string,
+  claudeDir: string,
 ): Promise<readonly SetupFinding[]> => {
+  const userConfigPath = claudeDir === defaultClaudeDir(home)
+    ? join(home, '.claude.json')
+    : join(claudeDir, '.claude.json');
   const [userSettings, projectSettings, known, userConfig, projectMcp] = await Promise.all([
-    readJson(join(home, '.claude', 'settings.json')),
+    readJson(join(claudeDir, 'settings.json')),
     readJson(join(projectPath, '.claude', 'settings.json')),
-    readJson(join(home, '.claude', 'plugins', 'known_marketplaces.json')),
-    readJson(join(home, '.claude.json')),
+    readJson(join(claudeDir, 'plugins', 'known_marketplaces.json')),
+    readJson(userConfigPath),
     readJson(join(projectPath, '.mcp.json')),
   ]);
 
@@ -352,9 +361,17 @@ export const validateAgentSetup = async (
   agent: AgentId,
   projectPath: string,
   home = homedir(),
+  claudeDir = defaultClaudeDir(home),
 ): Promise<readonly SetupFinding[]> => {
   if (agent === 'claude') {
-    return validateClaudeSetup(projectPath, home);
+    const profile = rootProfileLabel(claudeDir, CLAUDE_HOME_NAME);
+
+    return (await validateClaudeSetup(projectPath, home, claudeDir)).map((finding) => {
+      return {
+        ...finding,
+        profile,
+      };
+    });
   }
 
   return agent === 'codex' ? brokenCodexMcp(join(home, '.codex', 'config.toml')) : [];

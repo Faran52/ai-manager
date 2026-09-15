@@ -9,6 +9,7 @@ import {
   listAgentSessions,
   managedAgents,
   pathsFor,
+  pathsForProfile,
   readAgentSetup,
   readBlendedRate,
   readClaudePlugins,
@@ -197,7 +198,14 @@ const isSettingsBody = (body: object): body is SettingsBody => {
 
   // Absent means Claude, which is what every caller meant before the picker.
   // Parsed JSON never yields undefined, so a present key must name an agent.
-  return !('agent' in body) || isAgent(body.agent);
+  return (!('agent' in body) || isAgent(body.agent))
+    && (!('profile' in body) || typeof body.profile === 'string');
+};
+
+// The config dir behind a settings request: the one Claude root whose
+// profile label matches, or nothing (the service then takes the default).
+const claudeDirFor = (body: SettingsBody, deps: EndpointDeps | undefined): string | undefined => {
+  return pathsForProfile(resolveEndpointRoots(deps), 'claude', body.profile)[0];
 };
 
 const isRuleList = (value: unknown): value is readonly string[] => {
@@ -571,7 +579,12 @@ export const handleReadSettings = async (request: Request, deps?: EndpointDeps):
     }
 
     return jsonOk({
-      scopes: await readAgentSettings(body.agent ?? 'claude', body.projectPath, deps?.home),
+      scopes: await readAgentSettings(
+        body.agent ?? 'claude',
+        body.projectPath,
+        deps?.home,
+        claudeDirFor(body, deps),
+      ),
     });
   });
 };
@@ -601,6 +614,7 @@ export const handleWriteSettings = async (request: Request, deps?: EndpointDeps)
         body.patch,
         deps?.home,
         body.agent ?? 'claude',
+        claudeDirFor(body, deps),
       ),
     });
   });
@@ -660,12 +674,24 @@ export const handleAgentSetup = async (request: Request, deps?: EndpointDeps): P
       return jsonError(BAD_REQUEST, 'A non-empty projectPath is required.');
     }
 
+    /*
+     * One Claude card per config dir (~/.claude, ~/.claude-personal, ...):
+     * each keeps its own rules, MCP servers and settings. Plugins, usage
+     * and trust stay facts about the default root.
+     */
+    const perDir = (agent: AgentId): readonly (string | undefined)[] => {
+      return agent === 'claude' ? pathsFor(resolveEndpointRoots(deps), agent) : [undefined];
+    };
     const [setups, findings, usage, plugins, trust] = await Promise.all([
-      Promise.all(managedAgents.map((agent) => {
-        return readAgentSetup(agent, body.projectPath, deps?.home);
+      Promise.all(managedAgents.flatMap((agent) => {
+        return perDir(agent).map((claudeDir) => {
+          return readAgentSetup(agent, body.projectPath, deps?.home, claudeDir);
+        });
       })),
-      Promise.all(managedAgents.map((agent) => {
-        return validateAgentSetup(agent, body.projectPath, deps?.home);
+      Promise.all(managedAgents.flatMap((agent) => {
+        return perDir(agent).map((claudeDir) => {
+          return validateAgentSetup(agent, body.projectPath, deps?.home, claudeDir);
+        });
       })),
       readProjectUsage(body.projectPath, deps?.home),
       readClaudePlugins(body.projectPath, deps?.home),

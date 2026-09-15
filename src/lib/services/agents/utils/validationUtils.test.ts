@@ -420,3 +420,21 @@ describe('codex', () => {
     expect(await validateAgentSetup('codex', '/repo', home)).toHaveLength(1);
   });
 });
+
+describe('validateAgentSetup for a sibling Claude profile', () => {
+  test('reads that config dir and tags each finding with the profile', async () => {
+    const { home, project } = await workspace();
+    const personal = join(home, '.claude-personal');
+
+    await mkdir(personal, { recursive: true });
+    await writeFile(join(personal, 'settings.json'), JSON.stringify(hook(`${join(project, 'gone.sh')} --flag`)));
+
+    expect(await validateAgentSetup('claude', project, home, personal)).toEqual([
+      expect.objectContaining({
+        kind: 'hook',
+        profile: 'Personal',
+        detail: join(project, 'gone.sh'),
+      }),
+    ]);
+  });
+});

@@ -7,6 +7,11 @@ export interface ModelSummary {
 }
 
 // Set up means MCP servers, rules files, or, for Claude, plugins.
+// One Claude profile per card, so the key is the agent plus the profile.
+export const setupKey = (setup: Pick<AgentSetup, 'agent' | 'profile'>): string => {
+  return `${setup.agent}:${setup.profile ?? ''}`;
+};
+
 export const agentIsConfigured = (
   setup: AgentSetup,
   plugins: readonly InstalledPlugin[],

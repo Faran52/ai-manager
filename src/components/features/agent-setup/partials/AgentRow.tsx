@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
-import { agentOption, settingsAgents } from '@config/agents';
+import { agentBadgeLabel, settingsAgents } from '@config/agents';
 
 import { cn } from '@utils/cnUtils';
 import {
@@ -119,7 +119,9 @@ export const AgentRow: FC<AgentRowProps> = ({
   index,
 }) => {
   const { t, i18n } = useTranslation('setup');
-  const isClaude = setup.agent === 'claude';
+  // Plugins are read from the default root only, so a profile card has no
+  // plugin line: it would show another config dir's plugins as its own.
+  const isClaude = setup.agent === 'claude' && setup.profile == null;
   const {
     model,
     authMethod,
@@ -157,7 +159,7 @@ export const AgentRow: FC<AgentRowProps> = ({
           "
         />
         <span className="min-w-0 truncate text-ui font-semibold">
-          {agentOption(setup.agent).label}
+          {agentBadgeLabel(setup.agent, setup.profile)}
         </span>
         {/* The tint says it too, but colour alone is not a marker. Nothing is
             drawn for a healthy agent: success is silence. */}

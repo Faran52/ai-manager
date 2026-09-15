@@ -154,6 +154,8 @@ export type StorageResponse = StorageReport;
 
 export interface SettingsBody {
   readonly agent?: AgentId | undefined;
+  // Which Claude profile's file ("Personal"); absent means the default root.
+  readonly profile?: string | undefined;
   readonly projectPath: string;
 }
 

@@ -356,3 +356,45 @@ describe('readAgentSetup', () => {
     })).toMatchObject({ scope: 'user' });
   });
 });
+
+describe('readAgentSetup for a sibling Claude profile', () => {
+  test('reads that config dir and labels the setup with its profile', async () => {
+    const { home, project } = await workspace();
+    const personal = join(home, '.claude-personal');
+
+    await mkdir(personal, { recursive: true });
+    await writeFile(join(personal, 'CLAUDE.md'), 'personal rules');
+    await writeFile(join(personal, '.claude.json'), JSON.stringify({
+      mcpServers: { mine: { command: 'npx' } },
+    }));
+
+    const setup = await readAgentSetup('claude', project, home, personal);
+
+    expect(setup.profile).toBe('Personal');
+    expect(setup.rules).toEqual([expect.objectContaining({
+      path: join(personal, 'CLAUDE.md'),
+      scope: 'user',
+    })]);
+    expect(setup.mcpServers).toEqual([expect.objectContaining({
+      name: 'mine',
+      source: join(personal, '.claude.json'),
+    })]);
+  });
+
+  test('gives the default root no profile and reads its .claude.json from home', async () => {
+    const { home, project } = await workspace();
+
+    await mkdir(join(home, '.claude'), { recursive: true });
+    await writeFile(join(home, '.claude.json'), JSON.stringify({
+      mcpServers: { global: { command: 'npx' } },
+    }));
+
+    const setup = await readAgentSetup('claude', project, home, join(home, '.claude'));
+
+    expect(setup.profile).toBeUndefined();
+    expect(setup.mcpServers).toEqual([expect.objectContaining({
+      name: 'global',
+      source: join(home, '.claude.json'),
+    })]);
+  });
+});

@@ -29,6 +29,7 @@ import {
 import {
   AgentInstallSection,
   AgentSetupPanel,
+  setupKey,
   usePluginToggle,
 } from '@features/agent-setup';
 import { AnalyticsView, useAnalyticsScope } from '@features/analytics';
@@ -121,11 +122,13 @@ const HistoryAppView: FC = () => {
   const sessionCounts = useMemo(() => {
     const path = selectedProject?.actualPath;
 
-    return (projects.data ?? []).reduce<Partial<Record<AgentId, number>>>((totals, project) => {
+    return (projects.data ?? []).reduce<Record<string, number>>((totals, project) => {
+      const key = setupKey(project);
+
       return project.actualPath != null && project.actualPath === path
         ? {
             ...totals,
-            [project.agent]: (totals[project.agent] ?? 0) + project.sessionCount,
+            [key]: (totals[key] ?? 0) + project.sessionCount,
           }
         : totals;
     }, {});

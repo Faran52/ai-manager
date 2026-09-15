@@ -38,7 +38,7 @@ interface SurfaceSpec {
   readonly scope: SettingsScope;
   readonly format: SettingsFormat;
   readonly editable: boolean;
-  readonly path: (home: string, project: string) => string;
+  readonly path: (home: string, project: string, claudeDir: string) => string;
 }
 
 export interface SettingsPermissions {
@@ -98,8 +98,8 @@ const SURFACES: Partial<Record<AgentId, readonly SurfaceSpec[]>> = {
       scope: 'user',
       format: 'json',
       editable: true,
-      path: (home) => {
-        return join(home, '.claude', 'settings.json');
+      path: (_home, _project, claudeDir) => {
+        return join(claudeDir, 'settings.json');
       },
     },
     {
@@ -206,6 +206,7 @@ export const settingsSurfacesFor = (
   agent: AgentId,
   projectPath: string,
   home: string = homedir(),
+  claudeDir: string = join(home, '.claude'),
 ): readonly AgentSettingsSurface[] => {
   return (SURFACES[agent] ?? []).flatMap((spec) => {
     if (spec.scope !== 'user' && projectPath.length === 0) {
@@ -216,7 +217,7 @@ export const settingsSurfacesFor = (
       scope: spec.scope,
       format: spec.format,
       editable: spec.editable,
-      path: spec.path(home, projectPath),
+      path: spec.path(home, projectPath, claudeDir),
     }];
   });
 };
@@ -421,8 +422,9 @@ export const readAgentSettings = async (
   agent: AgentId,
   projectPath: string,
   home?: string,
+  claudeDir?: string,
 ): Promise<readonly ScopeSettings[]> => {
-  return Promise.all(settingsSurfacesFor(agent, projectPath, home).map(async (surface) => {
+  return Promise.all(settingsSurfacesFor(agent, projectPath, home, claudeDir).map(async (surface) => {
     if (surface.format === 'toml') {
       return readTomlSurface(surface);
     }
@@ -476,6 +478,7 @@ export const writeScopeSettings = async (
   patch: SettingsPatch,
   home?: string,
   agent: AgentId = 'claude',
+  claudeDir?: string,
 ): Promise<ScopeSettings> => {
   if (scope !== 'user' && projectPath.length === 0) {
     throw new Error('Select a project before editing its settings.');
@@ -487,7 +490,7 @@ export const writeScopeSettings = async (
    * env into it would invent configuration the agent never asked for, and a
    * request that reaches the service directly must be refused too.
    */
-  const surface = settingsSurfacesFor(agent, projectPath, home).find((entry) => {
+  const surface = settingsSurfacesFor(agent, projectPath, home, claudeDir).find((entry) => {
     return entry.scope === scope;
   });
 

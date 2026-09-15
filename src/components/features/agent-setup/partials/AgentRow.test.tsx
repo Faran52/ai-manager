@@ -343,3 +343,10 @@ test('hands the settings screen to the panel rather than nesting it', async () =
 
   expect(onOpenSettings).toHaveBeenCalledTimes(1);
 });
+
+test('names a sibling profile card and keeps the default root\'s plugins off it', () => {
+  renderRow(setup({ profile: 'Personal' }), { open: true });
+
+  expect(screen.getByText('Claude Code Personal')).toBeDefined();
+  expect(screen.queryByRole('button', { name: /View plugins/u })).toBeNull();
+});

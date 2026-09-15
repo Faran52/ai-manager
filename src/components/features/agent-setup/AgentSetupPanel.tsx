@@ -22,9 +22,8 @@ import {
   ProjectTrustCard,
   ProjectUsageCard,
 } from './partials';
-import { agentIsConfigured } from './utils/agentSetupUtils';
+import { agentIsConfigured, setupKey } from './utils/agentSetupUtils';
 
-import type { AgentId } from '@config/agents';
 import type {
   AgentSetup,
   InstalledPlugin,
@@ -42,7 +41,8 @@ export interface AgentSetupPanelProps {
   readonly usage: ProjectUsage | null;
   readonly plugins: readonly InstalledPlugin[];
   readonly trust: ProjectTrust;
-  readonly sessionCounts: Readonly<Partial<Record<AgentId, number>>>;
+  // Keyed by setupKey, so each Claude profile card counts its own sessions.
+  readonly sessionCounts: Readonly<Record<string, number>>;
   readonly nowMs: number;
   readonly onPluginToggle: (plugin: InstalledPlugin) => Promise<void>;
 }
@@ -66,10 +66,14 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
    * that default or the flagged row could never be closed. Findings arrive
    * after mount, so seeding the state at first render would miss them.
    */
-  const [picked, setPicked] = useState<AgentId | null | undefined>(undefined);
+  const [picked, setPicked] = useState<string | null | undefined>(undefined);
   const [pluginsOpen, setPluginsOpen] = useState(false);
-  const [settingsAgent, setSettingsAgent] = useState<AgentId | null>(null);
-  const settings = useSettings(settingsAgent != null ? projectPath : null, settingsAgent ?? 'claude');
+  const [settingsFor, setSettingsFor] = useState<AgentSetup | null>(null);
+  const settings = useSettings(
+    settingsFor == null ? null : projectPath,
+    settingsFor?.agent ?? 'claude',
+    settingsFor?.profile,
+  );
 
   if (!projectSelected) {
     return (
@@ -96,13 +100,13 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
    * own above the table, where the reader had to carry a summary back down to
    * the row wearing the warning marker.
    */
-  const findingsFor = (agent: AgentId): readonly SetupFinding[] => {
+  const findingsFor = (setup: AgentSetup): readonly SetupFinding[] => {
     return findings.filter((finding) => {
-      return finding.agent === agent;
+      return finding.agent === setup.agent && finding.profile === setup.profile;
     });
   };
-  const hasFinding = (agent: AgentId): boolean => {
-    return findingsFor(agent).length > 0;
+  const hasFinding = (setup: AgentSetup): boolean => {
+    return findingsFor(setup).length > 0;
   };
   const configured = setups.filter((setup) => {
     return agentIsConfigured(setup, plugins);
@@ -111,7 +115,7 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
     return !agentIsConfigured(setup, plugins);
   });
   const flagged = configured.filter((setup) => {
-    return hasFinding(setup.agent);
+    return hasFinding(setup);
   });
   /*
    * A flagged row leads and its warning marker says why, which is what the
@@ -119,9 +123,11 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
    * introduce three separately headed groups.
    */
   const listed = [...configured].sort((left, right) => {
-    return Number(hasFinding(right.agent)) - Number(hasFinding(left.agent));
+    return Number(hasFinding(right)) - Number(hasFinding(left));
   });
-  const expanded = picked === undefined ? flagged[0]?.agent ?? null : picked;
+  const first = flagged[0];
+  const firstKey = first == null ? null : setupKey(first);
+  const expanded = picked === undefined ? firstKey : picked;
   const enabledPlugins = plugins.filter((plugin) => {
     return plugin.enabled;
   }).length;
@@ -156,23 +162,23 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
           {listed.map((setup, index) => {
             return (
               <AgentRow
-                key={setup.agent}
+                key={setupKey(setup)}
                 index={index}
                 setup={setup}
                 projectPath={projectPath}
                 plugins={plugins}
-                sessionCount={sessionCounts[setup.agent] ?? 0}
-                findings={findingsFor(setup.agent)}
+                sessionCount={sessionCounts[setupKey(setup)] ?? 0}
+                findings={findingsFor(setup)}
                 nowMs={nowMs}
-                open={expanded === setup.agent}
+                open={expanded === setupKey(setup)}
                 onToggle={() => {
-                  setPicked(expanded === setup.agent ? null : setup.agent);
+                  setPicked(expanded === setupKey(setup) ? null : setupKey(setup));
                 }}
                 onOpenPlugins={() => {
                   setPluginsOpen(true);
                 }}
                 onOpenSettings={() => {
-                  setSettingsAgent(setup.agent);
+                  setSettingsFor(setup);
                 }}
               />
             );
@@ -247,9 +253,9 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
         </div>
       </Modal>
       <Modal
-        open={settingsAgent != null}
+        open={settingsFor != null}
         onClose={() => {
-          setSettingsAgent(null);
+          setSettingsFor(null);
         }}
         title={t('configuration')}
         widthClass="max-w-3xl"
@@ -261,7 +267,8 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
         <SettingsView
           settings={settings}
           projectPath={projectPath}
-          agent={settingsAgent ?? 'claude'}
+          agent={settingsFor?.agent ?? 'claude'}
+          profile={settingsFor?.profile}
         />
       </Modal>
     </motion.div>

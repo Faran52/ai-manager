@@ -15,6 +15,7 @@ import type { AsyncResource, AsyncSnapshot } from '../utils/asyncResourceUtils';
 export const useSettings = (
   projectPath: string | null,
   agent: AgentId = 'claude',
+  profile?: string,
 ): AsyncResource<readonly ScopeSettings[]> => {
   const [snapshot, setSnapshot] = useState<AsyncSnapshot<readonly ScopeSettings[]>>({ status: 'loading' });
   const [nonce, setNonce] = useState(0);
@@ -31,6 +32,7 @@ export const useSettings = (
         return (await fetchSettings({
           projectPath,
           agent,
+          profile,
         })).scopes;
       },
       (next) => {
@@ -43,7 +45,7 @@ export const useSettings = (
     return () => {
       active = false;
     };
-  }, [agent, nonce, projectPath]);
+  }, [agent, nonce, profile, projectPath]);
 
   const reload = useCallback(() => {
     setNonce((value) => {

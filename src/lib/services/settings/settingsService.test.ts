@@ -412,3 +412,13 @@ describe('writeScopeSettings', () => {
     expect(written.permissions.allow).not.toContain('x'.repeat(401));
   });
 });
+
+test('a sibling profile reads its user settings from its own config dir', () => {
+  expect(settingsSurfacesFor('claude', '/repo', '/home', '/home/.claude-personal').map((surface) => {
+    return surface.path;
+  })).toEqual([
+    '/home/.claude-personal/settings.json',
+    '/repo/.claude/settings.json',
+    '/repo/.claude/settings.local.json',
+  ]);
+});

@@ -1382,3 +1382,40 @@ describe('storage endpoint', () => {
     expect(response.status).toBe(200);
   });
 });
+
+describe('Claude profiles on the health and settings endpoints', () => {
+  test('reports one Claude setup per config dir, and reads settings for a named profile', async () => {
+    const project = await mkdtemp(join(tmpdir(), 'profile-project-'));
+    const home = await mkdtemp(join(tmpdir(), 'profile-home-'));
+    const personal = join(home, '.claude-personal');
+
+    await mkdir(join(home, '.claude'), { recursive: true });
+    await mkdir(personal, { recursive: true });
+    await writeFile(join(personal, 'CLAUDE.md'), 'personal rules');
+
+    const body = await jsonOf(await handleAgentSetup(post({ projectPath: project }), { home }));
+    const claude = (body as { setups: readonly { agent: string;
+      profile?: string;
+      rules: readonly { path: string }[]; }[]; }).setups.filter((setup) => {
+      return setup.agent === 'claude';
+    });
+
+    expect(claude).toHaveLength(2);
+    expect(claude[0]?.profile).toBeUndefined();
+    expect(claude[1]).toMatchObject({
+      profile: 'Personal',
+      rules: [{ path: join(personal, 'CLAUDE.md') }],
+    });
+
+    const scopes = (await jsonOf(await handleReadSettings(post({
+      projectPath: project,
+      profile: 'Personal',
+    }), { home }))) as { scopes: readonly { path: string }[] };
+
+    expect(scopes.scopes[0]?.path).toBe(join(personal, 'settings.json'));
+    expect((await handleReadSettings(post({
+      projectPath: project,
+      profile: 7,
+    }), { home })).status).toBe(400);
+  });
+});

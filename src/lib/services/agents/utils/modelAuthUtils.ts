@@ -62,8 +62,8 @@ const readJson = async (file: string): Promise<JsonValue> => {
   }
 };
 
-const readClaudeModelAuth = async (home: string): Promise<ModelAuthState> => {
-  const parsed = await readJson(join(home, '.claude', 'settings.json'));
+const readClaudeModelAuth = async (claudeDir: string): Promise<ModelAuthState> => {
+  const parsed = await readJson(join(claudeDir, 'settings.json'));
   const settings = isJsonObject(parsed) ? parsed : {};
   const model = typeof settings.model === 'string' ? settings.model : undefined;
   const env = isJsonObject(settings.env) ? settings.env : {};
@@ -208,10 +208,11 @@ const agentFormat = (agent: AgentId): AgentOption['format'] => {
 export const readModelAuth = async (
   agent: AgentId,
   home = homedir(),
+  claudeDir = join(home, '.claude'),
 ): Promise<ModelAuthState> => {
   switch (agentFormat(agent)) {
     case 'claude':
-      return readClaudeModelAuth(home);
+      return readClaudeModelAuth(claudeDir);
     case 'codex':
       return readCodexModelAuth(home);
     case 'gemini':
