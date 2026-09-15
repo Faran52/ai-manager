@@ -192,17 +192,43 @@ const withSessionAgent = (agent: AgentId, session: SessionSummary, profile?: str
   };
 };
 
+/**
+ * Claude and Codex keep one root per profile (.claude, .claude-personal), so
+ * whatever a root lists is tagged with that root's profile label before the
+ * roots are merged. Every other format has one root and no profile.
+ */
+const perRootWithProfile = async <T>(
+  agent: AgentId,
+  paths: readonly string[],
+  list: (path: string) => Promise<readonly T[]>,
+  tag: (agent: AgentId, item: T, profile?: string) => T,
+): Promise<readonly T[]> => {
+  const homeName = PROFILE_HOME_NAME[agent] ?? '';
+  const perPath = await Promise.all(paths.map(async (path) => {
+    const profile = rootProfileLabel(path, homeName);
+
+    return (await list(path)).map((item) => {
+      return tag(agent, item, profile);
+    });
+  }));
+
+  return perPath.flat();
+};
+
+const sessionsUnder = (
+  list: (path: string, id: string) => Promise<readonly SessionSummary[]>,
+  ids: readonly string[],
+) => {
+  return async (path: string): Promise<readonly SessionSummary[]> => {
+    return (await Promise.all(ids.map((id) => {
+      return list(path, id);
+    }))).flat();
+  };
+};
+
 const claudeRoutes: FormatRoutes = {
-  projects: async (agent, paths) => {
-    const perPath = await Promise.all(paths.map(async (path) => {
-      const profile = rootProfileLabel(path, CLAUDE_HOME_NAME);
-
-      return (await listProjects(path)).map((project) => {
-        return withProjectAgent(agent, project, profile);
-      });
-    }));
-
-    return perPath.flat();
+  projects: (agent, paths) => {
+    return perRootWithProfile(agent, paths, listProjects, withProjectAgent);
   },
   sessions: async (agent, paths, projectId) => {
     if (projectId != null && !PROJECT_ID_PATTERN.test(projectId)) {
@@ -215,18 +241,7 @@ const claudeRoutes: FormatRoutes = {
         })
       : [projectId];
 
-    const perPath = await Promise.all(paths.map(async (path) => {
-      const profile = rootProfileLabel(path, CLAUDE_HOME_NAME);
-      const found = await Promise.all(allIds.map(async (id) => {
-        return listSessions(path, id);
-      }));
-
-      return found.flat().map((session) => {
-        return withSessionAgent(agent, session, profile);
-      });
-    }));
-
-    return perPath.flat();
+    return perRootWithProfile(agent, paths, sessionsUnder(listSessions, allIds), withSessionAgent);
   },
   entries: async (filePath, allowedRoots) => {
     if (!await containedIn(allowedRoots, filePath)) {
@@ -247,16 +262,8 @@ const claudeRoutes: FormatRoutes = {
 };
 
 const codexRoutes: FormatRoutes = {
-  projects: async (agent, paths) => {
-    const perPath = await Promise.all(paths.map(async (path) => {
-      const profile = rootProfileLabel(path, CODEX_HOME_NAME);
-
-      return (await listCodexProjects(path)).map((project) => {
-        return withProjectAgent(agent, project, profile);
-      });
-    }));
-
-    return perPath.flat();
+  projects: (agent, paths) => {
+    return perRootWithProfile(agent, paths, listCodexProjects, withProjectAgent);
   },
   sessions: async (agent, paths, projectId) => {
     const ids = projectId == null
@@ -265,18 +272,7 @@ const codexRoutes: FormatRoutes = {
         })
       : [projectId];
 
-    const perPath = await Promise.all(paths.map(async (path) => {
-      const profile = rootProfileLabel(path, CODEX_HOME_NAME);
-      const found = await Promise.all(ids.map(async (id) => {
-        return listCodexSessions(path, id);
-      }));
-
-      return found.flat().map((session) => {
-        return withSessionAgent(agent, session, profile);
-      });
-    }));
-
-    return perPath.flat();
+    return perRootWithProfile(agent, paths, sessionsUnder(listCodexSessions, ids), withSessionAgent);
   },
   entries: async (filePath, allowedRoots) => {
     if (!await containedIn(allowedRoots, filePath)) {

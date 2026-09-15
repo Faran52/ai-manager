@@ -1,6 +1,10 @@
 import { readdirSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join, sep } from 'node:path';
+import {
+  basename,
+  join,
+  sep,
+} from 'node:path';
 
 import type { AgentId } from '@config/agents';
 
@@ -83,7 +87,7 @@ export const CODEX_HOME_NAME = '.codex';
  * every root uniformly rather than only the ones known to be siblings.
  */
 export const rootProfileLabel = (root: string, defaultName: string): string | undefined => {
-  const name = root.slice(root.lastIndexOf(sep) + 1);
+  const name = basename(root);
   const needle = defaultName.toLowerCase();
 
   if (name.toLowerCase() === needle || !name.toLowerCase().startsWith(needle)) {
