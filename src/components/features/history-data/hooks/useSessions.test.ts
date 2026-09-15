@@ -73,6 +73,29 @@ describe('useSessions', () => {
     });
   });
 
+  test('keeps only the sessions from the project\'s own profile', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return new Response(JSON.stringify({
+        sessions: [session(), {
+          ...session(),
+          filePath: '/personal.jsonl',
+          profile: 'Personal',
+        }],
+      }));
+    }));
+
+    const { result } = renderHook(() => {
+      return useSessions(PROJECT);
+    });
+
+    await waitFor(() => {
+      expect(result.current.status).toBe('ready');
+    });
+    expect(result.current.data?.map((entry) => {
+      return entry.filePath;
+    })).toEqual(['/f.jsonl']);
+  });
+
   test('reports failures through the error field', async () => {
     vi.stubGlobal('fetch', vi.fn(() => {
       return new Response('{"error":"bad project"}', { status: 400 });
