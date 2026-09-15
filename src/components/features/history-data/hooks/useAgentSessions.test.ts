@@ -60,7 +60,7 @@ describe('useAgentSessions', () => {
     vi.stubGlobal('fetch', fetchSpy);
 
     const { result } = renderHook(() => {
-      return useAgentSessions(null, PROJECTS);
+      return useAgentSessions(null, undefined, PROJECTS);
     });
 
     await waitFor(() => {
@@ -81,7 +81,7 @@ describe('useAgentSessions', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const { result } = renderHook(() => {
-      return useAgentSessions('claude', PROJECTS);
+      return useAgentSessions('claude', undefined, PROJECTS);
     });
 
     await waitFor(() => {
@@ -94,13 +94,58 @@ describe('useAgentSessions', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  test('narrows both the project list and the fetched sessions to one profile', async () => {
+    const projects: readonly ProjectSummary[] = [
+      ...PROJECTS,
+      {
+        ...project('d'),
+        profile: 'Personal',
+      },
+    ];
+    const fetchMock = vi.fn((_url: RequestInfo | URL, init?: RequestInit) => {
+      const body: unknown = JSON.parse(typeof init?.body === 'string' ? init.body : '{}');
+      const projectId = (body as { projectId: string }).projectId;
+      // The route fans out across every root sharing this project id, so a
+      // caller scoped to one profile can still get another profile's session
+      // back in the same response; the hook has to filter it out itself.
+      const sessions = projectId === 'd'
+        ? [
+            {
+              ...session('d', '/d.jsonl'),
+              profile: 'Personal',
+            },
+            {
+              ...session('d', '/d-default.jsonl'),
+              profile: undefined,
+            },
+          ]
+        : [session(projectId, `/${projectId}.jsonl`)];
+
+      return new Response(JSON.stringify({ sessions }));
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { result } = renderHook(() => {
+      return useAgentSessions('claude', 'Personal', projects);
+    });
+
+    await waitFor(() => {
+      expect(result.current.data).toHaveLength(1);
+    });
+    expect(result.current.data?.[0]?.filePath).toBe('/d.jsonl');
+    // Only the Personal project (id "d") is fetched, not the default
+    // profile's "a"/"b".
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   test('reports failures through the error field', async () => {
     vi.stubGlobal('fetch', vi.fn(() => {
       return new Response('{"error":"bad agent"}', { status: 400 });
     }));
 
     const { result } = renderHook(() => {
-      return useAgentSessions('claude', PROJECTS);
+      return useAgentSessions('claude', undefined, PROJECTS);
     });
 
     await waitFor(() => {
@@ -117,7 +162,7 @@ describe('useAgentSessions reload', () => {
 
     vi.stubGlobal('fetch', fetchMock);
     const { result } = renderHook(() => {
-      return useAgentSessions('claude', PROJECTS);
+      return useAgentSessions('claude', undefined, PROJECTS);
     });
 
     await waitFor(() => {
@@ -149,7 +194,7 @@ describe('useAgentSessions unmount safety', () => {
     );
 
     const { result, unmount } = renderHook(() => {
-      return useAgentSessions('claude', PROJECTS);
+      return useAgentSessions('claude', undefined, PROJECTS);
     });
 
     expect(result.current.data).toBeUndefined();
@@ -171,7 +216,7 @@ describe('useAgentSessions live polling', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
 
     const { result, unmount } = renderHook(() => {
-      return useAgentSessions('claude', PROJECTS, true);
+      return useAgentSessions('claude', undefined, PROJECTS, true);
     });
 
     await waitFor(() => {
@@ -211,7 +256,7 @@ describe('useAgentSessions live polling', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
 
     const { result } = renderHook(() => {
-      return useAgentSessions('claude', PROJECTS);
+      return useAgentSessions('claude', undefined, PROJECTS);
     });
 
     await waitFor(() => {
@@ -233,7 +278,7 @@ describe('useAgentSessions live polling', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
 
     const { result } = renderHook(() => {
-      return useAgentSessions(null, PROJECTS, true);
+      return useAgentSessions(null, undefined, PROJECTS, true);
     });
 
     await waitFor(() => {

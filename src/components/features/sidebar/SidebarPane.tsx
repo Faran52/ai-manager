@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
-import { agentOption } from '@config/agents';
+import { agentBadgeLabel, agentOption } from '@config/agents';
 import {
   projectsDrawerStorageKey,
   projectsPaneStorageKey,
@@ -95,10 +95,14 @@ export interface SidebarPaneProps {
   // True while the report is reading every project rather than one.
   readonly wholeMachine: boolean;
   readonly onSelectAllProjects: () => void;
-  // The agent the All Projects card's report is scoped to, distinct from the
-  // Funnel's own multi-select Projects-tree filter below.
+  /**
+   * The agent the All Projects card's report is scoped to, distinct from the
+   * Funnel's own multi-select Projects-tree filter below. `reportProfile`
+   * narrows it to one of that agent's same-agent sibling roots.
+   */
   readonly reportAgent: AgentId | null;
-  readonly onSelectReportAgent: (agent: AgentId) => void;
+  readonly reportProfile?: string | undefined;
+  readonly onSelectReportAgent: (agent: AgentId, profile?: string) => void;
   readonly onSelectSession: (session: SessionSummary) => void;
   readonly onDeleteProject: (project: ProjectSummary) => Promise<void>;
   readonly onRenameSession: (session: SessionSummary, title: string) => Promise<void>;
@@ -165,6 +169,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
   wholeMachine,
   onSelectAllProjects,
   reportAgent,
+  reportProfile,
   onSelectReportAgent,
   onSelectSession,
   onDeleteProject,
@@ -375,7 +380,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
        * fallback both call sites otherwise use.
        */
       const scopeName = selectedProject?.name
-        ?? (reportAgent != null ? agentOption(reportAgent).label : undefined);
+        ?? (reportAgent != null ? agentBadgeLabel(reportAgent, reportProfile) : undefined);
       const result = await exportSessions(selectedSessions, scopeName ?? '', Date.now());
 
       if (result.markdown.length > 0) {
@@ -895,6 +900,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                         onSelectAllProjects();
                       }}
                       selectedAgent={reportAgent}
+                      selectedProfile={reportProfile}
                       onSelectAgent={onSelectReportAgent}
                     />
                   )}

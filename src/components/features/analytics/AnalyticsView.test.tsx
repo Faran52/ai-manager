@@ -118,7 +118,10 @@ const globalStats: GlobalStats = {
     sessions: 3,
     projects: 2,
   }],
-  perAgent: { claude: stats },
+  perAgentProfile: [{
+    ...stats,
+    agent: 'claude',
+  }],
 };
 
 const globalResponse = (): Response => {
@@ -154,6 +157,7 @@ const renderView = (
   onOpenSession = vi.fn(),
   scope: 'global' | 'project' = 'project',
   reportAgent: AgentId | null = null,
+  reportProfile?: string,
 ) => {
   const view = render(
     <AnalyticsView
@@ -164,6 +168,7 @@ const renderView = (
       projectName="webapp"
       scope={scope}
       reportAgent={reportAgent}
+      reportProfile={reportProfile}
       onOpenSession={onOpenSession}
     />,
   );
@@ -203,7 +208,44 @@ test('scopes the global report to one agent across every project', async () => {
 
   await userEvent.click(screen.getByText('Big one'));
 
-  expect(onOpenSession).toHaveBeenCalledWith(globalStats.perAgent.claude?.topSessions[0]);
+  expect(onOpenSession).toHaveBeenCalledWith(globalStats.perAgentProfile[0]?.topSessions[0]);
+});
+
+test('scopes to one profile of an agent, not its sibling', async () => {
+  const personal: ProjectStats = {
+    ...stats,
+    topSessions: [{
+      filePath: '/personal.jsonl',
+      sessionId: 'personal',
+      title: 'Personal session',
+      tokens: 400,
+      messages: 3,
+      lastTimestampMs: Date.UTC(2026, 0, 2),
+      projectId: 'p',
+      agent: 'claude',
+    }],
+  };
+
+  vi.stubGlobal('fetch', vi.fn(() => {
+    return Promise.resolve(new Response(JSON.stringify({
+      stats: {
+        ...globalStats,
+        perAgentProfile: [
+          ...globalStats.perAgentProfile,
+          {
+            ...personal,
+            agent: 'claude',
+            profile: 'Personal',
+          },
+        ],
+      },
+    }), { status: 200 }));
+  }));
+
+  renderView(stats, 'ready', vi.fn(), 'global', 'claude', 'Personal');
+
+  expect(await screen.findByText('Personal session')).toBeDefined();
+  expect(screen.queryByText('Big one')).toBeNull();
 });
 
 test('falls back to the empty state for a report agent missing from the payload', async () => {

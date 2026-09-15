@@ -585,12 +585,13 @@ describe('HistoryApp cross-view flows', () => {
               sessions: 2,
               projects: 2,
             }],
-            perAgent: {
-              claude: projectStats([{
+            perAgentProfile: [{
+              ...projectStats([{
                 tool: 'AgentOnlyTool',
                 count: 1,
               }]),
-            },
+              agent: 'claude',
+            }],
           },
         });
       }

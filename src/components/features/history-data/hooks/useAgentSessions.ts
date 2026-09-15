@@ -21,18 +21,27 @@ const LIVE_REFRESH_MS = 3_000;
  * useSessions reads. There is no server route for this: it fans out the same
  * per-project fetch useSessions already makes and merges the answers, since
  * the agent's own project list is already on hand.
+ *
+ * `profile` narrows further to one same-agent sibling root ("Personal"),
+ * mirroring what selecting one project branch already does. The per-project
+ * fetch itself has no profile parameter (a project id can coincide across two
+ * profiles' roots, and the route already answers with every root's matches
+ * tagged), so the merged result is filtered by `session.profile` afterward
+ * rather than trusted to come back pre-scoped.
  */
 export const useAgentSessions = (
   agent: AgentId | null,
+  profile: string | undefined,
   projects: readonly ProjectSummary[],
   live = false,
 ): AsyncResource<readonly SessionSummary[]> => {
   const [snapshot, setSnapshot] = useState<AsyncSnapshot<readonly SessionSummary[]>>({ status: 'loading' });
   const [nonce, setNonce] = useState(0);
-  const [prevAgent, setPrevAgent] = useState(agent);
+  const scopeKey = agent == null ? '' : `${agent}:${profile ?? ''}`;
+  const [prevScopeKey, setPrevScopeKey] = useState(scopeKey);
 
-  if (agent !== prevAgent) {
-    setPrevAgent(agent);
+  if (scopeKey !== prevScopeKey) {
+    setPrevScopeKey(scopeKey);
     setSnapshot({ status: 'loading' });
   }
 
@@ -40,9 +49,9 @@ export const useAgentSessions = (
     return agent == null
       ? []
       : projects.filter((project) => {
-          return project.agent === agent;
+          return project.agent === agent && project.profile === profile;
         });
-  }, [agent, projects]);
+  }, [agent, profile, projects]);
 
   useEffect(() => {
     let active = true;
@@ -60,9 +69,13 @@ export const useAgentSessions = (
           });
         }));
 
-        return results.flatMap((result) => {
-          return result.sessions;
-        });
+        return results
+          .flatMap((result) => {
+            return result.sessions;
+          })
+          .filter((session) => {
+            return session.profile === profile;
+          });
       },
       (next) => {
         if (active) {
@@ -74,7 +87,7 @@ export const useAgentSessions = (
     return () => {
       active = false;
     };
-  }, [agent, agentProjects, nonce]);
+  }, [agent, agentProjects, nonce, profile]);
 
   const reload = useCallback(() => {
     setNonce((value) => {

@@ -37,6 +37,8 @@ export interface AnalyticsViewProps {
   readonly sessions: readonly SessionSummary[];
   // The one agent a global report is scoped to, from the All Projects card.
   readonly reportAgent: AgentId | null;
+  // Which of that agent's same-agent sibling roots, when it has more than one.
+  readonly reportProfile?: string | undefined;
 }
 
 interface GlobalStatsResponse {
@@ -105,13 +107,18 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
   onOpenSession,
   sessions,
   reportAgent,
+  reportProfile,
 }) => {
   const global = useGlobalStats();
   const { t } = useTranslation('analytics');
   const effectiveScope = scope === 'global' && global.status !== 'error' ? 'global' : 'project';
   // A missing entry (still loading, or a stale selection) falls through to the
   // same empty state a `null` project's stats already show below.
-  const globalStats = reportAgent != null ? global.data?.perAgent[reportAgent] : global.data;
+  const globalStats = reportAgent == null
+    ? global.data
+    : global.data?.perAgentProfile.find((entry) => {
+        return entry.agent === reportAgent && entry.profile === reportProfile;
+      });
   const selectedStats = effectiveScope === 'global' ? globalStats : stats;
   const selectedStatus = effectiveScope === 'global' ? global.status : status;
   const globalAgents = global.data?.agents ?? [];

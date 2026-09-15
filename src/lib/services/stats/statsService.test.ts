@@ -537,16 +537,68 @@ describe('global statistics', () => {
     expect(stats.models[0]?.basis).toBe('estimated');
 
     // The full per-agent report `agents` reduces away is kept alongside it, for
-    // a single agent's own report across every project it touched.
-    expect(stats.perAgent.claude?.totals.billingTokens).toBe(20);
-    expect(stats.perAgent.claude?.topSessions).toEqual([
+    // a single agent's own report across every project it touched. Neither
+    // root here has a sibling profile, so each agent has exactly one entry.
+    const claudeReport = stats.perAgentProfile.find((entry) => {
+      return entry.agent === 'claude';
+    });
+    const codebuddyReport = stats.perAgentProfile.find((entry) => {
+      return entry.agent === 'codebuddy';
+    });
+
+    expect(claudeReport?.profile).toBeUndefined();
+    expect(claudeReport?.totals.billingTokens).toBe(20);
+    expect(claudeReport?.topSessions).toEqual([
       expect.objectContaining({
         agent: 'claude',
         projectId: 'alpha',
         tokens: 20,
       }),
     ]);
-    expect(stats.perAgent.codebuddy?.totals.billingTokens).toBe(30);
+    expect(codebuddyReport?.totals.billingTokens).toBe(30);
+  });
+
+  test('keeps a sibling profile as its own report, not folded into the default', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'stats-profile-'));
+    const primary = join(home, '.claude');
+    const personal = join(home, '.claude-personal');
+
+    await writeSession(primary, 'alpha', 'a.jsonl', [assistantTurn('shared', 2, 0.2)]);
+    await writeSession(personal, 'beta', 'b.jsonl', [assistantTurn('shared', 3, 0.3)]);
+
+    const roots: AgentRoots = {
+      ...resolveAgentPaths({
+        env: {},
+        home,
+      }),
+      claude: [primary, personal],
+    };
+    const stats = await computeGlobalStats(roots);
+
+    // The bare per-agent tally still sums across both roots: it is the one
+    // figure a provider-distribution list wants.
+    expect(stats.agents).toEqual([{
+      agent: 'claude',
+      tokens: 50,
+      sessions: 2,
+      projects: 2,
+    }]);
+
+    // But a report scoped to one tally chip must not see the other profile's
+    // sessions, which is the whole point of splitting the chip out.
+    expect(stats.perAgentProfile).toHaveLength(2);
+
+    const defaultReport = stats.perAgentProfile.find((entry) => {
+      return entry.profile == null;
+    });
+    const personalReport = stats.perAgentProfile.find((entry) => {
+      return entry.profile === 'Personal';
+    });
+
+    expect(defaultReport?.totals.sessions).toBe(1);
+    expect(defaultReport?.totals.billingTokens).toBe(20);
+    expect(personalReport?.totals.sessions).toBe(1);
+    expect(personalReport?.totals.billingTokens).toBe(30);
   });
 
   test('exposes global statistics through the endpoint handler', async () => {

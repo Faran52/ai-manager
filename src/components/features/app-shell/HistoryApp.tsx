@@ -87,9 +87,14 @@ const HistoryAppView: FC = () => {
   const visibleProjects = projects.data ?? EMPTY_PROJECTS;
   const [selectedProject, setSelectedProject] = useState<ProjectSummary | null>(null);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
-  // The one agent a global report is scoped to, distinct from the Funnel's
-  // multi-select Projects-tree filter.
+  /**
+   * The one agent a global report is scoped to, distinct from the Funnel's
+   * multi-select Projects-tree filter. `reportProfile` narrows it further to
+   * one same-agent sibling root when the agent has more than one; undefined
+   * for the plain default root, matching ProjectSummary.profile.
+   */
   const [reportAgent, setReportAgent] = useState<AgentId | null>(null);
+  const [reportProfile, setReportProfile] = useState<string | undefined>(undefined);
   const [view, setView] = useState<AppView>('analytics');
   const projectKey = selectedProject == null
     ? ''
@@ -108,7 +113,7 @@ const HistoryAppView: FC = () => {
     return Date.now();
   });
   const projectSessions = useSessions(selectedProject, view === 'sessions');
-  const agentSessions = useAgentSessions(reportAgent, visibleProjects, view === 'sessions');
+  const agentSessions = useAgentSessions(reportAgent, reportProfile, visibleProjects, view === 'sessions');
   const sessions = reportAgent != null ? agentSessions : projectSessions;
   const stats = useProjectStats(view === 'analytics' ? selectedProject : null);
   const projectPath = selectedProject?.actualPath ?? '';
@@ -250,6 +255,7 @@ const HistoryAppView: FC = () => {
     setSelectedProject(project);
     clearOpenSession();
     setReportAgent(null);
+    setReportProfile(undefined);
   }, [clearOpenSession]);
 
   /**
@@ -261,6 +267,7 @@ const HistoryAppView: FC = () => {
     setSelectedProject(null);
     clearOpenSession();
     setReportAgent(null);
+    setReportProfile(undefined);
     setAnalyticsScope('global');
   }, [clearOpenSession, setAnalyticsScope]);
 
@@ -269,16 +276,20 @@ const HistoryAppView: FC = () => {
    * unfiltered global report. Picking an agent always means the whole machine:
    * there is no per-project, per-agent report to ask for, so a project picked
    * before this agent chip has to clear the same way it does for
-   * selectAllProjects.
+   * selectAllProjects. `profile` is part of the toggle identity too, so
+   * picking "Claude Code Personal" after "Claude Code" switches rather than
+   * closes, matching how picking a different project branch already works.
    */
-  const selectReportAgent = useCallback((agent: AgentId) => {
+  const selectReportAgent = useCallback((agent: AgentId, profile?: string) => {
     setSelectedProject(null);
     clearOpenSession();
     setAnalyticsScope('global');
-    setReportAgent((current) => {
-      return current === agent ? null : agent;
-    });
-  }, [clearOpenSession, setAnalyticsScope]);
+
+    const same = reportAgent === agent && reportProfile === profile;
+
+    setReportAgent(same ? null : agent);
+    setReportProfile(same ? undefined : profile);
+  }, [clearOpenSession, reportAgent, reportProfile, setAnalyticsScope]);
 
   // Every way of opening a transcript lands on the Sessions view.
   const showSession = useCallback(() => {
@@ -434,6 +445,7 @@ const HistoryAppView: FC = () => {
         projectAgent={selectedProject?.agent}
         sessions={sessionList}
         reportAgent={reportAgent}
+        reportProfile={reportProfile}
         onOpenSession={openStatsSession}
       />
     ),
@@ -540,6 +552,7 @@ const HistoryAppView: FC = () => {
               wholeMachine={analyticsScope === 'global'}
               onSelectAllProjects={selectAllProjects}
               reportAgent={reportAgent}
+              reportProfile={reportProfile}
               onSelectReportAgent={selectReportAgent}
               showSessions={view === 'sessions'}
               showAllProjects={view === 'sessions' || view === 'analytics'}

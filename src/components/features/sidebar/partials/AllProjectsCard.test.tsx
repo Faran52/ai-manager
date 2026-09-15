@@ -106,7 +106,7 @@ describe('AllProjectsCard', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /Claude Code/u }));
 
-    expect(onSelectAgent).toHaveBeenCalledWith('claude');
+    expect(onSelectAgent).toHaveBeenCalledWith('claude', undefined);
   });
 
   test('says nothing about agents before any project has loaded', () => {
@@ -114,5 +114,40 @@ describe('AllProjectsCard', () => {
 
     expect(screen.getByText('0 projects')).toBeDefined();
     expect(screen.queryByText('Claude Code')).toBeNull();
+  });
+
+  test('tallies a same-agent sibling profile as its own chip, not folded into the default', async () => {
+    const projects: readonly ProjectSummary[] = [
+      ...PROJECTS,
+      {
+        agent: 'claude',
+        profile: 'Personal',
+        id: 'd',
+        name: 'delta',
+        actualPath: '/repo/delta',
+        sessionCount: 5,
+        messageCount: 9,
+        lastActivityMs: 0,
+      },
+    ];
+    const { onSelectAgent } = renderCard({
+      projects,
+      selectedAgent: 'claude',
+      selectedProfile: 'Personal',
+    });
+
+    expect(screen.getByRole('button', {
+      name: /^Claude Code,/u,
+      pressed: false,
+    })).toBeDefined();
+    expect(screen.getByRole('button', {
+      name: /^Claude Code Personal,/u,
+      pressed: true,
+    })).toBeDefined();
+    expect(screen.getByText('5')).toBeDefined();
+
+    await userEvent.click(screen.getByRole('button', { name: /^Claude Code,/u }));
+
+    expect(onSelectAgent).toHaveBeenCalledWith('claude', undefined);
   });
 });

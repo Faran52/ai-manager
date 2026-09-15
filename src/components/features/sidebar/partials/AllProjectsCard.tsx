@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Layers } from 'lucide-react';
 
-import { agentOption } from '@config/agents';
+import { agentBadgeLabel } from '@config/agents';
 
 import type { AgentId } from '@config/agents';
 import type { ProjectSummary } from '@services/history/historyService';
@@ -14,27 +14,37 @@ export interface AllProjectsCardProps {
   readonly onSelect: () => void;
   // The agent a tally chip is currently scoping the report to, if any.
   readonly selectedAgent: AgentId | null;
-  readonly onSelectAgent: (agent: AgentId) => void;
+  // Which of that agent's same-agent sibling roots, when it has more than one.
+  readonly selectedProfile?: string | undefined;
+  readonly onSelectAgent: (agent: AgentId, profile?: string) => void;
 }
 
 interface AgentTally {
   readonly agent: AgentId;
+  // Undefined for the plain default root, same as ProjectSummary.profile: a
+  // project used under only one profile tallies as one chip, not two.
+  readonly profile?: string | undefined;
   readonly sessions: number;
 }
 
 const talliedBy = (projects: readonly ProjectSummary[]): readonly AgentTally[] => {
-  const sessions = new Map<AgentId, number>();
+  const sessions = new Map<string, AgentTally>();
 
   for (const project of projects) {
-    sessions.set(project.agent, (sessions.get(project.agent) ?? 0) + project.sessionCount);
+    const key = `${project.agent}:${project.profile ?? ''}`;
+    const tally = sessions.get(key) ?? {
+      agent: project.agent,
+      profile: project.profile,
+      sessions: 0,
+    };
+
+    sessions.set(key, {
+      ...tally,
+      sessions: tally.sessions + project.sessionCount,
+    });
   }
 
-  return [...sessions.entries()].map(([agent, count]) => {
-    return {
-      agent,
-      sessions: count,
-    };
-  }).sort((left, right) => {
+  return [...sessions.values()].sort((left, right) => {
     return right.sessions - left.sessions;
   });
 };
@@ -52,6 +62,7 @@ export const AllProjectsCard: FC<AllProjectsCardProps> = ({
   selected,
   onSelect,
   selectedAgent,
+  selectedProfile,
   onSelectAgent,
 }) => {
   const { t } = useTranslation('sidebar');
@@ -85,26 +96,28 @@ export const AllProjectsCard: FC<AllProjectsCardProps> = ({
         {tallies.length > 0 && (
           <div className="project-providers">
             {tallies.map((tally) => {
-              const active = tally.agent === selectedAgent;
+              const active = tally.agent === selectedAgent && tally.profile === selectedProfile;
+              const label = agentBadgeLabel(tally.agent, tally.profile);
 
               return (
                 <button
                   type="button"
-                  key={tally.agent}
+                  key={`${tally.agent}:${tally.profile ?? ''}`}
                   data-agent={tally.agent}
+                  data-profile={tally.profile}
                   data-selected={active}
                   aria-pressed={active}
-                  aria-label={`${agentOption(tally.agent).label}, ${t('sessionTally', {
+                  aria-label={`${label}, ${t('sessionTally', {
                     count: tally.sessions,
                   })}`}
                   onClick={() => {
-                    onSelectAgent(tally.agent);
+                    onSelectAgent(tally.agent, tally.profile);
                   }}
                   className="project-provider"
                 >
                   <span className="project-provider-dot" aria-hidden />
                   <span className="project-provider-name">
-                    {agentOption(tally.agent).label}
+                    {label}
                   </span>
                   <span className="project-provider-count">{tally.sessions}</span>
                 </button>

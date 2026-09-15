@@ -88,15 +88,27 @@ export interface AgentStatsUsage {
   readonly projects: number;
 }
 
+/**
+ * One agent's report, further narrowed to one of its profiles (a same-agent
+ * sibling root like ".claude-personal") when it has more than one. `profile`
+ * is undefined for the plain default root, matching `ProjectSummary.profile`.
+ */
+export interface AgentProfileStats extends ProjectStats {
+  readonly agent: AgentId;
+  readonly profile?: string | undefined;
+}
+
 export interface GlobalStats extends ProjectStats {
   readonly totals: CompleteStatsTotals;
   readonly agents: readonly AgentStatsUsage[];
   /**
    * The full report `computeGlobalStats` already builds per agent, keyed for a
-   * single-agent, every-project view rather than reduced to `AgentStatsUsage`'s
-   * four numbers.
+   * single-agent-and-profile, every-project view rather than reduced to
+   * `AgentStatsUsage`'s four numbers. `agents` above stays every profile of an
+   * agent combined, since that is the one figure a provider-distribution list
+   * wants; this is the one a report scoped to a single tally chip wants.
    */
-  readonly perAgent: Readonly<Partial<Record<AgentId, ProjectStats>>>;
+  readonly perAgentProfile: readonly AgentProfileStats[];
 }
 
 interface AgentAccumulator {
@@ -104,10 +116,19 @@ interface AgentAccumulator {
   projects: number;
 }
 
+interface AgentProfileAccumulator extends AgentAccumulator {
+  readonly agent: AgentId;
+  readonly profile?: string | undefined;
+}
+
 interface CountedSession {
   readonly session: SessionSummary;
   readonly aggregate: SessionAggregate;
 }
+
+const agentProfileKey = (agent: AgentId, profile?: string): string => {
+  return `${agent}:${profile ?? ''}`;
+};
 
 export type {
   DayActivity,
@@ -300,6 +321,7 @@ export const computeGlobalStats = async (roots: AgentRoots): Promise<GlobalStats
   }));
   const globalAccumulator = createAccumulator();
   const byAgent = new Map<AgentId, AgentAccumulator>();
+  const byAgentProfile = new Map<string, AgentProfileAccumulator>();
 
   for (const { project, sessions } of counted) {
     const agentAccumulator = byAgent.get(project.agent) ?? {
@@ -310,9 +332,21 @@ export const computeGlobalStats = async (roots: AgentRoots): Promise<GlobalStats
     agentAccumulator.projects += 1;
     byAgent.set(project.agent, agentAccumulator);
 
+    const profileKey = agentProfileKey(project.agent, project.profile);
+    const profileAccumulator = byAgentProfile.get(profileKey) ?? {
+      accumulator: createAccumulator(),
+      projects: 0,
+      agent: project.agent,
+      profile: project.profile,
+    };
+
+    profileAccumulator.projects += 1;
+    byAgentProfile.set(profileKey, profileAccumulator);
+
     for (const entry of sessions) {
       foldAggregate(globalAccumulator, entry.aggregate, entry.session);
       foldAggregate(agentAccumulator.accumulator, entry.aggregate, entry.session);
+      foldAggregate(profileAccumulator.accumulator, entry.aggregate, entry.session);
     }
   }
 
@@ -330,8 +364,12 @@ export const computeGlobalStats = async (roots: AgentRoots): Promise<GlobalStats
     }).sort((left, right) => {
       return right.tokens - left.tokens;
     }),
-    perAgent: Object.fromEntries([...byAgent.entries()].map(([agent, value]) => {
-      return [agent, projectStatsFrom(agent, value.accumulator, costs)];
-    })),
+    perAgentProfile: [...byAgentProfile.values()].map((value) => {
+      return {
+        ...projectStatsFrom(agentProfileKey(value.agent, value.profile), value.accumulator, costs),
+        agent: value.agent,
+        profile: value.profile,
+      };
+    }),
   };
 };
