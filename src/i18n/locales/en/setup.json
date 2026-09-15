@@ -72,7 +72,7 @@
   "noSessions": "no sessions",
   "sessionCount_one": "{{count}} session",
   "sessionCount_other": "{{count}} sessions",
-  "installAgentsTitle": "Install agents",
+  "installAgentsTitle": "Not installed",
   "agentInstalled": "Installed",
   "install": "Install",
   "installing": "Installing…",

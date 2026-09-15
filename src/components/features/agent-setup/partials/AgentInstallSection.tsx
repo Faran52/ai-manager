@@ -20,7 +20,8 @@ import type { FC } from 'react';
 /*
  * Installed-ness is a fact about this machine, not the selected project, so
  * this renders unconditionally in the Health tab rather than behind the
- * projectSelected gate AgentSetupPanel's own rows sit behind.
+ * projectSelected gate AgentSetupPanel's own rows sit behind, and after
+ * them, in the same list style as "not set up here".
  */
 export const AgentInstallSection: FC = () => {
   const { t } = useTranslation('setup');
@@ -63,7 +64,7 @@ export const AgentInstallSection: FC = () => {
   };
 
   return (
-    <section className="mb-4" data-health-group="agent-install">
+    <section className="mt-4" data-health-group="agent-install">
       <h3 className="
         px-1 pb-1 text-body font-semibold tracking-wider text-muted-foreground
         uppercase

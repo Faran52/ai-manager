@@ -72,7 +72,7 @@
   "noSessions": "세션 없음",
   "sessionCount_one": "세션 {{count}}개",
   "sessionCount_other": "세션 {{count}}개",
-  "installAgentsTitle": "에이전트 설치",
+  "installAgentsTitle": "설치되지 않음",
   "agentInstalled": "설치됨",
   "install": "설치",
   "installing": "설치 중…",

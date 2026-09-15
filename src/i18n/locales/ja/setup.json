@@ -72,7 +72,7 @@
   "noSessions": "セッションなし",
   "sessionCount_one": "{{count}} セッション",
   "sessionCount_other": "{{count}} セッション",
-  "installAgentsTitle": "エージェントをインストール",
+  "installAgentsTitle": "未インストール",
   "agentInstalled": "インストール済み",
   "install": "インストール",
   "installing": "インストール中…",

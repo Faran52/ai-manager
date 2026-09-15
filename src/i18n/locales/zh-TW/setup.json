@@ -72,7 +72,7 @@
   "noSessions": "無工作階段",
   "sessionCount_one": "{{count}} 個工作階段",
   "sessionCount_other": "{{count}} 個工作階段",
-  "installAgentsTitle": "安裝代理",
+  "installAgentsTitle": "未安裝",
   "agentInstalled": "已安裝",
   "install": "安裝",
   "installing": "安裝中…",
