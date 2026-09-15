@@ -601,6 +601,47 @@ describe('global statistics', () => {
     expect(personalReport?.totals.billingTokens).toBe(30);
   });
 
+  test('does not double-count when two profiles share a literal project id', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'stats-collision-'));
+    const primary = join(home, '.claude');
+    const personal = join(home, '.claude-personal');
+
+    // Same project id under both roots: the same working directory opened
+    // once under the default profile and once under `.claude-personal`.
+    await writeSession(primary, 'alpha', 'a.jsonl', [assistantTurn('shared', 2, 0.2)]);
+    await writeSession(personal, 'alpha', 'b.jsonl', [assistantTurn('shared', 3, 0.3)]);
+
+    const roots: AgentRoots = {
+      ...resolveAgentPaths({
+        env: {},
+        home,
+      }),
+      claude: [primary, personal],
+    };
+    const stats = await computeGlobalStats(roots);
+
+    expect(stats.totals.sessions).toBe(2);
+    expect(stats.totals.billingTokens).toBe(50);
+    expect(stats.agents).toEqual([{
+      agent: 'claude',
+      tokens: 50,
+      sessions: 2,
+      projects: 2,
+    }]);
+
+    const defaultReport = stats.perAgentProfile.find((entry) => {
+      return entry.profile == null;
+    });
+    const personalReport = stats.perAgentProfile.find((entry) => {
+      return entry.profile === 'Personal';
+    });
+
+    expect(defaultReport?.totals.sessions).toBe(1);
+    expect(defaultReport?.totals.billingTokens).toBe(20);
+    expect(personalReport?.totals.sessions).toBe(1);
+    expect(personalReport?.totals.billingTokens).toBe(30);
+  });
+
   test('exposes global statistics through the endpoint handler', async () => {
     const home = await newDir();
 

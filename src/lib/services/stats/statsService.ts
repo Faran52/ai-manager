@@ -2,7 +2,7 @@ import { agentOption } from '@config/agents';
 
 import {
   listAgentProjects,
-  pathsFor,
+  pathsForProfile,
   readModelCosts,
 } from '../agents/agentsService';
 import { listSessions } from '../history/utils/claudeUtils';
@@ -233,7 +233,7 @@ const countProject = async (
   project: ProjectSummary,
   roots: AgentRoots,
 ): Promise<readonly CountedSession[]> => {
-  const agentDirs = pathsFor(roots, project.agent);
+  const agentDirs = pathsForProfile(roots, project.agent, project.profile);
   const sessions = await sessionsForStats(agentDirs, project.id, project.agent);
   const counted: CountedSession[] = [];
 
