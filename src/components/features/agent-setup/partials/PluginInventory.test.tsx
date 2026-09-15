@@ -141,19 +141,102 @@ test('shortens a commit id standing in for a version', async () => {
   expect(screen.queryByText('0120fb83da5d')).toBeNull();
 });
 
-test('orders disabled first, then unknown marketplaces, then the healthy rest', async () => {
+test('sorts by plugin name by default and does not move a row when it toggles', async () => {
+  stubCosts([]);
+  const rows = [
+    plugin({ id: 'healthy@official' }),
+    plugin({
+      id: 'stray@somewhere',
+      marketplace: 'somewhere',
+      knownMarketplace: false,
+    }),
+    plugin({
+      id: 'sleeping@official',
+      enabled: false,
+    }),
+  ];
+
+  const { rerender } = render(
+    <PluginInventory plugins={rows} projectPath={PROJECT} onToggle={noToggle} />,
+  );
+
+  expect(await screen.findByRole('table')).toBeDefined();
+  expect(rowNames()).toEqual(['healthy', 'sleeping', 'stray']);
+
+  // Flip every plugin's enabled state and confirm the row order is unaffected:
+  // position is identity, not a function of status.
+  rerender(
+    <PluginInventory
+      plugins={rows.map((row) => {
+        return {
+          ...row,
+          enabled: !row.enabled,
+        };
+      })}
+      projectPath={PROJECT}
+      onToggle={noToggle}
+    />,
+  );
+
+  expect(rowNames()).toEqual(['healthy', 'sleeping', 'stray']);
+});
+
+test('sorts a text column ascending on the first click and descending on the second', async () => {
   stubCosts([]);
   render(
     <PluginInventory
       plugins={[
-        plugin({ id: 'healthy@official' }),
         plugin({
-          id: 'stray@somewhere',
-          marketplace: 'somewhere',
-          knownMarketplace: false,
+          id: 'zzz@official',
+          version: '1.0.0',
         }),
         plugin({
-          id: 'sleeping@official',
+          id: 'aaa@official',
+          version: '2.0.0',
+        }),
+      ]}
+      projectPath={PROJECT}
+      onToggle={noToggle}
+    />,
+  );
+
+  expect(await screen.findByRole('table')).toBeDefined();
+  // Default sort is by plugin name, so the version column starts inactive.
+  expect(screen.getByRole('columnheader', { name: 'Version' }).getAttribute('aria-sort')).toBe('none');
+
+  await userEvent.click(screen.getByRole('button', { name: 'Version' }));
+  expect(rowNames()).toEqual(['zzz', 'aaa']);
+  expect(screen.getByRole('columnheader', { name: 'Version' }).getAttribute('aria-sort')).toBe('ascending');
+  expect(screen.getByRole('columnheader', { name: 'Plugin' }).getAttribute('aria-sort')).toBe('none');
+
+  await userEvent.click(screen.getByRole('button', { name: 'Version' }));
+  expect(rowNames()).toEqual(['aaa', 'zzz']);
+  expect(screen.getByRole('columnheader', { name: 'Version' }).getAttribute('aria-sort')).toBe('descending');
+
+  // A third click on the same column returns to ascending rather than
+  // getting stuck once it has flipped direction.
+  await userEvent.click(screen.getByRole('button', { name: 'Version' }));
+  expect(rowNames()).toEqual(['zzz', 'aaa']);
+  expect(screen.getByRole('columnheader', { name: 'Version' }).getAttribute('aria-sort')).toBe('ascending');
+});
+
+test('sorts numeric columns, treats a missing cost as zero, and resets to ascending on a new column', async () => {
+  stubCosts([{
+    plugin: 'delta@official',
+    alwaysOnTokens: 50,
+    onInvokeTokens: 500,
+    estimatedCostUsd: 0.02,
+  }]);
+  render(
+    <PluginInventory
+      plugins={[
+        plugin({
+          id: 'delta@official',
+          enabled: true,
+        }),
+        // No cost entry at all, so every cost column reads zero for this one.
+        plugin({
+          id: 'alpha@official',
           enabled: false,
         }),
       ]}
@@ -163,7 +246,26 @@ test('orders disabled first, then unknown marketplaces, then the healthy rest', 
   );
 
   expect(await screen.findByRole('table')).toBeDefined();
-  expect(rowNames()).toEqual(['sleeping', 'stray', 'healthy']);
+
+  await userEvent.click(screen.getByRole('button', { name: 'always-on' }));
+  expect(rowNames()).toEqual(['alpha', 'delta']);
+
+  await userEvent.click(screen.getByRole('button', { name: 'State' }));
+  expect(rowNames()).toEqual(['alpha', 'delta']);
+  await userEvent.click(screen.getByRole('button', { name: 'State' }));
+  expect(rowNames()).toEqual(['delta', 'alpha']);
+
+  // A different column resets to ascending rather than carrying over State's
+  // descending direction.
+  await userEvent.click(screen.getByRole('button', { name: 'per invoke' }));
+  expect(rowNames()).toEqual(['alpha', 'delta']);
+  expect(screen.getByRole('columnheader', { name: 'per invoke' }).getAttribute('aria-sort')).toBe('ascending');
+
+  await userEvent.click(screen.getByRole('button', { name: '$/1k turns' }));
+  expect(rowNames()).toEqual(['alpha', 'delta']);
+
+  await userEvent.click(screen.getByRole('button', { name: 'Scope' }));
+  expect(rowNames()).toEqual(['alpha', 'delta']);
 });
 
 test('keeps the head of a long inventory in view while its rows scroll', async () => {

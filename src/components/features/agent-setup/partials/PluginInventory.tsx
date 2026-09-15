@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { ChevronDown, ChevronUp } from 'lucide-react';
+
 import { cn } from '@utils/cnUtils';
 import { toErrorMessage } from '@utils/errorUtils';
 
@@ -9,13 +11,38 @@ import { Spinner, Switch } from '@ui/index';
 import { usePluginCosts } from '../hooks/usePluginCosts';
 
 import type { InstalledPlugin, PluginCostAttribution } from '@services/agents/agentsService';
-import type { FC } from 'react';
+import type { FC, ReactNode } from 'react';
 
 export interface PluginInventoryProps {
   readonly plugins: readonly InstalledPlugin[];
   readonly projectPath: string;
   readonly onToggle: (plugin: InstalledPlugin) => Promise<void>;
 }
+
+type SortKey = 'alwaysOn' | 'perInvoke' | 'perTurns' | 'plugin' | 'scope' | 'state' | 'version';
+
+type SortDirection = 'asc' | 'desc';
+
+interface SortState {
+  readonly key: SortKey;
+  readonly direction: SortDirection;
+}
+
+type Comparator = (
+  left: InstalledPlugin,
+  right: InstalledPlugin,
+  byId: ReadonlyMap<string, PluginCostAttribution>,
+) => number;
+
+interface SortHeadProps {
+  readonly sortKey: SortKey;
+  readonly sort: SortState;
+  readonly onSort: (key: SortKey) => void;
+  readonly className?: string;
+  readonly children: ReactNode;
+}
+
+type CostField = 'alwaysOnTokens' | 'estimatedCostUsd' | 'onInvokeTokens';
 
 const CELL = 'truncate py-2 pe-4 text-start align-middle';
 
@@ -67,27 +94,131 @@ const versionIn = (version: string): string => {
   return SHA.test(version) ? version.slice(0, 7) : version;
 };
 
-const rank = (plugin: InstalledPlugin): number => {
-  if (!plugin.enabled) {
-    return 0;
-  }
-
-  return plugin.knownMarketplace ? 2 : 1;
-};
-
-// Disabled first, then unknown marketplaces, then the healthy rest alphabetically.
-const ordered = (plugins: readonly InstalledPlugin[]): readonly InstalledPlugin[] => {
-  return [...plugins].sort((left, right) => {
-    return rank(left) - rank(right) || left.id.localeCompare(right.id);
-  });
-};
-
 const costsById = (
   costs: readonly PluginCostAttribution[] | null,
 ): ReadonlyMap<string, PluginCostAttribution> => {
   return new Map((costs ?? []).map((cost) => {
     return [cost.plugin, cost];
   }));
+};
+
+const DEFAULT_SORT: SortState = {
+  key: 'plugin',
+  direction: 'asc',
+};
+
+const compareText = (left: string, right: string): number => {
+  return left.localeCompare(right);
+};
+
+const compareNumber = (left: number, right: number): number => {
+  return left - right;
+};
+
+const stateValue = (plugin: InstalledPlugin): number => {
+  return plugin.enabled ? 1 : 0;
+};
+
+// A plugin the cost read never attributed anything to sorts as a plain zero.
+const costField = (
+  byId: ReadonlyMap<string, PluginCostAttribution>,
+  plugin: InstalledPlugin,
+  field: CostField,
+): number => {
+  return byId.get(plugin.id)?.[field] ?? 0;
+};
+
+const COMPARATORS: Record<SortKey, Comparator> = {
+  plugin: (left, right) => {
+    return compareText(left.id, right.id);
+  },
+  scope: (left, right) => {
+    return compareText(left.scope, right.scope);
+  },
+  version: (left, right) => {
+    return compareText(left.version, right.version);
+  },
+  alwaysOn: (left, right, byId) => {
+    return compareNumber(costField(byId, left, 'alwaysOnTokens'), costField(byId, right, 'alwaysOnTokens'));
+  },
+  perInvoke: (left, right, byId) => {
+    return compareNumber(costField(byId, left, 'onInvokeTokens'), costField(byId, right, 'onInvokeTokens'));
+  },
+  perTurns: (left, right, byId) => {
+    return compareNumber(costField(byId, left, 'estimatedCostUsd'), costField(byId, right, 'estimatedCostUsd'));
+  },
+  state: (left, right) => {
+    return compareNumber(stateValue(left), stateValue(right));
+  },
+};
+
+/*
+ * Position is identity, not status: a plugin keeps its row when it is toggled
+ * on or off, sorted only by whatever column the reader picked (the plugin's
+ * own name by default). The old rank-then-alphabetical order moved a row the
+ * instant its switch changed, which read as the table losing track of it.
+ */
+const ordered = (
+  plugins: readonly InstalledPlugin[],
+  byId: ReadonlyMap<string, PluginCostAttribution>,
+  sort: SortState,
+): readonly InstalledPlugin[] => {
+  const sign = sort.direction === 'asc' ? 1 : -1;
+  const compare = COMPARATORS[sort.key];
+
+  return [...plugins].sort((left, right) => {
+    const primary = compare(left, right, byId);
+
+    return primary === 0 ? left.id.localeCompare(right.id) : primary * sign;
+  });
+};
+
+const toggleSort = (current: SortState, key: SortKey): SortState => {
+  if (current.key !== key) {
+    return {
+      key,
+      direction: 'asc',
+    };
+  }
+
+  return {
+    key,
+    direction: current.direction === 'asc' ? 'desc' : 'asc',
+  };
+};
+
+const ariaSortFor = (key: SortKey, sort: SortState): 'ascending' | 'descending' | 'none' => {
+  if (sort.key !== key) {
+    return 'none';
+  }
+
+  return sort.direction === 'asc' ? 'ascending' : 'descending';
+};
+
+const SortHead: FC<SortHeadProps> = ({
+  sortKey,
+  sort,
+  onSort,
+  className,
+  children,
+}) => {
+  const active = sort.key === sortKey;
+  const Icon = sort.direction === 'asc' ? ChevronUp : ChevronDown;
+
+  return (
+    <th scope="col" aria-sort={ariaSortFor(sortKey, sort)} className={className}>
+      <button
+        type="button"
+        onClick={() => {
+          onSort(sortKey);
+        }}
+        className="inline-flex items-center gap-0.5"
+      >
+        {children}
+        {active && <Icon className="size-3" />}
+      </button>
+    </th>
+  );
 };
 
 export const PluginInventory: FC<PluginInventoryProps> = ({
@@ -101,7 +232,12 @@ export const PluginInventory: FC<PluginInventoryProps> = ({
   const loadingCosts = costs == null && error == null;
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
   const byId = costsById(costs);
+
+  const handleSort = (key: SortKey): void => {
+    setSort(toggleSort(sort, key));
+  };
 
   const toggle = async (plugin: InstalledPlugin): Promise<void> => {
     setBusyId(plugin.id);
@@ -147,17 +283,66 @@ export const PluginInventory: FC<PluginInventoryProps> = ({
       <table className={TABLE}>
         <thead>
           <tr>
-            <th scope="col" className={cn(HEAD, 'w-[26%] ps-2')}>{t('plugin')}</th>
-            <th scope="col" className={cn(HEAD, 'w-[10%]')}>{t('scope')}</th>
-            <th scope="col" className={cn(HEAD, 'w-[13%]')}>{t('version')}</th>
-            <th scope="col" className={cn(HEAD, NUMERIC, 'w-[13%]')}>{t('costsAlwaysOn')}</th>
-            <th scope="col" className={cn(HEAD, NUMERIC, 'w-[13%]')}>{t('costsPerInvoke')}</th>
-            <th scope="col" className={cn(HEAD, NUMERIC, 'w-[15%]')}>{t('costsPerTurns')}</th>
-            <th scope="col" className={cn(HEAD, 'w-[10%]')}>{t('state')}</th>
+            <SortHead
+              sortKey="plugin"
+              sort={sort}
+              onSort={handleSort}
+              className={cn(HEAD, 'w-[26%] ps-2')}
+            >
+              {t('plugin')}
+            </SortHead>
+            <SortHead
+              sortKey="scope"
+              sort={sort}
+              onSort={handleSort}
+              className={cn(HEAD, 'w-[10%]')}
+            >
+              {t('scope')}
+            </SortHead>
+            <SortHead
+              sortKey="version"
+              sort={sort}
+              onSort={handleSort}
+              className={cn(HEAD, 'w-[13%]')}
+            >
+              {t('version')}
+            </SortHead>
+            <SortHead
+              sortKey="alwaysOn"
+              sort={sort}
+              onSort={handleSort}
+              className={cn(HEAD, NUMERIC, 'w-[13%]')}
+            >
+              {t('costsAlwaysOn')}
+            </SortHead>
+            <SortHead
+              sortKey="perInvoke"
+              sort={sort}
+              onSort={handleSort}
+              className={cn(HEAD, NUMERIC, 'w-[13%]')}
+            >
+              {t('costsPerInvoke')}
+            </SortHead>
+            <SortHead
+              sortKey="perTurns"
+              sort={sort}
+              onSort={handleSort}
+              className={cn(HEAD, NUMERIC, 'w-[15%]')}
+            >
+              {t('costsPerTurns')}
+            </SortHead>
+            <SortHead
+              sortKey="state"
+              sort={sort}
+              onSort={handleSort}
+              className={cn(HEAD, 'w-[10%]')}
+            >
+              {t('state')}
+            </SortHead>
           </tr>
         </thead>
         <tbody>
-          {ordered(plugins).map((plugin) => {
+          {ordered(plugins, byId, sort).map((plugin) => {
             const cost = byId.get(plugin.id);
             /* v8 ignore next -- splitting on a literal separator always yields index 0 */
             const name = plugin.id.split('@')[0] ?? plugin.id;
