@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { ChevronDown, ChevronUp } from 'lucide-react';
-
 import { cn } from '@utils/cnUtils';
 import { toErrorMessage } from '@utils/errorUtils';
 
@@ -10,8 +8,11 @@ import { Spinner, Switch } from '@ui/index';
 
 import { usePluginCosts } from '../hooks/usePluginCosts';
 
+import { SortHead } from './SortHead';
+
 import type { InstalledPlugin, PluginCostAttribution } from '@services/agents/agentsService';
-import type { FC, ReactNode } from 'react';
+import type { FC } from 'react';
+import type { SortKey, SortState } from './SortHead';
 
 export interface PluginInventoryProps {
   readonly plugins: readonly InstalledPlugin[];
@@ -21,28 +22,11 @@ export interface PluginInventoryProps {
   readonly onToggle: (plugin: InstalledPlugin) => Promise<void>;
 }
 
-type SortKey = 'alwaysOn' | 'perInvoke' | 'perTurns' | 'plugin' | 'scope' | 'state' | 'version';
-
-type SortDirection = 'asc' | 'desc';
-
-interface SortState {
-  readonly key: SortKey;
-  readonly direction: SortDirection;
-}
-
 type Comparator = (
   left: InstalledPlugin,
   right: InstalledPlugin,
   byId: ReadonlyMap<string, PluginCostAttribution>,
 ) => number;
-
-interface SortHeadProps {
-  readonly sortKey: SortKey;
-  readonly sort: SortState;
-  readonly onSort: (key: SortKey) => void;
-  readonly className?: string;
-  readonly children: ReactNode;
-}
 
 interface Column {
   readonly key: SortKey;
@@ -220,40 +204,6 @@ const toggleSort = (current: SortState, key: SortKey): SortState => {
     key,
     direction: current.direction === 'asc' ? 'desc' : 'asc',
   };
-};
-
-const ariaSortFor = (key: SortKey, sort: SortState): 'ascending' | 'descending' | 'none' => {
-  if (sort.key !== key) {
-    return 'none';
-  }
-
-  return sort.direction === 'asc' ? 'ascending' : 'descending';
-};
-
-const SortHead: FC<SortHeadProps> = ({
-  sortKey,
-  sort,
-  onSort,
-  className,
-  children,
-}) => {
-  const active = sort.key === sortKey;
-  const Icon = sort.direction === 'asc' ? ChevronUp : ChevronDown;
-
-  return (
-    <th scope="col" aria-sort={ariaSortFor(sortKey, sort)} className={className}>
-      <button
-        type="button"
-        onClick={() => {
-          onSort(sortKey);
-        }}
-        className="inline-flex items-center gap-0.5"
-      >
-        {children}
-        {active && <Icon className="size-3" />}
-      </button>
-    </th>
-  );
 };
 
 export const PluginInventory: FC<PluginInventoryProps> = ({

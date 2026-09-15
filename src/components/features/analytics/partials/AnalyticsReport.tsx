@@ -5,7 +5,6 @@ import {
   MessagesSquare,
   Zap,
 } from 'lucide-react';
-import { motion } from 'motion/react';
 
 import {
   formatCost,
@@ -13,11 +12,7 @@ import {
   formatTokens,
 } from '@utils/formatUtils';
 
-import {
-  arriveInSequence,
-  Eyebrow,
-  MetricCard,
-} from '@ui/index';
+import { MetricCard } from '@ui/index';
 
 import { ActivityHeatmap } from './ActivityHeatmap';
 import { AnalyticsPanel } from './AnalyticsPanel';
@@ -27,6 +22,7 @@ import { ModelDistribution } from './ModelDistribution';
 import { PricingCoverage } from './PricingCoverage';
 import { ProjectUsageCard } from './ProjectUsageCard';
 import { ProviderDistribution } from './ProviderDistribution';
+import { ReportSection } from './ReportSection';
 import { StoragePanel } from './StoragePanel';
 import { TopSessions } from './TopSessions';
 import { WorkRhythm } from './WorkRhythm';
@@ -122,25 +118,6 @@ const metricsFor = (
   );
 };
 
-/*
- * A named group of panels. Without them the report was one long column of cards
- * with nothing to say where one subject ended and the next began.
- */
-const Section: FC<{ readonly title: string;
-  readonly index: number;
-  readonly children: ReactNode; }> = ({
-  title,
-  index,
-  children,
-}) => {
-  return (
-    <motion.section className="grid gap-4" {...arriveInSequence(index)}>
-      <Eyebrow as="h3">{title}</Eyebrow>
-      {children}
-    </motion.section>
-  );
-};
-
 export const AnalyticsReport: FC<AnalyticsReportProps> = ({
   stats: selectedStats,
   storage,
@@ -157,11 +134,11 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
 
   return (
     <div className="space-y-8 p-4">
-      <Section title={t('sectionOverview')} index={0}>
+      <ReportSection title={t('sectionOverview')} index={0}>
         {metricsFor(selectedStats, t)}
-      </Section>
+      </ReportSection>
 
-      <Section title={t('sectionCost')} index={1}>
+      <ReportSection title={t('sectionCost')} index={1}>
         <div className="
           grid gap-4
           lg:grid-cols-2
@@ -180,9 +157,9 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
         {wholeMachine && reportAgent == null && <ProviderDistribution agents={globalAgents} />}
 
         <ModelDistribution models={selectedStats.models} />
-      </Section>
+      </ReportSection>
 
-      <Section title={t('sectionActivity')} index={2}>
+      <ReportSection title={t('sectionActivity')} index={2}>
         {/*
           * The grid of days is narrow by nature, so it shares its row rather
           * than leaving half the width empty.
@@ -220,24 +197,24 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
         </div>
 
         <WorkRhythm rhythm={selectedStats.rhythm} effort={selectedStats.effort} />
-      </Section>
+      </ReportSection>
 
-      <Section title={t('sectionStorage')} index={3}>
+      <ReportSection title={t('sectionStorage')} index={3}>
         <StoragePanel
           storage={storage}
           agent={wholeMachine ? reportAgent : projectAgent}
           projectSessions={wholeMachine ? undefined : sessions}
         />
-      </Section>
+      </ReportSection>
 
       {(!wholeMachine || reportAgent != null) && (
-        <Section title={t('sectionSessions')} index={4}>
+        <ReportSection title={t('sectionSessions')} index={4}>
           <TopSessions
             sessions={selectedStats.topSessions}
             usageRecorded={selectedStats.totals.usageRecorded}
             onOpenSession={onOpenSession}
           />
-        </Section>
+        </ReportSection>
       )}
     </div>
   );

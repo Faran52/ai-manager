@@ -22,17 +22,18 @@ import {
   Badge,
   Button,
   collapseTransition,
-  Eyebrow,
 } from '@ui/index';
 
 import { modelSummaryOf } from '../utils/agentSetupUtils';
+
+import { SetupGroup } from './SetupGroup';
 
 import type {
   AgentSetup,
   InstalledPlugin,
   SetupFinding,
 } from '@services/agents/agentsService';
-import type { FC, ReactNode } from 'react';
+import type { FC } from 'react';
 
 export interface AgentRowProps {
   readonly setup: AgentSetup;
@@ -47,12 +48,6 @@ export interface AgentRowProps {
   readonly onOpenSettings: () => void;
   // Position in the card grid, so the cards arrive one after another.
   readonly index: number;
-}
-
-interface GroupProps {
-  readonly label: string;
-  readonly children: ReactNode;
-  readonly tone?: 'default' | 'warn';
 }
 
 /*
@@ -78,35 +73,6 @@ const AUTH_LABELS: Readonly<Record<string, string>> = {
 
 // The qualifier rides inside its chip, dimmer than the name it qualifies.
 const QUALIFIER = 'opacity-70';
-
-/**
- * A line of the open row: its label, then whatever the agent records for it.
- *
- * The label column is fixed so MCP, RULES and MODEL line up down the left. A
- * crowded group then wraps inside its own line and pushes only the line below
- * it, rather than shoving the next group along.
- */
-const Group: FC<GroupProps> = ({
-  label,
-  children,
-  tone = 'default',
-}) => {
-  return (
-    <div className="grid grid-cols-[4.25rem_minmax(0,1fr)] items-baseline gap-3">
-      <Eyebrow
-        as="dt"
-        size="figure"
-        tone={tone === 'warn' ? 'warn' : 'muted'}
-        className="pt-0.5"
-      >
-        {label}
-      </Eyebrow>
-      <dd className="flex min-w-0 flex-wrap items-baseline gap-1">
-        {children}
-      </dd>
-    </div>
-  );
-};
 
 export const AgentRow: FC<AgentRowProps> = ({
   setup,
@@ -240,7 +206,7 @@ export const AgentRow: FC<AgentRowProps> = ({
               "
               >
                 {flagged && (
-                  <Group label={t('colProblem')} tone="warn">
+                  <SetupGroup label={t('colProblem')} tone="warn">
                     {findings.map((finding) => {
                       return (
                         <Badge
@@ -253,10 +219,10 @@ export const AgentRow: FC<AgentRowProps> = ({
                         </Badge>
                       );
                     })}
-                  </Group>
+                  </SetupGroup>
                 )}
                 {setup.mcpServers.length > 0 && (
-                  <Group label={t('mcp')}>
+                  <SetupGroup label={t('mcp')}>
                     {setup.mcpServers.map((server) => {
                       return (
                         <Badge
@@ -268,10 +234,10 @@ export const AgentRow: FC<AgentRowProps> = ({
                         </Badge>
                       );
                     })}
-                  </Group>
+                  </SetupGroup>
                 )}
                 {setup.rules.length > 0 && (
-                  <Group label={t('rules')}>
+                  <SetupGroup label={t('rules')}>
                     {setup.rules.map((rule) => {
                       const age = formatTimeAgo(rule.modifiedMs, nowMs, i18n.language);
 
@@ -295,13 +261,13 @@ export const AgentRow: FC<AgentRowProps> = ({
                         </Badge>
                       );
                     })}
-                  </Group>
+                  </SetupGroup>
                 )}
                 {/* Named as configured rather than as the model in use: it is
                       the default from settings, and a project's sessions
                       routinely span several models. */}
                 {hasModelDetail && (
-                  <Group label={t('model')}>
+                  <SetupGroup label={t('model')}>
                     {model != null && (
                       <Badge title={t('modelConfigured')}>
                         <span className="text-foreground">{model}</span>
@@ -309,23 +275,23 @@ export const AgentRow: FC<AgentRowProps> = ({
                     )}
                     {provider != null && <Badge>{provider}</Badge>}
                     {authKey != null && <Badge>{t(authKey)}</Badge>}
-                  </Group>
+                  </SetupGroup>
                 )}
                 {isClaude && (
-                  <Group label={t('pluginsTitle')}>
+                  <SetupGroup label={t('pluginsTitle')}>
                     <Button size="sm" onClick={onOpenPlugins}>
                       <Blocks className="size-3" />
                       {t('viewPlugins')}
                     </Button>
-                  </Group>
+                  </SetupGroup>
                 )}
                 {settingsAgents.includes(setup.agent) && (
-                  <Group label={t('configuration')}>
+                  <SetupGroup label={t('configuration')}>
                     <Button size="sm" onClick={onOpenSettings}>
                       <SlidersHorizontal className="size-3" />
                       {t('viewConfiguration')}
                     </Button>
-                  </Group>
+                  </SetupGroup>
                 )}
               </dl>
             </motion.div>
