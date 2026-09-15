@@ -20,7 +20,8 @@ import type {
 
 export interface TooltipProps {
   readonly content: string;
-  readonly children: ReactNode;
+  // The hover target. Optional only with `position`, which brings its own.
+  readonly children?: ReactNode;
   readonly side?: 'top' | 'right' | 'bottom' | 'left';
   /**
    * A cell/cursor point rather than `children` itself. Lets one Tooltip serve

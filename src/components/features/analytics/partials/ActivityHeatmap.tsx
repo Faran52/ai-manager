@@ -183,9 +183,7 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
               y: hovered.y,
             }}
             open
-          >
-            <span aria-hidden />
-          </Tooltip>
+          />
         )}
       </div>
 
