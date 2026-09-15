@@ -105,6 +105,9 @@ export interface UpdateEndpointDeps {
   readonly updateDeps?: Parameters<typeof checkForUpdate>[1] | undefined;
 }
 
+// The request plus the profile it names, resolved to a config dir by the handler.
+type PluginActionInput = PluginActionRequest & { readonly profile?: string | undefined };
+
 const isAgent = (value: unknown): value is AgentId => {
   return typeof value === 'string' && isAgentId(value);
 };
@@ -202,10 +205,23 @@ const isSettingsBody = (body: object): body is SettingsBody => {
     && (!('profile' in body) || typeof body.profile === 'string');
 };
 
-// The config dir behind a settings request: the one Claude root whose
-// profile label matches, or nothing (the service then takes the default).
-const claudeDirFor = (body: SettingsBody, deps: EndpointDeps | undefined): string | undefined => {
-  return pathsForProfile(resolveEndpointRoots(deps), 'claude', body.profile)[0];
+/**
+ * The config dir behind a profile-scoped request: the one Claude root whose
+ * profile label matches. No profile means the default root, which every
+ * reader and the CLI already assume, so nothing is passed down.
+ */
+const claudeDirFor = (
+  body: { readonly profile?: string | undefined },
+  deps: EndpointDeps | undefined,
+): string | undefined => {
+  return body.profile == null
+    ? undefined
+    : pathsForProfile(resolveEndpointRoots(deps), 'claude', body.profile)[0];
+};
+
+// Parsed JSON never yields undefined, so a present profile must be a string.
+const profileOf = (body: object): string | undefined => {
+  return 'profile' in body && typeof body.profile === 'string' ? body.profile : undefined;
 };
 
 const isRuleList = (value: unknown): value is readonly string[] => {
@@ -716,7 +732,7 @@ const isSetupScope = (value: unknown): value is SetupScope => {
   return value === 'user' || value === 'project';
 };
 
-const parsePluginActionBody = (body: object): PluginActionRequest | undefined => {
+const parsePluginActionBody = (body: object): PluginActionInput | undefined => {
   if (!('action' in body) || !isPluginActionName(body.action)
     || !('plugin' in body) || typeof body.plugin !== 'string'
     || body.plugin.length === 0 || /\s/u.test(body.plugin)
@@ -730,6 +746,7 @@ const parsePluginActionBody = (body: object): PluginActionRequest | undefined =>
     plugin: body.plugin,
     scope: body.scope,
     projectPath: body.projectPath,
+    profile: profileOf(body),
   };
 };
 
@@ -745,6 +762,7 @@ export const handlePluginAction = async (request: Request, deps?: EndpointDeps):
     const result = await runPluginAction({
       ...target,
       home: deps?.home,
+      claudeDir: claudeDirFor(target, deps),
     }, deps?.pluginAction);
 
     if (!result.ok) {
@@ -763,14 +781,16 @@ export const handlePluginCosts = async (request: Request, deps?: EndpointDeps): 
       return jsonError(BAD_REQUEST, 'A non-empty projectPath is required.');
     }
 
+    const claudeDir = claudeDirFor({ profile: profileOf(body) }, deps);
     const [plugins, usage, blendedRate] = await Promise.all([
-      readClaudePlugins(body.projectPath, deps?.home),
+      readClaudePlugins(body.projectPath, deps?.home, claudeDir),
       readProjectUsage(body.projectPath, deps?.home),
       readBlendedRate(deps?.home),
     ]);
     const estimates = await readPluginCosts({
       plugins,
       home: deps?.home,
+      claudeDir,
     }, deps?.pluginDetails);
 
     return jsonOk({ costs: attributePluginCosts(usage, estimates, blendedRate) });

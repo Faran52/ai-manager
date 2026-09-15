@@ -189,10 +189,13 @@ export interface PluginActionBody {
   readonly plugin: string;
   readonly scope: SetupScope;
   readonly action: PluginActionName;
+  // The Claude profile whose plugins these are; absent means the default root.
+  readonly profile?: string | undefined;
 }
 
 export interface PluginCostsBody {
   readonly projectPath: string;
+  readonly profile?: string | undefined;
 }
 
 export interface PluginCostsResponse {

@@ -109,3 +109,24 @@ describe('usePluginToggle', () => {
     expect(reload).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('usePluginToggle for a Claude profile', () => {
+  test('names the profile so the action lands in that config dir', async () => {
+    const fetchSpy = vi.fn((_url: RequestInfo | URL, init?: RequestInit) => {
+      return new Response(JSON.stringify({
+        ok: true,
+        seen: init != null,
+      }));
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+
+    const { result } = renderHook(() => {
+      return usePluginToggle('/repo', vi.fn());
+    });
+    await result.current(PLUGIN, 'Personal');
+
+    const sent: unknown = JSON.parse(bodyOf(fetchSpy.mock.calls[0]?.[1]));
+
+    expect(sent).toMatchObject({ profile: 'Personal' });
+  });
+});

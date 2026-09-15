@@ -72,3 +72,31 @@ describe('usePluginCosts', () => {
     });
   });
 });
+
+describe('usePluginCosts for a Claude profile', () => {
+  test('names the profile in the request', async () => {
+    const fetchSpy = vi.fn((_url: RequestInfo | URL, init?: RequestInit) => {
+      return new Response(JSON.stringify({
+        costs: COSTS,
+        seen: init != null,
+      }));
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+
+    const { result } = renderHook(() => {
+      return usePluginCosts('/repo', 'Personal');
+    });
+
+    await waitFor(() => {
+      expect(result.current.costs).not.toBeNull();
+    });
+
+    const init = fetchSpy.mock.calls[0]?.[1];
+    const sent: unknown = JSON.parse(typeof init?.body === 'string' ? init.body : '{}');
+
+    expect(sent).toEqual({
+      projectPath: '/repo',
+      profile: 'Personal',
+    });
+  });
+});

@@ -1,4 +1,4 @@
-import type { AgentSetup, InstalledPlugin } from '@services/agents/agentsService';
+import type { AgentSetup } from '@services/agents/agentsService';
 
 export interface ModelSummary {
   readonly model: string | undefined;
@@ -12,13 +12,10 @@ export const setupKey = (setup: Pick<AgentSetup, 'agent' | 'profile'>): string =
   return `${setup.agent}:${setup.profile ?? ''}`;
 };
 
-export const agentIsConfigured = (
-  setup: AgentSetup,
-  plugins: readonly InstalledPlugin[],
-): boolean => {
+export const agentIsConfigured = (setup: AgentSetup): boolean => {
   return setup.mcpServers.length > 0
     || setup.rules.length > 0
-    || (setup.agent === 'claude' && plugins.length > 0);
+    || (setup.plugins?.length ?? 0) > 0;
 };
 
 /*

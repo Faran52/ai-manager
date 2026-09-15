@@ -161,3 +161,31 @@ describe('readClaudePlugins', () => {
     expect(await readClaudePlugins(project, home)).toEqual([]);
   });
 });
+
+describe('readClaudePlugins for a sibling profile', () => {
+  test('reads the registry files from that config dir', async () => {
+    const { home, project } = await workspace();
+    const personal = join(home, '.claude-personal');
+
+    await mkdir(join(personal, 'plugins'), { recursive: true });
+    await write(join(personal, 'plugins', 'installed_plugins.json'), {
+      version: 2,
+      plugins: {
+        'mine@own': [{
+          scope: 'user',
+          version: '1.0.0',
+        }],
+      },
+    });
+    await write(join(personal, 'plugins', 'known_marketplaces.json'), { own: {} });
+    await write(join(personal, 'settings.json'), { enabledPlugins: { 'mine@own': true } });
+
+    expect(await readClaudePlugins(project, home, personal)).toEqual([
+      expect.objectContaining({
+        id: 'mine@own',
+        enabled: true,
+        knownMarketplace: true,
+      }),
+    ]);
+  });
+});

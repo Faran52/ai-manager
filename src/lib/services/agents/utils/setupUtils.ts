@@ -9,11 +9,13 @@ import { join } from 'node:path';
 import { isJsonObject, parseJsonContainer } from '@utils/jsonUtils';
 
 import { readModelAuth } from './modelAuthUtils';
+import { readClaudePlugins } from './pluginsUtils';
 import { CLAUDE_HOME_NAME, rootProfileLabel } from './rootsUtils';
 
 import type { AgentId } from '@config/agents';
 import type { JsonObject, JsonValue } from '@utils/jsonUtils';
 import type { ModelAuthState } from './modelAuthUtils';
+import type { InstalledPlugin } from './pluginsUtils';
 
 export type SetupScope = 'user' | 'project';
 
@@ -39,6 +41,8 @@ export interface AgentSetup {
   readonly mcpServers: readonly McpServerSummary[];
   readonly rules: readonly RulesFileSummary[];
   readonly modelAuth: ModelAuthState;
+  // Claude only: the plugins installed in this profile's config dir.
+  readonly plugins?: readonly InstalledPlugin[] | undefined;
 }
 
 interface SetupLocation {
@@ -523,17 +527,20 @@ export const readAgentSetup = async (
   home = homedir(),
   claudeDir = defaultClaudeDir(home),
 ): Promise<AgentSetup> => {
-  const [mcpServers, rules, modelAuth] = await Promise.all([
+  const claude = agent === 'claude';
+  const [mcpServers, rules, modelAuth, plugins] = await Promise.all([
     readAgentMcp(agent, projectPath, home, claudeDir),
     readAgentRules(agent, projectPath, home, claudeDir),
     readModelAuth(agent, home, claudeDir),
+    claude ? readClaudePlugins(projectPath, home, claudeDir) : undefined,
   ]);
 
   return {
     agent,
-    profile: agent === 'claude' ? rootProfileLabel(claudeDir, CLAUDE_HOME_NAME) : undefined,
+    profile: claude ? rootProfileLabel(claudeDir, CLAUDE_HOME_NAME) : undefined,
     mcpServers,
     rules,
     modelAuth,
+    plugins,
   };
 };

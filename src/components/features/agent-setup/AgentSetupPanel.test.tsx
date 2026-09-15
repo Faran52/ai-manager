@@ -67,7 +67,6 @@ test('lists every configured agent with its servers and rules', async () => {
       projectPath={PROJECT}
       findings={[]}
       usage={null}
-      plugins={[]}
       nowMs={0}
       onPluginToggle={noToggle}
       setups={[
@@ -118,7 +117,6 @@ test('shows the scope a server comes from', async () => {
       projectPath={PROJECT}
       findings={[]}
       usage={null}
-      plugins={[]}
       nowMs={0}
       onPluginToggle={noToggle}
       setups={[
@@ -161,7 +159,6 @@ test('says when an agent has rules but no servers', async () => {
       projectPath={PROJECT}
       findings={[]}
       usage={null}
-      plugins={[]}
       nowMs={0}
       onPluginToggle={noToggle}
       setups={[setup('codex', { rules: [rule(`${PROJECT}/AGENTS.md`, 4)] })]}
@@ -189,7 +186,6 @@ test('shortens a user-wide rules path to the home tilde', async () => {
       projectPath={PROJECT}
       findings={[]}
       usage={null}
-      plugins={[]}
       nowMs={0}
       onPluginToggle={noToggle}
       setups={[
@@ -237,7 +233,6 @@ test('counts setup here and leaves recorded spend to the analytics tab', () => {
       projectPath={PROJECT}
       findings={[]}
       usage={USAGE}
-      plugins={[]}
       nowMs={1000}
       onPluginToggle={noToggle}
       setups={[setup('claude', { rules: [rule(`${PROJECT}/CLAUDE.md`, 3)] })]}
@@ -261,7 +256,6 @@ test('still counts setup when no agent is configured', () => {
       projectPath={PROJECT}
       findings={[]}
       usage={USAGE}
-      plugins={[]}
       nowMs={1000}
       onPluginToggle={noToggle}
       setups={[setup('claude')]}
@@ -286,7 +280,6 @@ test('asks for a project before anything else', () => {
       setups={[]}
       findings={[]}
       usage={null}
-      plugins={[]}
       nowMs={0}
       onPluginToggle={noToggle}
     />,
@@ -310,7 +303,6 @@ test('says the location is unknown when the project has no folder', () => {
       setups={[setup('claude')]}
       findings={[]}
       usage={null}
-      plugins={[]}
       nowMs={0}
       onPluginToggle={noToggle}
     />,
@@ -334,7 +326,6 @@ test('names every agent, set up or not', () => {
       setups={[setup('claude'), setup('codex')]}
       findings={[]}
       usage={null}
-      plugins={[]}
       nowMs={0}
       onPluginToggle={noToggle}
     />,
@@ -367,7 +358,6 @@ test('orders flagged agents first, then healthy, then unused', () => {
         detail: '/gone.sh',
       }]}
       usage={null}
-      plugins={[]}
       nowMs={0}
       onPluginToggle={noToggle}
     />,
@@ -401,7 +391,6 @@ test('flags an agent that a setup finding names', () => {
         detail: 'pending',
       }]}
       usage={null}
-      plugins={[]}
       nowMs={0}
       onPluginToggle={noToggle}
     />,
@@ -422,7 +411,6 @@ test('leads with setup problems when there are any', () => {
       sessionCounts={{}}
       projectPath={PROJECT}
       usage={null}
-      plugins={[]}
       nowMs={0}
       onPluginToggle={noToggle}
       findings={[{
@@ -452,7 +440,6 @@ test('counts multiple setup problems', () => {
       sessionCounts={{}}
       projectPath={PROJECT}
       usage={null}
-      plugins={[]}
       nowMs={0}
       onPluginToggle={noToggle}
       findings={[
@@ -493,17 +480,18 @@ test('opens the plugin table in a dialog and closes it again', async () => {
       projectPath={PROJECT}
       findings={[]}
       usage={null}
-      plugins={[{
-        id: 'review@official',
-        marketplace: 'official',
-        scope: 'user',
-        enabled: true,
-        version: '1.0.0',
-        knownMarketplace: true,
-      }]}
       nowMs={0}
       onPluginToggle={noToggle}
-      setups={[setup('claude')]}
+      setups={[setup('claude', {
+        plugins: [{
+          id: 'review@official',
+          marketplace: 'official',
+          scope: 'user',
+          enabled: true,
+          version: '1.0.0',
+          knownMarketplace: true,
+        }],
+      })]}
     />,
   );
 
@@ -535,7 +523,6 @@ test('opens an agent\'s configuration in a dialog and closes it again', async ()
       projectPath={PROJECT}
       findings={[]}
       usage={null}
-      plugins={[]}
       nowMs={0}
       onPluginToggle={noToggle}
       setups={[setup('claude', { rules: [rule(`${PROJECT}/CLAUDE.md`)] })]}
@@ -567,7 +554,6 @@ test('shuts a card that is already open instead of leaving it stuck', async () =
       projectPath={PROJECT}
       findings={[]}
       usage={null}
-      plugins={[]}
       nowMs={0}
       onPluginToggle={noToggle}
       setups={[setup('codex', { rules: [rule(`${PROJECT}/AGENTS.md`, 4)] })]}
@@ -610,7 +596,6 @@ test('shows one card per Claude profile, each with its own findings and count', 
         detail: '/gone.sh',
       }]}
       usage={null}
-      plugins={[]}
       nowMs={0}
       onPluginToggle={noToggle}
       setups={[
@@ -628,4 +613,55 @@ test('shows one card per Claude profile, each with its own findings and count', 
   // The flagged profile card opens itself, the default one stays shut.
   expect(await screen.findByText('Hook script missing')).toBeDefined();
   expect(screen.getByText('5 sessions')).toBeDefined();
+});
+
+test('opens a profile card\'s own plugins, not the default root\'s', async () => {
+  vi.stubGlobal('fetch', vi.fn(() => {
+    return Promise.resolve(new Response(JSON.stringify({ costs: [] }), { status: 200 }));
+  }));
+  render(
+    <AgentSetupPanel
+      projectSelected
+      trust={{
+        known: true,
+        trusted: true,
+        onboarded: true,
+      }}
+      sessionCounts={{}}
+      projectPath={PROJECT}
+      findings={[]}
+      usage={null}
+      nowMs={0}
+      onPluginToggle={noToggle}
+      setups={[
+        setup('claude', {
+          plugins: [{
+            id: 'default@official',
+            marketplace: 'official',
+            scope: 'user',
+            enabled: true,
+            version: '1.0.0',
+            knownMarketplace: true,
+          }],
+        }),
+        setup('claude', {
+          profile: 'Personal',
+          plugins: [{
+            id: 'personal@own',
+            marketplace: 'own',
+            scope: 'user',
+            enabled: false,
+            version: '2.0.0',
+            knownMarketplace: true,
+          }],
+        }),
+      ]}
+    />,
+  );
+
+  await expand(/Claude Code Personal/u);
+  await userEvent.click(screen.getByRole('button', { name: 'View plugins' }));
+
+  expect(await screen.findByText('personal')).toBeDefined();
+  expect(screen.queryByText('default')).toBeNull();
 });

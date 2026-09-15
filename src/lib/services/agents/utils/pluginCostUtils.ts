@@ -26,6 +26,7 @@ export interface PluginCostPlugin {
 export interface PluginDetailsInput {
   readonly plugins: readonly PluginCostPlugin[];
   readonly home?: string | undefined;
+  readonly claudeDir?: string | undefined;
 }
 
 const TOKEN_PATTERN = /~\s*[\d,.]+k?/gu;
@@ -77,7 +78,10 @@ export const readPluginCosts = (
   });
 
   return Promise.all(enabled.map(async (plugin) => {
-    const result = await run(['plugin', 'details', plugin.id], { cwd: input.home ?? homedir() });
+    const result = await run(['plugin', 'details', plugin.id], {
+      cwd: input.home ?? homedir(),
+      claudeDir: input.claudeDir,
+    });
 
     if (!result.ok) {
       return {

@@ -465,7 +465,6 @@ const HistoryAppView: FC = () => {
           setups={agentSetup.data?.setups ?? []}
           findings={agentSetup.data?.findings ?? []}
           usage={agentSetup.data?.usage ?? null}
-          plugins={agentSetup.data?.plugins ?? []}
           trust={agentSetup.data?.trust ?? {
             known: false,
             trusted: false,

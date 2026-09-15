@@ -60,11 +60,12 @@ const applicableInstall = (installs: JsonValue, projectPath: string): JsonObject
 export const readClaudePlugins = async (
   projectPath: string,
   home = homedir(),
+  claudeDir = join(home, '.claude'),
 ): Promise<readonly InstalledPlugin[]> => {
   const [installed, known, userSettings, projectSettings] = await Promise.all([
-    readJson(join(home, '.claude', 'plugins', 'installed_plugins.json')),
-    readJson(join(home, '.claude', 'plugins', 'known_marketplaces.json')),
-    readJson(join(home, '.claude', 'settings.json')),
+    readJson(join(claudeDir, 'plugins', 'installed_plugins.json')),
+    readJson(join(claudeDir, 'plugins', 'known_marketplaces.json')),
+    readJson(join(claudeDir, 'settings.json')),
     readJson(join(projectPath, '.claude', 'settings.json')),
   ]);
 

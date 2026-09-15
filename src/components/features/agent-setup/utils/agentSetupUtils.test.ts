@@ -19,7 +19,7 @@ const setup = (overrides: Partial<AgentSetup> = {}): AgentSetup => {
 };
 
 test('counts an agent as set up once it has servers, rules or claude plugins', () => {
-  expect(agentIsConfigured(setup(), [])).toBe(false);
+  expect(agentIsConfigured(setup())).toBe(false);
   expect(agentIsConfigured(setup({
     rules: [{
       path: '/CLAUDE.md',
@@ -27,15 +27,17 @@ test('counts an agent as set up once it has servers, rules or claude plugins', (
       bytes: 4,
       modifiedMs: 0,
     }],
-  }), [])).toBe(true);
-  expect(agentIsConfigured(setup(), [{
-    id: 'review@official',
-    marketplace: 'official',
-    scope: 'user',
-    enabled: true,
-    version: '1.0.0',
-    knownMarketplace: true,
-  }])).toBe(true);
+  }))).toBe(true);
+  expect(agentIsConfigured(setup({
+    plugins: [{
+      id: 'review@official',
+      marketplace: 'official',
+      scope: 'user',
+      enabled: true,
+      version: '1.0.0',
+      knownMarketplace: true,
+    }],
+  }))).toBe(true);
 });
 
 test('reads the model and credentials a claude setup records', () => {

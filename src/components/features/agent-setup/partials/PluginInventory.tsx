@@ -16,6 +16,8 @@ import type { FC, ReactNode } from 'react';
 export interface PluginInventoryProps {
   readonly plugins: readonly InstalledPlugin[];
   readonly projectPath: string;
+  // The Claude profile these plugins belong to, for the cost read.
+  readonly profile?: string | undefined;
   readonly onToggle: (plugin: InstalledPlugin) => Promise<void>;
 }
 
@@ -257,10 +259,11 @@ const SortHead: FC<SortHeadProps> = ({
 export const PluginInventory: FC<PluginInventoryProps> = ({
   plugins,
   projectPath,
+  profile,
   onToggle,
 }) => {
   const { t } = useTranslation('setup');
-  const { costs, error } = usePluginCosts(projectPath);
+  const { costs, error } = usePluginCosts(projectPath, profile);
   // Costs are read with the table, so a null list is still in flight.
   const loadingCosts = costs == null && error == null;
   const [busyId, setBusyId] = useState<string | null>(null);

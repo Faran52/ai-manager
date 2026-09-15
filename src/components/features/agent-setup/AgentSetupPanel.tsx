@@ -38,12 +38,11 @@ export interface AgentSetupPanelProps {
   readonly setups: readonly AgentSetup[];
   readonly findings: readonly SetupFinding[];
   readonly usage: ProjectUsage | null;
-  readonly plugins: readonly InstalledPlugin[];
   readonly trust: ProjectTrust;
   // Keyed by setupKey, so each Claude profile card counts its own sessions.
   readonly sessionCounts: Readonly<Record<string, number>>;
   readonly nowMs: number;
-  readonly onPluginToggle: (plugin: InstalledPlugin) => Promise<void>;
+  readonly onPluginToggle: (plugin: InstalledPlugin, profile?: string) => Promise<void>;
 }
 
 export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
@@ -52,7 +51,6 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
   setups,
   findings,
   usage,
-  plugins,
   trust,
   sessionCounts,
   nowMs,
@@ -66,8 +64,20 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
    * after mount, so seeding the state at first render would miss them.
    */
   const [picked, setPicked] = useState<string | null | undefined>(undefined);
-  const [pluginsOpen, setPluginsOpen] = useState(false);
-  const [settingsFor, setSettingsFor] = useState<AgentSetup | null>(null);
+  /*
+   * Which card's plugin table or configuration sheet is open, by key rather
+   * than by the setup object: a toggle reloads the setups, and a held object
+   * would keep showing the plugins as they were before the toggle.
+   */
+  const [pluginsKey, setPluginsKey] = useState<string | null>(null);
+  const [settingsKey, setSettingsKey] = useState<string | null>(null);
+  const bySetupKey = (key: string | null): AgentSetup | null => {
+    return setups.find((setup) => {
+      return setupKey(setup) === key;
+    }) ?? null;
+  };
+  const pluginsFor = bySetupKey(pluginsKey);
+  const settingsFor = bySetupKey(settingsKey);
   const settings = useSettings(
     settingsFor == null ? null : projectPath,
     settingsFor?.agent ?? 'claude',
@@ -107,11 +117,9 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
   const hasFinding = (setup: AgentSetup): boolean => {
     return findingsFor(setup).length > 0;
   };
-  const configured = setups.filter((setup) => {
-    return agentIsConfigured(setup, plugins);
-  });
+  const configured = setups.filter(agentIsConfigured);
   const unconfigured = setups.filter((setup) => {
-    return !agentIsConfigured(setup, plugins);
+    return !agentIsConfigured(setup);
   });
   const flagged = configured.filter((setup) => {
     return hasFinding(setup);
@@ -127,7 +135,8 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
   const first = flagged[0];
   const firstKey = first == null ? null : setupKey(first);
   const expanded = picked === undefined ? firstKey : picked;
-  const enabledPlugins = plugins.filter((plugin) => {
+  const openPlugins = pluginsFor?.plugins ?? [];
+  const enabledPlugins = openPlugins.filter((plugin) => {
     return plugin.enabled;
   }).length;
 
@@ -165,7 +174,7 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
                 index={index}
                 setup={setup}
                 projectPath={projectPath}
-                plugins={plugins}
+                plugins={setup.plugins ?? []}
                 sessionCount={sessionCounts[setupKey(setup)] ?? 0}
                 findings={findingsFor(setup)}
                 nowMs={nowMs}
@@ -174,10 +183,10 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
                   setPicked(expanded === setupKey(setup) ? null : setupKey(setup));
                 }}
                 onOpenPlugins={() => {
-                  setPluginsOpen(true);
+                  setPluginsKey(setupKey(setup));
                 }}
                 onOpenSettings={() => {
-                  setSettingsFor(setup);
+                  setSettingsKey(setupKey(setup));
                 }}
               />
             );
@@ -212,9 +221,9 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
         </section>
       )}
       <Modal
-        open={pluginsOpen}
+        open={pluginsFor != null}
         onClose={() => {
-          setPluginsOpen(false);
+          setPluginsKey(null);
         }}
         title={t('pluginsTitle')}
         widthClass="max-w-3xl"
@@ -232,7 +241,7 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
               font-mono text-xs font-normal text-muted-foreground
             "
             >
-              {`${String(enabledPlugins)}/${String(plugins.length)}`}
+              {`${String(enabledPlugins)}/${String(openPlugins.length)}`}
             </span>
           </h3>
           {/*
@@ -243,9 +252,12 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
             */}
           <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
             <PluginInventory
-              plugins={plugins}
+              plugins={openPlugins}
               projectPath={projectPath}
-              onToggle={onPluginToggle}
+              profile={pluginsFor?.profile}
+              onToggle={(plugin) => {
+                return onPluginToggle(plugin, pluginsFor?.profile);
+              }}
             />
           </div>
         </div>
@@ -253,7 +265,7 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
       <Modal
         open={settingsFor != null}
         onClose={() => {
-          setSettingsFor(null);
+          setSettingsKey(null);
         }}
         title={t('configuration')}
         widthClass="max-w-3xl"

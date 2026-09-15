@@ -13,6 +13,8 @@ export interface PluginActionRequest {
   readonly scope: SetupScope;
   readonly projectPath: string;
   readonly home?: string | undefined;
+  // The profile's config dir, when the action targets a sibling profile.
+  readonly claudeDir?: string | undefined;
 }
 
 const BASE_ARGS: Record<PluginActionName, readonly string[]> = {
@@ -45,5 +47,8 @@ export const runPluginAction = (
   request: PluginActionRequest,
   run: ClaudeCliRunner = runClaudeCli,
 ): Promise<ClaudeCliResult> => {
-  return run(pluginActionArgs(request), { cwd: pluginActionCwd(request) });
+  return run(pluginActionArgs(request), {
+    cwd: pluginActionCwd(request),
+    claudeDir: request.claudeDir,
+  });
 };

@@ -15,7 +15,7 @@ export interface PluginCostsResource {
  * it rather than waiting behind a press. Every write lands after the await, so
  * the effect body never sets state on the render that scheduled it.
  */
-export const usePluginCosts = (projectPath: string): PluginCostsResource => {
+export const usePluginCosts = (projectPath: string, profile?: string): PluginCostsResource => {
   const [costs, setCosts] = useState<readonly PluginCostAttribution[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +24,10 @@ export const usePluginCosts = (projectPath: string): PluginCostsResource => {
 
     const read = async (): Promise<void> => {
       try {
-        const response = await fetchPluginCosts({ projectPath });
+        const response = await fetchPluginCosts({
+          projectPath,
+          profile,
+        });
 
         if (live) {
           setCosts(response.costs);
@@ -42,7 +45,7 @@ export const usePluginCosts = (projectPath: string): PluginCostsResource => {
     return () => {
       live = false;
     };
-  }, [projectPath]);
+  }, [profile, projectPath]);
 
   return {
     costs,

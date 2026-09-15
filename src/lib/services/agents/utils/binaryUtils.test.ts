@@ -101,3 +101,17 @@ describe('runBinary', () => {
     expect(result.output).toContain(cwd.split('/').at(-1) ?? cwd);
   });
 });
+
+describe('runBinary environment', () => {
+  test('lays the given variables over the inherited environment', async () => {
+    const bin = await stubbedBinary('tool', 'echo "$CLAUDE_CONFIG_DIR"');
+
+    await expect(runBinary(join(bin, 'tool'), [], {
+      env: { CLAUDE_CONFIG_DIR: '/home/me/.claude-personal' },
+      timeoutMs: TIMEOUT_MS,
+    })).resolves.toEqual({
+      ok: true,
+      output: '/home/me/.claude-personal',
+    });
+  });
+});

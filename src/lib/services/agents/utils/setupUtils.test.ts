@@ -149,6 +149,8 @@ describe('readAgentSetup', () => {
         mcpServers: [],
         rules: [],
         modelAuth: await readModelAuth(agent, home),
+        // Claude always carries its plugin list, empty here; nobody else has one.
+        plugins: agent === 'claude' ? [] : undefined,
       });
     }
   });

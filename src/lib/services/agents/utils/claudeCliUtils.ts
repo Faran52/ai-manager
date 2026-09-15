@@ -6,6 +6,8 @@ export type ClaudeCliResult = BinaryRunResult;
 
 export interface ClaudeCliOptions {
   readonly cwd: string;
+  // A sibling profile's config dir; Claude Code reads CLAUDE_CONFIG_DIR for it.
+  readonly claudeDir?: string | undefined;
 }
 
 export type ClaudeCliRunner = (args: readonly string[], options: ClaudeCliOptions) => Promise<ClaudeCliResult>;
@@ -28,6 +30,7 @@ export const runClaudeCli = async (
 
   return runBinary(binary, args, {
     cwd: options.cwd,
+    env: options.claudeDir == null ? undefined : { CLAUDE_CONFIG_DIR: options.claudeDir },
     timeoutMs: TIMEOUT_MS,
   });
 };

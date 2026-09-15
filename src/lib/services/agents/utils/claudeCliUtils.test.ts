@@ -98,3 +98,19 @@ describe('runClaudeCli', () => {
     });
   });
 });
+
+describe('runClaudeCli for a sibling profile', () => {
+  test('points the cli at the profile through CLAUDE_CONFIG_DIR', async () => {
+    const bin = await stubbedClaude('echo "$CLAUDE_CONFIG_DIR"');
+
+    vi.stubEnv('PATH', bin);
+
+    await expect(runClaudeCli(['plugin', 'list'], {
+      cwd: bin,
+      claudeDir: '/home/me/.claude-work',
+    })).resolves.toEqual({
+      ok: true,
+      output: '/home/me/.claude-work',
+    });
+  });
+});

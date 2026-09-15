@@ -119,9 +119,7 @@ export const AgentRow: FC<AgentRowProps> = ({
   index,
 }) => {
   const { t, i18n } = useTranslation('setup');
-  // Plugins are read from the default root only, so a profile card has no
-  // plugin line: it would show another config dir's plugins as its own.
-  const isClaude = setup.agent === 'claude' && setup.profile == null;
+  const isClaude = setup.agent === 'claude';
   const {
     model,
     authMethod,

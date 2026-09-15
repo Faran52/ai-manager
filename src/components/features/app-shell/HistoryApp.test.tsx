@@ -339,14 +339,14 @@ describe('HistoryApp', () => {
               model: 'claude-opus-5',
               authMethod: 'oauth',
             },
-          }],
-          plugins: [{
-            id: 'review@official',
-            marketplace: 'official',
-            scope: 'user',
-            enabled: true,
-            version: '1.0.0',
-            knownMarketplace: true,
+            plugins: [{
+              id: 'review@official',
+              marketplace: 'official',
+              scope: 'user',
+              enabled: true,
+              version: '1.0.0',
+              knownMarketplace: true,
+            }],
           }],
         });
       }
@@ -407,14 +407,14 @@ describe('HistoryApp', () => {
               model: 'claude-opus-5',
               authMethod: 'oauth',
             },
-          }],
-          plugins: [{
-            id: 'review@official',
-            marketplace: 'official',
-            scope: 'project',
-            enabled: false,
-            version: '1.0.0',
-            knownMarketplace: true,
+            plugins: [{
+              id: 'review@official',
+              marketplace: 'official',
+              scope: 'project',
+              enabled: false,
+              version: '1.0.0',
+              knownMarketplace: true,
+            }],
           }],
         });
       }

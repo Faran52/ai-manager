@@ -1419,3 +1419,62 @@ describe('Claude profiles on the health and settings endpoints', () => {
     }), { home })).status).toBe(400);
   });
 });
+
+describe('plugin endpoints for a Claude profile', () => {
+  test('resolves the profile to its config dir for actions and costs', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'plugin-profile-'));
+    const personal = join(home, '.claude-personal');
+
+    await mkdir(join(home, '.claude'), { recursive: true });
+    await mkdir(join(personal, 'plugins'), { recursive: true });
+    await writeFile(join(personal, 'plugins', 'installed_plugins.json'), JSON.stringify({
+      version: 2,
+      plugins: {
+        'mine@own': [{
+          scope: 'user',
+          version: '1.0.0',
+        }],
+      },
+    }));
+    await writeFile(join(personal, 'settings.json'), JSON.stringify({ enabledPlugins: { 'mine@own': true } }));
+
+    const run = vi.fn(() => {
+      return Promise.resolve({
+        ok: true,
+        output: 'Always-on context: ~1k tokens',
+      });
+    });
+
+    expect((await handlePluginAction(post({
+      projectPath: '/projects/demo',
+      plugin: 'mine@own',
+      scope: 'user',
+      action: 'disable',
+      profile: 'Personal',
+    }), {
+      home,
+      pluginAction: run,
+    })).status).toBe(200);
+    expect(run).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({ claudeDir: personal }));
+
+    const details = vi.fn(() => {
+      return Promise.resolve({
+        ok: true,
+        output: 'Always-on context: ~1k tokens',
+      });
+    });
+    const costs = await jsonOf(await handlePluginCosts(post({
+      projectPath: '/projects/demo',
+      profile: 'Personal',
+    }), {
+      home,
+      pluginDetails: details,
+    }));
+
+    expect(costs).toMatchObject({ costs: [{ plugin: 'mine@own' }] });
+    expect(details).toHaveBeenCalledWith(
+      ['plugin', 'details', 'mine@own'],
+      expect.objectContaining({ claudeDir: personal }),
+    );
+  });
+});

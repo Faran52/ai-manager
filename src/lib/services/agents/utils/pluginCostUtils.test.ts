@@ -178,3 +178,23 @@ describe('attributePluginCosts', () => {
     }], 999)[0]?.estimatedCostUsd).toBeCloseTo(0.02);
   });
 });
+
+describe('readPluginCosts for a sibling profile', () => {
+  test('hands the config dir to the cli runner', async () => {
+    const run = runner(true, DETAILS);
+
+    await readPluginCosts({
+      plugins: [{
+        id: 'on@a',
+        enabled: true,
+      }],
+      home: '/home/x',
+      claudeDir: '/home/x/.claude-personal',
+    }, run);
+
+    expect(run).toHaveBeenCalledWith(['plugin', 'details', 'on@a'], {
+      cwd: '/home/x',
+      claudeDir: '/home/x/.claude-personal',
+    });
+  });
+});

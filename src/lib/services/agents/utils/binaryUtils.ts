@@ -43,11 +43,19 @@ export const runBinary = (
   binary: string,
   args: readonly string[],
   options: { readonly cwd?: string;
+    // Laid over the inherited environment, for a CLI steered by a variable.
+    readonly env?: Readonly<Record<string, string>> | undefined;
     readonly timeoutMs: number; },
 ): Promise<BinaryRunResult> => {
   return new Promise((resolve) => {
     execFile(binary, [...args], {
       cwd: options.cwd,
+      env: options.env == null
+        ? undefined
+        : {
+            ...process.env,
+            ...options.env,
+          },
       timeout: options.timeoutMs,
       encoding: 'utf8',
     }, (error, stdout, stderr) => {
