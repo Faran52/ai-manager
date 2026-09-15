@@ -153,10 +153,11 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
           "
           data-agent-list
         >
-          {listed.map((setup) => {
+          {listed.map((setup, index) => {
             return (
               <AgentRow
                 key={setup.agent}
+                index={index}
                 setup={setup}
                 projectPath={projectPath}
                 plugins={plugins}

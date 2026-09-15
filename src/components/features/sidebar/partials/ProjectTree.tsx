@@ -2,13 +2,18 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { FolderSearch } from 'lucide-react';
+import { motion } from 'motion/react';
 
 import { agentBadgeLabel } from '@config/agents';
 
 import { formatTimeAgo, tildePath } from '@utils/formatUtils';
 import { initialsOf } from '@utils/initialsUtils';
 
-import { EmptyState, Spinner } from '@ui/index';
+import {
+  arriveInSequence,
+  EmptyState,
+  Spinner,
+} from '@ui/index';
 
 import { buildProjectTree } from '../utils/projectTreeUtils';
 
@@ -80,7 +85,7 @@ export const ProjectTree: FC<ProjectTreeProps> = ({
 
   return (
     <ul className="project-navigator" aria-label={t('projects')} data-project-navigator>
-      {groups.map((group) => {
+      {groups.map((group, index) => {
         const primaryBranch = group.agents[0];
 
         // v8 ignore next -- groups are built from at least one project branch.
@@ -93,7 +98,12 @@ export const ProjectTree: FC<ProjectTreeProps> = ({
         });
 
         return (
-          <li className="project-card" data-active={active} key={group.key}>
+          <motion.li
+            className="project-card"
+            data-active={active}
+            key={group.key}
+            {...arriveInSequence(index)}
+          >
             <button
               type="button"
               className="project-card-heading"
@@ -160,7 +170,7 @@ export const ProjectTree: FC<ProjectTreeProps> = ({
                 );
               })}
             </div>
-          </li>
+          </motion.li>
         );
       })}
     </ul>

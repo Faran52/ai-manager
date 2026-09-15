@@ -56,6 +56,7 @@ const renderRow = (
         onToggle={noop}
         onOpenPlugins={noop}
         onOpenSettings={noop}
+        index={0}
         {...props}
       />
     </ul>,

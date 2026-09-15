@@ -1,4 +1,10 @@
-import type { Transition } from 'motion/react';
+import type { TargetAndTransition, Transition } from 'motion/react';
+
+export interface ArrivalProps {
+  readonly initial: TargetAndTransition;
+  readonly animate: TargetAndTransition;
+  readonly transition: Transition;
+}
 
 /*
  * Springs, not eased durations, for anything the reader can interrupt. A tween
@@ -17,6 +23,34 @@ export const MOTION_DURATION_SLOW = 0.7;
 
 // Marks in one list fill in sequence, so the eye reads an order rather than a flash.
 export const MOTION_STAGGER = 0.05;
+
+// Capped so a long list never keeps its tail waiting on the rows above it.
+export const staggerDelay = (index: number): number => {
+  return Math.min(index, 12) * MOTION_STAGGER;
+};
+
+/*
+ * A list item, card or section arriving: a short fade with a few pixels of
+ * settle, each sibling a beat after the last. Spread onto a motion element.
+ * The app root's MotionConfig reducedMotion="user" strips the travel for a
+ * reduced-motion reader, so callers need no check of their own.
+ */
+export const arriveInSequence = (index: number): ArrivalProps => {
+  return {
+    initial: {
+      opacity: 0,
+      y: 4,
+    },
+    animate: {
+      opacity: 1,
+      y: 0,
+    },
+    transition: {
+      ...fadeTransition,
+      delay: staggerDelay(index),
+    },
+  };
+};
 
 // Opacity alone has no distance to travel, so a spring would have nothing to
 // model. A short linear-ish fade is both cheaper and steadier.

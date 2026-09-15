@@ -5,6 +5,7 @@ import {
   MessagesSquare,
   Zap,
 } from 'lucide-react';
+import { motion } from 'motion/react';
 
 import {
   formatCost,
@@ -12,7 +13,7 @@ import {
   formatTokens,
 } from '@utils/formatUtils';
 
-import { MetricCard } from '@ui/index';
+import { arriveInSequence, MetricCard } from '@ui/index';
 
 import { ActivityHeatmap } from './ActivityHeatmap';
 import { AnalyticsPanel } from './AnalyticsPanel';
@@ -116,9 +117,14 @@ const metricsFor = (
  * with nothing to say where one subject ended and the next began.
  */
 const Section: FC<{ readonly title: string;
-  readonly children: ReactNode; }> = ({ title, children }) => {
+  readonly index: number;
+  readonly children: ReactNode; }> = ({
+  title,
+  index,
+  children,
+}) => {
   return (
-    <section className="grid gap-4">
+    <motion.section className="grid gap-4" {...arriveInSequence(index)}>
       <h3 className="
         text-xs font-semibold tracking-wider text-foreground/80 uppercase
       "
@@ -126,7 +132,7 @@ const Section: FC<{ readonly title: string;
         {title}
       </h3>
       {children}
-    </section>
+    </motion.section>
   );
 };
 
@@ -144,11 +150,11 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
 
   return (
     <div className="space-y-8 p-4">
-      <Section title={t('sectionOverview')}>
+      <Section title={t('sectionOverview')} index={0}>
         {metricsFor(selectedStats, t)}
       </Section>
 
-      <Section title={t('sectionCost')}>
+      <Section title={t('sectionCost')} index={1}>
         <div className="
           grid gap-4
           lg:grid-cols-2
@@ -167,7 +173,7 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
         <ModelDistribution models={selectedStats.models} />
       </Section>
 
-      <Section title={t('sectionActivity')}>
+      <Section title={t('sectionActivity')} index={2}>
         {/*
           * The grid of days is narrow by nature, so it shares its row rather
           * than leaving half the width empty.
@@ -207,7 +213,7 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
         <WorkRhythm rhythm={selectedStats.rhythm} effort={selectedStats.effort} />
       </Section>
 
-      <Section title={t('sectionStorage')}>
+      <Section title={t('sectionStorage')} index={3}>
         <StoragePanel
           storage={storage}
           agent={wholeMachine ? reportAgent : projectAgent}
@@ -216,7 +222,7 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
       </Section>
 
       {(!wholeMachine || reportAgent != null) && (
-        <Section title={t('sectionSessions')}>
+        <Section title={t('sectionSessions')} index={4}>
           <TopSessions
             sessions={selectedStats.topSessions}
             usageRecorded={selectedStats.totals.usageRecorded}

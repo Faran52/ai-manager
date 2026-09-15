@@ -18,6 +18,7 @@ import {
 } from '@utils/formatUtils';
 
 import {
+  arriveInSequence,
   Badge,
   Button,
   collapseTransition,
@@ -43,6 +44,8 @@ export interface AgentRowProps {
   readonly onToggle: () => void;
   readonly onOpenPlugins: () => void;
   readonly onOpenSettings: () => void;
+  // Position in the card grid, so the cards arrive one after another.
+  readonly index: number;
 }
 
 interface GroupProps {
@@ -113,6 +116,7 @@ export const AgentRow: FC<AgentRowProps> = ({
   onToggle,
   onOpenPlugins,
   onOpenSettings,
+  index,
 }) => {
   const { t, i18n } = useTranslation('setup');
   const isClaude = setup.agent === 'claude';
@@ -129,11 +133,12 @@ export const AgentRow: FC<AgentRowProps> = ({
   const hasModelDetail = model != null || provider != null || authKey != null;
 
   return (
-    <li
+    <motion.li
       data-agent={setup.agent}
       className={cn('flex flex-col rounded-lg border bg-card px-3 py-2.5', flagged
         ? 'border-warn/35 bg-warn/5'
         : 'border-border')}
+      {...arriveInSequence(index)}
     >
       <button
         type="button"
@@ -324,6 +329,6 @@ export const AgentRow: FC<AgentRowProps> = ({
           </div>
         )}
       </AnimatePresence>
-    </li>
+    </motion.li>
   );
 };

@@ -34,6 +34,7 @@ import { formatTimeAgo } from '@utils/formatUtils';
 
 import {
   AgentMark,
+  arriveInSequence,
   collapseTransition,
   controlTransition,
   EmptyState,
@@ -815,11 +816,15 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
 
   // The whole `<li>`: nested in a thread's own `<ul>` or standing directly in
   // the session list, a row is styled the same either way.
-  const renderSessionRow = (row: SessionRow, isContinuation: boolean): ReactElement => {
+  const renderSessionRow = (row: SessionRow, isContinuation: boolean, index = 0): ReactElement => {
     return (
-      <li key={row.session.filePath} className={rowClassName(row, isContinuation)}>
+      <motion.li
+        key={row.session.filePath}
+        className={rowClassName(row, isContinuation)}
+        {...arriveInSequence(index)}
+      >
         {renderRowContent(row)}
-      </li>
+      </motion.li>
     );
   };
 
@@ -1157,7 +1162,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                                   </span>
                                 </button>
                               </li>
-                              {!shut && groupThreadRuns(group.rows).map(({ head, parts }) => {
+                              {!shut && groupThreadRuns(group.rows).map(({ head, parts }, index) => {
                                 /**
                                  * partCount, not parts.length: a collapsed thread has
                                  * no parts to render yet but still needs the stable,
@@ -1165,7 +1170,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                                  */
                                 return head.partCount > 1
                                   ? renderThreadGroup(head, parts)
-                                  : renderSessionRow(head, false);
+                                  : renderSessionRow(head, false, index);
                               })}
                             </Fragment>
                           );

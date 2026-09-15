@@ -6,8 +6,13 @@ import {
 import { useTranslation } from 'react-i18next';
 
 import { Search as SearchIcon } from 'lucide-react';
+import { motion } from 'motion/react';
 
-import { Button, Modal } from '@ui/index';
+import {
+  arriveInSequence,
+  Button,
+  Modal,
+} from '@ui/index';
 
 import { groupBySession } from './utils/hitGroupUtils';
 
@@ -141,7 +146,7 @@ export const SearchDialog: FC<SearchDialogProps> = ({
               </p>
               {group.hits.map((hit, index) => {
                 return (
-                  <button
+                  <motion.button
                     key={`${group.filePath}-${String(index)}`}
                     type="button"
                     onClick={() => {
@@ -149,6 +154,7 @@ export const SearchDialog: FC<SearchDialogProps> = ({
                       onClose();
                     }}
                     data-search-hit
+                    {...arriveInSequence(index)}
                     className="
                       w-full rounded-md px-2 py-1.5 text-start
                       hover:bg-accent
@@ -169,7 +175,7 @@ export const SearchDialog: FC<SearchDialogProps> = ({
                       <mark className="bg-primary/25 text-inherit">{hit.match}</mark>
                       {hit.after}
                     </span>
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>
