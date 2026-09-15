@@ -237,8 +237,10 @@ export const SettingsView: FC<SettingsViewProps> = ({
   };
 
   return (
-    <div className="h-full overflow-y-auto p-4" data-settings-view>
-      <div className="mx-auto grid max-w-3xl gap-4">
+    // The heading and the file tabs stay put; only the file's own content
+    // scrolls, so the tab you are on never leaves the top of the sheet.
+    <div className="flex h-full flex-col" data-settings-view>
+      <div className="mx-auto grid w-full max-w-3xl gap-4 px-4 pt-4">
         <header className="grid gap-1">
           <h2 className="text-base font-semibold text-foreground">{t('heading')}</h2>
           <p className="text-sm text-muted-foreground">{t('intro')}</p>
@@ -247,7 +249,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
         {/* Tabs on the file: the agent is fixed by the Health card this opened from. */}
         <nav
           className={cn(
-            '-mb-2 flex items-center gap-1 border-b border-border',
+            'flex items-center gap-1 border-b border-border',
             scopes.length === 0 && 'hidden',
           )}
           aria-label={t('scopes')}
@@ -301,200 +303,208 @@ export const SettingsView: FC<SettingsViewProps> = ({
             );
           })}
         </nav>
+      </div>
 
-        {settings.status === 'loading' && <Spinner />}
+      <div className="min-h-0 flex-1 overflow-y-auto p-4">
+        <div className="mx-auto grid max-w-3xl gap-4">
+          {settings.status === 'loading' && <Spinner />}
 
-        {settings.status === 'error' && (
-          <p className="
-            flex items-center gap-2 rounded-lg border border-destructive/40
-            bg-destructive/10 px-3 py-2 text-xs text-destructive
-          "
-          >
-            <CircleAlert className="size-3.5" />
-            {settings.error}
-          </p>
-        )}
-
-        {settings.status === 'ready' && scopes.length === 1
-          && projectScopedSettingsAgents.includes(agent) && (
-          <p className="text-xs text-muted-foreground" data-settings-project-hint>
-            {t('projectHint')}
-          </p>
-        )}
-
-        {current == null && settings.status === 'ready' && (
-          <EmptyState
-            icon={<SlidersHorizontal className="size-8" />}
-            title={scopes.length === 0 ? t('noSettingsFile') : t('noScope')}
-          />
-        )}
-
-        {current != null && current.editable !== true && (
-          <div className="
-            grid gap-3 rounded-lg border border-border bg-card p-4
-          "
-          >
-            <FilePath scope={current} />
-            {/* One quiet line, not a warning banner: nothing has gone wrong. */}
-            <p className="flex items-start gap-2 text-xs text-muted-foreground">
-              <Lock className="mt-0.5 size-3.5 shrink-0" />
-              <span>
-                <span className="font-medium text-foreground">{t('readOnly')}</span>
-                {` ${t('readOnlyHint')}`}
-              </span>
+          {settings.status === 'error' && (
+            <p className="
+              flex items-center gap-2 rounded-lg border border-destructive/40
+              bg-destructive/10 px-3 py-2 text-xs text-destructive
+            "
+            >
+              <CircleAlert className="size-3.5" />
+              {settings.error}
             </p>
-            <div data-holds>
-              {/*
+          )}
+
+          {settings.status === 'ready' && scopes.length === 1
+            && projectScopedSettingsAgents.includes(agent) && (
+            <p className="text-xs text-muted-foreground" data-settings-project-hint>
+              {t('projectHint')}
+            </p>
+          )}
+
+          {current == null && settings.status === 'ready' && (
+            <EmptyState
+              icon={<SlidersHorizontal className="size-8" />}
+              title={scopes.length === 0 ? t('noSettingsFile') : t('noScope')}
+            />
+          )}
+
+          {current != null && current.editable !== true && (
+            <div className="
+              grid gap-3 rounded-lg border border-border bg-card p-4
+            "
+            >
+              <FilePath scope={current} />
+              {/* One quiet line, not a warning banner: nothing has gone wrong. */}
+              <p className="
+                flex items-start gap-2 text-xs text-muted-foreground
+              "
+              >
+                <Lock className="mt-0.5 size-3.5 shrink-0" />
+                <span>
+                  <span className="font-medium text-foreground">{t('readOnly')}</span>
+                  {` ${t('readOnlyHint')}`}
+                </span>
+              </p>
+              <div data-holds>
+                {/*
                 A file that is not on disk holds nothing by definition, so the
                 two together said the same thing twice.
               */}
-              {current.preservedKeys.length === 0
-                ? (
-                    <p className="text-body text-muted-foreground">
-                      {current.exists ? t('holdsNothing') : t('notPresentHint')}
-                    </p>
-                  )
-                : <KeyList label={t('holds')} keys={current.preservedKeys} />}
+                {current.preservedKeys.length === 0
+                  ? (
+                      <p className="text-body text-muted-foreground">
+                        {current.exists ? t('holdsNothing') : t('notPresentHint')}
+                      </p>
+                    )
+                  : <KeyList label={t('holds')} keys={current.preservedKeys} />}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {current?.editable === true && draft != null && (
-          <div className="
-            grid gap-4 rounded-lg border border-border bg-card p-4
-          "
-          >
-            <FilePath scope={current} />
+          {current?.editable === true && draft != null && (
+            <div className="
+              grid gap-4 rounded-lg border border-border bg-card p-4
+            "
+            >
+              <FilePath scope={current} />
 
-            {!current.readable && (
-              <p className="
-                flex items-center gap-2 rounded-lg border border-warn/40
-                bg-warn/10 px-3 py-2 text-xs text-warn
-              "
-              >
-                <CircleAlert className="size-3.5" />
-                {t('unreadable')}
-              </p>
-            )}
+              {!current.readable && (
+                <p className="
+                  flex items-center gap-2 rounded-lg border border-warn/40
+                  bg-warn/10 px-3 py-2 text-xs text-warn
+                "
+                >
+                  <CircleAlert className="size-3.5" />
+                  {t('unreadable')}
+                </p>
+              )}
 
-            <GroupLabel>{t('groupPermissions')}</GroupLabel>
-            {RULE_LISTS.map(({
-              list,
-              tone,
-              placeholder,
-            }) => {
-              return (
-                <RuleListEditor
-                  key={list}
-                  label={t(`permission_${list}`)}
-                  hint={t(`permissionHint_${list}`)}
-                  placeholder={placeholder}
-                  tone={tone}
-                  rules={draft.permissions[list]}
-                  onChange={(rules) => {
-                    patch(current.path, draft, {
-                      permissions: {
-                        ...draft.permissions,
-                        [list]: rules,
-                      },
-                    });
-                  }}
-                />
-              );
-            })}
+              <GroupLabel>{t('groupPermissions')}</GroupLabel>
+              {RULE_LISTS.map(({
+                list,
+                tone,
+                placeholder,
+              }) => {
+                return (
+                  <RuleListEditor
+                    key={list}
+                    label={t(`permission_${list}`)}
+                    hint={t(`permissionHint_${list}`)}
+                    placeholder={placeholder}
+                    tone={tone}
+                    rules={draft.permissions[list]}
+                    onChange={(rules) => {
+                      patch(current.path, draft, {
+                        permissions: {
+                          ...draft.permissions,
+                          [list]: rules,
+                        },
+                      });
+                    }}
+                  />
+                );
+              })}
 
-            <GroupLabel>{t('groupDirectories')}</GroupLabel>
-            <RuleListEditor
-              label={t('permission_additionalDirectories')}
-              hint={t('permissionHint_additionalDirectories')}
-              placeholder="../shared-library"
-              rules={draft.permissions.additionalDirectories}
-              onChange={(rules) => {
-                patch(current.path, draft, {
-                  permissions: {
-                    ...draft.permissions,
-                    additionalDirectories: rules,
-                  },
-                });
-              }}
-            />
+              <GroupLabel>{t('groupDirectories')}</GroupLabel>
+              <RuleListEditor
+                label={t('permission_additionalDirectories')}
+                hint={t('permissionHint_additionalDirectories')}
+                placeholder="../shared-library"
+                rules={draft.permissions.additionalDirectories}
+                onChange={(rules) => {
+                  patch(current.path, draft, {
+                    permissions: {
+                      ...draft.permissions,
+                      additionalDirectories: rules,
+                    },
+                  });
+                }}
+              />
 
-            <GroupLabel>{t('groupEnvironment')}</GroupLabel>
-            <EnvEditor
-              entries={draft.env}
-              onChange={(entries) => {
-                patch(current.path, draft, { env: entries });
-              }}
-            />
+              <GroupLabel>{t('groupEnvironment')}</GroupLabel>
+              <EnvEditor
+                entries={draft.env}
+                onChange={(entries) => {
+                  patch(current.path, draft, { env: entries });
+                }}
+              />
 
-            {/*
+              {/*
               Folded away: sixteen chips of keys this screen will not touch were
               the largest block on the card and the least actionable thing on it.
               A native `details` rather than a state hook, since nothing else
               needs to know whether it is open.
             */}
-            {current.preservedKeys.length > 0 && (
-              <details data-preserved-keys>
-                <summary className="
-                  cursor-pointer text-body text-muted-foreground
-                  hover:text-foreground
+              {current.preservedKeys.length > 0 && (
+                <details data-preserved-keys>
+                  <summary className="
+                    cursor-pointer text-body text-muted-foreground
+                    hover:text-foreground
+                  "
+                  >
+                    {t('preservedCount', { count: current.preservedKeys.length })}
+                  </summary>
+                  <div className="mt-2">
+                    <KeyChips keys={current.preservedKeys} />
+                  </div>
+                </details>
+              )}
+
+              {error != null && (
+                <p className="
+                  flex items-center gap-2 rounded-lg border
+                  border-destructive/40 bg-destructive/10 px-3 py-2 text-xs
+                  text-destructive
                 "
                 >
-                  {t('preservedCount', { count: current.preservedKeys.length })}
-                </summary>
-                <div className="mt-2">
-                  <KeyChips keys={current.preservedKeys} />
-                </div>
-              </details>
-            )}
+                  <CircleAlert className="size-3.5" />
+                  {error}
+                </p>
+              )}
 
-            {error != null && (
-              <p className="
-                flex items-center gap-2 rounded-lg border border-destructive/40
-                bg-destructive/10 px-3 py-2 text-xs text-destructive
-              "
-              >
-                <CircleAlert className="size-3.5" />
-                {error}
-              </p>
-            )}
-
-            {/*
+              {/*
               Sticky so it stays reachable: four rule lists and the environment
               editor sit above it, and a rule added at the top used to need a
               scroll to the bottom to commit it. -bottom-4 cancels the scroller's
               own pb-4, so the opaque bar reaches the true bottom edge instead of
               leaving a 1rem strip where the row behind it shows through.
             */}
-            <div className="
-              sticky -bottom-4 -mx-4 -mb-4 flex items-center gap-3 rounded-b-lg
-              border-t border-border bg-card px-4 py-3
-            "
-            >
-              <Button
-                variant="primary"
-                disabled={saving || !current.readable}
-                onClick={() => {
-                  save(current.path, draft);
-                }}
+              <div className="
+                sticky -bottom-4 -mx-4 -mb-4 flex items-center gap-3
+                rounded-b-lg border-t border-border bg-card px-4 py-3
+              "
               >
-                {saving && <Loader2 className="size-3.5 animate-spin" />}
-                {!saving && saved && <Check className="size-3.5" />}
-                {!saving && !saved && <Save className="size-3.5" />}
-                {saved && !saving ? t('saved') : t('save')}
-              </Button>
-              {dirty && !saving && (
-                <span
-                  className="flex items-center gap-1.5 text-xs text-warn"
-                  data-unsaved
+                <Button
+                  variant="primary"
+                  disabled={saving || !current.readable}
+                  onClick={() => {
+                    save(current.path, draft);
+                  }}
                 >
-                  <span className="size-1.5 rounded-full bg-warn" />
-                  {t('unsaved')}
-                </span>
-              )}
+                  {saving && <Loader2 className="size-3.5 animate-spin" />}
+                  {!saving && saved && <Check className="size-3.5" />}
+                  {!saving && !saved && <Save className="size-3.5" />}
+                  {saved && !saving ? t('saved') : t('save')}
+                </Button>
+                {dirty && !saving && (
+                  <span
+                    className="flex items-center gap-1.5 text-xs text-warn"
+                    data-unsaved
+                  >
+                    <span className="size-1.5 rounded-full bg-warn" />
+                    {t('unsaved')}
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
