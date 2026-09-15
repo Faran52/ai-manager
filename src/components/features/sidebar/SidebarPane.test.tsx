@@ -1230,3 +1230,18 @@ describe('SidebarPane view scope', () => {
     expect(order()).toBe('early-first');
   });
 });
+
+test('leaves the agent chips off the project cards when asked, as Health does', () => {
+  render(
+    <SidebarPane
+      {...base}
+      projects={[project('p', 'webapp')]}
+      sessions={[]}
+      showAgentChips={false}
+    />,
+  );
+
+  expect(screen.getByText('webapp')).toBeDefined();
+  // The All Projects card keeps its tallies; only the project cards lose theirs.
+  expect(document.querySelector('[data-project-navigator] .project-provider')).toBeNull();
+});

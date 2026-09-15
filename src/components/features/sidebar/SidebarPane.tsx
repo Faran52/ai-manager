@@ -115,6 +115,8 @@ export interface SidebarPaneProps {
   readonly showSessions?: boolean;
   // The scope card is pinned above the list where a report can be global.
   readonly showAllProjects?: boolean;
+  // Health reads a project as one folder, so its cards carry no agent chips.
+  readonly showAgentChips?: boolean;
 }
 
 const MIN_PROJECTS_WIDTH = 200;
@@ -241,6 +243,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
   onDeleteSession,
   showSessions = true,
   showAllProjects = true,
+  showAgentChips = true,
 }) => {
   const { t, i18n } = useTranslation('sidebar');
   const { push: pushToast } = useToast();
@@ -970,6 +973,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                     order={projectOrder}
                     selectedProject={selectedProject}
                     nowMs={nowMs}
+                    showAgentChips={showAgentChips}
                     onSelectProject={(project) => {
                       exitSelectionMode();
                       onSelectProject(project);

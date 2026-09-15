@@ -36,6 +36,12 @@ export interface ProjectTreeProps {
   readonly nowMs: number;
   readonly onSelectProject: (project: ProjectSummary) => void;
   readonly onOpenMenu: (event: MouseEvent, project: ProjectSummary) => void;
+  /**
+   * The per-agent tally chips under a card. Sessions and Analytics pick a
+   * branch with them; Health reads the project as one folder, so there the
+   * chips only add noise and are left off.
+   */
+  readonly showAgentChips?: boolean;
 }
 
 export const ProjectTree: FC<ProjectTreeProps> = ({
@@ -49,6 +55,7 @@ export const ProjectTree: FC<ProjectTreeProps> = ({
   nowMs,
   onSelectProject,
   onOpenMenu,
+  showAgentChips = true,
 }) => {
   const { t, i18n } = useTranslation('sidebar');
   const groups = useMemo(() => {
@@ -128,48 +135,50 @@ export const ProjectTree: FC<ProjectTreeProps> = ({
             {group.actualPath != null && (
               <p className="project-card-path" title={group.actualPath}>{tildePath(group.actualPath)}</p>
             )}
-            <div className="project-providers">
-              {group.agents.map((branch) => {
-                const selected = selectedProject?.agent === branch.agent
-                  && selectedProject.id === branch.projectId;
-                const label = agentBadgeLabel(branch.agent, branch.source.profile);
-                // A worktree makes the same agent appear twice in one group, so
-                // the row is named and keyed by the project it reads, not the agent.
-                const branchName = branch.worktree == null
-                  ? label
-                  : `${label} · ${branch.worktree}`;
+            {showAgentChips && (
+              <div className="project-providers">
+                {group.agents.map((branch) => {
+                  const selected = selectedProject?.agent === branch.agent
+                    && selectedProject.id === branch.projectId;
+                  const label = agentBadgeLabel(branch.agent, branch.source.profile);
+                  // A worktree makes the same agent appear twice in one group, so
+                  // the row is named and keyed by the project it reads, not the agent.
+                  const branchName = branch.worktree == null
+                    ? label
+                    : `${label} · ${branch.worktree}`;
 
-                return (
-                  <button
-                    type="button"
-                    className="project-provider"
-                    data-agent={branch.agent}
-                    data-selected={selected}
-                    aria-pressed={selected}
-                    aria-label={`${group.name}, ${branchName}, ${t('sessionCount', { count: branch.sessionCount })}`}
-                    title={`${branchName} · ${t('sessionCount', { count: branch.sessionCount })} · ${formatTimeAgo(
-                      branch.lastActivityMs,
-                      nowMs,
-                      i18n.language,
-                    )}`}
-                    key={`${group.key}:${branch.agent}:${branch.projectId}`}
-                    onClick={() => {
-                      onSelectProject(branch.source);
-                    }}
-                    onContextMenu={(event) => {
-                      onOpenMenu(event, branch.source);
-                    }}
-                  >
-                    <span className="project-provider-dot" aria-hidden />
-                    <span className="project-provider-name">{label}</span>
-                    {branch.worktree != null && (
-                      <span className="project-provider-worktree">{branch.worktree}</span>
-                    )}
-                    <span className="project-provider-count">{branch.sessionCount}</span>
-                  </button>
-                );
-              })}
-            </div>
+                  return (
+                    <button
+                      type="button"
+                      className="project-provider"
+                      data-agent={branch.agent}
+                      data-selected={selected}
+                      aria-pressed={selected}
+                      aria-label={`${group.name}, ${branchName}, ${t('sessionCount', { count: branch.sessionCount })}`}
+                      title={`${branchName} · ${t('sessionCount', { count: branch.sessionCount })} · ${formatTimeAgo(
+                        branch.lastActivityMs,
+                        nowMs,
+                        i18n.language,
+                      )}`}
+                      key={`${group.key}:${branch.agent}:${branch.projectId}`}
+                      onClick={() => {
+                        onSelectProject(branch.source);
+                      }}
+                      onContextMenu={(event) => {
+                        onOpenMenu(event, branch.source);
+                      }}
+                    >
+                      <span className="project-provider-dot" aria-hidden />
+                      <span className="project-provider-name">{label}</span>
+                      {branch.worktree != null && (
+                        <span className="project-provider-worktree">{branch.worktree}</span>
+                      )}
+                      <span className="project-provider-count">{branch.sessionCount}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </motion.li>
         );
       })}

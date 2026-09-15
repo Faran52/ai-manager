@@ -553,6 +553,7 @@ const HistoryAppView: FC = () => {
               onSelectReportAgent={selectReportAgent}
               showSessions={view === 'sessions'}
               showAllProjects={view === 'sessions' || view === 'analytics'}
+              showAgentChips={view !== 'health'}
               projects={visibleProjects}
               projectsStatus={projects.status}
               projectNames={projectNames}
