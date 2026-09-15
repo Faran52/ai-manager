@@ -15,8 +15,8 @@
     background: color-mix(in srgb, var(--muted) 55%, transparent);
     border: 1px solid transparent;
     border-radius: 0.5rem;
-    transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease,
-      box-shadow 120ms ease;
+    transition: color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease),
+      box-shadow var(--motion-fast) var(--motion-ease);
   }
 
   .sidebar-funnel-trigger:hover,
@@ -50,7 +50,7 @@
     background: color-mix(in srgb, var(--muted) 55%, transparent);
     border: 1px solid transparent;
     border-radius: 0.5rem;
-    transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease;
+    transition: color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease);
   }
 
   .sidebar-filter-trigger:hover,
@@ -66,7 +66,7 @@
   }
 
   .sidebar-filter-trigger svg {
-    transition: transform 120ms ease;
+    transition: transform var(--motion-fast) var(--motion-ease);
   }
 
   .sidebar-filter-trigger svg[data-open="true"] {
@@ -97,7 +97,7 @@
     color: var(--muted-foreground);
     text-align: start;
     border-radius: 0.5rem;
-    transition: color 120ms ease, background-color 120ms ease;
+    transition: color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease);
   }
 
   .agent-filter-option:focus-visible {
@@ -138,7 +138,7 @@
     overflow: hidden;
     text-align: start;
     border-radius: 0.4375rem;
-    transition: color 120ms ease, background-color 120ms ease;
+    transition: color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease);
   }
 
   .sidebar-row:hover {
@@ -207,7 +207,7 @@
     color: transparent;
     border: 1px solid var(--muted-foreground);
     border-radius: 0.25rem;
-    transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease;
+    transition: color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease);
   }
 
   .sidebar-check[data-checked="true"] {
@@ -226,7 +226,7 @@
     height: 1.5rem;
     color: var(--muted-foreground);
     border-radius: 0.375rem;
-    transition: color 120ms ease, background-color 120ms ease;
+    transition: color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease);
   }
 
   .sidebar-header-icon:hover {
@@ -256,7 +256,7 @@
     color: var(--muted-foreground);
     background: color-mix(in srgb, var(--muted) 55%, transparent);
     border-radius: var(--radius-xs);
-    transition: color 120ms ease, background-color 120ms ease;
+    transition: color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease);
   }
 
   .sidebar-thread-toggle:hover {
@@ -270,7 +270,7 @@
   }
 
   .sidebar-thread-toggle svg {
-    transition: transform 120ms ease;
+    transition: transform var(--motion-fast) var(--motion-ease);
   }
 
   .sidebar-thread-toggle[aria-expanded="false"] svg {
@@ -295,7 +295,7 @@
     background: var(--muted);
     border: 1px solid transparent;
     border-radius: 0.375rem;
-    transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease;
+    transition: color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease);
   }
 
   .sidebar-select-trigger:hover {
@@ -343,7 +343,7 @@
     font-size: 0.6875rem;
     font-weight: 600;
     border-radius: 0.375rem;
-    transition: color 120ms ease, background-color 120ms ease, opacity 120ms ease;
+    transition: color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease), opacity var(--motion-fast) var(--motion-ease);
   }
 
   .session-selection-action {
@@ -408,7 +408,7 @@
     background: var(--card);
     border: 1px solid transparent;
     border-radius: var(--radius-lg);
-    transition: background-color 120ms ease, border-color 120ms ease;
+    transition: background-color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease);
   }
 
   /* Keep the inline margin the list cards carry so the pinned card sits at the
@@ -531,7 +531,7 @@
     background: var(--muted);
     border: 1px solid transparent;
     border-radius: var(--radius-md);
-    transition: color 120ms ease, background-color 120ms ease;
+    transition: color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease);
   }
 
   .project-provider:hover {

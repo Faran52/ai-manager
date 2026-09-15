@@ -10,7 +10,7 @@
     font-weight: 500;
     color: var(--muted-foreground);
     border-radius: 0.5rem;
-    transition: color 140ms ease, background-color 140ms ease;
+    transition: color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease);
   }
 
   .toolbar-button:hover {
@@ -59,7 +59,7 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     transform: translateX(-50%);
-    transition: color 120ms ease, border-color 120ms ease;
+    transition: color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease);
   }
 
   .titlebar-search:hover {
@@ -81,7 +81,7 @@
     height: 1.625rem;
     color: var(--muted-foreground);
     border-radius: var(--radius-md);
-    transition: color 120ms ease, background-color 120ms ease;
+    transition: color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease);
   }
 
   .chrome-icon-button:hover,
@@ -126,7 +126,7 @@
     color: var(--foreground-2);
     white-space: nowrap;
     border-radius: var(--radius-md);
-    transition: color 120ms ease, background-color 120ms ease;
+    transition: color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease);
   }
 
   .command-action:disabled {

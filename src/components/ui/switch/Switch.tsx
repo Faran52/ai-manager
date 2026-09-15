@@ -43,13 +43,13 @@ export const Switch: FC<SwitchProps> = ({
         * A CSS transform rather than a Motion spring: the travel is signed, and
         * reading the document direction during render would break server
         * rendering. Tailwind's rtl variant knows the direction without asking.
-        * The duration is matched to controlTransition by eye.
+        * The timing is the shared --motion-fast token via Tailwind's default.
         */}
       <SwitchThumb
         className={cn(
           `
             pointer-events-none absolute inset-s-0.5 size-4 rounded-full
-            transition-transform duration-200 ease-out
+            transition-transform
           `,
           `
             data-[state=checked]:translate-x-4

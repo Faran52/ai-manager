@@ -14,6 +14,9 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
+  /* transition-colors and friends inherit the same timing as the stylesheets. */
+  --default-transition-duration: var(--motion-fast);
+  --default-transition-timing-function: var(--motion-ease);
   --font-sans: "Geist Variable", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: "Geist Mono Variable", ui-monospace, "SF Mono", menlo, consolas, monospace;
   --color-background: var(--background);
@@ -75,7 +78,7 @@
     font-family: var(--font-sans);
     color: var(--foreground);
     background-color: var(--background);
-    transition: color 240ms ease, background-color 240ms ease;
+    transition: color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease);
   }
 
   button,

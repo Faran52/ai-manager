@@ -12,7 +12,7 @@
 
     /* A menu row is a control, so it takes the control radius. */
     border-radius: var(--radius-md);
-    transition: color 120ms ease, background-color 120ms ease;
+    transition: color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease);
   }
 
   /*

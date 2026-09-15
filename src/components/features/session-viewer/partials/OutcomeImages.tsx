@@ -54,7 +54,7 @@ export const OutcomeImages: FC<OutcomeImagesProps> = ({ images }) => {
                   alt="tool result"
                   loading="lazy"
                   className="
-                    max-h-48 transition-transform duration-300
+                    max-h-48 transition-transform
                     group-hover:scale-[1.02]
                   "
                 />

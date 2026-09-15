@@ -169,6 +169,9 @@ and delete the other.
 **Motion is a feature here, not decoration, and it is held to the standard of a native macOS
 surface.** There is no acceptable trade of smoothness for convenience. The vocabulary lives in
 `src/components/ui/constants.ts` and nothing outside that file declares a duration or a curve.
+On the CSS side, `--motion-fast` and `--motion-ease` in `tokens.css` are the same two facts for
+hover and colour transitions; Tailwind's default transition timing points at them too, so no
+stylesheet or `duration-*` class writes its own milliseconds.
 
 | Transition           | Use                                        | Bounce |
 |----------------------|--------------------------------------------|--------|

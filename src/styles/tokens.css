@@ -8,6 +8,10 @@
 }
 
 :root {
+  /* The CSS side of constants.ts: hover and colour transitions read these,
+     no stylesheet writes its own milliseconds. */
+  --motion-fast: 160ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
   --background: #fbfbfa;
   --card: #fff;
   --popover: #fff;
