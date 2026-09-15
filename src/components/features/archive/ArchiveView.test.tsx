@@ -30,6 +30,7 @@ const archive: ArchiveSummary = {
   sessionCount: 2,
   sizeBytes: 4096,
   agents: ['claude'],
+  projectKeys: ['claude:proj'],
 };
 
 const noop = (): void => {
@@ -79,6 +80,62 @@ test('totals the archives it was given', () => {
   expect(screen.getByText('2')).toBeDefined();
   expect(screen.getByText('5')).toBeDefined();
   expect(screen.getByText('5KB')).toBeDefined();
+});
+
+test('scopes the list to the selected project and offers the way back', async () => {
+  const onShowAll = vi.fn();
+
+  render(
+    <ArchiveView
+      archives={resource('ready', [archive, {
+        ...archive,
+        id: 'elsewhere',
+        note: 'another project only',
+        projectKeys: ['codex:other'],
+      }])}
+      selectedProject={{
+        agent: 'claude',
+        id: 'proj',
+        name: 'webapp',
+        sessionCount: 1,
+        messageCount: 1,
+        lastActivityMs: 0,
+      }}
+      onShowAll={onShowAll}
+      onOpenSession={noop}
+      retention={retentionResource}
+      nowMs={NOW}
+    />,
+  );
+
+  expect(screen.getByText('before the upgrade')).toBeDefined();
+  expect(screen.queryByText('another project only')).toBeNull();
+  expect(screen.getByText('In webapp')).toBeDefined();
+
+  await userEvent.click(screen.getByText('Show all'));
+
+  expect(onShowAll).toHaveBeenCalledOnce();
+});
+
+test('says which project has no archived sessions yet', () => {
+  render(
+    <ArchiveView
+      archives={resource('ready', [archive])}
+      selectedProject={{
+        agent: 'codex',
+        id: 'other',
+        name: 'elsewhere',
+        sessionCount: 1,
+        messageCount: 1,
+        lastActivityMs: 0,
+      }}
+      onOpenSession={noop}
+      retention={retentionResource}
+      nowMs={NOW}
+    />,
+  );
+
+  expect(screen.getByText('No archive holds a session from elsewhere yet.')).toBeDefined();
 });
 
 test('invites a first archive when there are none', () => {

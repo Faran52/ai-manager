@@ -451,6 +451,8 @@ const HistoryAppView: FC = () => {
         archives={archives}
         retention={retention}
         nowMs={nowMs}
+        selectedProject={selectedProject}
+        onShowAll={selectAllProjects}
         onOpenSession={openArchivedSession}
       />
     ),

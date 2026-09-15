@@ -261,6 +261,7 @@ describe('archive endpoints', () => {
     sessionCount: 2,
     sizeBytes: 40,
     agents: ['claude'],
+    projectKeys: ['claude:proj'],
   };
 
   test('reads the list, one archive and an acknowledged delete', async () => {

@@ -24,6 +24,7 @@ const archive = {
   sessionCount: 1,
   sizeBytes: 10,
   agents: ['claude'],
+  projectKeys: ['claude:proj'],
 };
 
 describe('useArchives', () => {

@@ -26,6 +26,7 @@ const archive: ArchiveSummary = {
   sessionCount: 1,
   sizeBytes: 2048,
   agents: ['claude'],
+  projectKeys: ['claude:proj'],
 };
 
 const noop = (): void => {
@@ -73,6 +74,42 @@ test('names an archive by its note and loads sessions once expanded', async () =
 
   await userEvent.click(screen.getByText('Login fix'));
   expect(onOpenSession).toHaveBeenCalledTimes(1);
+});
+
+test('lists only the scoped project\'s sessions when given a project key', async () => {
+  const session = {
+    agent: 'claude',
+    projectId: 'proj',
+    projectName: 'webapp',
+    actualSessionId: 's',
+    title: 'Login fix',
+    messageCount: 3,
+    lastTimestampMs: 1,
+    sizeBytes: 2048,
+    sourcePath: '/home/.claude/projects/proj/s.jsonl',
+    archivePath: '/archives/a/files/claude/proj/s.jsonl',
+  };
+
+  stubDetail([session, {
+    ...session,
+    projectId: 'other',
+    projectName: 'elsewhere',
+    title: 'Not this one',
+    archivePath: '/archives/a/files/claude/other/s.jsonl',
+  }]);
+
+  render(
+    <ArchiveCard
+      archive={archive}
+      projectKey="claude:proj"
+      onOpenSession={noop}
+      onDelete={noop}
+    />,
+  );
+  await userEvent.click(screen.getByText('before the upgrade'));
+
+  expect(await screen.findByText('Login fix')).toBeDefined();
+  expect(screen.queryByText('Not this one')).toBeNull();
 });
 
 test('does not refetch when it is collapsed and opened again', async () => {

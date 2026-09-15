@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 
 import { createArchive, deleteArchive } from '@lib/apis/apiClient';
+import { projectKeyOf } from '@services/history/historyService';
 import { toErrorMessage } from '@utils/errorUtils';
 import { sizeLabel } from '@utils/formatUtils';
 
@@ -26,6 +27,7 @@ import { ArchiveCard, RetentionCard } from './partials';
 import type { AsyncResource } from '@features/history-data';
 import type { RetentionStatusResponse } from '@lib/apis/contracts';
 import type { ArchivedSession, ArchiveSummary } from '@services/archive/archiveService';
+import type { ProjectSummary } from '@services/history/historyService';
 import type { FC } from 'react';
 
 export interface ArchiveViewProps {
@@ -33,6 +35,13 @@ export interface ArchiveViewProps {
   readonly retention: AsyncResource<RetentionStatusResponse>;
   readonly nowMs: number;
   readonly onOpenSession: (session: ArchivedSession) => void;
+  /**
+   * The sidebar's selected project, if any: the list narrows to archives
+   * holding one of its sessions, and each card to those sessions. Retention
+   * and Create archive stay machine-wide either way.
+   */
+  readonly selectedProject?: ProjectSummary | null;
+  readonly onShowAll?: () => void;
 }
 
 const totalsOf = (archives: readonly ArchiveSummary[]): {
@@ -55,13 +64,20 @@ export const ArchiveView: FC<ArchiveViewProps> = ({
   retention,
   nowMs,
   onOpenSession,
+  selectedProject = null,
+  onShowAll,
 }) => {
   const { t } = useTranslation('archive');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
   const [pendingDelete, setPendingDelete] = useState<ArchiveSummary>();
-  const list = archives.data ?? [];
+  const projectKey = selectedProject == null
+    ? undefined
+    : projectKeyOf(selectedProject.agent, selectedProject.id);
+  const list = (archives.data ?? []).filter((archive) => {
+    return projectKey == null || archive.projectKeys.includes(projectKey);
+  });
   const totals = totalsOf(list);
   const reload = archives.reload;
 
@@ -153,6 +169,16 @@ export const ArchiveView: FC<ArchiveViewProps> = ({
               flex flex-wrap items-center gap-3 text-figure text-faint
             "
             >
+              {selectedProject != null && (
+                <span className="flex items-center gap-2" data-archive-scope>
+                  <span className="text-foreground-2">
+                    {t('scopedTo', { project: selectedProject.name })}
+                  </span>
+                  <Button size="sm" variant="ghost" onClick={onShowAll}>
+                    {t('showAll')}
+                  </Button>
+                </span>
+              )}
               <span>
                 <span className="font-mono text-foreground-2">{list.length}</span>
                 {' '}
@@ -178,7 +204,9 @@ export const ArchiveView: FC<ArchiveViewProps> = ({
           <EmptyState
             icon={<Archive className="size-8" />}
             title={t('noArchives')}
-            hint={t('noArchivesHint')}
+            hint={selectedProject == null
+              ? t('noArchivesHint')
+              : t('noArchivesForProject', { project: selectedProject.name })}
           />
         )}
 
@@ -188,6 +216,7 @@ export const ArchiveView: FC<ArchiveViewProps> = ({
               <ArchiveCard
                 key={archive.id}
                 archive={archive}
+                projectKey={projectKey}
                 onOpenSession={onOpenSession}
                 onDelete={(target) => {
                   setPendingDelete(target);

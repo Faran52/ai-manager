@@ -19,6 +19,7 @@ import {
 } from '@utils/jsonUtils';
 
 import { listAgentProjects, listAgentSessions } from '../agents/agentsService';
+import { projectKeyOf } from '../history/utils/lookupUtils';
 
 import type { AgentId } from '@config/agents';
 import type { JsonValue } from '@utils/jsonUtils';
@@ -51,6 +52,9 @@ export interface ArchiveSummary {
   readonly sessionCount: number;
   readonly sizeBytes: number;
   readonly agents: readonly AgentId[];
+  // "agent:projectId" for every project with a session inside, so the view can
+  // scope the list to the selected project without opening each manifest.
+  readonly projectKeys: readonly string[];
 }
 
 const MANIFEST = 'manifest.json';
@@ -240,10 +244,12 @@ export const readArchive = async (id: string, home?: string): Promise<ArchiveMan
 
 const summarise = (manifest: ArchiveManifest): ArchiveSummary => {
   const agents = new Set<AgentId>();
+  const projectKeys = new Set<string>();
   let sizeBytes = 0;
 
   for (const session of manifest.sessions) {
     agents.add(session.agent);
+    projectKeys.add(projectKeyOf(session.agent, session.projectId));
     sizeBytes += session.sizeBytes;
   }
 
@@ -254,6 +260,7 @@ const summarise = (manifest: ArchiveManifest): ArchiveSummary => {
     sessionCount: manifest.sessions.length,
     sizeBytes,
     agents: [...agents],
+    projectKeys: [...projectKeys],
   };
 };
 

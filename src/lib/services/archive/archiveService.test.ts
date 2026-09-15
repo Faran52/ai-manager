@@ -231,6 +231,8 @@ describe('listArchives', () => {
     })).toEqual([second.id, first.id]);
     expect(archives[0]?.sessionCount).toBe(1);
     expect(archives[0]?.agents).toEqual(['claude']);
+    expect(archives[0]?.projectKeys).toHaveLength(1);
+    expect(archives[0]?.projectKeys[0]).toMatch(/^claude:/u);
     expect(archives[0]?.sizeBytes).toBeGreaterThan(0);
   });
 

@@ -11,6 +11,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { agentOption } from '@config/agents';
 
 import { fetchArchive } from '@lib/apis/apiClient';
+import { projectKeyOf } from '@services/history/historyService';
 import { cn } from '@utils/cnUtils';
 import { formatDateTime, sizeLabel } from '@utils/formatUtils';
 
@@ -25,12 +26,15 @@ import type { FC } from 'react';
 
 export interface ArchiveCardProps {
   readonly archive: ArchiveSummary;
+  // "agent:projectId" to list only that project's sessions; undefined lists all.
+  readonly projectKey?: string | undefined;
   readonly onOpenSession: (session: ArchivedSession) => void;
   readonly onDelete: (archive: ArchiveSummary) => void;
 }
 
 export const ArchiveCard: FC<ArchiveCardProps> = ({
   archive,
+  projectKey,
   onOpenSession,
   onDelete,
 }) => {
@@ -38,6 +42,9 @@ export const ArchiveCard: FC<ArchiveCardProps> = ({
   const [open, setOpen] = useState(false);
   const [sessions, setSessions] = useState<readonly ArchivedSession[]>();
   const [loading, setLoading] = useState(false);
+  const shown = sessions?.filter((session) => {
+    return projectKey == null || projectKeyOf(session.agent, session.projectId) === projectKey;
+  });
 
   const toggle = (): void => {
     const next = !open;
@@ -123,11 +130,11 @@ export const ArchiveCard: FC<ArchiveCardProps> = ({
           >
             <div className="border-t border-border px-4 py-2">
               {loading && <Spinner />}
-              {sessions?.length === 0 && (
+              {shown?.length === 0 && (
                 <p className="py-3 text-xs text-muted-foreground">{t('archiveEmpty')}</p>
               )}
               <ul className="grid gap-0.5">
-                {(sessions ?? []).map((session) => {
+                {(shown ?? []).map((session) => {
                   return (
                     <li key={session.archivePath}>
                       <button
