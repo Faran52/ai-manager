@@ -21,6 +21,7 @@ import type { NavRailProps } from './NavRail';
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllGlobals();
 });
 
 const mount = (overrides: Partial<NavRailProps> = {}): NavRailProps => {
@@ -65,6 +66,21 @@ describe('NavRail', () => {
       .toBe('page');
     expect(screen.getByRole('button', { name: 'Sessions' }).getAttribute('aria-current'))
       .toBeNull();
+  });
+
+  test('still marks the active view for a reduced-motion reader', () => {
+    vi.stubGlobal('matchMedia', () => {
+      return {
+        matches: true,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      };
+    });
+
+    mount({ view: 'archive' });
+
+    expect(screen.getByRole('button', { name: 'Archive' }).getAttribute('aria-current'))
+      .toBe('page');
   });
 
   test('goes where it is sent', async () => {

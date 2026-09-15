@@ -9,10 +9,16 @@ import {
   RefreshCw,
   Settings,
 } from 'lucide-react';
+import { motion } from 'motion/react';
 
 import { cn } from '@utils/cnUtils';
 
-import { Tooltip, useToast } from '@ui/index';
+import {
+  controlTransition,
+  Tooltip,
+  useReducedMotion,
+  useToast,
+} from '@ui/index';
 
 import type { AppView } from '@features/app-header';
 import type { FC, ReactNode } from 'react';
@@ -60,6 +66,9 @@ const DESTINATIONS: readonly Destination[] = [
   },
 ];
 
+// Reduced motion gets the end state with no travel, same as Disclosure.
+const INSTANT = { duration: 0 };
+
 const RAIL_BUTTON = `
   relative flex size-10 items-center justify-center rounded-lg text-faint
   transition-colors
@@ -77,6 +86,7 @@ export const NavRail: FC<NavRailProps> = ({
 }) => {
   const { t } = useTranslation('common');
   const { push } = useToast();
+  const reduceMotion = useReducedMotion();
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -116,8 +126,17 @@ export const NavRail: FC<NavRailProps> = ({
               onClick={() => {
                 onViewChange(destination.id);
               }}
-              className={cn(RAIL_BUTTON, active && 'bg-accent text-primary')}
+              className={cn(RAIL_BUTTON, active && 'text-primary')}
             >
+              {/* One mark for the whole rail, so it glides to the new view
+                  rather than vanishing here and appearing there. */}
+              {active && (
+                <motion.span
+                  className="absolute inset-0 -z-10 rounded-lg bg-accent"
+                  layoutId="rail-active"
+                  transition={reduceMotion ? INSTANT : controlTransition}
+                />
+              )}
               {destination.icon}
               {destination.id === 'health' && flagged > 0 && (
                 <span
