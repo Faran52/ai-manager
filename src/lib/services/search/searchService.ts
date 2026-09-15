@@ -16,6 +16,7 @@ export interface SearchHit {
   readonly filePath: string;
   readonly projectId: string;
   readonly sessionId: string;
+  readonly profile?: string | undefined;
   readonly role: 'user' | 'assistant' | 'system' | 'summary';
   readonly timestampMs: number;
   readonly before: string;
@@ -38,6 +39,7 @@ interface SessionContext {
   readonly filePath: string;
   readonly projectId: string;
   readonly sessionId: string;
+  readonly profile?: string | undefined;
 }
 
 interface SessionHitOutcome {
@@ -45,7 +47,7 @@ interface SessionHitOutcome {
   readonly hits: readonly SearchHit[];
 }
 
-type SearchSession = Pick<SessionSummary, 'filePath' | 'id'>;
+type SearchSession = Pick<SessionSummary, 'filePath' | 'id' | 'profile'>;
 
 const assistantText = (entry: Extract<HistoryEntry, { kind: 'assistant' }>): string => {
   return entry.blocks
@@ -135,6 +137,7 @@ const sessionHits = async (
     filePath: session.filePath,
     projectId,
     sessionId: session.id,
+    profile: session.profile,
   };
   const hits: SearchHit[] = [];
 

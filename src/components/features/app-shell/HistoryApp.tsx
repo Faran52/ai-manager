@@ -294,7 +294,7 @@ const HistoryAppView: FC = () => {
   }, []);
 
   const selectSession = useCallback((session: SessionSummary) => {
-    setSelectedProject(findAgentProject(projects.data, session.projectId, session.agent));
+    setSelectedProject(findAgentProject(projects.data, session.projectId, session.agent, session.profile));
     setSelectedFilePath(session.filePath);
     setHighlightTimestamp(undefined);
     setArchivedSession(null);
@@ -359,7 +359,7 @@ const HistoryAppView: FC = () => {
   const jumpToHit = useCallback(
     (hit: SearchHit) => {
       setView('sessions');
-      setSelectedProject(findAgentProject(projects.data, hit.projectId, hit.agent));
+      setSelectedProject(findAgentProject(projects.data, hit.projectId, hit.agent, hit.profile));
       setSelectedFilePath(hit.filePath);
       setHighlightTimestamp(new Date(hit.timestampMs).toISOString());
     },
@@ -388,7 +388,7 @@ const HistoryAppView: FC = () => {
       showSession();
       // A top session can come from a per-agent global rollup, so it is not
       // necessarily under the project already selected.
-      setSelectedProject(findAgentProject(projects.data, session.projectId, session.agent));
+      setSelectedProject(findAgentProject(projects.data, session.projectId, session.agent, session.profile));
       setSelectedFilePath(session.filePath);
       setHighlightTimestamp(new Date(session.lastTimestampMs).toISOString());
     },

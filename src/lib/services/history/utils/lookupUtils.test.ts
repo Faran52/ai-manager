@@ -35,6 +35,17 @@ describe('findAgentProject', () => {
     expect(findAgentProject(projects, 'missing', 'claude')).toBeNull();
   });
 
+  test('tells two profiles of the same project id apart', () => {
+    const personal = {
+      ...project('alpha', 'claude'),
+      profile: 'Personal',
+    };
+    const both = [...projects, personal];
+
+    expect(findAgentProject(both, 'alpha', 'claude', 'Personal')).toBe(personal);
+    expect(findAgentProject(both, 'alpha', 'claude')).toBe(projects[0]);
+  });
+
   test('returns null for an absent project list', () => {
     expect(findAgentProject(undefined, 'alpha', 'claude')).toBeNull();
   });

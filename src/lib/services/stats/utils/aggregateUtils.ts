@@ -30,6 +30,7 @@ export interface SessionTokenTotals {
   // project already on screen, so opening one needs to resolve its own project.
   readonly projectId: string;
   readonly agent: AgentId;
+  readonly profile?: string | undefined;
 }
 
 interface DayCount {
@@ -374,6 +375,7 @@ export const foldAggregate = (
     lastTimestampMs: session.lastTimestampMs,
     projectId: session.projectId,
     agent: session.agent,
+    profile: session.profile,
   });
 };
 
