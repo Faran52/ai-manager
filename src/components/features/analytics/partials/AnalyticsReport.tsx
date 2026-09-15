@@ -13,7 +13,11 @@ import {
   formatTokens,
 } from '@utils/formatUtils';
 
-import { arriveInSequence, MetricCard } from '@ui/index';
+import {
+  arriveInSequence,
+  Eyebrow,
+  MetricCard,
+} from '@ui/index';
 
 import { ActivityHeatmap } from './ActivityHeatmap';
 import { AnalyticsPanel } from './AnalyticsPanel';
@@ -131,12 +135,7 @@ const Section: FC<{ readonly title: string;
 }) => {
   return (
     <motion.section className="grid gap-4" {...arriveInSequence(index)}>
-      <h3 className="
-        text-xs font-semibold tracking-wider text-foreground/80 uppercase
-      "
-      >
-        {title}
-      </h3>
+      <Eyebrow as="h3">{title}</Eyebrow>
       {children}
     </motion.section>
   );

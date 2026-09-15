@@ -9,6 +9,7 @@ import { agentBadgeLabel } from '@config/agents';
 import {
   Badge,
   EmptyState,
+  Eyebrow,
   fadeTransition,
   Modal,
 } from '@ui/index';
@@ -195,13 +196,7 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
       )}
       {unconfigured.length > 0 && (
         <section data-health-group="not-set-up">
-          <h3 className="
-            px-1 pb-1 text-body font-semibold tracking-wider
-            text-muted-foreground uppercase
-          "
-          >
-            {t('notSetUpHere')}
-          </h3>
+          <Eyebrow as="h3" className="px-1 pb-1">{t('notSetUpHere')}</Eyebrow>
           <ul className="grid gap-1 px-1">
             {unconfigured.map((setup) => {
               return (

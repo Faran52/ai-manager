@@ -1,3 +1,5 @@
+import { Eyebrow } from '@ui/index';
+
 import type { FC, ReactNode } from 'react';
 
 export interface AnalyticsPanelProps {
@@ -12,12 +14,7 @@ export const AnalyticsPanel: FC<AnalyticsPanelProps> = ({ children, title }) => 
       flex h-full flex-col rounded-lg border border-border bg-card p-4 shadow-sm
     "
     >
-      <h4 className="
-        text-body font-semibold tracking-wider text-muted-foreground uppercase
-      "
-      >
-        {title}
-      </h4>
+      <Eyebrow as="h4">{title}</Eyebrow>
       {children}
     </section>
   );

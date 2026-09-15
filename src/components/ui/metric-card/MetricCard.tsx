@@ -1,3 +1,5 @@
+import { Eyebrow } from '../eyebrow/Eyebrow';
+
 import type { FC, ReactNode } from 'react';
 
 export interface MetricCardProps {
@@ -18,14 +20,10 @@ export const MetricCard: FC<MetricCardProps> = ({
       className="rounded-lg border border-border bg-card p-4 shadow-sm"
       data-metric-card
     >
-      <div className="
-        flex items-center gap-1.5 text-body font-medium tracking-wider
-        text-muted-foreground uppercase
-      "
-      >
+      <Eyebrow className="flex items-center gap-1.5">
         {icon}
         {label}
-      </div>
+      </Eyebrow>
       <p
         className="mt-1 font-mono text-2xl font-semibold text-foreground"
         data-metric-value

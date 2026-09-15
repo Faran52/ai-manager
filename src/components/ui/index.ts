@@ -8,6 +8,7 @@ export * from './confirm-dialog/ConfirmDialog';
 export * from './constants';
 export * from './disclosure/Disclosure';
 export * from './empty-state/EmptyState';
+export * from './eyebrow/Eyebrow';
 export * from './hooks/useLastPresent';
 export * from './hooks/useReducedMotion';
 export * from './hooks/useSmoothScroll';

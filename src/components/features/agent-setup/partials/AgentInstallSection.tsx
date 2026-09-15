@@ -9,6 +9,7 @@ import {
   Badge,
   Button,
   ConfirmDialog,
+  Eyebrow,
   Spinner,
 } from '@ui/index';
 
@@ -65,13 +66,7 @@ export const AgentInstallSection: FC = () => {
 
   return (
     <section className="mt-4" data-health-group="agent-install">
-      <h3 className="
-        px-1 pb-1 text-body font-semibold tracking-wider text-muted-foreground
-        uppercase
-      "
-      >
-        {t('installAgentsTitle')}
-      </h3>
+      <Eyebrow as="h3" className="px-1 pb-1">{t('installAgentsTitle')}</Eyebrow>
       <ul className="grid gap-1 px-1">
         {ids.map((agent) => {
           const status = agents[agent];

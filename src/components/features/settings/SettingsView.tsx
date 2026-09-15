@@ -26,6 +26,7 @@ import {
   Button,
   controlTransition,
   EmptyState,
+  Eyebrow,
   Notice,
   Spinner,
 } from '@ui/index';
@@ -114,13 +115,7 @@ const FilePath: FC<{ readonly scope: ScopeSettings }> = ({ scope }) => {
   return (
     <div className="flex items-start gap-2 border-b border-border pb-3">
       <FileCode2 className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-      <span className="
-        pt-0.5 text-figure font-semibold tracking-wider text-muted-foreground
-        uppercase
-      "
-      >
-        {t('file')}
-      </span>
+      <Eyebrow size="figure" className="pt-0.5">{t('file')}</Eyebrow>
       <span className="grid min-w-0 flex-1 gap-1.5">
         {/* A break opportunity after each slash, so a long path wraps at a
             segment boundary instead of splitting "settings.local.json" in two. */}
@@ -178,19 +173,6 @@ const KeyList: FC<{
       <span className="text-body text-muted-foreground">{label}</span>
       <KeyChips keys={keys} />
     </div>
-  );
-};
-
-// A group heading, so the three verdicts read as one set rather than as peers of
-// the directory list and the environment.
-const GroupLabel: FC<{ readonly children: string }> = ({ children }) => {
-  return (
-    <span className="
-      text-figure font-semibold tracking-wider text-muted-foreground uppercase
-    "
-    >
-      {children}
-    </span>
   );
 };
 
@@ -405,7 +387,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
                 <Notice tone="warn">{t('unreadable')}</Notice>
               )}
 
-              <GroupLabel>{t('groupPermissions')}</GroupLabel>
+              <Eyebrow size="figure">{t('groupPermissions')}</Eyebrow>
               {RULE_LISTS.map(({
                 list,
                 tone,
@@ -431,7 +413,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
                 );
               })}
 
-              <GroupLabel>{t('groupDirectories')}</GroupLabel>
+              <Eyebrow size="figure">{t('groupDirectories')}</Eyebrow>
               <RuleListEditor
                 label={t('permission_additionalDirectories')}
                 hint={t('permissionHint_additionalDirectories')}
@@ -447,7 +429,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
                 }}
               />
 
-              <GroupLabel>{t('groupEnvironment')}</GroupLabel>
+              <Eyebrow size="figure">{t('groupEnvironment')}</Eyebrow>
               <EnvEditor
                 entries={draft.env}
                 onChange={(entries) => {

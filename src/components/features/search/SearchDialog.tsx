@@ -11,6 +11,7 @@ import { motion } from 'motion/react';
 import {
   arriveInSequence,
   Button,
+  Eyebrow,
   Modal,
 } from '@ui/index';
 
@@ -137,13 +138,9 @@ export const SearchDialog: FC<SearchDialogProps> = ({
 
           return (
             <div key={group.filePath} className="mb-2">
-              <p className="
-                truncate px-2 py-1 text-body font-semibold tracking-wider
-                text-muted-foreground uppercase
-              "
-              >
+              <Eyebrow as="p" className="truncate px-2 py-1">
                 {`${projectName} · ${new Date(group.first.timestampMs).toLocaleDateString('en-GB')}`}
-              </p>
+              </Eyebrow>
               {group.hits.map((hit, index) => {
                 return (
                   <motion.button

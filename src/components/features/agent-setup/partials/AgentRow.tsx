@@ -22,6 +22,7 @@ import {
   Badge,
   Button,
   collapseTransition,
+  Eyebrow,
 } from '@ui/index';
 
 import { modelSummaryOf } from '../utils/agentSetupUtils';
@@ -92,12 +93,14 @@ const Group: FC<GroupProps> = ({
 }) => {
   return (
     <div className="grid grid-cols-[4.25rem_minmax(0,1fr)] items-baseline gap-3">
-      <dt className={cn(`
-        pt-0.5 text-figure font-medium tracking-wider uppercase
-      `, tone === 'warn' ? 'text-warn' : 'text-muted-foreground/80')}
+      <Eyebrow
+        as="dt"
+        size="figure"
+        tone={tone === 'warn' ? 'warn' : 'muted'}
+        className="pt-0.5"
       >
         {label}
-      </dt>
+      </Eyebrow>
       <dd className="flex min-w-0 flex-wrap items-baseline gap-1">
         {children}
       </dd>
