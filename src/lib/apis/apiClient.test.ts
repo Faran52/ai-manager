@@ -233,23 +233,30 @@ describe('unreadable bodies', () => {
   });
 });
 
-describe('error json without an error field', () => {
-  test('falls back to the status message', async () => {
+const UNUSABLE_BODIES = [
+  {
+    body: '{"foo":1}',
+    status: 503,
+    message: 'project list failed (503)',
+  },
+  {
+    body: '{"projects":',
+    status: 200,
+    message: 'project list returned malformed JSON',
+  },
+];
+
+describe('bodies the client cannot use', () => {
+  test.each(UNUSABLE_BODIES)('$message', async ({
+    body,
+    status,
+    message,
+  }) => {
     vi.stubGlobal('fetch', vi.fn(() => {
-      return new Response('{"foo":1}', { status: 503 });
+      return new Response(body, { status });
     }));
 
-    await expect(fetchProjects()).rejects.toThrow('project list failed (503)');
-  });
-});
-
-describe('malformed success bodies', () => {
-  test('rejects 200 responses with broken JSON', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => {
-      return new Response('{"projects":', { status: 200 });
-    }));
-
-    await expect(fetchProjects()).rejects.toThrow('project list returned malformed JSON');
+    await expect(fetchProjects()).rejects.toThrow(message);
   });
 });
 

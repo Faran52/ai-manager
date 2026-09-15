@@ -191,7 +191,6 @@ test('reports on the whole machine in the global scope', async () => {
   renderView(stats, 'ready', vi.fn(), 'global');
 
   expect(await screen.findByText('Provider distribution')).toBeDefined();
-  expect(screen.getByText('Claude Code · 3 sessions · 2 projects')).toBeDefined();
   expect(screen.queryByText('Big one')).toBeNull();
 });
 

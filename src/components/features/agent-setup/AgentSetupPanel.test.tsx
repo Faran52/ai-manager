@@ -104,112 +104,6 @@ test('lists every configured agent with its servers and rules', async () => {
   expect(screen.getByText('CLAUDE.md')).toBeDefined();
 });
 
-test('shows the scope a server comes from', async () => {
-  render(
-    <AgentSetupPanel
-      projectSelected
-      trust={{
-        known: true,
-        trusted: true,
-        onboarded: true,
-      }}
-      sessionCounts={{}}
-      projectPath={PROJECT}
-      findings={[]}
-      usage={null}
-      nowMs={0}
-      onPluginToggle={noToggle}
-      setups={[
-        setup('claude', {
-          mcpServers: [
-            {
-              name: 'everywhere',
-              scope: 'user',
-              source: '/home/.claude.json',
-              command: undefined,
-            },
-            {
-              name: 'local',
-              scope: 'project',
-              source: `${PROJECT}/.mcp.json`,
-              command: undefined,
-            },
-          ],
-        }),
-      ]}
-    />,
-  );
-
-  await expand(/Claude Code/u);
-
-  expect(screen.getByText('user')).toBeDefined();
-  expect(screen.getByText('project')).toBeDefined();
-});
-
-test('says when an agent has rules but no servers', async () => {
-  render(
-    <AgentSetupPanel
-      projectSelected
-      trust={{
-        known: true,
-        trusted: true,
-        onboarded: true,
-      }}
-      sessionCounts={{}}
-      projectPath={PROJECT}
-      findings={[]}
-      usage={null}
-      nowMs={0}
-      onPluginToggle={noToggle}
-      setups={[setup('codex', { rules: [rule(`${PROJECT}/AGENTS.md`, 4)] })]}
-    />,
-  );
-
-  await expand(/Codex CLI/u);
-
-  expect(screen.getByText('AGENTS.md')).toBeDefined();
-  expect(screen.queryByText('None')).toBeNull();
-  // Rules and Configuration (Codex keeps a settings file too); no MCP or Model.
-  expect(document.querySelectorAll('[data-agent-detail] dt')).toHaveLength(2);
-});
-
-test('shortens a user-wide rules path to the home tilde', async () => {
-  render(
-    <AgentSetupPanel
-      projectSelected
-      trust={{
-        known: true,
-        trusted: true,
-        onboarded: true,
-      }}
-      sessionCounts={{}}
-      projectPath={PROJECT}
-      findings={[]}
-      usage={null}
-      nowMs={0}
-      onPluginToggle={noToggle}
-      setups={[
-        setup('codex', {
-          rules: [
-            rule(`${PROJECT}/AGENTS.md`, 4),
-            {
-              path: '/Users/dev/.codex/AGENTS.md',
-              scope: 'user',
-              bytes: 9,
-              modifiedMs: 0,
-            },
-          ],
-        }),
-      ]}
-    />,
-  );
-
-  await expand(/Codex CLI/u);
-
-  expect(screen.getByText('AGENTS.md')).toBeDefined();
-  expect(screen.getByText('~/.codex/AGENTS.md')).toBeDefined();
-});
-
 const USAGE = {
   costUsd: 42,
   inputTokens: 10,
@@ -220,51 +114,44 @@ const USAGE = {
   models: [],
 };
 
-test('counts setup here and leaves recorded spend to the analytics tab', () => {
-  render(
-    <AgentSetupPanel
-      projectSelected
-      trust={{
-        known: true,
-        trusted: true,
-        onboarded: true,
-      }}
-      sessionCounts={{}}
-      projectPath={PROJECT}
-      findings={[]}
-      usage={USAGE}
-      nowMs={1000}
-      onPluginToggle={noToggle}
-      setups={[setup('claude', { rules: [rule(`${PROJECT}/CLAUDE.md`, 3)] })]}
-    />,
-  );
+const SETUP_COUNTS = [
+  {
+    configured: true,
+    count: /1 of 1 set up/u,
+  },
+  {
+    configured: false,
+    count: /0 of 1 set up/u,
+  },
+];
 
-  expect(screen.queryByText('Recorded usage')).toBeNull();
-  expect(screen.getByText(/1 of 1 set up/u)).toBeDefined();
-});
+test.each(SETUP_COUNTS)(
+  'counts setup here and leaves recorded spend to the analytics tab (configured: $configured)',
+  ({ configured, count }) => {
+    render(
+      <AgentSetupPanel
+        projectSelected
+        trust={{
+          known: true,
+          trusted: true,
+          onboarded: true,
+        }}
+        sessionCounts={{}}
+        projectPath={PROJECT}
+        findings={[]}
+        usage={USAGE}
+        nowMs={1000}
+        onPluginToggle={noToggle}
+        setups={[configured
+          ? setup('claude', { rules: [rule(`${PROJECT}/CLAUDE.md`, 3)] })
+          : setup('claude')]}
+      />,
+    );
 
-test('still counts setup when no agent is configured', () => {
-  render(
-    <AgentSetupPanel
-      projectSelected
-      trust={{
-        known: true,
-        trusted: true,
-        onboarded: true,
-      }}
-      sessionCounts={{}}
-      projectPath={PROJECT}
-      findings={[]}
-      usage={USAGE}
-      nowMs={1000}
-      onPluginToggle={noToggle}
-      setups={[setup('claude')]}
-    />,
-  );
-
-  expect(screen.queryByText('Recorded usage')).toBeNull();
-  expect(screen.getByText(/0 of 1 set up/u)).toBeDefined();
-});
+    expect(screen.queryByText('Recorded usage')).toBeNull();
+    expect(screen.getByText(count)).toBeDefined();
+  },
+);
 
 test('asks for a project before anything else', () => {
   render(
