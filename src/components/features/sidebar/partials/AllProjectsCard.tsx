@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
+import { sumBy } from 'es-toolkit';
 import { Layers } from 'lucide-react';
 
 import { agentBadgeLabel } from '@config/agents';
@@ -31,9 +32,9 @@ export const AllProjectsCard: FC<AllProjectsCardProps> = ({
 }) => {
   const { t } = useTranslation('sidebar');
   const tallies = talliedBy(projects);
-  const sessions = projects.reduce((total, project) => {
-    return total + project.sessionCount;
-  }, 0);
+  const sessions = sumBy(projects, (project) => {
+    return project.sessionCount;
+  });
 
   return (
     <div className="all-projects-pin">

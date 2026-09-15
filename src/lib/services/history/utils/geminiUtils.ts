@@ -5,6 +5,8 @@ import {
 } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
+import { sumBy } from 'es-toolkit';
+
 import { appConfig } from '@config/appConfig';
 
 import {
@@ -536,9 +538,9 @@ export const listGeminiProjects = async (
       name: folder == null ? 'Unknown project' : basename(folder),
       actualPath: folder,
       sessionCount: values.length,
-      messageCount: values.reduce((total, value) => {
-        return total + conversationMessageCount(value.entries);
-      }, 0),
+      messageCount: sumBy(values, (value) => {
+        return conversationMessageCount(value.entries);
+      }),
       lastActivityMs: values.reduce((latest, value) => {
         return Math.max(latest, value.lastTimestampMs);
       }, 0),

@@ -1,3 +1,5 @@
+import { sumBy } from 'es-toolkit';
+
 import type { AgentId } from '@config/agents';
 import type {
   AgentStorage,
@@ -21,12 +23,12 @@ export const heldBy = (report: StorageReport | undefined, agent: AgentId | undef
 
   return {
     shown,
-    totalBytes: shown.reduce((total, held) => {
-      return total + held.bytes;
-    }, 0),
-    reclaimableBytes: shown.reduce((total, held) => {
-      return total + held.reclaimableBytes;
-    }, 0),
+    totalBytes: sumBy(shown, (held) => {
+      return held.bytes;
+    }),
+    reclaimableBytes: sumBy(shown, (held) => {
+      return held.reclaimableBytes;
+    }),
     disposable: shown.flatMap((held) => {
       return held.entries.filter((entry) => {
         return entry.reclaimable;

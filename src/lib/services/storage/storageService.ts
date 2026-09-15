@@ -11,6 +11,8 @@ import {
   join,
 } from 'node:path';
 
+import { sum, sumBy } from 'es-toolkit';
+
 import { agentOption, agentOptions } from '@config/agents';
 
 import { resolveAgentPaths } from '../agents/agentsService';
@@ -132,9 +134,7 @@ const sizeOf = async (path: string, depth: number, budget: Budget): Promise<numb
     return sizeOf(join(path, name), depth + 1, budget);
   }));
 
-  return sizes.reduce((total, size) => {
-    return total + size;
-  }, 0);
+  return sum(sizes);
 };
 
 /**
@@ -189,12 +189,12 @@ const measureRoot = async (root: string, budget: Budget): Promise<RootMeasuremen
   }));
 
   return {
-    bytes: measured.reduce((total, entry) => {
-      return total + entry.bytes;
-    }, 0),
-    reclaimableBytes: measured.reduce((total, entry) => {
-      return total + (entry.reclaimable ? entry.bytes : 0);
-    }, 0),
+    bytes: sumBy(measured, (entry) => {
+      return entry.bytes;
+    }),
+    reclaimableBytes: sumBy(measured, (entry) => {
+      return entry.reclaimable ? entry.bytes : 0;
+    }),
     entries: notableFirst(measured.filter((entry) => {
       return entry.bytes > 0;
     })),

@@ -1,3 +1,5 @@
+import { sumBy } from 'es-toolkit';
+
 import type {
   EditedFile,
   EditKind,
@@ -5,9 +7,9 @@ import type {
 } from '@services/edits/editsService';
 
 const changesOfKind = (edits: readonly FileEdit[], kind: EditKind): number => {
-  return edits.reduce((total, edit) => {
-    return edit.kind === kind ? total + edit.changes : total;
-  }, 0);
+  return sumBy(edits, (edit) => {
+    return edit.kind === kind ? edit.changes : 0;
+  });
 };
 
 // An open session asks what it changed, not what the project did, so the counts

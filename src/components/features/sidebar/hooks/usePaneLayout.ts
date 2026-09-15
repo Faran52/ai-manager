@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 
+import { clamp } from 'es-toolkit';
+
 import {
   projectsDrawerStorageKey,
   projectsPaneStorageKey,
@@ -38,10 +40,6 @@ export const SESSIONS_WIDTH: WidthRange = {
 
 // The width a column folds to: its strip of marks, w-14 in the tailwind scale.
 export const COLLAPSED_WIDTH = '3.5rem';
-
-const clamp = (value: number, range: WidthRange): number => {
-  return Math.min(Math.max(value, range.min), range.max);
-};
 
 const storedWidth = (key: string, range: WidthRange): number => {
   const stored = Number(localStorage.getItem(key));
@@ -83,12 +81,12 @@ export const usePaneLayout = (): PaneLayout => {
     setSessionsOpen,
     resizeProjects: (delta) => {
       setProjectsWidth((width) => {
-        return clamp(width + delta, PROJECTS_WIDTH);
+        return clamp(width + delta, PROJECTS_WIDTH.min, PROJECTS_WIDTH.max);
       });
     },
     resizeSessions: (delta) => {
       setSessionsWidth((width) => {
-        return clamp(width + delta, SESSIONS_WIDTH);
+        return clamp(width + delta, SESSIONS_WIDTH.min, SESSIONS_WIDTH.max);
       });
     },
   };

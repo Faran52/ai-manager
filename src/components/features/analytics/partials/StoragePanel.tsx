@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { sumBy } from 'es-toolkit';
 import { HardDrive, Trash2 } from 'lucide-react';
 
 import { reclaimStorage } from '@lib/apis/apiClient';
@@ -52,9 +53,9 @@ export const StoragePanel: FC<StoragePanelProps> = ({
     reclaimableBytes,
     disposable,
   } = heldBy(report, agent);
-  const projectBytes = (projectSessions ?? []).reduce((total, session) => {
-    return total + session.sizeBytes;
-  }, 0);
+  const projectBytes = sumBy(projectSessions ?? [], (session) => {
+    return session.sizeBytes;
+  });
   const onlyThisProject = projectSessions != null;
 
   const freeThem = (): void => {

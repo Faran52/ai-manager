@@ -1,3 +1,4 @@
+import { clamp } from 'es-toolkit';
 import { motion } from 'motion/react';
 
 import { fillTransition, MOTION_STAGGER } from '../constants';
@@ -47,7 +48,7 @@ export const BarRow: FC<BarRowProps> = ({
 }) => {
   // The bar animates from empty, so its scale mid-flight is not the proportion.
   // data-bar-fill carries the settled figure for tests and for reading the DOM.
-  const percent = Math.min(100, Math.max(0, max === 0 ? 0 : Math.round((value / max) * 100)));
+  const percent = clamp(max === 0 ? 0 : Math.round((value / max) * 100), 0, 100);
 
   return (
     <li className="contents" data-bar-row={label}>

@@ -2,6 +2,8 @@ import { stat } from 'node:fs/promises';
 import { basename } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
+import { sumBy } from 'es-toolkit';
+
 import { appConfig } from '@config/appConfig';
 
 import { parseUnifiedDiff } from '@utils/diffUtils';
@@ -559,9 +561,9 @@ export const listOpenCodeProjects = async (
       name: cwd != null ? basename(cwd) : basename(id),
       actualPath: cwd,
       sessionCount: values.length,
-      messageCount: values.reduce((total, value) => {
-        return total + value.messageCount;
-      }, 0),
+      messageCount: sumBy(values, (value) => {
+        return value.messageCount;
+      }),
       lastActivityMs: values.reduce((latest, value) => {
         return Math.max(latest, value.lastTimestampMs);
       }, 0),

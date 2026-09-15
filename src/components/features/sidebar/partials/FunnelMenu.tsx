@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { sumBy } from 'es-toolkit';
 import {
   CalendarRange,
   ListFilter,
@@ -85,9 +86,9 @@ export const FunnelMenu: FC<FunnelMenuProps> = ({
         .sort((left, right) => {
           return Number(right.count > 0) - Number(left.count > 0);
         });
-  const totalCount = offered.reduce((total, entry) => {
-    return total + entry.count;
-  }, 0);
+  const totalCount = sumBy(offered, (entry) => {
+    return entry.count;
+  });
   // Both groups are always populated: offered is the whole supported set.
   const agentGroups = [
     {

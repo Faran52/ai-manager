@@ -1,5 +1,7 @@
 import { stat } from 'node:fs/promises';
 
+import { clamp } from 'es-toolkit';
+
 import { agentOption } from '@config/agents';
 
 import { LruCache } from '@utils/lruCacheUtils';
@@ -99,7 +101,7 @@ export const loadSessionPage = async (
     : entries.filter((entry) => {
         return !isSidechained(entry);
       });
-  const start = Math.min(Math.max(request.offset, 0), visible.length);
+  const start = clamp(request.offset, 0, visible.length);
   const end = Math.min(start + Math.max(request.limit, 0), visible.length);
 
   return {

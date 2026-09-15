@@ -1,3 +1,5 @@
+import { clamp } from 'es-toolkit';
+
 import { appConfig } from '@config/appConfig';
 
 const JSON_HEADERS = { 'content-type': 'application/json' };
@@ -47,7 +49,7 @@ export const readJsonObject = async (request: Request): Promise<object | undefin
 export const clampLimit = (limit: number | undefined): number => {
   const requested = limit ?? appConfig.pageSize;
 
-  return Math.min(Math.max(Math.floor(requested), 1), appConfig.maxPageSize);
+  return clamp(Math.floor(requested), 1, appConfig.maxPageSize);
 };
 
 export const clampOffset = (requested = 0): number => {

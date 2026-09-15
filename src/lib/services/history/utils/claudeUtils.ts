@@ -5,6 +5,8 @@ import {
 } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
+import { sumBy } from 'es-toolkit';
+
 import { appConfig } from '@config/appConfig';
 
 import { LruCache } from '@utils/lruCacheUtils';
@@ -360,9 +362,9 @@ export const listProjects = async (claudeDir: string): Promise<readonly ProjectS
       name: actualPath != null ? basename(actualPath) : fallbackProjectName(projectId),
       actualPath,
       sessionCount: sessions.length,
-      messageCount: sessions.reduce((total, session) => {
-        return total + session.messageCount;
-      }, 0),
+      messageCount: sumBy(sessions, (session) => {
+        return session.messageCount;
+      }),
       lastActivityMs: sessions.reduce((latest, session) => {
         return Math.max(latest, session.lastTimestampMs);
       }, 0),

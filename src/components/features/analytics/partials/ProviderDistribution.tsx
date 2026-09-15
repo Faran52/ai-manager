@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
+import { sumBy } from 'es-toolkit';
+
 import { agentOption } from '@config/agents';
 
 import { cn } from '@utils/cnUtils';
@@ -28,9 +30,9 @@ export const ProviderDistribution: FC<ProviderDistributionProps> = ({ agents }) 
   const ordered = [...agents].sort((left, right) => {
     return right.tokens - left.tokens;
   });
-  const total = ordered.reduce((sum, agent) => {
-    return sum + agent.tokens;
-  }, 0);
+  const total = sumBy(ordered, (agent) => {
+    return agent.tokens;
+  });
   const max = ordered[0]?.tokens ?? 0;
 
   return (

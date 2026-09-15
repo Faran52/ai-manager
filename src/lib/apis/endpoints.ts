@@ -1,3 +1,5 @@
+import { sumBy } from 'es-toolkit';
+
 import { isAgentId } from '@config/agents';
 
 import {
@@ -459,9 +461,9 @@ export const handleCreateArchive = async (request: Request, deps?: EndpointDeps)
         createdMs: manifest.createdMs,
         note: manifest.note,
         sessionCount: manifest.sessions.length,
-        sizeBytes: manifest.sessions.reduce((total, session) => {
-          return total + session.sizeBytes;
-        }, 0),
+        sizeBytes: sumBy(manifest.sessions, (session) => {
+          return session.sizeBytes;
+        }),
         agents: [...new Set(manifest.sessions.map((session) => {
           return session.agent;
         }))],
