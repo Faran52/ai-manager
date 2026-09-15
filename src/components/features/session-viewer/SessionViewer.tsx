@@ -23,8 +23,8 @@ import { isTypingTarget, matchesShortcut } from '@utils/shortcutUtils';
 import {
   Button,
   EmptyState,
+  IconButton,
   Spinner,
-  Tooltip,
   useSmoothScroll,
 } from '@ui/index';
 import { useMessages } from '@features/history-data';
@@ -88,77 +88,6 @@ const modelOf = (entries: readonly HistoryEntry[]): string | undefined => {
   return entries.reduce<string | undefined>((found, entry) => {
     return entry.kind === 'assistant' && entry.model != null ? entry.model : found;
   }, undefined);
-};
-
-/*
- * An icon-only header control: tooltip and label for the name, a lit background
- * for the on state. The panel toggles and the filter switch all wear it.
- */
-const HeaderAction: FC<{
-  readonly label: string;
-  readonly icon: ReactNode;
-  readonly active: boolean;
-  readonly onClick: () => void;
-}> = ({
-  label,
-  icon,
-  active,
-  onClick,
-}) => {
-  return (
-    <Tooltip content={label}>
-      <button
-        type="button"
-        aria-label={label}
-        aria-pressed={active}
-        onClick={onClick}
-        className={cn('toolbar-button', active && 'bg-primary/10 text-primary')}
-      >
-        {icon}
-      </button>
-    </Tooltip>
-  );
-};
-
-/*
- * One half of the companion-panel segmented pair. Lit like a raised tab when its
- * panel is open, flat when it is not, so the pair can also show neither on.
- */
-const PanelTab: FC<{
-  readonly label: string;
-  readonly icon: ReactNode;
-  readonly active: boolean;
-  readonly onClick: () => void;
-}> = ({
-  label,
-  icon,
-  active,
-  onClick,
-}) => {
-  return (
-    <Tooltip content={label}>
-      <button
-        type="button"
-        aria-label={label}
-        aria-pressed={active}
-        onClick={onClick}
-        className={cn(
-          `
-            flex h-5.25 w-6.5 items-center justify-center rounded-sm
-            transition-colors
-          `,
-          active
-            ? 'bg-card text-foreground'
-            : `
-              text-muted-foreground
-              hover:text-foreground
-            `,
-        )}
-      >
-        {icon}
-      </button>
-    </Tooltip>
-  );
 };
 
 export const SessionViewer: FC<SessionViewerProps> = ({
@@ -336,10 +265,11 @@ export const SessionViewer: FC<SessionViewerProps> = ({
           </span>
           <div className="flex shrink-0 items-center gap-1.5">
             {supportsSidechains && (
-              <HeaderAction
+              <IconButton
+                variant="toolbar"
                 label={t('includeSubagentActivity')}
                 icon={<Users className="size-3.5" />}
-                active={includeSidechain}
+                pressed={includeSidechain}
                 onClick={() => {
                   setIncludeSidechain((value) => {
                     return !value;
@@ -353,20 +283,22 @@ export const SessionViewer: FC<SessionViewerProps> = ({
               p-0.5
             "
             >
-              <PanelTab
+              <IconButton
+                variant="segment"
                 label={t('navigator')}
                 icon={<ListTree className="size-3.5" />}
-                active={panel === 'navigator'}
+                pressed={panel === 'navigator'}
                 onClick={() => {
                   setPanel((current) => {
                     return current === 'navigator' ? 'none' : 'navigator';
                   });
                 }}
               />
-              <PanelTab
+              <IconButton
+                variant="segment"
                 label={t('fileEdits')}
                 icon={<FileText className="size-3.5" />}
-                active={panel === 'edits'}
+                pressed={panel === 'edits'}
                 onClick={() => {
                   setPanel((current) => {
                     return current === 'edits' ? 'none' : 'edits';

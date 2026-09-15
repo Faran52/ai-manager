@@ -216,29 +216,6 @@
     border-color: var(--primary);
   }
 
-  /* The header's one icon control: same footprint as the fold toggle. */
-  .sidebar-header-icon {
-    display: flex;
-    flex: none;
-    align-items: center;
-    justify-content: center;
-    width: 1.5rem;
-    height: 1.5rem;
-    color: var(--muted-foreground);
-    border-radius: 0.375rem;
-    transition: color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease);
-  }
-
-  .sidebar-header-icon:hover {
-    color: var(--foreground);
-    background: var(--accent);
-  }
-
-  .sidebar-header-icon:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: -2px;
-  }
-
   /* A mark near the size of the badges beside it (project id, message
      count), not a full icon button: the row's own chevron, not a toolbar
      action. Positioned above the title button's stretched click target

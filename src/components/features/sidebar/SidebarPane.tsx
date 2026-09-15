@@ -13,6 +13,7 @@ import {
   Layers,
   ListChecks,
   MessagesSquare,
+  PanelLeft,
   Search,
   X,
 } from 'lucide-react';
@@ -40,6 +41,7 @@ import {
   EmptyState,
   fadeTransition,
   foldTransition,
+  IconButton,
   PaneDivider,
   SectionHeader,
   Spinner,
@@ -60,7 +62,6 @@ import {
 import { AllProjectsCard } from './partials/AllProjectsCard';
 import { CollapsedStrip } from './partials/CollapsedStrip';
 import { FunnelMenu } from './partials/FunnelMenu';
-import { PanelToggle } from './partials/PanelToggle';
 import { exportSessions } from './utils/bulkExportUtils';
 import { withinDateFilter } from './utils/dateFilterUtils';
 import { buildProjectTree } from './utils/projectTreeUtils';
@@ -659,33 +660,23 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
 
   if (selectionMode) {
     sessionHeaderAction = (
-      <Tooltip content={t('cancelSelection')}>
-        <button
-          type="button"
-          aria-label={t('cancelSelection')}
-          onClick={exitSelectionMode}
-          className="sidebar-header-icon"
-        >
-          <X className="size-3.5" />
-        </button>
-      </Tooltip>
+      <IconButton
+        label={t('cancelSelection')}
+        icon={<X className="size-3.5" />}
+        onClick={exitSelectionMode}
+      />
     );
   }
   else if (selectableSessions.length > 0) {
     sessionHeaderAction = (
-      <Tooltip content={t('selectSessions')}>
-        <button
-          type="button"
-          aria-label={t('selectSessions')}
-          onClick={() => {
-            setMenuTarget(null);
-            setSelectionMode(true);
-          }}
-          className="sidebar-header-icon"
-        >
-          <ListChecks className="size-3.5" />
-        </button>
-      </Tooltip>
+      <IconButton
+        label={t('selectSessions')}
+        icon={<ListChecks className="size-3.5" />}
+        onClick={() => {
+          setMenuTarget(null);
+          setSelectionMode(true);
+        }}
+      />
     );
   }
 
@@ -917,9 +908,10 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                     count={projectCount}
                     casing="plain"
                     action={(
-                      <PanelToggle
+                      <IconButton
                         label={t('hideProjects')}
-                        onToggle={() => {
+                        icon={<PanelLeft className="size-3.5" />}
+                        onClick={() => {
                           setProjectsOpen(false);
                         }}
                       />
@@ -1068,9 +1060,10 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                         action={(
                           <span className="flex items-center gap-1">
                             {sessionHeaderAction}
-                            <PanelToggle
+                            <IconButton
                               label={t('hideSessions')}
-                              onToggle={() => {
+                              icon={<PanelLeft className="size-3.5" />}
+                              onClick={() => {
                                 setSessionsOpen(false);
                               }}
                             />

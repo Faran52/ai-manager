@@ -12,6 +12,7 @@ export * from './eyebrow/Eyebrow';
 export * from './hooks/useLastPresent';
 export * from './hooks/useReducedMotion';
 export * from './hooks/useSmoothScroll';
+export * from './icon-button/IconButton';
 export * from './markdown-text/MarkdownText';
 export * from './markdown-view/MarkdownView';
 export * from './menu/Menu';

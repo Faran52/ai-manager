@@ -1,9 +1,13 @@
+import { PanelLeft } from 'lucide-react';
+
 import { cn } from '@utils/cnUtils';
 import { initialsOf } from '@utils/initialsUtils';
 
-import { AgentMark, Tooltip } from '@ui/index';
-
-import { PanelToggle } from './PanelToggle';
+import {
+  AgentMark,
+  IconButton,
+  Tooltip,
+} from '@ui/index';
 
 import type { AgentId } from '@config/agents';
 import type { FC, ReactNode } from 'react';
@@ -51,7 +55,7 @@ export const CollapsedStrip: FC<CollapsedStripProps> = ({
         flex h-9 shrink-0 items-center justify-center border-b border-border
       "
       >
-        <PanelToggle label={expandLabel} onToggle={onExpand} />
+        <IconButton label={expandLabel} icon={<PanelLeft className="size-3.5" />} onClick={onExpand} />
       </div>
       <ul aria-label={listLabel} className="min-h-0 flex-1 overflow-y-auto py-2">
         {items.map((item) => {
