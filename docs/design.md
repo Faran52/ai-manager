@@ -298,11 +298,17 @@ pointing toward it on screen. The primitives handle this; a hand-rolled one woul
 
 ## Components
 
-### Exist (26, in `src/components/ui`)
+### Exist (29, in `src/components/ui`)
 
 AgentMark, Badge, BarRow, Button, CodeBlock, CodeLine, ConfirmDialog, Disclosure, EmptyState,
-MarkdownText, MenuCheckboxItem, MenuItem, MetricCard, Modal, OutputBlock, PaneDivider, PatchView,
-PopupMenu, SectionHeader, Spinner, Switch, Tabs, TabsPanel, TextInput, Toast, Tooltip.
+Eyebrow, IconButton, MarkdownText, MenuCheckboxItem, MenuItem, MetricCard, Modal, Notice,
+OutputBlock, PaneDivider, PatchView, PopupMenu, SectionHeader, Spinner, Switch, Tabs, TabsPanel,
+TextInput, Toast, Tooltip.
+
+`Eyebrow` is the tracked uppercase label: report sections, health groups and card headings all
+draw it rather than repeating the class string. `IconButton` is a tooltip around an icon-only
+button, in ghost, toolbar and segment variants, and is every icon control that carries no text.
+`Notice` is the inline error or warning line with its icon; it is not a toast and does not move.
 
 `Disclosure` is the one collapsible: a trigger and a height-animated region on `collapseTransition`,
 reduced-motion aware. Thinking, the injected-context row and the tool card all open through it.
