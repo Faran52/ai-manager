@@ -7,6 +7,7 @@ import { formatTokens } from '@utils/formatUtils';
 
 import {
   MOTION_STAGGER,
+  Panel,
   riseTransition,
   Tooltip,
 } from '@ui/index';
@@ -18,8 +19,6 @@ import {
   monthsOf,
   weeksTo,
 } from '../utils/heatmapUtils';
-
-import { AnalyticsPanel } from './AnalyticsPanel';
 
 import type { DayActivity } from '@services/stats/statsService';
 import type { FC, PointerEvent } from 'react';
@@ -73,7 +72,7 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
   };
 
   return (
-    <AnalyticsPanel title={t('activity')}>
+    <Panel title={t('activity')} className="flex h-full flex-col">
       <div className="mt-3 flex h-52 gap-2" data-activity-heatmap>
         <div className="grid shrink-0 grid-rows-7 gap-1 pt-4">
           {ROW_KEYS.map((weekday) => {
@@ -195,6 +194,6 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
         })}
         <span>{t('heatmapMore')}</span>
       </div>
-    </AnalyticsPanel>
+    </Panel>
   );
 };

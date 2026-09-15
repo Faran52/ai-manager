@@ -1,8 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-import { MetricCard } from '@ui/index';
-
-import { AnalyticsPanel } from './AnalyticsPanel';
+import { MetricCard, Panel } from '@ui/index';
 
 import type { StatsTotals } from '@services/stats/statsService';
 import type { FC } from 'react';
@@ -15,7 +13,7 @@ export const PricingCoverage: FC<PricingCoverageProps> = ({ totals }) => {
   const { t } = useTranslation('analytics');
 
   return (
-    <AnalyticsPanel title={t('pricingCoverage')}>
+    <Panel title={t('pricingCoverage')} className="flex h-full flex-col">
       <div className="mt-3 grid grid-cols-2 gap-3">
         <MetricCard
           label={t('pricedTokens')}
@@ -26,6 +24,6 @@ export const PricingCoverage: FC<PricingCoverageProps> = ({ totals }) => {
           value={String(totals.unpricedModelCount ?? 0)}
         />
       </div>
-    </AnalyticsPanel>
+    </Panel>
   );
 };

@@ -19,6 +19,7 @@ import {
   EmptyState,
   Eyebrow,
   Notice,
+  Panel,
   Spinner,
 } from '@ui/index';
 
@@ -175,10 +176,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
           )}
 
           {current != null && current.editable !== true && (
-            <div className="
-              grid gap-3 rounded-lg border border-border bg-card p-4
-            "
-            >
+            <Panel className="grid gap-3">
               <SettingsFilePath scope={current} />
               {/* One quiet line, not a warning banner: nothing has gone wrong. */}
               <p className="
@@ -204,14 +202,11 @@ export const SettingsView: FC<SettingsViewProps> = ({
                     )
                   : <KeyChips label={t('holds')} keys={current.preservedKeys} />}
               </div>
-            </div>
+            </Panel>
           )}
 
           {current?.editable === true && draft != null && (
-            <div className="
-              grid gap-4 rounded-lg border border-border bg-card p-4
-            "
-            >
+            <Panel className="grid gap-4">
               <SettingsFilePath scope={current} />
 
               {!current.readable && (
@@ -327,7 +322,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
                   </span>
                 )}
               </div>
-            </div>
+            </Panel>
           )}
         </div>
       </div>

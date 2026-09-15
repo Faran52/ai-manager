@@ -1,5 +1,4 @@
 export * from './ActivityHeatmap';
-export * from './AnalyticsPanel';
 export * from './AnalyticsReport';
 export * from './BarList';
 export * from './BillingBreakdown';

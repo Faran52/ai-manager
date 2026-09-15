@@ -3,9 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@utils/cnUtils';
 import { formatTokens } from '@utils/formatUtils';
 
-import { BAR_LIST_GRID, BarRow } from '@ui/index';
-
-import { AnalyticsPanel } from './AnalyticsPanel';
+import {
+  BAR_LIST_GRID,
+  BarRow,
+  Panel,
+} from '@ui/index';
 
 import type { FC } from 'react';
 
@@ -22,7 +24,7 @@ export const BarList: FC<BarListProps> = ({ title, items }) => {
   }, 0);
 
   return (
-    <AnalyticsPanel title={title}>
+    <Panel title={title} className="flex h-full flex-col">
       {/*
         * The list is the grid, not the row: columns have to be shared for the
         * bars to line up, and for the label and figure columns to size to the
@@ -45,6 +47,6 @@ export const BarList: FC<BarListProps> = ({ title, items }) => {
           <li className="col-span-3 text-xs text-muted-foreground">{t('nothingRecorded')}</li>
         )}
       </ul>
-    </AnalyticsPanel>
+    </Panel>
   );
 };

@@ -12,6 +12,6 @@ describe('SummaryDivider', () => {
     render(<SummaryDivider text="A recap" />);
 
     expect(screen.getByText('A recap')).toBeDefined();
-    expect(document.querySelector('[data-summary-divider]')).not.toBeNull();
+    expect(screen.getByRole('separator', { name: 'A recap' })).toBeDefined();
   });
 });

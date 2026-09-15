@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import { formatTokens } from '@utils/formatUtils';
 
-import { AnalyticsPanel } from './AnalyticsPanel';
+import { Panel } from '@ui/index';
 
 import type { SessionTokenTotals } from '@services/stats/statsService';
 import type { FC } from 'react';
@@ -20,7 +20,7 @@ export const TopSessions: FC<TopSessionsProps> = ({
 }) => {
   const { t } = useTranslation('analytics');
   return (
-    <AnalyticsPanel title={t('topSessions')}>
+    <Panel title={t('topSessions')} className="flex h-full flex-col">
       <ul
         className="-mx-2 mt-2 divide-y divide-border"
         data-top-sessions
@@ -55,6 +55,6 @@ export const TopSessions: FC<TopSessionsProps> = ({
           );
         })}
       </ul>
-    </AnalyticsPanel>
+    </Panel>
   );
 };

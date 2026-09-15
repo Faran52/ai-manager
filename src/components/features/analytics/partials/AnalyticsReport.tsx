@@ -1,9 +1,10 @@
 import { useTranslation } from 'react-i18next';
 
+import { Panel } from '@ui/index';
+
 import { usageItems } from '../utils/usageListUtils';
 
 import { ActivityHeatmap } from './ActivityHeatmap';
-import { AnalyticsPanel } from './AnalyticsPanel';
 import { BarList } from './BarList';
 import { BillingBreakdown } from './BillingBreakdown';
 import { ModelDistribution } from './ModelDistribution';
@@ -99,11 +100,11 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
           {selectedStats.totals.usageRecorded
             ? <ActivityHeatmap activity={selectedStats.activity} />
             : (
-                <AnalyticsPanel title={t('activity')}>
+                <Panel title={t('activity')} className="flex h-full flex-col">
                   <p className="mt-3 text-sm text-muted-foreground">
                     {t('tokenActivityMissing')}
                   </p>
-                </AnalyticsPanel>
+                </Panel>
               )}
           <BarList
             title={t('toolCalls')}

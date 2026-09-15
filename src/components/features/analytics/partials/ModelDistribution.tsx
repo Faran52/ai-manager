@@ -2,9 +2,11 @@ import { useTranslation } from 'react-i18next';
 
 import { formatCost, formatTokens } from '@utils/formatUtils';
 
-import { Badge, BarRow } from '@ui/index';
-
-import { AnalyticsPanel } from './AnalyticsPanel';
+import {
+  Badge,
+  BarRow,
+  Panel,
+} from '@ui/index';
 
 import type { StatsModelUsage } from '@services/stats/statsService';
 import type { PricingBasis } from '@services/stats/utils/pricingUtils';
@@ -46,7 +48,7 @@ export const ModelDistribution: FC<ModelDistributionProps> = ({ models }) => {
   }, 0);
 
   return (
-    <AnalyticsPanel title={t('modelDistribution')}>
+    <Panel title={t('modelDistribution')} className="flex h-full flex-col">
       <ul className={GRID} data-model-distribution>
         {ordered.map((model, index) => {
           return (
@@ -81,6 +83,6 @@ export const ModelDistribution: FC<ModelDistributionProps> = ({ models }) => {
           <li className="col-span-4 text-xs text-muted-foreground">{t('noModels')}</li>
         )}
       </ul>
-    </AnalyticsPanel>
+    </Panel>
   );
 };

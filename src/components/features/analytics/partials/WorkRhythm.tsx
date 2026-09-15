@@ -3,11 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@utils/cnUtils';
 import { formatTokens } from '@utils/formatUtils';
 
-import { BAR_LIST_GRID, BarRow } from '@ui/index';
+import {
+  BAR_LIST_GRID,
+  BarRow,
+  Panel,
+} from '@ui/index';
 
 import { hourSlots } from '../utils/rhythmSlotUtils';
 
-import { AnalyticsPanel } from './AnalyticsPanel';
 import { RhythmStrip } from './RhythmStrip';
 
 import type { StatsEffort, StatsRhythm } from '@services/stats/statsService';
@@ -50,7 +53,7 @@ export const WorkRhythm: FC<WorkRhythmProps> = ({ rhythm, effort }) => {
   ];
 
   return (
-    <AnalyticsPanel title={t('workRhythm')}>
+    <Panel title={t('workRhythm')} className="flex h-full flex-col">
       <div className="mt-3 grid gap-4" data-work-rhythm>
         <RhythmStrip caption={t('byHour')} slots={hourSlots(rhythm.hours)} />
         {/*
@@ -101,6 +104,6 @@ export const WorkRhythm: FC<WorkRhythmProps> = ({ rhythm, effort }) => {
           })}
         </dl>
       </div>
-    </AnalyticsPanel>
+    </Panel>
   );
 };

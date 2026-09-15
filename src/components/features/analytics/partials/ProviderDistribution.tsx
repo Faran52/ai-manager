@@ -5,9 +5,7 @@ import { agentOption } from '@config/agents';
 import { cn } from '@utils/cnUtils';
 import { formatTokens } from '@utils/formatUtils';
 
-import { BarRow } from '@ui/index';
-
-import { AnalyticsPanel } from './AnalyticsPanel';
+import { BarRow, Panel } from '@ui/index';
 
 import type { AgentStatsUsage } from '@services/stats/statsService';
 import type { FC } from 'react';
@@ -36,7 +34,7 @@ export const ProviderDistribution: FC<ProviderDistributionProps> = ({ agents }) 
   const max = ordered[0]?.tokens ?? 0;
 
   return (
-    <AnalyticsPanel title={t('providerDistribution')}>
+    <Panel title={t('providerDistribution')} className="flex h-full flex-col">
       <ul className={cn('mt-3', PROVIDER_GRID)} data-provider-distribution>
         {ordered.map((agent, index) => {
           const share = total === 0 ? 0 : Math.round((agent.tokens / total) * 100);
@@ -69,6 +67,6 @@ export const ProviderDistribution: FC<ProviderDistributionProps> = ({ agents }) 
           <li className="col-span-4 text-xs text-muted-foreground">{t('noProviders')}</li>
         )}
       </ul>
-    </AnalyticsPanel>
+    </Panel>
   );
 };

@@ -10,6 +10,7 @@ import { formatTimeAgo } from '@utils/formatUtils';
 import {
   Button,
   Notice,
+  Panel,
   Spinner,
   Switch,
   TextInput,
@@ -94,10 +95,7 @@ export const RetentionCard: FC<RetentionCardProps> = ({ retention, nowMs }) => {
   const due = status.due.sessions;
 
   return (
-    <section
-      className="grid gap-3 rounded-lg border border-border bg-card p-4"
-      data-retention-card
-    >
+    <Panel className="grid gap-3">
       {/* The state of the rule is a switch on the trailing edge of its own card,
           not the bare word "Off" sitting in the middle of a sentence. */}
       <header className="flex items-center gap-2">
@@ -210,6 +208,6 @@ export const RetentionCard: FC<RetentionCardProps> = ({ retention, nowMs }) => {
       {error != null && (
         <Notice>{error}</Notice>
       )}
-    </section>
+    </Panel>
   );
 };

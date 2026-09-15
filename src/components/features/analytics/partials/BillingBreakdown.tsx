@@ -2,9 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import { formatTokens } from '@utils/formatUtils';
 
-import { MetricCard } from '@ui/index';
-
-import { AnalyticsPanel } from './AnalyticsPanel';
+import { MetricCard, Panel } from '@ui/index';
 
 import type { StatsTotals } from '@services/stats/statsService';
 import type { FC } from 'react';
@@ -27,7 +25,7 @@ export const BillingBreakdown: FC<BillingBreakdownProps> = ({ totals }) => {
   const billingTokens = totals.billingTokens ?? conversationTokens + nonConversationTokens;
 
   return (
-    <AnalyticsPanel title={t('billingBreakdown')}>
+    <Panel title={t('billingBreakdown')} className="flex h-full flex-col">
       <div className="
         mt-3 grid gap-3
         md:grid-cols-3
@@ -54,6 +52,6 @@ export const BillingBreakdown: FC<BillingBreakdownProps> = ({ totals }) => {
           {t('splitUnavailable')}
         </p>
       )}
-    </AnalyticsPanel>
+    </Panel>
   );
 };
