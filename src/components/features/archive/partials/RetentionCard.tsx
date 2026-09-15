@@ -1,11 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  CircleAlert,
-  Loader2,
-  ShieldCheck,
-} from 'lucide-react';
+import { Loader2, ShieldCheck } from 'lucide-react';
 
 import { runRetention, writeRetention } from '@lib/apis/apiClient';
 import { toErrorMessage } from '@utils/errorUtils';
@@ -13,6 +9,7 @@ import { formatTimeAgo } from '@utils/formatUtils';
 
 import {
   Button,
+  Notice,
   Spinner,
   Switch,
   TextInput,
@@ -49,14 +46,7 @@ export const RetentionCard: FC<RetentionCardProps> = ({ retention, nowMs }) => {
 
   if (status == null) {
     return (
-      <p className="
-        flex items-center gap-2 rounded-lg border border-destructive/40
-        bg-destructive/10 px-3 py-2 text-xs text-destructive
-      "
-      >
-        <CircleAlert className="size-3.5" />
-        {retention.error}
-      </p>
+      <Notice>{retention.error}</Notice>
     );
   }
 
@@ -218,14 +208,7 @@ export const RetentionCard: FC<RetentionCardProps> = ({ retention, nowMs }) => {
       )}
 
       {error != null && (
-        <p className="
-          flex items-center gap-2 rounded-lg border border-destructive/40
-          bg-destructive/10 px-3 py-2 text-xs text-destructive
-        "
-        >
-          <CircleAlert className="size-3.5" />
-          {error}
-        </p>
+        <Notice>{error}</Notice>
       )}
     </section>
   );

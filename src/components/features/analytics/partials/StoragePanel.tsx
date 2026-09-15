@@ -1,11 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  CircleAlert,
-  HardDrive,
-  Trash2,
-} from 'lucide-react';
+import { HardDrive, Trash2 } from 'lucide-react';
 
 import { reclaimStorage } from '@lib/apis/apiClient';
 import { sizeLabel } from '@utils/formatUtils';
@@ -16,6 +12,7 @@ import {
   ConfirmDialog,
   EmptyState,
   MetricCard,
+  Notice,
   Spinner,
 } from '@ui/index';
 
@@ -128,14 +125,7 @@ export const StoragePanel: FC<StoragePanelProps> = ({
       {storage.status === 'loading' && <Spinner />}
 
       {storage.status === 'error' && (
-        <p className="
-          flex items-center gap-2 rounded-lg border border-destructive/40
-          bg-destructive/10 px-3 py-2 text-xs text-destructive
-        "
-        >
-          <CircleAlert className="size-3.5" />
-          {storage.error}
-        </p>
+        <Notice>{storage.error}</Notice>
       )}
 
       {report != null && (

@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next';
 
 import {
   Check,
-  CircleAlert,
   FileCode2,
   Loader2,
   Lock,
@@ -27,6 +26,7 @@ import {
   Button,
   controlTransition,
   EmptyState,
+  Notice,
   Spinner,
 } from '@ui/index';
 
@@ -344,14 +344,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
           {settings.status === 'loading' && <Spinner />}
 
           {settings.status === 'error' && (
-            <p className="
-              flex items-center gap-2 rounded-lg border border-destructive/40
-              bg-destructive/10 px-3 py-2 text-xs text-destructive
-            "
-            >
-              <CircleAlert className="size-3.5" />
-              {settings.error}
-            </p>
+            <Notice>{settings.error}</Notice>
           )}
 
           {settings.status === 'ready' && scopes.length === 1
@@ -409,14 +402,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
               <FilePath scope={current} />
 
               {!current.readable && (
-                <p className="
-                  flex items-center gap-2 rounded-lg border border-warn/40
-                  bg-warn/10 px-3 py-2 text-xs text-warn
-                "
-                >
-                  <CircleAlert className="size-3.5" />
-                  {t('unreadable')}
-                </p>
+                <Notice tone="warn">{t('unreadable')}</Notice>
               )}
 
               <GroupLabel>{t('groupPermissions')}</GroupLabel>
@@ -491,15 +477,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
               )}
 
               {error != null && (
-                <p className="
-                  flex items-center gap-2 rounded-lg border
-                  border-destructive/40 bg-destructive/10 px-3 py-2 text-xs
-                  text-destructive
-                "
-                >
-                  <CircleAlert className="size-3.5" />
-                  {error}
-                </p>
+                <Notice>{error}</Notice>
               )}
 
               {/*

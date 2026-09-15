@@ -17,6 +17,7 @@ import {
   Button,
   ConfirmDialog,
   EmptyState,
+  Notice,
   SectionHeader,
   Spinner,
   TextInput,
@@ -148,14 +149,7 @@ export const ArchiveView: FC<ArchiveViewProps> = ({
         </div>
 
         {error != null && (
-          <p className="
-            flex items-center gap-2 rounded-lg border border-destructive/40
-            bg-destructive/10 px-3 py-2 text-xs text-destructive
-          "
-          >
-            <CircleAlert className="size-3.5" />
-            {error}
-          </p>
+          <Notice>{error}</Notice>
         )}
 
         {/* Three figures that read 0, 0 and 0B on an empty install were three

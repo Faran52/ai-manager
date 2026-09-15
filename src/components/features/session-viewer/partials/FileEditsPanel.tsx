@@ -1,12 +1,8 @@
 import { useTranslation } from 'react-i18next';
 
-import {
-  CircleAlert,
-  FileText,
-  X,
-} from 'lucide-react';
+import { FileText, X } from 'lucide-react';
 
-import { Spinner } from '@ui/index';
+import { Notice, Spinner } from '@ui/index';
 
 import { EditedFileList } from './EditedFileList';
 
@@ -86,14 +82,7 @@ export const FileEditsPanel: FC<FileEditsPanelProps> = ({
         {status === 'loading' && <Spinner />}
 
         {status === 'error' && (
-          <p className="
-            flex items-center gap-2 rounded-lg border border-destructive/40
-            bg-destructive/10 px-3 py-2 text-body text-destructive
-          "
-          >
-            <CircleAlert className="size-3.5" />
-            {error}
-          </p>
+          <Notice>{error}</Notice>
         )}
 
         {status === 'ready' && files.length === 0 && (

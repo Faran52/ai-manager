@@ -22,6 +22,7 @@ export * from './menu/MenuSeparator';
 export * from './menu/MenuSub';
 export * from './metric-card/MetricCard';
 export * from './modal/Modal';
+export * from './notice/Notice';
 export * from './output-block/OutputBlock';
 export * from './pane-divider/PaneDivider';
 export * from './patch-view/PatchView';
