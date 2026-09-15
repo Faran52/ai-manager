@@ -111,12 +111,9 @@ export interface GlobalStats extends ProjectStats {
   readonly perAgentProfile: readonly AgentProfileStats[];
 }
 
-interface AgentAccumulator {
+interface AgentProfileAccumulator {
   readonly accumulator: Accumulator;
   projects: number;
-}
-
-interface AgentProfileAccumulator extends AgentAccumulator {
   readonly agent: AgentId;
   readonly profile?: string | undefined;
 }
@@ -320,18 +317,9 @@ export const computeGlobalStats = async (roots: AgentRoots): Promise<GlobalStats
     };
   }));
   const globalAccumulator = createAccumulator();
-  const byAgent = new Map<AgentId, AgentAccumulator>();
   const byAgentProfile = new Map<string, AgentProfileAccumulator>();
 
   for (const { project, sessions } of counted) {
-    const agentAccumulator = byAgent.get(project.agent) ?? {
-      accumulator: createAccumulator(),
-      projects: 0,
-    };
-
-    agentAccumulator.projects += 1;
-    byAgent.set(project.agent, agentAccumulator);
-
     const profileKey = agentProfileKey(project.agent, project.profile);
     const profileAccumulator = byAgentProfile.get(profileKey) ?? {
       accumulator: createAccumulator(),
@@ -345,23 +333,33 @@ export const computeGlobalStats = async (roots: AgentRoots): Promise<GlobalStats
 
     for (const entry of sessions) {
       foldAggregate(globalAccumulator, entry.aggregate, entry.session);
-      foldAggregate(agentAccumulator.accumulator, entry.aggregate, entry.session);
       foldAggregate(profileAccumulator.accumulator, entry.aggregate, entry.session);
     }
   }
 
   const costs = await readModelCosts();
+  // The per-agent line is its profiles summed: one fold, not a second one.
+  const byAgent = new Map<AgentId, AgentStatsUsage>();
+
+  for (const value of byAgentProfile.values()) {
+    const usage = byAgent.get(value.agent) ?? {
+      agent: value.agent,
+      tokens: 0,
+      sessions: 0,
+      projects: 0,
+    };
+
+    byAgent.set(value.agent, {
+      agent: value.agent,
+      tokens: usage.tokens + value.accumulator.billingTokens,
+      sessions: usage.sessions + value.accumulator.sessions,
+      projects: usage.projects + value.projects,
+    });
+  }
 
   return {
     ...projectStatsFrom('global', globalAccumulator, costs),
-    agents: [...byAgent.entries()].map(([agent, value]) => {
-      return {
-        agent,
-        tokens: value.accumulator.billingTokens,
-        sessions: value.accumulator.sessions,
-        projects: value.projects,
-      };
-    }).sort((left, right) => {
+    agents: [...byAgent.values()].sort((left, right) => {
       return right.tokens - left.tokens;
     }),
     perAgentProfile: [...byAgentProfile.values()].map((value) => {
