@@ -5,12 +5,13 @@ import { formatTokens } from '@utils/formatUtils';
 
 import { BAR_LIST_GRID, BarRow } from '@ui/index';
 
+import { hourSlots } from '../utils/rhythmSlotUtils';
+
 import { AnalyticsPanel } from './AnalyticsPanel';
 import { RhythmStrip } from './RhythmStrip';
 
 import type { StatsEffort, StatsRhythm } from '@services/stats/statsService';
 import type { FC } from 'react';
-import type { RhythmSlot } from './RhythmStrip';
 
 export interface WorkRhythmProps {
   readonly rhythm: StatsRhythm;
@@ -26,22 +27,6 @@ const WEEKDAY_KEYS = [
   'weekdaySat',
   'weekdaySun',
 ] as const;
-
-/*
- * Every hour carries its own label. Labelling only some of them meant counting
- * along the row to work out which bar was which, which is the thing a label is
- * supposed to save you from.
- */
-const hourSlots = (counts: readonly number[]): RhythmSlot[] => {
-  return counts.map((count, hour) => {
-    return {
-      key: String(hour),
-      label: `${String(hour)}:00`,
-      tick: String(hour).padStart(2, '0'),
-      count,
-    };
-  });
-};
 
 export const WorkRhythm: FC<WorkRhythmProps> = ({ rhythm, effort }) => {
   const { t } = useTranslation('analytics');

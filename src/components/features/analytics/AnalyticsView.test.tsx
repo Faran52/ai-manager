@@ -377,33 +377,3 @@ test('shows a global error for failed and malformed responses', async () => {
 
   expect(await screen.findByText("Couldn't load analytics for webapp")).toBeDefined();
 });
-
-test('does not update global state after unmounting', async () => {
-  const pending = Promise.withResolvers<Response>();
-
-  vi.stubGlobal('fetch', vi.fn(() => {
-    return pending.promise;
-  }));
-  const view = renderView();
-
-  view.unmount();
-  pending.resolve(globalResponse());
-  await pending.promise;
-
-  expect(document.querySelector('[data-analytics-view]')).toBeNull();
-});
-
-test('does not report a request error after unmounting', async () => {
-  const pending = Promise.withResolvers<Response>();
-
-  vi.stubGlobal('fetch', vi.fn(() => {
-    return pending.promise;
-  }));
-  const view = renderView();
-
-  view.unmount();
-  pending.reject(new Error('offline'));
-
-  await expect(pending.promise).rejects.toThrow('offline');
-  expect(document.querySelector('[data-analytics-view]')).toBeNull();
-});

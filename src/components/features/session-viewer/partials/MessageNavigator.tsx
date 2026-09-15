@@ -11,6 +11,7 @@ import { agentBadgeLabel } from '@config/agents';
 
 import { cn } from '@utils/cnUtils';
 
+import { previewOf } from '../utils/navigatorUtils';
 import { buildTimelineModel } from '../utils/timelineUtils';
 
 import type { AgentId } from '@config/agents';
@@ -41,33 +42,6 @@ interface NavigatorEntry {
   readonly key: string;
   readonly preview: string;
 }
-
-const cleanPreview = (text: string): string => {
-  return text.replace(/\s+/gu, ' ').trim();
-};
-
-const previewOf = (entry: HistoryEntry): string => {
-  switch (entry.kind) {
-    case 'user':
-      return cleanPreview([entry.text, entry.command, entry.injectedText].find((value) => {
-        return value != null && value.length > 0;
-      }) ?? '');
-    case 'assistant': {
-      const block = entry.blocks.find((item) => {
-        return item.blockType === 'text' || item.blockType === 'tool-use';
-      });
-
-      if (block?.blockType === 'text') {
-        return cleanPreview(block.text);
-      }
-
-      return block?.blockType === 'tool-use' ? block.call.name : '';
-    }
-    case 'system':
-    case 'summary':
-      return cleanPreview(entry.text);
-  }
-};
 
 export const MessageNavigator: FC<MessageNavigatorProps> = ({
   entries,

@@ -4,6 +4,8 @@ import {
   Search,
 } from 'lucide-react';
 
+import { webUrl } from '../utils/webUtils';
+
 import type { ToolCallInput } from '@services/history/historyService';
 import type { FC } from 'react';
 
@@ -12,17 +14,6 @@ type WebToolInput = Extract<ToolCallInput, { readonly kind: 'web-fetch' | 'web-s
 export interface WebToolBodyProps {
   readonly input: WebToolInput;
 }
-
-const webUrl = (value: string): URL | undefined => {
-  try {
-    const url = new URL(value);
-
-    return url.protocol === 'http:' || url.protocol === 'https:' ? url : undefined;
-  }
-  catch {
-    return undefined;
-  }
-};
 
 export const WebToolBody: FC<WebToolBodyProps> = ({ input }) => {
   if (input.kind === 'web-search') {

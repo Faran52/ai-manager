@@ -4,6 +4,8 @@ import { Layers } from 'lucide-react';
 
 import { agentBadgeLabel } from '@config/agents';
 
+import { talliedBy } from '../utils/agentTallyUtils';
+
 import type { AgentId } from '@config/agents';
 import type { ReportScope } from '@features/history-data';
 import type { ProjectSummary } from '@services/history/historyService';
@@ -17,36 +19,6 @@ export interface AllProjectsCardProps {
   readonly selectedScope: ReportScope | null;
   readonly onSelectAgent: (agent: AgentId, profile?: string) => void;
 }
-
-interface AgentTally {
-  readonly agent: AgentId;
-  // Undefined for the plain default root, same as ProjectSummary.profile: a
-  // project used under only one profile tallies as one chip, not two.
-  readonly profile?: string | undefined;
-  readonly sessions: number;
-}
-
-const talliedBy = (projects: readonly ProjectSummary[]): readonly AgentTally[] => {
-  const sessions = new Map<string, AgentTally>();
-
-  for (const project of projects) {
-    const key = `${project.agent}:${project.profile ?? ''}`;
-    const tally = sessions.get(key) ?? {
-      agent: project.agent,
-      profile: project.profile,
-      sessions: 0,
-    };
-
-    sessions.set(key, {
-      ...tally,
-      sessions: tally.sessions + project.sessionCount,
-    });
-  }
-
-  return [...sessions.values()].sort((left, right) => {
-    return right.sessions - left.sessions;
-  });
-};
 
 /**
  * Every project at once, pinned above the list rather than first inside it.

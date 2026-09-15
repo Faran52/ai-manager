@@ -53,22 +53,6 @@ test('names the file and puts its directory underneath, counting every change', 
   expect(screen.getByText('4 changes')).toBeDefined();
 });
 
-test('keeps the directory of a path that lies outside the project whole', () => {
-  render(
-    <EditedFileList files={[file]} projectPath="/elsewhere" nowMs={NOW} onOpenEdit={noop} />,
-  );
-
-  expect(screen.getByText('/repo/src')).toBeDefined();
-});
-
-test('keeps the path whole when the project has none', () => {
-  render(
-    <EditedFileList files={[file]} projectPath={undefined} nowMs={NOW} onOpenEdit={noop} />,
-  );
-
-  expect(screen.getByText('/repo/src')).toBeDefined();
-});
-
 /*
  * A file edited at the root of the project has no directory to put underneath
  * it, so the row is its name alone rather than its name over an empty line.
@@ -94,22 +78,6 @@ test('prints no directory line for a file at the project root', () => {
  * A bare filename with no slash anywhere is the same case reached the other
  * way, and it must not slice a directory out of the name.
  */
-test('names a path that has no directory at all', () => {
-  render(
-    <EditedFileList
-      files={[{
-        ...file,
-        path: 'notes.md',
-      }]}
-      projectPath={undefined}
-      nowMs={NOW}
-      onOpenEdit={noop}
-    />,
-  );
-
-  expect(screen.getByText('notes.md')).toBeDefined();
-});
-
 test('expands to the sessions that touched it, then collapses', async () => {
   render(
     <EditedFileList files={[file]} projectPath="/repo" nowMs={NOW} onOpenEdit={noop} />,

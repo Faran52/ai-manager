@@ -46,3 +46,23 @@ export const editsInSession = (
     }];
   });
 };
+
+/*
+ * The name carries the row and the directory sits under it. A full path per row
+ * means reading forty copies of the same prefix to find the one part that
+ * differs, which is the filename.
+ */
+export const splitPath = (path: string, projectPath: string | undefined): {
+  readonly name: string;
+  readonly directory: string;
+} => {
+  const relative = projectPath != null && path.startsWith(projectPath)
+    ? path.slice(projectPath.length).replace(/^\//u, '')
+    : path;
+  const cut = relative.lastIndexOf('/');
+
+  return {
+    name: cut === -1 ? relative : relative.slice(cut + 1),
+    directory: cut === -1 ? '' : relative.slice(0, cut),
+  };
+};

@@ -8,6 +8,8 @@ import { formatTimeAgo } from '@utils/formatUtils';
 
 import { Disclosure } from '@ui/index';
 
+import { splitPath } from '../utils/sessionEditsUtils';
+
 import { FileDiffPanel } from './FileDiffPanel';
 
 import type { EditedFile, FileEdit } from '@services/edits/editsService';
@@ -25,26 +27,6 @@ export interface EditedFileListProps {
   readonly onOpenEdit?: ((edit: FileEdit) => void)
     | undefined;
 }
-
-/*
- * The name carries the row and the directory sits under it. A full path per row
- * means reading forty copies of the same prefix to find the one part that
- * differs, which is the filename.
- */
-const splitPath = (path: string, projectPath: string | undefined): {
-  readonly name: string;
-  readonly directory: string;
-} => {
-  const relative = projectPath != null && path.startsWith(projectPath)
-    ? path.slice(projectPath.length).replace(/^\//u, '')
-    : path;
-  const cut = relative.lastIndexOf('/');
-
-  return {
-    name: cut === -1 ? relative : relative.slice(cut + 1),
-    directory: cut === -1 ? '' : relative.slice(0, cut),
-  };
-};
 
 export const EditedFileList: FC<EditedFileListProps> = ({
   files,

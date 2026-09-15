@@ -6,11 +6,28 @@ import { toErrorMessage } from '@utils/errorUtils';
 
 import { Spinner, Switch } from '@ui/index';
 
+import {
+  CELL,
+  COLUMNS,
+  DEFAULT_SORT,
+  NUMERIC,
+  ROW,
+  SWITCH_CELL,
+  TABLE,
+} from '../constants';
 import { usePluginCosts } from '../hooks/usePluginCosts';
+import {
+  costIn,
+  costsById,
+  ordered,
+  toggleSort,
+  tokensIn,
+  versionIn,
+} from '../utils/pluginTableUtils';
 
 import { SortHead } from './SortHead';
 
-import type { InstalledPlugin, PluginCostAttribution } from '@services/agents/agentsService';
+import type { InstalledPlugin } from '@services/agents/agentsService';
 import type { FC } from 'react';
 import type { SortKey, SortState } from './SortHead';
 
@@ -21,190 +38,6 @@ export interface PluginInventoryProps {
   readonly profile?: string | undefined;
   readonly onToggle: (plugin: InstalledPlugin) => Promise<void>;
 }
-
-type Comparator = (
-  left: InstalledPlugin,
-  right: InstalledPlugin,
-  byId: ReadonlyMap<string, PluginCostAttribution>,
-) => number;
-
-interface Column {
-  readonly key: SortKey;
-  readonly labelKey: string;
-  readonly className: string;
-}
-
-type CostField = 'alwaysOnTokens' | 'estimatedCostUsd' | 'onInvokeTokens';
-
-const CELL = 'truncate py-2 pe-4 text-start align-middle';
-
-/*
- * The state cell holds a control, not text: truncate would clip the switch and
- * paint a stray ellipsis beside it.
- */
-const SWITCH_CELL = 'py-2 pe-4 text-start align-middle whitespace-nowrap';
-
-const HEAD = cn(CELL, `
-  sticky top-0 z-10 bg-popover text-figure font-medium tracking-wider
-  text-muted-foreground uppercase
-`);
-const NUMERIC = 'text-end';
-const TABLE = 'w-full table-fixed border-collapse font-mono text-body';
-const ROW = `
-  border-b border-border/40 last:border-0
-  hover:bg-muted-foreground/5
-`;
-
-const TOKENS = new Intl.NumberFormat();
-
-const tokensIn = (value: number): string => {
-  return value === 0 ? '·' : TOKENS.format(value);
-};
-
-const PER_TURNS = 1000;
-
-/*
- * Always-on context is re-sent on every turn, so a plugin costs a fraction of a
- * cent each time and four decimals rounded most of them to $0.0000. A thousand
- * turns is a scale worth acting on, and the per-turn figure stays in the title.
- */
-const costIn = (perTurnUsd: number): string => {
-  return perTurnUsd <= 0 ? '·' : `$${(perTurnUsd * PER_TURNS).toFixed(2)}`;
-};
-
-const SHA = /^[0-9a-f]{7,40}$/u;
-
-/*
- * A commit id is not a version. Twelve hex characters crowd the column and say
- * no more than seven do, and a plugin with no version at all says nothing.
- */
-const versionIn = (version: string): string => {
-  if (version === 'unknown' || version.length === 0) {
-    return '·';
-  }
-
-  return SHA.test(version) ? version.slice(0, 7) : version;
-};
-
-const costsById = (
-  costs: readonly PluginCostAttribution[] | null,
-): ReadonlyMap<string, PluginCostAttribution> => {
-  return new Map((costs ?? []).map((cost) => {
-    return [cost.plugin, cost];
-  }));
-};
-
-const DEFAULT_SORT: SortState = {
-  key: 'plugin',
-  direction: 'asc',
-};
-
-// A plugin the cost read never attributed anything to sorts as a plain zero.
-const costField = (
-  byId: ReadonlyMap<string, PluginCostAttribution>,
-  plugin: InstalledPlugin,
-  field: CostField,
-): number => {
-  return byId.get(plugin.id)?.[field] ?? 0;
-};
-
-const COMPARATORS: Record<SortKey, Comparator> = {
-  plugin: (left, right) => {
-    return left.id.localeCompare(right.id);
-  },
-  scope: (left, right) => {
-    return left.scope.localeCompare(right.scope);
-  },
-  version: (left, right) => {
-    return left.version.localeCompare(right.version);
-  },
-  alwaysOn: (left, right, byId) => {
-    return costField(byId, left, 'alwaysOnTokens') - costField(byId, right, 'alwaysOnTokens');
-  },
-  perInvoke: (left, right, byId) => {
-    return costField(byId, left, 'onInvokeTokens') - costField(byId, right, 'onInvokeTokens');
-  },
-  perTurns: (left, right, byId) => {
-    return costField(byId, left, 'estimatedCostUsd') - costField(byId, right, 'estimatedCostUsd');
-  },
-  state: (left, right) => {
-    return Number(left.enabled) - Number(right.enabled);
-  },
-};
-
-// Head cells in table order; the widths sum to 100 of a table-fixed layout.
-const COLUMNS: readonly Column[] = [
-  {
-    key: 'plugin',
-    labelKey: 'plugin',
-    className: cn(HEAD, 'w-[26%] ps-2'),
-  },
-  {
-    key: 'scope',
-    labelKey: 'scope',
-    className: cn(HEAD, 'w-[10%]'),
-  },
-  {
-    key: 'version',
-    labelKey: 'version',
-    className: cn(HEAD, 'w-[13%]'),
-  },
-  {
-    key: 'alwaysOn',
-    labelKey: 'costsAlwaysOn',
-    className: cn(HEAD, NUMERIC, 'w-[13%]'),
-  },
-  {
-    key: 'perInvoke',
-    labelKey: 'costsPerInvoke',
-    className: cn(HEAD, NUMERIC, 'w-[13%]'),
-  },
-  {
-    key: 'perTurns',
-    labelKey: 'costsPerTurns',
-    className: cn(HEAD, NUMERIC, 'w-[15%]'),
-  },
-  {
-    key: 'state',
-    labelKey: 'state',
-    className: cn(HEAD, 'w-[10%]'),
-  },
-];
-
-/*
- * Position is identity, not status: a plugin keeps its row when it is toggled
- * on or off, sorted only by whatever column the reader picked (the plugin's
- * own name by default). The old rank-then-alphabetical order moved a row the
- * instant its switch changed, which read as the table losing track of it.
- */
-const ordered = (
-  plugins: readonly InstalledPlugin[],
-  byId: ReadonlyMap<string, PluginCostAttribution>,
-  sort: SortState,
-): readonly InstalledPlugin[] => {
-  const sign = sort.direction === 'asc' ? 1 : -1;
-  const compare = COMPARATORS[sort.key];
-
-  return [...plugins].sort((left, right) => {
-    const primary = compare(left, right, byId);
-
-    return primary === 0 ? left.id.localeCompare(right.id) : primary * sign;
-  });
-};
-
-const toggleSort = (current: SortState, key: SortKey): SortState => {
-  if (current.key !== key) {
-    return {
-      key,
-      direction: 'asc',
-    };
-  }
-
-  return {
-    key,
-    direction: current.direction === 'asc' ? 'desc' : 'asc',
-  };
-};
 
 export const PluginInventory: FC<PluginInventoryProps> = ({
   plugins,

@@ -16,14 +16,12 @@ import {
   Spinner,
 } from '@ui/index';
 
+import { heldBy } from '../utils/storageHeldUtils';
+
 import type { AgentId } from '@config/agents';
 import type { AsyncResource } from '@features/history-data';
 import type { SessionSummary } from '@services/history/historyService';
-import type {
-  AgentStorage,
-  StorageEntry,
-  StorageReport,
-} from '@services/storage/storageService';
+import type { StorageReport } from '@services/storage/storageService';
 import type { FC } from 'react';
 
 export interface StoragePanelProps {
@@ -37,36 +35,6 @@ export interface StoragePanelProps {
    */
   readonly projectSessions?: readonly SessionSummary[] | undefined;
 }
-
-interface Held {
-  readonly shown: readonly AgentStorage[];
-  readonly totalBytes: number;
-  readonly reclaimableBytes: number;
-  readonly disposable: readonly StorageEntry[];
-}
-
-// Naming an agent narrows every figure here, not only the list, so a project's
-// own total never reads as the whole machine's.
-const heldBy = (report: StorageReport | undefined, agent: AgentId | undefined): Held => {
-  const shown = (report?.agents ?? []).filter((held) => {
-    return agent == null || held.agent === agent;
-  });
-
-  return {
-    shown,
-    totalBytes: shown.reduce((total, held) => {
-      return total + held.bytes;
-    }, 0),
-    reclaimableBytes: shown.reduce((total, held) => {
-      return total + held.reclaimableBytes;
-    }, 0),
-    disposable: shown.flatMap((held) => {
-      return held.entries.filter((entry) => {
-        return entry.reclaimable;
-      });
-    }),
-  };
-};
 
 export const StoragePanel: FC<StoragePanelProps> = ({
   storage,

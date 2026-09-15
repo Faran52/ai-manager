@@ -1,3 +1,10 @@
+import {
+  DAYS_IN_WEEK,
+  MS_PER_DAY,
+  WASH_SCALE,
+  WEEKS_SHOWN,
+} from '../constants';
+
 export interface HeatmapDay {
   readonly date: string;
   readonly tokens: number;
@@ -18,18 +25,6 @@ export interface HeatmapWeek {
   readonly month?: string | undefined;
 }
 
-/*
- * The four washes, idle first. Cells and the legend both read this one list, so
- * the key under the grid can never drift from the grid. It tracks the accent
- * (--primary), not --ok: the heatmap is a mark the reader colours in Settings
- * like every bar in the report, and --ok is a fixed status colour that would
- * ignore that choice. Idle is --recess, a hole, so "quiet" and "nothing" look
- * different rather than both being the palest shade.
- */
-export const WASH_SCALE = ['bg-recess', 'bg-primary/40', 'bg-primary/70', 'bg-primary'] as const;
-
-export const IDLE_CLASS = WASH_SCALE[0];
-
 // Buckets a day's token total against the week's peak into 0–3 intensity levels.
 export const levelFor = (tokens: number, peak: number): 0 | 1 | 2 | 3 => {
   if (tokens <= 0 || peak === 0) {
@@ -46,15 +41,6 @@ export const levelFor = (tokens: number, peak: number): 0 | 1 | 2 | 3 => {
 export const levelClass = (tokens: number, peak: number): string => {
   return WASH_SCALE[levelFor(tokens, peak)];
 };
-
-/*
- * About two months. The grid stretches to whatever card it is given, in both
- * directions, so the span decides how coarse the picture is rather than how
- * much of the card goes unused.
- */
-export const WEEKS_SHOWN = 9;
-const DAYS_IN_WEEK = 7;
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 const isoOf = (day: Date): string => {
   return day.toISOString().slice(0, 10);

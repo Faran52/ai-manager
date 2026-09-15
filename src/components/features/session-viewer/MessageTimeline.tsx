@@ -13,15 +13,10 @@ import { cn } from '@utils/cnUtils';
 
 import { fadeTransition, useReducedMotion } from '@ui/index';
 
-import {
-  AssistantTurn,
-  DateDivider,
-  FloatingDate,
-  SummaryDivider,
-  SystemNotice,
-  UserTurn,
-} from './partials';
-import { defaultMessageFilters, visibleAssistantBlocks } from './utils/messageFilterUtils';
+import { OVERSCAN } from './constants';
+import { FloatingDate, TimelineRowBody } from './partials';
+import { defaultMessageFilters } from './utils/messageFilterUtils';
+import { estimateRow } from './utils/rowEstimateUtils';
 import {
   buildTimelineModel,
   dayAtRow,
@@ -29,10 +24,9 @@ import {
 } from './utils/timelineUtils';
 
 import type { AgentId } from '@config/agents';
-import type { HistoryEntry, ToolOutcome } from '@services/history/historyService';
+import type { HistoryEntry } from '@services/history/historyService';
 import type { FC } from 'react';
 import type { MessageFilters } from './utils/messageFilterUtils';
-import type { TimelineRow } from './utils/timelineUtils';
 
 export interface MessageTimelineProps {
   readonly entries: readonly HistoryEntry[];
@@ -49,91 +43,6 @@ export interface MessageTimelineProps {
 export interface TimelineNavigation {
   readonly index: number;
 }
-
-/**
- * How tall each row is before it is measured. One number for every row made the
- * total height wrong by a wide margin on a mixed transcript, and the scrollbar
- * jumped as rows mounted and corrected it, so each kind estimates its own.
- */
-const DATE_ROW_PX = 32;
-const SUMMARY_ROW_PX = 56;
-const SYSTEM_ROW_PX = 72;
-const USER_ROW_PX = 104;
-const ASSISTANT_BASE_PX = 64;
-const ASSISTANT_BLOCK_PX = 120;
-const OVERSCAN = 6;
-
-const estimateRow = (row: TimelineRow | undefined): number => {
-  /* v8 ignore next 3 -- the virtualizer only asks about indexes within its own count */
-  if (row == null) {
-    return USER_ROW_PX;
-  }
-
-  if (row.kind === 'date') {
-    return DATE_ROW_PX;
-  }
-
-  switch (row.entry.kind) {
-    case 'user':
-      return USER_ROW_PX;
-    case 'assistant':
-      return ASSISTANT_BASE_PX + row.entry.blocks.length * ASSISTANT_BLOCK_PX;
-    case 'system':
-      return SYSTEM_ROW_PX;
-    case 'summary':
-      return SUMMARY_ROW_PX;
-  }
-};
-
-const renderRow = (
-  row: TimelineRow,
-  pairs: ReadonlyMap<string, ToolOutcome>,
-  orphans: ReadonlyMap<string, readonly ToolOutcome[]>,
-  filters: MessageFilters,
-  nowMs: number,
-  agent: AgentId,
-  profile: string | undefined,
-) => {
-  if (row.kind === 'date') {
-    return <DateDivider timestampMs={row.timestampMs} nowMs={nowMs} />;
-  }
-
-  const { entry } = row;
-
-  switch (entry.kind) {
-    case 'user':
-      return (
-        <UserTurn
-          entry={entry}
-          agent={agent}
-          orphans={orphans.get(entry.uuid) ?? []}
-          filters={filters.content}
-          showHeader={!row.continues}
-        />
-      );
-    case 'assistant': {
-      const visible = visibleAssistantBlocks(entry.blocks, filters);
-
-      return (
-        <AssistantTurn
-          entry={entry}
-          agent={agent}
-          profile={profile}
-          visibleBlocks={visible.blocks}
-          hiddenCount={visible.hiddenCount}
-          outcomeFor={(toolUseId) => {
-            return pairs.get(toolUseId);
-          }}
-          showHeader={!row.continues}
-        />
-      );
-    }
-    case 'system':
-      return <SystemNotice entry={entry} />;
-    case 'summary':
-      return <SummaryDivider text={entry.text} />;
-  }
-};
 
 export const MessageTimeline: FC<MessageTimelineProps> = ({
   entries,
@@ -284,7 +193,15 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
               )}
               style={{ transform: `translateY(${String(item.start - scrollMarginRef.current)}px)` }}
             >
-              {renderRow(row, model.pairs, model.orphans, filters, nowMs, agent, profile)}
+              <TimelineRowBody
+                row={row}
+                pairs={model.pairs}
+                orphans={model.orphans}
+                filters={filters}
+                nowMs={nowMs}
+                agent={agent}
+                profile={profile}
+              />
             </div>
           );
         })}

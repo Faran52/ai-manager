@@ -1,4 +1,4 @@
-import { editsInSession } from './sessionEditsUtils';
+import { editsInSession, splitPath } from './sessionEditsUtils';
 
 import type { EditedFile, EditKind } from '@services/edits/editsService';
 
@@ -41,4 +41,27 @@ test('keeps only what the open session changed and recounts it', () => {
 
 test('drops a file the open session never touched', () => {
   expect(editsInSession([editedFile], '/sessions/nobody.jsonl')).toEqual([]);
+});
+
+test('splits a path into its name and the directory relative to the project', () => {
+  expect(splitPath('/repo/src/a.ts', '/repo')).toEqual({
+    name: 'a.ts',
+    directory: 'src',
+  });
+  expect(splitPath('/repo/src/a.ts', '/elsewhere')).toEqual({
+    name: 'a.ts',
+    directory: '/repo/src',
+  });
+  expect(splitPath('/repo/src/a.ts', undefined)).toEqual({
+    name: 'a.ts',
+    directory: '/repo/src',
+  });
+  expect(splitPath('/repo/README.md', '/repo')).toEqual({
+    name: 'README.md',
+    directory: '',
+  });
+  expect(splitPath('README.md', undefined)).toEqual({
+    name: 'README.md',
+    directory: '',
+  });
 });

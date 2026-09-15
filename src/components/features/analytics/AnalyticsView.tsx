@@ -1,21 +1,17 @@
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { BarChart3, CircleAlert } from 'lucide-react';
 
 import { EmptyState, Spinner } from '@ui/index';
 
+import { useGlobalStats } from './hooks/useGlobalStats';
 import { AnalyticsReport } from './partials';
 
 import type { AgentId } from '@config/agents';
 import type { AsyncResource, ReportScope } from '@features/history-data';
 import type { ProjectUsage } from '@services/agents/agentsService';
 import type { SessionSummary } from '@services/history/historyService';
-import type {
-  GlobalStats,
-  ProjectStats,
-  SessionTokenTotals,
-} from '@services/stats/statsService';
+import type { ProjectStats, SessionTokenTotals } from '@services/stats/statsService';
 import type { StorageReport } from '@services/storage/storageService';
 import type { FC } from 'react';
 import type { Scope } from './hooks/useAnalyticsScope';
@@ -42,62 +38,6 @@ export interface AnalyticsViewProps {
   readonly usage?: ProjectUsage | null | undefined;
   readonly nowMs?: number | undefined;
 }
-
-interface GlobalStatsResponse {
-  readonly stats: GlobalStats;
-}
-
-interface GlobalSnapshot {
-  readonly data?: GlobalStats | undefined;
-  readonly status: LoadState;
-}
-
-const isGlobalStatsResponse = (value: unknown): value is GlobalStatsResponse => {
-  return typeof value === 'object'
-    && value !== null
-    && 'stats' in value
-    && typeof value.stats === 'object'
-    && value.stats !== null
-    && 'agents' in value.stats
-    && Array.isArray(value.stats.agents);
-};
-
-const useGlobalStats = (): GlobalSnapshot => {
-  const [global, setGlobal] = useState<GlobalSnapshot>({ status: 'loading' });
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    void (async () => {
-      try {
-        const response = await fetch('/api/global-stats', { signal: controller.signal });
-        const parsed: unknown = JSON.parse(await response.text());
-
-        if (!response.ok || !isGlobalStatsResponse(parsed)) {
-          throw new Error('Invalid global stats response');
-        }
-
-        if (!controller.signal.aborted) {
-          setGlobal({
-            data: parsed.stats,
-            status: 'ready',
-          });
-        }
-      }
-      catch {
-        if (!controller.signal.aborted) {
-          setGlobal({ status: 'error' });
-        }
-      }
-    })();
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
-  return global;
-};
 
 export const AnalyticsView: FC<AnalyticsViewProps> = ({
   stats,

@@ -20,6 +20,7 @@ export * from './StatusBadge';
 export * from './SummaryDivider';
 export * from './SystemNotice';
 export * from './ThinkingCard';
+export * from './TimelineRowBody';
 export * from './TodoList';
 export * from './ToolExecutionCard';
 export * from './ToolInputBody';

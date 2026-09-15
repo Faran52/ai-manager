@@ -4,7 +4,7 @@ import {
   test,
 } from 'vitest';
 
-import { inputRows } from './toolInputUtils';
+import { changeOf, inputRows } from './toolInputUtils';
 
 import type { RowedInput } from './toolInputUtils';
 
@@ -85,5 +85,39 @@ describe('inputRows', () => {
         value: 'fast',
       }],
     })).toEqual(['mode: fast']);
+  });
+});
+
+describe('changeOf', () => {
+  test('reads a written file as additions, an edit as a replacement, and a batch as every edit', () => {
+    expect(changeOf({
+      kind: 'file-write',
+      path: '/repo/new.ts',
+      content: 'first',
+    }).flatMap((hunk) => {
+      return hunk.lines;
+    })).toContain('+first');
+    expect(changeOf({
+      kind: 'file-edit',
+      path: '/repo/a.ts',
+      oldString: 'a',
+      newString: 'b',
+      replaceAll: false,
+    }).flatMap((hunk) => {
+      return hunk.lines;
+    })).toEqual(['-a', '+b']);
+    expect(changeOf({
+      kind: 'multi-edit',
+      path: '/repo/a.ts',
+      edits: [{
+        oldString: 'a',
+        newString: 'b',
+        replaceAll: false,
+      }, {
+        oldString: 'c',
+        newString: 'd',
+        replaceAll: false,
+      }],
+    })).toHaveLength(2);
   });
 });

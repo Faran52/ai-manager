@@ -1,18 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-import {
-  Coins,
-  MessagesSquare,
-  Zap,
-} from 'lucide-react';
-
-import {
-  formatCost,
-  formatDurationMs,
-  formatTokens,
-} from '@utils/formatUtils';
-
-import { MetricCard } from '@ui/index';
+import { usageItems } from '../utils/usageListUtils';
 
 import { ActivityHeatmap } from './ActivityHeatmap';
 import { AnalyticsPanel } from './AnalyticsPanel';
@@ -22,6 +10,7 @@ import { ModelDistribution } from './ModelDistribution';
 import { PricingCoverage } from './PricingCoverage';
 import { ProjectUsageCard } from './ProjectUsageCard';
 import { ProviderDistribution } from './ProviderDistribution';
+import { ReportMetrics } from './ReportMetrics';
 import { ReportSection } from './ReportSection';
 import { StoragePanel } from './StoragePanel';
 import { TopSessions } from './TopSessions';
@@ -35,11 +24,9 @@ import type {
   AgentStatsUsage,
   ProjectStats,
   SessionTokenTotals,
-  ToolUsage,
 } from '@services/stats/statsService';
 import type { StorageReport } from '@services/storage/storageService';
-import type { FC, ReactNode } from 'react';
-import type { BarListProps } from './BarList';
+import type { FC } from 'react';
 
 export interface AnalyticsReportProps {
   readonly stats: ProjectStats;
@@ -58,66 +45,6 @@ export interface AnalyticsReportProps {
   readonly nowMs?: number | undefined;
 }
 
-// The three usage lists read from the same ranked shape, and ten bars is as
-// deep as a card of them stays legible.
-const usageItems = (usage: readonly ToolUsage[]): BarListProps['items'] => {
-  return usage.slice(0, 10).map((entry) => {
-    return {
-      label: entry.tool,
-      value: entry.count,
-    };
-  });
-};
-
-const metricsFor = (
-  stats: ProjectStats,
-  translate: ReturnType<typeof useTranslation>['t'],
-): ReactNode => {
-  const billingTokens = stats.totals.billingTokens
-    ?? stats.totals.inputTokens
-    + stats.totals.outputTokens
-    + stats.totals.cacheCreationTokens
-    + stats.totals.cacheReadTokens;
-
-  return (
-    <div className="
-      grid grid-cols-2 gap-3
-      xl:grid-cols-4
-    "
-    >
-      <MetricCard
-        label={translate('sessions', { ns: 'sidebar' })}
-        value={String(stats.totals.sessions)}
-        icon={<MessagesSquare className="size-3.5" />}
-      />
-      <MetricCard
-        label={translate('assistantTurns')}
-        value={formatTokens(stats.totals.messages)}
-        icon={<Zap className="size-3.5" />}
-      />
-      <MetricCard
-        label={translate('billingTotal')}
-        value={stats.totals.usageRecorded
-          ? formatTokens(billingTokens)
-          : translate('notRecorded', { ns: 'common' })}
-        hint={stats.totals.usageRecorded
-          ? translate('cacheReadsValue', { value: formatTokens(stats.totals.cacheReadTokens) })
-          : undefined}
-        icon={<Coins className="size-3.5" />}
-      />
-      <MetricCard
-        label={translate('computeTime')}
-        value={stats.totals.usageRecorded
-          ? formatDurationMs(stats.totals.durationMs)
-          : translate('notRecorded', { ns: 'common' })}
-        hint={stats.totals.usageRecorded
-          ? translate('derivedCost', { value: formatCost(stats.totals.costUsd) })
-          : undefined}
-      />
-    </div>
-  );
-};
-
 export const AnalyticsReport: FC<AnalyticsReportProps> = ({
   stats: selectedStats,
   storage,
@@ -135,7 +62,7 @@ export const AnalyticsReport: FC<AnalyticsReportProps> = ({
   return (
     <div className="space-y-8 p-4">
       <ReportSection title={t('sectionOverview')} index={0}>
-        {metricsFor(selectedStats, t)}
+        <ReportMetrics stats={selectedStats} />
       </ReportSection>
 
       <ReportSection title={t('sectionCost')} index={1}>

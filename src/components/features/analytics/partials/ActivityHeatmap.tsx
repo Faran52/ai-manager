@@ -11,11 +11,11 @@ import {
   Tooltip,
 } from '@ui/index';
 
+import { WASH_SCALE } from '../constants';
 import {
   levelClass,
   levelFor,
   monthsOf,
-  WASH_SCALE,
   weeksTo,
 } from '../utils/heatmapUtils';
 

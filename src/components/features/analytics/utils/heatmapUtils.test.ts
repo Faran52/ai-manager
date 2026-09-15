@@ -4,11 +4,11 @@ import {
   test,
 } from 'vitest';
 
+import { IDLE_CLASS, WEEKS_SHOWN } from '../constants';
+
 import {
-  IDLE_CLASS,
   levelClass,
   levelFor,
-  WEEKS_SHOWN,
   weeksTo,
 } from './heatmapUtils';
 

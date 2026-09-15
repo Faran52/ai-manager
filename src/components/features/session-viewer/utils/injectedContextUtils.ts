@@ -1,5 +1,15 @@
 import { unwrapFileRefs } from '@utils/markdownUtils';
 
+import {
+  CLINE_FIELDS,
+  ENV_FIELDS,
+  HEADER,
+  LONE_WRAPPER,
+  NOISE_BLOCKS,
+  PLUGIN_LINE,
+  WRAPPER_NAME,
+} from '../constants';
+
 import type { ToolInputRow } from '@services/history/historyService';
 
 export interface ParsedInjectedContext {
@@ -22,15 +32,6 @@ interface Carved {
   readonly inner: string;
   readonly rest: string;
 }
-
-/**
- * An attribute-free lowercase tag name: every framing wrapper the agents emit
- * (<environment_details>, <system-reminder>, <path>/<type>/<content>) and almost
- * no real prose.
- */
-const WRAPPER_NAME = /^[a-z][a-z\d_-]*$/u;
-// A line that is nothing but one such tag: an unclosed opener, or a stray closer.
-const LONE_WRAPPER = /^[ \t]*<\/?[a-z][\w-]*>[ \t]*\r?\n?/gmu;
 
 /*
  * One sweep that replaces every <tag>...</tag> pair with its trimmed body. An
@@ -85,25 +86,6 @@ export const stripEnvelopes = (text: string): string => {
   return current.replace(LONE_WRAPPER, '').replace(/\n{3,}/gu, '\n\n').trim();
 };
 
-/**
- * The line an instruction payload is filed under, at the very start of the
- * block: the "# AGENTS.md/CLAUDE.md instructions for <path>" an agent prints
- * above its rules, or the "Base directory for this skill: <path>" Claude Code
- * prints above a skill's SKILL.md. Redundant once the body is rendered under
- * its own label.
- */
-const HEADER = /^(?:# (?:AGENTS|CLAUDE)\.md instructions for |Base directory for this skill: ).*(?:\r?\n)?/u;
-// A "- Name (id@source)" bullet. `\S.*` after the spaces keeps this linear: the
-// leading whitespace is chewed to the first non-space and the rest is the name.
-const PLUGIN_LINE = /^ *- +(\S.*)/gmu;
-
-const ENV_FIELDS: readonly (readonly [string, string])[] = [
-  ['cwd', 'cwd'],
-  ['shell', 'shell'],
-  ['date', 'current_date'],
-  ['timezone', 'timezone'],
-];
-
 // The text between the first `open`/`close` pair, and the source with that
 // span removed. Absent or unclosed leaves the source untouched.
 const carve = (source: string, open: string, close: string): Carved => {
@@ -122,15 +104,6 @@ const carve = (source: string, open: string, close: string): Carved => {
     rest: source.slice(0, start) + source.slice(end + close.length),
   };
 };
-
-/*
- * Codex opens the turn with catalog prose on how apps, plugins and skills work
- * in general. It is the same boilerplate every session and describes none of
- * this one, so it is dropped the way the <filesystem> tree is. A carve per tag
- * rather than one regex: a lazy match between a tag and its backreferenced
- * close backtracks super-linearly on a long turn.
- */
-const NOISE_BLOCKS = ['apps_instructions', 'plugins_instructions', 'skills_instructions'];
 
 const dropNoise = (source: string): string => {
   return NOISE_BLOCKS.reduce((acc, tag) => {
@@ -158,18 +131,6 @@ const environmentRows = (block: string): readonly ToolInputRow[] => {
       : [];
   });
 };
-
-/*
- * Cline's <environment_details> is a run of "# Section" blocks. The working
- * directory and the mode are the two a transcript reader needs; the file list,
- * the open tabs, the detected-tools dump and the context-window gauge are the
- * same noise as Codex's <filesystem> tree, so they go with the rest of the
- * block.
- */
-const CLINE_FIELDS: readonly (readonly [string, RegExp])[] = [
-  ['cwd', /^# Current Working Directory \(([^)]+)\) Files$/mu],
-  ['mode', /^# Current Mode\r?\n(.+)$/mu],
-];
 
 const clineEnvironmentRows = (block: string): readonly ToolInputRow[] => {
   return CLINE_FIELDS.flatMap(([label, pattern]) => {

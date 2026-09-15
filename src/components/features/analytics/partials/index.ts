@@ -7,6 +7,7 @@ export * from './ModelDistribution';
 export * from './PricingCoverage';
 export * from './ProjectUsageCard';
 export * from './ProviderDistribution';
+export * from './ReportMetrics';
 export * from './ReportSection';
 export * from './RhythmStrip';
 export * from './StoragePanel';

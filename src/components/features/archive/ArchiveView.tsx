@@ -24,6 +24,7 @@ import {
 } from '@ui/index';
 
 import { ArchiveCard, RetentionCard } from './partials';
+import { totalsOf } from './utils/archiveTotalsUtils';
 
 import type { AsyncResource } from '@features/history-data';
 import type { RetentionStatusResponse } from '@lib/apis/contracts';
@@ -44,21 +45,6 @@ export interface ArchiveViewProps {
   readonly selectedProject?: ProjectSummary | null;
   readonly onShowAll?: () => void;
 }
-
-const totalsOf = (archives: readonly ArchiveSummary[]): {
-  readonly sessions: number;
-  readonly bytes: number;
-} => {
-  return archives.reduce((totals, archive) => {
-    return {
-      sessions: totals.sessions + archive.sessionCount,
-      bytes: totals.bytes + archive.sizeBytes,
-    };
-  }, {
-    sessions: 0,
-    bytes: 0,
-  });
-};
 
 export const ArchiveView: FC<ArchiveViewProps> = ({
   archives,
