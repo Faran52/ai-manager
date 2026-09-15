@@ -802,11 +802,7 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
               >
                 <ul>
                   {parts.map((row) => {
-                    return (
-                      <li key={row.session.filePath} className={rowClassName(row, true)}>
-                        {renderRowContent(row)}
-                      </li>
-                    );
+                    return renderSessionRow(row, true);
                   })}
                 </ul>
               </motion.li>
