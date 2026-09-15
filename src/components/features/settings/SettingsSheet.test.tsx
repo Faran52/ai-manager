@@ -37,10 +37,6 @@ describe('SettingsSheet', () => {
     expect(screen.getByRole('heading', { name: 'Appearance' })).toBeDefined();
   });
 
-  /*
-   * The appearance controls read inline rather than behind four icon buttons,
-   * so every value is visible without opening anything.
-   */
   test('holds the look of the app rather than the header', () => {
     sheet();
 

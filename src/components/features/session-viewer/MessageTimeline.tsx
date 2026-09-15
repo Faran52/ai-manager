@@ -70,23 +70,20 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
     return buildTimelineModel(entries, filters);
   }, [entries, filters]);
 
-  /**
-   * The list starts below whatever the viewer draws above it, and the
-   * virtualizer measures against the scroll box, so it needs that offset. Held
-   * in a ref rather than state: writing state here would re-render on mount for
-   * a value the next render reads anyway.
+  /*
+   * The virtualizer measures against the scroll box, so it needs the offset of
+   * whatever the viewer draws above. A ref, because state would re-render on
+   * mount for a value the next render reads anyway.
    */
   useLayoutEffect(() => {
     /* v8 ignore next -- the ref is attached before layout effects run */
     scrollMarginRef.current = listRef.current?.offsetTop ?? 0;
   }, [model.rows.length]);
 
-  /**
-   * React Compiler cannot memoize a component holding a virtualizer, because the
-   * hook hands back functions whose identity has to change as scroll state does.
-   * Skipping compilation here is the trade: measured windowing beats memoizing a
-   * list that was rendering every row. The lint rule that reports the skip is
-   * turned off for this file in eslint.config.js.
+  /*
+   * React Compiler cannot memoize a component holding a virtualizer: the hook
+   * hands back functions whose identity has to change as scroll state does.
+   * The rule reporting the skip is off for this file in eslint.config.js.
    */
   const virtualizer = useVirtualizer({
     count: model.rows.length,

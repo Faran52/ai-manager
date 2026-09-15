@@ -1,14 +1,7 @@
-/**
- * Environment read once, at the edge, so nothing else reaches for `process.env`.
- *
- * `astro.config.mjs` inlines the baked half at build time: a packaged app runs
- * with the user's environment rather than the one that built it, so a release
- * that only read `process.env` would ship with update checking off. The static
- * member access below is what lets the bundler substitute the literal, so these
- * cannot be looked up by a computed key.
- *
- * Anything exported here reaches the client bundle through the config barrel,
- * so only values safe to publish belong in this file.
+/*
+ * Environment read once, at the edge, so nothing else reaches for process.env.
+ * The static member access is what lets the bundler substitute the literal, so
+ * these cannot be looked up by a computed key. Everything here reaches clients.
  */
 
 // Unset has to arrive as undefined, not '': a blank public key reads as a key

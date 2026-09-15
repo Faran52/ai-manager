@@ -343,12 +343,6 @@ describe('structured history discovery', () => {
     })).toEqual(['Kilo Code', 'Roo Code']);
   });
 
-  /*
-   * Confirms the generic reader over Pi's real, unmodified shape (verified
-   * against earendil-works/pi's own docs/session-format.md), rather than
-   * assuming it: role and text sit one level deeper, under .message, than the
-   * reader's own top-level fields, but it already falls back to that nesting.
-   */
   const EXPECTED_ENTRIES = [
     {
       kind: 'user',

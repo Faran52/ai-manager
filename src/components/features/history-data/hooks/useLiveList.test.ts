@@ -116,8 +116,6 @@ describe('useLiveList', () => {
 
     const afterFirstLoad = load.mock.calls.length;
 
-    // The interval fires a load, so the tick has to be flushed as the state
-    // update it is, not just advanced past.
     await act(async () => {
       await vi.advanceTimersByTimeAsync(3_000);
     });

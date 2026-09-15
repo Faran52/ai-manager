@@ -103,8 +103,6 @@ test('dismisses on its own after a while', async () => {
 
   expect(screen.getByText('Saved')).toBeDefined();
 
-  // Fake time retires the toast from state; real time then lets its exit
-  // animation actually finish leaving the DOM.
   act(() => {
     vi.advanceTimersByTime(5_000);
   });

@@ -20,8 +20,6 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-// Generous rather than tight: a real subprocess under a loaded test run can take
-// far longer than it would alone, and this only caps a hang, not the happy path.
 const TIMEOUT_MS = 10_000;
 
 const stubbedBinary = async (name: string, script: string): Promise<string> => {
@@ -97,7 +95,6 @@ describe('runBinary', () => {
     });
 
     expect(result.ok).toBe(true);
-    // realpath, since macOS's tmpdir is itself a symlink pwd resolves through.
     expect(result.output).toContain(cwd.split('/').at(-1) ?? cwd);
   });
 });

@@ -97,7 +97,6 @@ describe('useAgentInstalls', () => {
     await waitFor(() => {
       expect(result.current.agents?.crush?.installed).toBe(true);
     });
-    // The initial check, the install POST itself, and the re-check after it.
     expect(fetchSpy).toHaveBeenCalledTimes(3);
   });
 

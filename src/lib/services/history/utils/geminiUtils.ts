@@ -215,13 +215,10 @@ const toolPartsOf = (record: JsonObject, fallbackId: string): ToolParts => {
   };
 };
 
-/**
- * Reads either on-disk shape.
- *
- * Gemini CLI moved chat recording from one `.json` object carrying a `messages`
- * array to an append-only `.jsonl` log whose first line is session metadata,
- * with `{ "$set": {...} }` lines updating it and `{ "$rewindTo": ... }` markers
- * carrying nothing to show.
+/*
+ * Gemini CLI moved from one .json object carrying a messages array to an
+ * append-only .jsonl log whose first line is metadata, with $set lines updating
+ * it. Both shapes still exist on disk.
  */
 const readRecords = (content: string): ChatRecords => {
   const whole = parseJsonContainer(content);

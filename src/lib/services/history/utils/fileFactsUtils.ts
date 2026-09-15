@@ -11,15 +11,10 @@ interface Cached<T> extends FileFacts {
   readonly value: T;
 }
 
-/**
- * Listing a project and reporting on it both read the same transcripts, and a
- * report reads them for every project it covers. Parsing is the expensive part,
- * so what a parse concluded is kept against the size and mtime it concluded it
- * from, and only a file that has actually changed is read again.
- *
- * Each caller gets its own store because what is worth keeping differs by
- * format, and because the whole point is to keep the conclusion rather than the
- * transcript it came from.
+/*
+ * Parsing is the expensive part of both listing and reporting, so a conclusion
+ * is kept against the size and mtime it came from and only a changed file is
+ * read again. Each caller gets its own store: what is worth keeping differs.
  */
 export const fileFactsStore = <T>(capacity: number): (
   filePath: string,

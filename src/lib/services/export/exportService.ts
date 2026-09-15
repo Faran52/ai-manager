@@ -98,10 +98,9 @@ export const entriesToJson = (entries: readonly HistoryEntry[]): string => {
 };
 
 /*
- * Transcript text is arbitrary: it carries the HTML, script tags and quotes
- * that were discussed inside the session. Every value in the document goes
- * through here so none of it can become live markup. The ampersand is replaced
- * first, or it would re-encode the entities the later passes introduce.
+ * Transcript text carries the HTML and quotes discussed inside the session, so
+ * every value goes through here. The ampersand is replaced first, or it would
+ * re-encode the entities the later passes introduce.
  */
 const escapeHtml = (value: string): string => {
   return value
@@ -112,12 +111,8 @@ const escapeHtml = (value: string): string => {
     .replaceAll("'", '&#39;');
 };
 
-/*
- * Body text is written out as-is inside a pre-wrap block rather than parsed as
- * markdown. A parser would be a second renderer to keep in step with the one in
- * the app, and a faithful copy of what the transcript holds is what an export
- * is for.
- */
+// Not parsed as markdown: a parser would be a second renderer to keep in step
+// with the app, and a faithful copy is what an export is for.
 const block = (text: string): string => {
   return `<div class="body">${escapeHtml(text)}</div>`;
 };

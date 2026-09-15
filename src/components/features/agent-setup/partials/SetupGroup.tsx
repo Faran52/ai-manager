@@ -8,13 +8,8 @@ export interface SetupGroupProps {
   readonly tone?: 'default' | 'warn';
 }
 
-/**
- * A line of the open row: its label, then whatever the agent records for it.
- *
- * The label column is fixed so MCP, RULES and MODEL line up down the left. A
- * crowded group then wraps inside its own line and pushes only the line below
- * it, rather than shoving the next group along.
- */
+// The label column is fixed so MCP, RULES and MODEL line up down the left. A
+// crowded group wraps inside its own line rather than shoving the next along.
 export const SetupGroup: FC<SetupGroupProps> = ({
   label,
   children,

@@ -25,7 +25,6 @@ export interface HeatmapWeek {
   readonly month?: string | undefined;
 }
 
-// Buckets a day's token total against the week's peak into 0–3 intensity levels.
 export const levelFor = (tokens: number, peak: number): 0 | 1 | 2 | 3 => {
   if (tokens <= 0 || peak === 0) {
     return 0;
@@ -46,14 +45,8 @@ const isoOf = (day: Date): string => {
   return day.toISOString().slice(0, 10);
 };
 
-/**
- * Lays the last half year out as weeks, because a flat run of squares gives the
- * reader nothing to measure against: no way to see which day of the week a
- * square is, and no way to see where one month ends and the next begins.
- *
- * Columns are weeks and rows are weekdays, so a habit shows up as a row and a
- * busy fortnight as neighbouring columns. The grid always ends on today.
- */
+// Columns are weeks and rows are weekdays, so a habit shows up as a row and a
+// busy fortnight as neighbouring columns. A flat run of squares shows neither.
 export const weeksTo = (
   activity: readonly { readonly date: string;
     readonly tokens: number;
@@ -108,14 +101,8 @@ export const weeksTo = (
   return weeks;
 };
 
-/**
- * Groups the columns into the months they belong to, so a month can be drawn as
- * its own block with space either side. Running every week together left the
- * month names floating over a wall of squares with nothing to attach them to.
- *
- * A week is filed under the month its Monday falls in, which is the same rule
- * that decides where the name is written.
- */
+// A week is filed under the month its Monday falls in, the same rule that
+// decides where the name is written. Ungrouped, the names had nothing to sit on.
 export const monthsOf = (weeks: readonly HeatmapWeek[]): readonly HeatmapMonth[] => {
   const months: HeatmapMonth[] = [];
 

@@ -24,7 +24,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  // Unmount first, a viewer left mounted would refetch against the real fetch.
   cleanup();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
@@ -243,8 +242,6 @@ describe('SessionViewer states', () => {
     );
     await screen.findByText('the question');
 
-    // The entries arriving and the scroll effect running are separate commits,
-    // so sampling the spy the moment the text appears is a race.
     await waitFor(() => {
       expect(scrollSpy).toHaveBeenCalled();
     });
@@ -455,10 +452,6 @@ describe('SessionViewer message navigator', () => {
     expect(screen.getByLabelText('Message navigator')).toBeDefined();
   });
 
-  /*
-   * One companion panel at a time: both want the same strip of width, so
-   * opening one closes the other rather than splitting the transcript twice.
-   */
   test('swaps between the navigator and the file edits, and closes either', async () => {
     localStorage.setItem(messageNavigatorOpenStorageKey, 'true');
     stubPage();
@@ -472,7 +465,6 @@ describe('SessionViewer message navigator', () => {
     expect(screen.getByRole('complementary', { name: 'File edits' })).toBeDefined();
     expect(screen.queryByLabelText('Message navigator')).toBeNull();
 
-    // Pressing the open panel's own button closes it rather than reopening it.
     await userEvent.click(screen.getByRole('button', { name: 'File edits' }));
     expect(screen.queryByRole('complementary', { name: 'File edits' })).toBeNull();
 

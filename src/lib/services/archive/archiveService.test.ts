@@ -71,7 +71,6 @@ const newHome = async (): Promise<string> => {
   return home;
 };
 
-// OpenCode keeps every session in one database, which is the shape the archive skips.
 const addSharedDatabase = async (home: string): Promise<void> => {
   const dataDir = join(home, '.local', 'share', 'opencode', 'data');
 

@@ -79,7 +79,6 @@ test('aggregates projects and dispatches session discovery by agent', async () =
   });
   const projects = await listAgentProjects(roots);
 
-  // Membership, not order: codex counts file mtime as activity and claude does not.
   expect(projects.map((project) => {
     return project.agent;
   }).sort((left, right) => {
@@ -149,9 +148,6 @@ test('routes compatible, structured, SQLite, and OpenCode agent families', async
       content: 'Buddy',
     },
   }));
-  // Open Interpreter's own format: json.dump(self.messages, f), a plain
-  // [{role, content}] array, not a Codex-style rollout (verified against its
-  // source, not guessed).
   await mkdir(join(interpreter, 'conversations'), { recursive: true });
   await writeFile(join(interpreter, 'conversations', 'i.json'), JSON.stringify([
     {

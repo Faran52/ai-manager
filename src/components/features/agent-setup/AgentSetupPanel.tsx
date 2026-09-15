@@ -58,12 +58,8 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
   onPluginToggle,
 }) => {
   const { t } = useTranslation('setup');
-  /*
-   * undefined is nobody having chosen yet, which is when the first flagged
-   * agent opens itself. null is a row the reader shut, and it has to outrank
-   * that default or the flagged row could never be closed. Findings arrive
-   * after mount, so seeding the state at first render would miss them.
-   */
+  // undefined is nobody having chosen yet, so the first flagged agent opens
+  // itself. null is a row the reader shut, and has to outrank that default.
   const [picked, setPicked] = useState<string | null | undefined>(undefined);
   /*
    * Which card's plugin table or configuration sheet is open, by key rather

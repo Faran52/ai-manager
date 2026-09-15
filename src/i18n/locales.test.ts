@@ -25,7 +25,6 @@ const baseKey = (key: string): string => {
 };
 
 const sortedKeys = (bundle: Bundle): readonly string[] => {
-  // Plural suffixes differ by language, Arabic carries six forms where English has two.
   return [...new Set(Object.keys(bundle).map(baseKey))].sort(byText);
 };
 
@@ -61,8 +60,6 @@ describe('locale parity', () => {
     }
   });
 
-  // A translation may drop a placeholder, Arabic says "one session" without the
-  // numeral. Inventing one is the real bug, it would render a literal brace.
   test('translations never introduce an unknown placeholder', () => {
     for (const namespace of namespaces) {
       for (const language of languages) {

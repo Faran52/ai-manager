@@ -30,8 +30,6 @@ const noToggle = (): Promise<void> => {
   return Promise.resolve();
 };
 
-// A collapsed card no longer keeps its detail in the DOM, so a test that reads
-// one has to open that card first.
 const expand = async (label: RegExp): Promise<void> => {
   await userEvent.click(screen.getByRole('button', { name: label }));
 };
@@ -351,7 +349,6 @@ test('counts multiple setup problems', () => {
 });
 
 test('opens the plugin table in a dialog and closes it again', async () => {
-  // The table reads its cost figures on mount and waits on a spinner until they land.
   vi.stubGlobal('fetch', vi.fn(() => {
     return Promise.resolve(new Response(JSON.stringify({ costs: [] }), { status: 200 }));
   }));
@@ -497,7 +494,6 @@ test('shows one card per Claude profile, each with its own findings and count', 
 
   expect(screen.getByText('Claude Code')).toBeDefined();
   expect(screen.getByText('Claude Code Personal')).toBeDefined();
-  // The flagged profile card opens itself, the default one stays shut.
   expect(await screen.findByText('Hook script missing')).toBeDefined();
   expect(screen.getByText('5 sessions')).toBeDefined();
 });

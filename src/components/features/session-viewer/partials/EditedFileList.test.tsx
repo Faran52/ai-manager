@@ -53,10 +53,6 @@ test('names the file and puts its directory underneath, counting every change', 
   expect(screen.getByText('4 changes')).toBeDefined();
 });
 
-/*
- * A file edited at the root of the project has no directory to put underneath
- * it, so the row is its name alone rather than its name over an empty line.
- */
 test('prints no directory line for a file at the project root', () => {
   render(
     <EditedFileList
@@ -74,10 +70,6 @@ test('prints no directory line for a file at the project root', () => {
   expect(screen.queryByText('/repo')).toBeNull();
 });
 
-/*
- * A bare filename with no slash anywhere is the same case reached the other
- * way, and it must not slice a directory out of the name.
- */
 test('expands to the sessions that touched it, then collapses', async () => {
   render(
     <EditedFileList files={[file]} projectPath="/repo" nowMs={NOW} onOpenEdit={noop} />,

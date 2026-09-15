@@ -23,20 +23,8 @@ export type AgentBinaryRunner = (bin: string, args: readonly string[]) => Promis
 
 /*
  * Only agents with one verified, official, single-command install, checked
- * directly against their own docs, npm, or PyPI page. Deliberately not all 13
- * unmanaged agents:
- *
- * - PearAI and Trae are GUI desktop apps distributed as a per-OS installer,
- *   not a package-manager command.
- * - ForgeCode and Kimi both have naming collisions across unrelated projects
- *   sharing the name, with no way to tell which one a user means.
- * - Kiro's setup is gated behind an interactive AWS Builder ID sign-in, not a
- *   plain install.
- * - oh-my-pi's own docs say it needs the Bun runtime "to run from source",
- *   not confidently just a plain npm install.
- *
- * Guessing any of these wrong means running the wrong command on a real
- * machine, so they stay uncovered until named explicitly.
+ * against their own docs. Guessing wrong means running the wrong command on a
+ * real machine, so the other 13 stay uncovered until named explicitly.
  */
 export const AGENT_INSTALLS: Partial<Record<AgentId, AgentInstallInfo>> = {
   codebuddy: {

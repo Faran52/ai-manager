@@ -8,12 +8,8 @@ import type { AgentId } from '@config/agents';
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
 import type { AsyncResource } from '../utils/asyncResourceUtils';
 
-/**
- * The one agent a global report is scoped to, distinct from the Funnel's
- * multi-select Projects-tree filter. `profile` narrows it further to one
- * same-agent sibling root when the agent has more than one; undefined for the
- * plain default root, matching ProjectSummary.profile.
- */
+// The one agent a global report is scoped to, distinct from the Funnel multi-
+// select. profile narrows to one sibling root, matching ProjectSummary.profile.
 export interface ReportScope {
   readonly agent: AgentId;
   readonly profile?: string | undefined;
@@ -22,15 +18,9 @@ export interface ReportScope {
 const EMPTY: readonly SessionSummary[] = [];
 
 /*
- * One agent, every project it has touched, rather than the one project
- * useSessions reads. There is no server route for this: it fans out the same
- * per-project fetch useSessions already makes and merges the answers, since
- * the agent's own project list is already on hand.
- *
- * `profile` narrows further to one same-agent sibling root ("Personal"),
- * mirroring what selecting one project branch already does. The per-project
- * fetch itself has no profile parameter, so the merged result is filtered by
- * `session.profile` afterward rather than trusted to come back pre-scoped.
+ * No server route exists for one agent across every project, so this fans out
+ * the per-project fetch useSessions already makes. The per-project fetch takes
+ * no profile, so the merged result is filtered afterward rather than trusted.
  */
 export const useAgentSessions = (
   scope: ReportScope | null,

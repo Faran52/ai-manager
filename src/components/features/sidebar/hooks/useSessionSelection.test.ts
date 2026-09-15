@@ -49,7 +49,6 @@ describe('useSessionSelection', () => {
     act(() => {
       result.current.toggleAll();
     });
-    // Cursor sessions cannot be deleted, so they are never selectable.
     expect(result.current.selectedPaths).toEqual(['/r/a.jsonl', '/r/b.jsonl']);
     expect(result.current.allSelected).toBe(true);
 

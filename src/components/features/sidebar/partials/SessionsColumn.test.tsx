@@ -30,8 +30,6 @@ const noop = (): void => {
 
 const NOW = Date.UTC(2026, 0, 3);
 
-// The column reads its filters and selection from the pane; here both hooks
-// stand in for it so the column can be driven on its own.
 const Harness: FC<HarnessProps> = ({
   sessions = [],
   ...overrides

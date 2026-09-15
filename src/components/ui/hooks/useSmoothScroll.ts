@@ -29,13 +29,10 @@ const wheelDelta = (event: WheelEvent, viewportHeight: number): number => {
   return event.deltaMode === DELTA_MODE_PAGE ? event.deltaY * viewportHeight : event.deltaY;
 };
 
-/**
- * Eases an element's own scrolling instead of letting the wheel drive it
- * directly, so a transcript glides to a stop rather than jumping per notch.
- *
- * The step is scaled by elapsed time rather than by frame count, so the same
- * gesture travels the same distance whether the display runs at 60Hz or 120Hz.
- * Anyone who asked for reduced motion keeps the platform's own scrolling.
+/*
+ * The step scales by elapsed time rather than frame count, so the same gesture
+ * travels the same distance at 60Hz and 120Hz. Reduced motion keeps the
+ * platform own scrolling.
  */
 export const useSmoothScroll = (element: HTMLElement | null): void => {
   useEffect(() => {

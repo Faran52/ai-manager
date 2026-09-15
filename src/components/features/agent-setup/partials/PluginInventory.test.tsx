@@ -33,15 +33,12 @@ const noToggle = (): Promise<void> => {
   return Promise.resolve();
 };
 
-// The name cell can also carry an unknown-marketplace note, and textContent
-// would run the two together.
 const rowNames = (): readonly string[] => {
   return within(screen.getByRole('table')).getAllByRole('row').slice(1).map((row) => {
     return row.children[0]?.firstElementChild?.textContent ?? '';
   });
 };
 
-// The table reads its figures on mount, so every case has to answer that call.
 const stubCosts = (costs: readonly PluginCostAttribution[]): void => {
   vi.stubGlobal('fetch', vi.fn(() => {
     return Promise.resolve(new Response(JSON.stringify({ costs }), { status: 200 }));
@@ -163,8 +160,6 @@ test('sorts by plugin name by default and does not move a row when it toggles', 
   expect(await screen.findByRole('table')).toBeDefined();
   expect(rowNames()).toEqual(['healthy', 'sleeping', 'stray']);
 
-  // Flip every plugin's enabled state and confirm the row order is unaffected:
-  // position is identity, not a function of status.
   rerender(
     <PluginInventory
       plugins={rows.map((row) => {
@@ -201,7 +196,6 @@ test('sorts a text column ascending on the first click and descending on the sec
   );
 
   expect(await screen.findByRole('table')).toBeDefined();
-  // Default sort is by plugin name, so the version column starts inactive.
   expect(screen.getByRole('columnheader', { name: 'Version' }).getAttribute('aria-sort')).toBe('none');
 
   await userEvent.click(screen.getByRole('button', { name: 'Version' }));
@@ -213,8 +207,6 @@ test('sorts a text column ascending on the first click and descending on the sec
   expect(rowNames()).toEqual(['aaa', 'zzz']);
   expect(screen.getByRole('columnheader', { name: 'Version' }).getAttribute('aria-sort')).toBe('descending');
 
-  // A third click on the same column returns to ascending rather than
-  // getting stuck once it has flipped direction.
   await userEvent.click(screen.getByRole('button', { name: 'Version' }));
   expect(rowNames()).toEqual(['zzz', 'aaa']);
   expect(screen.getByRole('columnheader', { name: 'Version' }).getAttribute('aria-sort')).toBe('ascending');
@@ -234,7 +226,6 @@ test('sorts numeric columns, treats a missing cost as zero, and resets to ascend
           id: 'delta@official',
           enabled: true,
         }),
-        // No cost entry at all, so every cost column reads zero for this one.
         plugin({
           id: 'alpha@official',
           enabled: false,
@@ -255,8 +246,6 @@ test('sorts numeric columns, treats a missing cost as zero, and resets to ascend
   await userEvent.click(screen.getByRole('button', { name: 'State' }));
   expect(rowNames()).toEqual(['delta', 'alpha']);
 
-  // A different column resets to ascending rather than carrying over State's
-  // descending direction.
   await userEvent.click(screen.getByRole('button', { name: 'per invoke' }));
   expect(rowNames()).toEqual(['alpha', 'delta']);
   expect(screen.getByRole('columnheader', { name: 'per invoke' }).getAttribute('aria-sort')).toBe('ascending');
@@ -279,8 +268,6 @@ test('keeps the head of a long inventory in view while its rows scroll', async (
 
   expect(await screen.findByRole('table')).toBeDefined();
   expect(rowNames()).toHaveLength(40);
-  // The dialog body is the scroller, so the head sticks to that instead of the
-  // table sitting in a second nested scroll box of its own.
   expect(screen.getAllByRole('columnheader')[0]?.className).toContain('sticky');
 });
 
@@ -295,7 +282,7 @@ test('says none when no plugins are installed', () => {
 test('waits on a spinner rather than showing a table of placeholders', () => {
   vi.stubGlobal('fetch', vi.fn(() => {
     return new Promise(() => {
-      // Never settles, so the table stays in its loading state.
+      return undefined;
     });
   }));
 
@@ -349,7 +336,6 @@ test('claims no cost when the project has no usage to price against', async () =
   );
 
   expect(await screen.findByText('12')).toBeDefined();
-  // A plugin that never runs and costs nothing shows a placeholder in both columns.
   expect(screen.getAllByText('·')).toHaveLength(2);
   expect(screen.queryByText(/\$\d/u)).toBeNull();
 });
@@ -425,7 +411,7 @@ test('reports a failed cost read', async () => {
 
 test('drops a cost read that lands after the table has gone', async () => {
   let release = (): void => {
-    // Replaced by the deferred resolver below.
+    return undefined;
   };
   const pending = new Promise<Response>((resolve) => {
     release = () => {
@@ -454,7 +440,7 @@ test('drops a cost read that lands after the table has gone', async () => {
 
 test('drops a failed cost read that lands after the table has gone', async () => {
   let refuse = (): void => {
-    // Replaced by the deferred rejecter below.
+    return undefined;
   };
   const pending = new Promise<Response>((_resolve, reject) => {
     refuse = () => {

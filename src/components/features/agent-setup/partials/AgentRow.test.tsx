@@ -15,7 +15,7 @@ const nowMs = Date.parse('2026-01-02T00:00:00Z');
 const modifiedMs = Date.parse('2026-01-01T00:00:00Z');
 
 const noop = (): void => {
-  // The row reports intent; the panel owns what happens next.
+  return undefined;
 };
 
 const FINDING: SetupFinding = {
@@ -147,7 +147,6 @@ test('chips each server with its scope, and hides the file it came from behind i
 
   expect(screen.getByText('context7')).toBeDefined();
   expect(screen.getByText('user')).toBeDefined();
-  // A path is long and repeats down the group, so it rides in the chip's title.
   expect(document.querySelector('[title="/Users/dev/.claude.json"]')).not.toBeNull();
 });
 
@@ -210,7 +209,6 @@ test('leaves out a group the agent records nothing for', () => {
   );
 
   expect(screen.getByText('.cursorrules')).toBeDefined();
-  // No servers, no model and no plugins, so the pane is the one line it has.
   expect(screen.queryByText('MCP')).toBeNull();
   expect(screen.queryByText('Model')).toBeNull();
   expect(screen.queryByText('None')).toBeNull();

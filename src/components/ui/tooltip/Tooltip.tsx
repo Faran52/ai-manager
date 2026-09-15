@@ -23,12 +23,8 @@ export interface TooltipProps {
   // The hover target. Optional only with `position`, which brings its own.
   readonly children?: ReactNode;
   readonly side?: 'top' | 'right' | 'bottom' | 'left';
-  /**
-   * A cell/cursor point rather than `children` itself. Lets one Tooltip serve
-   * many hover targets (a heatmap's cells) instead of mounting one
-   * Provider+Root+Portal per target; same technique as Menu's own `position`.
-   * The caller drives `open` from its own pointer handlers.
-   */
+  // A point rather than children, so one Tooltip serves many hover targets
+  // instead of a Provider, Root and Portal each. The caller drives open.
   readonly position?: PopupPosition;
   // Forces the open state. A position-anchored caller drives this itself,
   // since hover on the real cell never reaches the invisible trigger.

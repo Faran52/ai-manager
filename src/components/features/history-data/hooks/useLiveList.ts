@@ -10,15 +10,10 @@ import type { AsyncResource, AsyncSnapshot } from '../utils/asyncResourceUtils';
 
 const LIVE_REFRESH_MS = 3_000;
 
-/**
- * The shape every sessions list shares: load for one key, reset to loading
- * when the key changes, reload on demand, and while `live`, refetch every few
- * seconds and on the tab becoming visible again, but only while it is visible.
- *
- * `key` names what is loaded ('' for nothing, which never polls); `load` must
- * be stable per key, so callers wrap it in useCallback, and a new `load` for
- * the same key (a project list refreshed underneath) refetches without the
- * loading flash a key change brings.
+/*
+ * key names what is loaded, and the empty string never polls. load must be
+ * stable per key, so a new load for the same key refetches without the loading
+ * flash that a key change brings.
  */
 export const useLiveList = <T>(
   key: string,

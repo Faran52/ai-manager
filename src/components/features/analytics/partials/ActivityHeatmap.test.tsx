@@ -112,8 +112,6 @@ describe('ActivityHeatmap hover', () => {
     await user.hover(cell);
     expect((await screen.findByRole('tooltip')).textContent).toBe(`${iso} · 400 tokens`);
 
-    // Leaving the grid, not just the one cell, is what closes it: moving between
-    // adjacent cells must not flicker the shared tooltip shut and open again.
     await user.unhover(screen.getByRole('img', { name: 'daily activity heatmap' }));
 
     expect(screen.queryByRole('tooltip')).toBeNull();

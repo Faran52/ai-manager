@@ -70,10 +70,6 @@ describe('LanguagePicker', () => {
     expect(document.documentElement.dir).toBe('ltr');
   });
 
-  /*
-   * The system entry is a value on the same control rather than a first row in
-   * a menu, so it survives the list being relabelled into the chosen language.
-   */
   test('keeps the system entry addressable in any language', async () => {
     await i18n.changeLanguage('ko');
     render(<LanguagePicker />);

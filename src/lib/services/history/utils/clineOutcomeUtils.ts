@@ -6,10 +6,9 @@ export interface ClineResults {
 }
 
 /*
- * The marker Cline writes at the head of a tool result. The quoted argument is
- * matched greedily rather than up to the first quote, because a shell command
- * quotes its own arguments and Cline does not escape them. The `for` clause is
- * optional because attempt_completion reports without one.
+ * The quoted argument is matched greedily rather than to the first quote,
+ * because a shell command quotes its own arguments and Cline does not escape
+ * them. The for clause is optional: attempt_completion reports without one.
  */
 const RESULT_MARKER = /^\[[^\s\]]+(?: for '.*')?\] Result:/gmu;
 

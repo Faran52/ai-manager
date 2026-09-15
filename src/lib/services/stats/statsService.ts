@@ -101,12 +101,10 @@ export interface AgentProfileStats extends ProjectStats {
 export interface GlobalStats extends ProjectStats {
   readonly totals: CompleteStatsTotals;
   readonly agents: readonly AgentStatsUsage[];
-  /**
-   * The full report `computeGlobalStats` already builds per agent, keyed for a
-   * single-agent-and-profile, every-project view rather than reduced to
-   * `AgentStatsUsage`'s four numbers. `agents` above stays every profile of an
-   * agent combined, since that is the one figure a provider-distribution list
-   * wants; this is the one a report scoped to a single tally chip wants.
+  /*
+   * The full per-agent report, keyed for a single agent and profile across every
+   * project. agents above stays every profile combined, which is what a provider
+   * distribution wants; this is what a report scoped to one tally chip wants.
    */
   readonly perAgentProfile: readonly AgentProfileStats[];
 }
@@ -220,11 +218,10 @@ const addSession = async (
   }
 };
 
-/**
- * One project's whole contribution, counted before anything is folded in.
- * Projects are read at the same time because each waits mostly on the disk;
- * their sessions are read one after another so a large history cannot open
- * every transcript it owns at once.
+/*
+ * Projects are read together because each waits mostly on the disk; their
+ * sessions are read one after another so a large history cannot open every
+ * transcript it owns at once.
  */
 const countProject = async (
   project: ProjectSummary,

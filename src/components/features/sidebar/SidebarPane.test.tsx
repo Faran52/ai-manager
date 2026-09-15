@@ -28,9 +28,6 @@ import type { ProjectSummary, SessionSummary } from '@services/history/historySe
 import type { ReactElement } from 'react';
 import type { SidebarPaneProps } from './SidebarPane';
 
-// Every SidebarPane render needs a ToastProvider ancestor now that bulk
-// actions report through useToast(); wrapping render() here means every
-// existing call site keeps working unchanged.
 const render = (ui: ReactElement): ReturnType<typeof rtlRender> => {
   return rtlRender(<ToastProvider>{ui}</ToastProvider>);
 };
@@ -455,17 +452,14 @@ describe('SidebarPane agent and mutation actions', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Filter and sort projects' }));
     await userEvent.click(await screen.findByRole('menuitem', { name: /Agents/u }));
 
-    // From "every agent", the first pick narrows to just that one.
     await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: /Claude Code/u }));
     expect(screen.queryByText('codex-app')).toBeNull();
     expect(screen.queryByText('gemini-app')).toBeNull();
 
-    // A second pick widens the set rather than replacing it.
     await userEvent.click(screen.getByRole('menuitemcheckbox', { name: /Codex CLI/u }));
     expect(screen.getByText('codex-app')).toBeDefined();
     expect(screen.queryByText('gemini-app')).toBeNull();
 
-    // Dropping one leaves the other still narrowing the list.
     await userEvent.click(screen.getByRole('menuitemcheckbox', { name: /Claude Code/u }));
     expect(screen.queryByText('claude-app')).toBeNull();
     expect(screen.getByText('codex-app')).toBeDefined();
@@ -607,9 +601,6 @@ describe('SidebarPane agent and mutation actions', () => {
     fireEvent.contextMenu(screen.getByText('app'));
     await userEvent.click(screen.getByText('Delete project history'));
     await userEvent.click(screen.getByRole('button', { name: 'Delete permanently' }));
-    // Radix hides the rest of the page from assistive tech while its dialog
-    // portal is open, and this alert sits outside that portal; `hidden: true`
-    // reads through it the way it would for a sighted user behind the modal.
     expect((await screen.findByRole('alert', { hidden: true })).textContent).toBe('project delete denied');
     await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     await waitFor(() => {
@@ -945,8 +936,6 @@ describe('SidebarPane session threads', () => {
 });
 
 describe('SidebarPane branches', () => {
-  // The branch itself is named in the viewer's header; here it only has to be
-  // findable, so that a filter can reach a session by the work it belongs to.
   const onBranch = (id: string, title: string, branch?: string): SessionSummary => {
     return {
       ...session(id, title),
@@ -1011,8 +1000,6 @@ describe('SidebarPane collapsed columns', () => {
 
     expect(onSelectProject).toHaveBeenCalledWith(expect.objectContaining({ id: 'p2' }));
 
-    // Once the open drawer has handed its width back, the folded strip is the
-    // only place "All projects" still lives.
     await waitFor(() => {
       expect(screen.queryByLabelText('Filter projects')).toBeNull();
     });
@@ -1036,8 +1023,6 @@ describe('SidebarPane collapsed columns', () => {
     );
     await userEvent.click(screen.getByRole('button', { name: 'Hide sessions' }));
 
-    // The folded strip carries the agent circle, and the row it stands in for
-    // still opens on a click without unfolding anything first.
     const strip = screen.getByRole('button', { name: 'Login fix' });
 
     expect(within(strip).getByText('CC')).toBeDefined();
@@ -1242,6 +1227,5 @@ test('leaves the agent chips off the project cards when asked, as Health does', 
   );
 
   expect(screen.getByText('webapp')).toBeDefined();
-  // The All Projects card keeps its tallies; only the project cards lose theirs.
   expect(document.querySelector('[data-project-navigator] .project-provider')).toBeNull();
 });

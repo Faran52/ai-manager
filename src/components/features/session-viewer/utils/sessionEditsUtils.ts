@@ -10,13 +10,8 @@ const changesOfKind = (edits: readonly FileEdit[], kind: EditKind): number => {
   }, 0);
 };
 
-/**
- * The project's edit list, narrowed to one transcript.
- *
- * An open session asks what it changed, not what the project did, and the
- * counts are recomputed rather than carried over because a file the project
- * touched forty times may have been touched once here.
- */
+// An open session asks what it changed, not what the project did, so the counts
+// are recomputed: a file touched forty times here may have been touched once.
 export const editsInSession = (
   files: readonly EditedFile[],
   sessionFilePath: string | undefined,

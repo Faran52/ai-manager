@@ -36,12 +36,8 @@ const walkDir = async (dir: string, depth: number): Promise<readonly string[]> =
   return found.flat();
 };
 
-/**
- * Two agents keep their history inside the projects themselves, and they are
- * pointed at the same parents. Sharing the walk while it runs means the tree is
- * read once for both rather than twice at the same moment. Nothing is kept once
- * the walk settles, so a later scan still sees the directory as it now stands.
- */
+// Two agents are pointed at the same parents, so sharing the walk while it runs
+// reads the tree once rather than twice. Nothing is kept once it settles.
 const inFlight = new Map<string, Promise<readonly string[]>>();
 
 export const listTree = async (root: string, maxDepth: number): Promise<readonly string[]> => {

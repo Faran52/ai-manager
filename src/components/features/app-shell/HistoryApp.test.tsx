@@ -139,7 +139,6 @@ describe('HistoryApp', () => {
     render(<HistoryApp />);
     await screen.findByText('alpha');
 
-    // The session column rides with the Sessions view, and its divider with it.
     await userEvent.click(screen.getByRole('button', { name: /^Sessions/u }));
 
     const divider = screen.getByRole('slider', { name: 'Resize sidebar' });
@@ -185,7 +184,6 @@ describe('HistoryApp', () => {
     expect(screen.getAllByRole('button', { name: /beta/ }).length).toBeGreaterThan(0);
 
     await openProject('alpha');
-    // Sessions are read from the Sessions view, where their column lives.
     await userEvent.click(screen.getByRole('button', { name: /^Sessions/u }));
     const target = screen.getAllByText('The chosen one').at(0);
 
@@ -616,14 +614,11 @@ describe('HistoryApp cross-view flows', () => {
     await userEvent.click(chip);
     expect(await screen.findByText('AgentOnlyTool')).toBeDefined();
 
-    // Clicking the same chip again clears back to the full, unfiltered rollup.
     await userEvent.click(chip);
     await waitFor(() => {
       expect(screen.queryByText('AgentOnlyTool')).toBeNull();
     });
 
-    // Picking a project clears it too, same as leaving the whole machine for
-    // one project already does to the analytics scope.
     await userEvent.click(chip);
     expect(await screen.findByText('AgentOnlyTool')).toBeDefined();
     await openProject('alpha');
@@ -1099,7 +1094,6 @@ describe('HistoryApp keyboard shortcuts', () => {
     expect(await screen.findByRole('button', { name: /Health/ })).toBeDefined();
 
     await userEvent.keyboard('4');
-    // The pane opens on the archives themselves now, not on a title and an intro.
     expect(await screen.findByRole('button', { name: /Create archive/u })).toBeDefined();
 
     await userEvent.keyboard('5');
@@ -1260,15 +1254,9 @@ describe('HistoryApp file edits', () => {
     await openProject('alpha');
 
     await userEvent.click(screen.getByRole('button', { name: /^Sessions/ }));
-    /*
-     * File edits is a panel beside the transcript now, not a tab that replaces
-     * it, so a session has to be open before there are any edits to show.
-     */
     await userEvent.click(await screen.findByText('The chosen one'));
     await userEvent.click(await screen.findByRole('button', { name: 'File edits' }));
-    // The name carries the row now; the directory sits under it, dim.
     await userEvent.click(await screen.findByText('a.ts'));
-    // Opening the edit jumps the transcript to the turn that made it.
     await userEvent.click(await screen.findByText('Login fix'));
 
     expect(await screen.findByText('the question')).toBeDefined();

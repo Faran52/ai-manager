@@ -44,12 +44,8 @@ export const useWorkspaceSelection = (
   const [highlightTimestamp, setHighlightTimestamp] = useState<string | undefined>(undefined);
   const [archivedSession, setArchivedSession] = useState<ArchivedSession | null>(null);
 
-  /**
-   * The three ways to change what the sidebar is scoped to (a project, All
-   * Projects, or one report agent) are mutually exclusive: picking one always
-   * means leaving whichever of the other two was open. Sharing this reset is
-   * what keeps a future caller from repeating the bug where it was missed.
-   */
+  // The three ways to rescope the sidebar are mutually exclusive, so sharing this
+  // reset is what stops a fourth caller repeating the bug where it was missed.
   const clearOpenSession = useCallback(() => {
     setSelectedFilePath(null);
     setHighlightTimestamp(undefined);
@@ -73,14 +69,10 @@ export const useWorkspaceSelection = (
     setReportScope(null);
   }, [clearOpenSession]);
 
-  /**
-   * Toggling twice, or reaching for All Projects itself, clears back to the
-   * unfiltered global report. Picking an agent always means the whole machine:
-   * there is no per-project, per-agent report to ask for, so a project picked
-   * before this agent chip has to clear the same way it does for
-   * selectAllProjects. `profile` is part of the toggle identity too, so
-   * picking Claude Code Personal after Claude Code switches rather than
-   * closes, matching how picking a different project branch already works.
+  /*
+   * Picking an agent always means the whole machine: there is no per-project,
+   * per-agent report, so a project picked earlier has to clear. profile is part
+   * of the toggle identity, so a sibling profile switches rather than closes.
    */
   const selectReportAgent = useCallback((agent: AgentId, profile?: string) => {
     setSelectedProject(null);

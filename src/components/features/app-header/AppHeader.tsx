@@ -34,12 +34,8 @@ export interface AppHeaderProps {
   readonly overflow?: ReactNode;
 }
 
-/**
- * The one bar of window chrome: what you are looking at on the left, search
- * in the centre, what you can do to the open thing on the right. Refresh and
- * settings live at the foot of the rail. The window carries no wordmark; on
- * the desktop the OS draws the frame, and in the browser there is none to draw.
- */
+// The window carries no wordmark: on the desktop the OS draws the frame, and in
+// the browser there is none to draw.
 export const AppHeader: FC<AppHeaderProps> = ({
   view,
   projectName,

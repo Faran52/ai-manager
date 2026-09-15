@@ -45,12 +45,8 @@ interface WalkOptions {
 
 const supportedExtensions = new Set(['.json', '.jsonl', '.md', '.ndjson', '.txt']);
 
-/*
- * A Cline task is a directory of three files: the Anthropic-format transcript,
- * the UI event stream, and a metadata blob. Only the first is a conversation,
- * so reading the folder generically turned one task into three sessions that
- * all shared the id `api_conversation_history`.
- */
+// A Cline task is three files and only the transcript is a conversation.
+// Reading the folder generically turned one task into three sessions.
 const CLINE_TRANSCRIPT = 'api_conversation_history.json';
 
 // The extension that wrote the task is the only grouping the store offers.
@@ -301,12 +297,8 @@ const markdownEntries = (
   });
 };
 
-/**
- * Cline returns a tool result as the next user message rather than as a block
- * carrying the call's id, so the results in a message pair with the calls of
- * the assistant turn above it. A checklist gets no result, so it is not a call
- * a result can land on.
- */
+// Cline returns a tool result as the next user message rather than a block
+// carrying the call id, so results pair with the assistant turn above them.
 const withClineOutcomes = (entries: readonly StructuredEntry[]): readonly StructuredEntry[] => {
   let callIds: readonly string[] = [];
 

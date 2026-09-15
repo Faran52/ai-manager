@@ -15,12 +15,9 @@ export interface InjectedContextBodyProps {
 const LABEL_CLASS = 'text-eyebrow font-medium tracking-wide text-dim uppercase';
 
 /*
- * Injected context. When the agent is one whose context has a known shape it is
- * split into parts: an instruction body (a Codex AGENTS.md, a Claude skill's
- * SKILL.md) is Markdown by nature and renders parsed, the environment is a
- * short row list, the recommended plugins sit behind their own count. Anything
- * unrecognised is handed to MarkdownView, which parses it only if it reads as
- * Markdown.
+ * A known context shape splits into parts: an instruction body renders parsed,
+ * the environment is a row list, plugins sit behind their count. Anything
+ * unrecognised goes to MarkdownView, which parses only if it reads as Markdown.
  */
 export const InjectedContextBody: FC<InjectedContextBodyProps> = ({ text }) => {
   const { t } = useTranslation('session');

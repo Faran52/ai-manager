@@ -21,8 +21,6 @@ import {
 
 import type { JsonValue } from '@utils/jsonUtils';
 
-// Filenames and event shapes match OpenHands' own docs verbatim (MessageEvent
-// carries role/content at the top level; ActionEvent/ObservationEvent do not).
 const messageEvent = (n: number, role: string, content: JsonValue): [string, string] => {
   return [`event-${String(n).padStart(5, '0')}-a.json`, JSON.stringify({
     type: 'MessageEvent',
@@ -62,8 +60,6 @@ describe('OpenHands event-file discovery', () => {
 
     await writeFile(join(eventsDir, userName), userJson);
     await writeFile(join(eventsDir, replyName), replyJson);
-    // An ActionEvent/ObservationEvent pair: real per OpenHands' docs, but
-    // neither carries a role, so the generic reader drops both untouched.
     await writeFile(join(eventsDir, 'event-00003-a.json'), JSON.stringify({
       type: 'ActionEvent',
       id: 'evt_3',
@@ -185,8 +181,6 @@ describe('OpenHands event-file discovery', () => {
     const stray = join(eventsDir, 'not-an-event.json');
 
     await mkdir(eventsDir, { recursive: true });
-    // Exists (so the allowed-roots check passes) but does not match the
-    // event-NNNNN-<uuid>.json pattern, so eventGroups finds nothing for it.
     await writeFile(stray, '{}');
 
     expect(await loadOpenHandsEntries(stray, [root])).toBeUndefined();

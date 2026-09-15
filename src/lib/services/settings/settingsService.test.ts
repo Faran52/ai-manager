@@ -72,9 +72,6 @@ test('the project prompt is offered to exactly the agents that read one', () => 
 });
 
 test('the picker offers exactly the agents SURFACES covers', () => {
-  // Two lists because the picker is client code and this module reads the
-  // filesystem. They must name the same agents, or an agent gains a settings
-  // page with no files behind it, or files with no way to reach them.
   expect([...surfacedAgents].sort((left, right) => {
     return left.localeCompare(right);
   })).toEqual([...settingsAgents].sort((left, right) => {
@@ -242,12 +239,6 @@ describe('readAgentSettings across agents', () => {
     expect(scope?.exists).toBe(true);
     expect(scope?.format).toBe('toml');
     expect(scope?.editable).toBe(false);
-    /*
-     * Only the outermost section name and the root keys above the first header,
-     * so a table per provider or per server does not list one key each. A real
-     * config listed sixty keys, most of them env vars nested inside
-     * `[mcp_servers.<name>.env]`, for a file configuring thirteen areas.
-     */
     expect(scope?.preservedKeys).toEqual([
       'model',
       'model_providers',
@@ -259,8 +250,6 @@ describe('readAgentSettings across agents', () => {
     const { home, project } = await newProject();
 
     await mkdir(join(home, '.codex'), { recursive: true });
-    // The orphan sits above the first header, where root keys are read, so the
-    // line without a name on its left is the one being skipped.
     await writeFile(join(home, '.codex', 'config.toml'), [
       '= orphaned',
       '[]',
@@ -270,7 +259,6 @@ describe('readAgentSettings across agents', () => {
 
     const [scope] = await readAgentSettings('codex', project, home);
 
-    // `name` belongs to the `[[profiles]]` table, which is already named.
     expect(scope?.preservedKeys).toEqual(['profiles']);
   });
 

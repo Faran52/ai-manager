@@ -19,12 +19,8 @@ export interface TurnFrameProps {
   readonly children: ReactNode;
 }
 
-/*
- * One shape for both sides of a turn: a round mark in the role's colour, then
- * the body. The transcript reads as turns down one column, not a stream of
- * bubbles bouncing left and right. The mark carries the role, so the body does
- * not have to shout it.
- */
+// One shape for both sides of a turn, so the transcript reads as turns down one
+// column rather than bubbles bouncing left and right.
 export const TurnFrame: FC<TurnFrameProps> = ({
   speaker,
   agent,

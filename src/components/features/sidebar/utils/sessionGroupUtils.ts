@@ -36,12 +36,8 @@ export const recencyBucket = (timestampMs: number, nowMs: number): RecencyBucket
   return timestampMs >= startOfToday - 6 * DAY_MS ? 'week' : 'earlier';
 };
 
-/**
- * Session rows split under Today / this week / earlier headers, in the order the
- * buckets first appear so the grouping follows the sort rather than fighting it.
- * A thread's continuation rows inherit their head's bucket, so an older part
- * never drifts into a different group from the session it belongs to.
- */
+// Buckets appear in the order the sort produces, so the grouping follows the
+// sort rather than fighting it. Continuation rows inherit their head bucket.
 export const groupSessionsByRecency = <T extends GroupableRow>(
   rows: readonly T[],
   nowMs: number,

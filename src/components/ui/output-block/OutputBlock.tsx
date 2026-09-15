@@ -17,11 +17,9 @@ export interface OutputBlockProps {
 const MAX_BODY_CHARS = 20_000;
 
 /*
- * A tool result, shown inline under its label the way the transcript mock draws
- * it: the tool card is the only thing that collapses, so the output never hides
- * behind a second disclosure. MarkdownView decides from the text itself whether
- * to parse it, and only then offers the Parsed / Raw switch. The body is
- * height-bounded and scrolls, so a wall of output cannot stretch the card.
+ * The tool card is the only thing that collapses, so output never hides behind a
+ * second disclosure. The body is height-bounded and scrolls, so a wall of
+ * output cannot stretch the card.
  */
 export const OutputBlock: FC<OutputBlockProps> = ({ label, text }) => {
   const { t } = useTranslation('common');

@@ -58,12 +58,8 @@ const capable = (manage: boolean): AgentCapabilities => {
   };
 };
 
-/*
- * `manage` records whether the agent has a configuration surface worth
- * managing: Tier 1 agents carry it outright, Tier 2 agents carry it but only
- * surface once an adapter proves the surface, Tier 3 agents stay history
- * only. Management UI is gated further by an existing adapter.
- */
+// manage records whether the agent has a configuration surface worth managing.
+// Tier 2 carries it but surfaces only once an adapter proves the surface.
 const readOnlyAgent = (
   id: AgentId,
   label: string,
@@ -199,11 +195,9 @@ export const agentBadgeLabel = (agent: AgentId, profile?: string): string => {
 };
 
 /*
- * The agents that keep a settings file of their own, in the order the picker
- * offers them. Here rather than in settingsService because the picker is client
- * code and that module reads the filesystem, so importing a value from it would
- * pull node builtins into the browser bundle. A settings test asserts the two
- * lists match, so a new surface cannot be added in one place alone.
+ * Here rather than in settingsService because the picker is client code and
+ * that module reads the filesystem, which would pull node builtins into the
+ * browser bundle. A settings test asserts the two lists match.
  */
 const SETTINGS_AGENTS = new Set<AgentId>(['claude', 'codex', 'gemini', 'opencode', 'grok']);
 

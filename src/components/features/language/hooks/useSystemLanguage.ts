@@ -40,12 +40,8 @@ const remember = (language: string): void => {
   }
 };
 
-/**
- * Following the system is recorded by storing nothing, rather than by storing
- * the word "system". A stored language is a decision the reader made; its
- * absence means they never made one, which is exactly when their system should
- * be allowed to keep deciding, including after it changes.
- */
+// Following the system is recorded by storing nothing. A stored language is a
+// decision; its absence means the system should keep deciding, including later.
 export const useSystemLanguage = (): SystemLanguageChoice => {
   const { i18n } = useTranslation();
   const [following, setFollowing] = useState(() => {

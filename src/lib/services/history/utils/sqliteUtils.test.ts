@@ -387,7 +387,6 @@ describe('SQLite history discovery', () => {
     const filePath = join(root, 'crush.db');
     const database = new DatabaseSync(filePath);
 
-    // Columns match charmbracelet/crush's initial migration verbatim.
     database.exec(`
       CREATE TABLE sessions (
         id TEXT PRIMARY KEY, title TEXT, message_count INTEGER,
@@ -479,7 +478,6 @@ describe('SQLite history discovery', () => {
       1,
       1,
     );
-    // A malformed parts column (not a JSON array at all) reads as no text too.
     database.prepare('INSERT INTO messages VALUES (?, ?, ?, ?, ?, ?, ?)').run(
       'm2',
       'empty',
@@ -507,7 +505,6 @@ describe('SQLite history discovery', () => {
       );
     `);
     database.prepare('INSERT INTO sessions VALUES (?, ?, ?, ?)').run('sess-1', '', 1, 1);
-    // A text part with nothing readable in its data, alongside a real one.
     database.prepare('INSERT INTO messages VALUES (?, ?, ?, ?, ?, ?, ?)').run(
       'm1',
       'sess-1',
@@ -598,7 +595,6 @@ describe('SQLite history discovery', () => {
     const filePath = join(root, 'logs.db');
     const database = new DatabaseSync(filePath);
 
-    // Columns match llm/migrations.py verbatim, trimmed to the ones this reads.
     database.exec(`
       CREATE TABLE conversations (id TEXT PRIMARY KEY, name TEXT, model TEXT);
       CREATE TABLE responses (
@@ -631,7 +627,6 @@ describe('SQLite history discovery', () => {
       actualSessionId: 'conv-1',
       title: 'Question about llm',
     }]);
-    // The system prompt is named once, on the first exchange, not repeated on the second.
     expect(entries).toMatchObject(EXPECTED_ENTRIES_2);
   });
 
@@ -666,7 +661,6 @@ describe('SQLite history discovery', () => {
       );
     `);
     database.prepare('INSERT INTO conversations VALUES (?, ?, ?)').run('conv-1', null, 'gpt-4o-mini');
-    // An unparseable timestamp and a missing duration both fall back too.
     database.prepare(`
       INSERT INTO responses (id, conversation_id, prompt, response, duration_ms, datetime_utc)
       VALUES (?, ?, ?, ?, ?, ?)

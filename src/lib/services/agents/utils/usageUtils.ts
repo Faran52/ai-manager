@@ -88,12 +88,10 @@ const projectEntry = async (projectPath: string, home: string): Promise<JsonObje
   return isJsonObject(entry) ? entry : undefined;
 };
 
-/**
- * What Claude Code itself billed, per model, summed over every project it has
- * seen. Only the ratio is wanted: `lastModelUsage` holds one session's running
- * totals per project, so these are a sample of the history rather than all of
- * it, and a cost per token divides that scale back out. Model keys arrive as
- * Claude Code writes them, context tier included (`claude-opus-5[1m]`).
+/*
+ * Only the ratio is wanted: lastModelUsage holds one session running total per
+ * project, so these sample the history and a cost per token divides the scale
+ * back out. Model keys arrive with the context tier, as claude-opus-5[1m].
  */
 export const readModelCosts = async (
   home = homedir(),
@@ -122,12 +120,8 @@ export const readModelCosts = async (
   return costs;
 };
 
-/**
- * One price per token across everything Claude Code has billed. A single
- * project's `lastCost` is zero whenever its most recent session is still open,
- * so a per-project rate drops to zero exactly when someone is using the app;
- * pooling every project keeps a rate on hand.
- */
+// A single project lastCost is zero while its newest session is open, so a
+// per-project rate drops to zero exactly when someone is using the app.
 export const readBlendedRate = async (home = homedir()): Promise<number> => {
   let costUsd = 0;
   let billedTokens = 0;

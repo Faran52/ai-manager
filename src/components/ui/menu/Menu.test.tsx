@@ -48,10 +48,6 @@ test('runs an item and closes', async () => {
   });
 });
 
-/*
- * The whole reason for taking the headless kit. The old menu declared
- * role="menu" and answered no arrow key at all.
- */
 test('walks its items with the arrow keys', async () => {
   menu();
   await open();
@@ -81,10 +77,6 @@ test('closes on escape without running anything', async () => {
   expect(onSelect).not.toHaveBeenCalled();
 });
 
-/*
- * A right-click menu has no element to hang off, so it anchors to a point. The
- * invisible trigger is what keeps Radix from placing it at the document origin.
- */
 test('anchors to a cursor point when given one', () => {
   render(
     <Menu

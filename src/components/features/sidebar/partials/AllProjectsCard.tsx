@@ -20,14 +20,8 @@ export interface AllProjectsCardProps {
   readonly onSelectAgent: (agent: AgentId, profile?: string) => void;
 }
 
-/**
- * Every project at once, pinned above the list rather than first inside it.
- *
- * It is not a project, so it must not read as one of the eight: it sits outside
- * the scroller and the rule under it runs the full width of the drawer. Its
- * agent tallies are branches like a project card's, and picking one scopes the
- * report to that agent's activity across every project it has touched.
- */
+// Not a project, so it must not read as one of the eight: it sits outside the
+// scroller and its rule runs the full width of the drawer.
 export const AllProjectsCard: FC<AllProjectsCardProps> = ({
   projects,
   selected,

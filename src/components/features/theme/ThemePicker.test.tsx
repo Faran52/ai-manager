@@ -28,10 +28,6 @@ test('sets the chosen mode', async () => {
   expect(onChange).toHaveBeenCalledWith('light');
 });
 
-/*
- * The control is the whole set, not a popover, so every mode is on screen at
- * rest. That is the point of the change: there is nothing to open or dismiss.
- */
 test('shows every mode without being opened', () => {
   render(<ThemePicker mode="light" onChange={vi.fn()} />);
 

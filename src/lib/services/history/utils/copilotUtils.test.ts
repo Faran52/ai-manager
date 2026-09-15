@@ -1436,7 +1436,6 @@ describe('copilot remaining edge paths', () => {
       );
     }
 
-    // A directory where a session file is expected makes readFile fail.
     await mkdir(join(root, 'hash-alpha', 'chatSessions', 'broken.jsonl'), { recursive: true });
 
     const projects = await listCopilotProjects('copilot', [root]);

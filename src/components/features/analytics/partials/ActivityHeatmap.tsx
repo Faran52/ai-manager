@@ -44,15 +44,8 @@ const ROW_LABEL: Partial<Record<(typeof ROW_KEYS)[number], string>> = {
   fri: 'weekdayFri',
 };
 
-/**
- * A fixed height, not the whole card.
- *
- * The grid filled the panel with flex-1, but a panel's height is set by whichever
- * sibling in its row is taller. An agent with a long tool list drew tall cells
- * and one with a short list drew flat pills, so the same heatmap looked different
- * per agent. A fixed height keeps a cell one shape for everyone; WEEKS_SHOWN
- * pins the width the same way.
- */
+// A fixed height, not the whole card: a panel is sized by its tallest sibling,
+// so flex-1 drew tall cells beside one agent and flat pills beside another.
 export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
   const { t } = useTranslation('analytics');
   const [todayMs] = useState(() => {
@@ -64,12 +57,8 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
   }, 0);
   const months = monthsOf(weeksTo(activity, todayMs));
 
-  /*
-   * One shared tooltip for every cell instead of one Tooltip (Provider+Root+
-   * Portal each) per cell: staggering 365 of those is the same cost the
-   * comment above already rejects for animation, worse since each also
-   * carries Radix state. The cell just reports its own rect on entry.
-   */
+  // One shared tooltip rather than a Provider, Root and Portal per cell:
+  // 365 of those carry Radix state as well as the render cost.
   const hoverDay = (day: DayActivity) => {
     return (event: PointerEvent<HTMLSpanElement>): void => {
       const rect = event.currentTarget.getBoundingClientRect();

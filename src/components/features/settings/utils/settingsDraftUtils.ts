@@ -10,12 +10,8 @@ export interface Draft {
   readonly env: readonly EnvEntry[];
 }
 
-/**
- * What the scope tab counts: the rules and variables this screen manages, so a
- * file with nothing in it says so without being opened. Takes a Draft, because
- * a parked edit is counted too: reading the file while the section below it
- * showed the edited list had the tab say 0 beside a list saying 1.
- */
+// Takes a Draft so a parked edit is counted too. Reading the file instead had
+// the tab say 0 beside a list saying 1.
 export const managedCount = (source: Draft): number => {
   return source.permissions.allow.length
     + source.permissions.deny.length

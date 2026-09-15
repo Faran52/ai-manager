@@ -34,12 +34,8 @@ interface CodexMcpServer {
   readonly enabled: boolean;
 }
 
-/*
- * `[mcp_servers.<name>]` declares a server and `[mcp_servers.<name>.env]`
- * declares its environment, so a nested table ends the server's own fields.
- * Reading `NODE_REPL_NODE_PATH` out of an env block as though it were the
- * server's command is the mistake this guards against.
- */
+// A nested table ends the server own fields, so reading NODE_REPL_NODE_PATH out
+// of an env block as though it were the command is what this guards against.
 interface CodexMcpFields {
   command: string | undefined;
   enabled: boolean;

@@ -47,9 +47,6 @@ const base = {
   },
 } satisfies ComponentProps<typeof ProjectTree>;
 
-// Before rather than after: switching the language notifies every mounted
-// component, and doing that on the way out re-renders a tree the test is done
-// with. Setting it on the way in gives the same guarantee with nothing mounted.
 beforeEach(async () => {
   await initI18n().changeLanguage('en');
 });
@@ -149,7 +146,6 @@ describe('ProjectTree', () => {
       />,
     );
 
-    // One group, and the same agent twice: the main tree and the branch.
     expect(screen.getByText('workspace-feature-x')).toBeDefined();
     expect(screen.getAllByRole('button', { name: /Claude Code/u })).toHaveLength(2);
 

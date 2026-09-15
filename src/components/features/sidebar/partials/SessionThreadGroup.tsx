@@ -17,17 +17,10 @@ export interface SessionThreadGroupProps {
   readonly collapse: Transition;
 }
 
-/**
- * One card around a thread's fullest transcript and the parts revealed by
- * expanding it: a part reads as belonging to the thread, not as a row that
- * happens to sit under the one above it. The `<ul>` and its head row stay
- * mounted whether or not it is open, so the group animates into and out of
- * a stable parent instead of cutting between two shapes.
- *
- * One motion element gated by the open boolean, exactly Disclosure's own
- * shape, rather than one per part: AnimatePresence animating a list that
- * starts genuinely empty does not reliably play an enter transition the
- * first time it gains children, only on every diff after that.
+/*
+ * The ul and its head row stay mounted whether or not the group is open, so it
+ * animates into a stable parent. One motion element gated by that boolean, not
+ * one per part: AnimatePresence skips the first enter on a list that starts empty.
  */
 export const SessionThreadGroup: FC<SessionThreadGroupProps> = ({
   head,

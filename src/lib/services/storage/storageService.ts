@@ -63,11 +63,10 @@ interface RootMeasurement {
   readonly entries: readonly StorageEntry[];
 }
 
-/**
- * Measuring 1.5 GB by walking every file would block the request for seconds,
- * and the answer only has to be good enough to point at what is large. Depth
- * stops the walk inside deep trees, and the entry budget stops one enormous
- * directory from starving the rest.
+/*
+ * Walking every file would block the request for seconds, and the answer only
+ * has to point at what is large. Depth stops deep trees, the entry budget stops
+ * one enormous directory from starving the rest.
  */
 const MAX_DEPTH = 6;
 const MAX_ENTRIES = 40_000;
@@ -104,10 +103,9 @@ const sizeOf = async (path: string, depth: number, budget: Budget): Promise<numb
   }
 
   /*
-   * A link holds nothing: the bytes belong to whatever it points at, which is
-   * usually somewhere else entirely. Codex leaves directories of links to its
-   * own binary, and following them reported four gigabytes that do not exist,
-   * being one 229 MB file counted once per link.
+   * A link holds nothing. Codex leaves directories of links to its own binary,
+   * and following them reported four gigabytes that do not exist, one 229 MB file
+   * counted once per link.
    */
   if (facts.isSymbolicLink()) {
     return 0;
@@ -203,17 +201,9 @@ const measureRoot = async (root: string, budget: Budget): Promise<RootMeasuremen
   };
 };
 
-/**
- * Some agents keep their history inside the projects themselves rather than in
- * a directory of their own, so their roots are ordinary source folders. Sizing
- * those would report the user's code, node_modules and build output as agent
- * storage, which is worse than reporting nothing, so they are skipped.
- */
-/**
- * Only work an agent rebuilds on demand counts as reclaimable. Transcripts,
- * generated images and anything else the person cannot get back are never
- * offered, however large: the archive and the retention policy are where
- * history goes, not here.
+/*
+ * Only work an agent rebuilds on demand. Transcripts and generated images are
+ * never offered however large: the archive and retention policy own history.
  */
 const DISPOSABLE_STEMS: ReadonlySet<string> = new Set([
   'cache',
@@ -238,6 +228,8 @@ const isReclaimable = (name: string): boolean => {
   return DISPOSABLE_STEMS.has(stem) || stem.startsWith('log_') || stem.startsWith('logs_');
 };
 
+// Some agents keep history inside the projects themselves, so sizing these
+// roots would report the user code and node_modules as agent storage.
 const projectRoots = (home: string): ReadonlySet<string> => {
   return new Set([
     process.cwd(),
@@ -307,14 +299,10 @@ export const readStorageReport = async (
   };
 };
 
-/**
- * Deletes rebuildable working files and nothing else.
- *
- * The caller says what it wants removed, but every path is checked again here
- * before anything happens: it has to sit directly inside a root this machine
- * actually resolved for an agent, and its own name has to be one of the
- * disposable ones. A path that fails either test is refused and reported, never
- * quietly skipped, because the difference matters to whoever asked.
+/*
+ * Every path is checked again here: it has to sit directly inside a resolved
+ * root and its name has to be disposable. A path failing either is refused and
+ * reported, never quietly skipped, because the difference matters to the caller.
  */
 export const reclaimStorage = async (
   paths: readonly string[],

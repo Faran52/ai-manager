@@ -62,7 +62,6 @@ test('refuses a blank and a duplicate rule', async () => {
   await userEvent.type(field, 'Bash(ls:*)');
   expect(screen.getByText('Add').closest('button')?.disabled).toBe(true);
 
-  // Enter routes through the same guard, so it cannot bypass the disabled button.
   await userEvent.type(field, '{Enter}');
   expect(onChange).not.toHaveBeenCalled();
 });

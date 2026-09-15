@@ -22,7 +22,6 @@ export interface TimelineRowBodyProps {
   readonly profile: string | undefined;
 }
 
-// One timeline row, drawn as whichever turn or divider it is.
 export const TimelineRowBody: FC<TimelineRowBodyProps> = ({
   row,
   pairs,

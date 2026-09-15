@@ -167,10 +167,9 @@ const textContent = (payload: CodexPayload): string => {
 };
 
 /*
- * Codex prefixes every exec result with its own runner banner, and reports a
- * failed run in that banner rather than in a status field. A successful run ends
- * the banner with an `Output:` line; a failure often stops at `Script error:`
- * with nothing after it, so both forms are stripped.
+ * Codex reports a failed run in its runner banner rather than a status field. A
+ * success ends the banner with an Output: line, a failure often stops at
+ * Script error: with nothing after it, so both forms are stripped.
  */
 const CODEX_RUNNER_BANNER = /^Script (?:completed|failed|error)[\s\S]*?\nOutput:[ \t]*\n?/u;
 const CODEX_ERROR_BANNER = /^Script (?:failed|error):?[ \t]*\n?/u;

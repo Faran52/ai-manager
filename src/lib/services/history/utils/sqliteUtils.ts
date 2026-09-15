@@ -533,13 +533,9 @@ const gooseSessions = (
 };
 
 /*
- * llm logs one row per exchange rather than one row per message: a response
- * row carries both the prompt and the reply, with no role column at all
- * (verified against llm/migrations.py, not guessed). Synthesised into the
- * generic {role, content, timestamp} shape parseStructuredHistory already
- * reads, same as entriesFromTable's fallback does for an unrecognised table.
- * The reply is timestamped after its own duration, so a reader sorting by
- * time sees the prompt before the answer it produced rather than a tie.
+ * llm logs one row per exchange with no role column (verified against
+ * llm/migrations.py). Synthesised into the generic role/content/timestamp shape.
+ * The reply is timestamped after its duration, so sorting keeps prompt first.
  */
 const llmEntries = (
   database: DatabaseSync,
@@ -588,14 +584,9 @@ const llmEntries = (
 };
 
 /*
- * Crush's messages.parts is a discriminated union array, [{type, data}], not
- * the flat {text: "..."} shape the generic reader checks for (verified
- * against charmbracelet/crush's internal/message/content.go and
- * internal/db/migrations/20250424200609_initial.sql, not guessed). Only the
- * text parts are read; reasoning, tool_call, tool_result and finish parts are
- * real but their exact field shapes are not verified against source the way
- * text's is, so rendering them wrong would be worse than a plain-text turn
- * that leaves them out.
+ * Crush messages.parts is a discriminated union, not the flat text shape the
+ * generic reader checks for. Only text parts are read: the others are real but
+ * their field shapes are unverified, and rendering them wrong is worse.
  */
 const crushText = (parts: JsonValue): string => {
   if (!isJsonArray(parts)) {

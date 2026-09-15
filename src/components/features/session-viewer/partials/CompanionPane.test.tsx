@@ -77,10 +77,6 @@ test('shows the edits this session made', () => {
   expect(screen.getByText('src')).toBeDefined();
 });
 
-/*
- * One panel at a time. Both want the same strip of width, so the navigator and
- * the edits never share it.
- */
 test('shows the navigator instead, never both', () => {
   pane({ panel: 'navigator' });
 
@@ -125,10 +121,6 @@ test('opens the edit that made a change', async () => {
   expect(onOpenEdit).toHaveBeenCalledTimes(1);
 });
 
-/*
- * A scan still running must not read as a session that changed nothing, which
- * is what an empty list on its own would say.
- */
 test('waits for the edit scan rather than claiming nothing changed', () => {
   pane({
     editedFiles: [],
@@ -148,8 +140,6 @@ test('reports a failed edit scan', () => {
   expect(screen.getByText('transcripts unreadable')).toBeDefined();
 });
 
-// Nothing shortens a path that lies outside the project, so it keeps its whole
-// directory and only the name is lifted out of it.
 test('keeps the whole directory of a path outside the project', () => {
   pane({ projectPath: undefined });
 

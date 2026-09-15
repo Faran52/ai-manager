@@ -37,19 +37,10 @@ const promptFrom = (line: string): RawPrompt | undefined => {
   return { sessionId: parsed.sessionId };
 };
 
-/**
- * Removes a session's prompts from the record, for when its transcript is
- * deleted on purpose.
- *
- * The record outliving a transcript is what makes it worth keeping where an
- * agent pruned the transcript itself. It is not what anyone wants where someone
- * deliberately threw the session away: leaving the prompts behind would
- * manufacture an orphan.
- *
- * The rewrite goes through a neighbouring file and a rename, because this is
- * Claude Code's own record and a half-written one would be worse than a stale
- * one. Lines that are not prompts, or not this session's, are passed through
- * untouched.
+/*
+ * A record outliving its transcript is the point where an agent pruned it, and
+ * an orphan where someone deleted it on purpose. The rewrite goes through a
+ * neighbouring file and a rename: a half-written record is worse than a stale one.
  */
 export const forgetSessionPrompts = async (
   sessionId: string,

@@ -133,12 +133,8 @@ const tomlMcpNames = async (file: string): Promise<readonly string[]> => {
   }
 };
 
-/*
- * Claude Code keeps its config dir at ~/.claude unless CLAUDE_CONFIG_DIR
- * points elsewhere, and the sibling profiles this app finds (.claude-personal)
- * are exactly that case. The default root is the one exception that keeps
- * its .claude.json beside the dir, in the home itself.
- */
+// The default root is the one exception that keeps its .claude.json beside the
+// dir, in the home itself, rather than inside it.
 export const defaultClaudeDir = (home: string): string => {
   return join(home, CLAUDE_HOME_NAME);
 };

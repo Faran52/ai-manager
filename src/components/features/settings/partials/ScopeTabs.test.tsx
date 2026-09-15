@@ -68,7 +68,6 @@ test('counts what each file holds, marks a parked edit and switches on a click',
   const user = screen.getByRole('button', { name: /User/u });
 
   expect(user.getAttribute('aria-current')).toBe('true');
-  // The parked edit is what the tab counts, and it carries the unsaved dot.
   expect(user.textContent).toContain('2');
   expect(user.querySelector('[title="Unsaved changes"]')).not.toBeNull();
   expect(screen.getByRole('button', { name: /Project/u }).textContent).toContain('—');

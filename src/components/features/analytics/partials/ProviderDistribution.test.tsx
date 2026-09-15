@@ -22,7 +22,6 @@ test('shows providers ordered with token shares and scope counts', () => {
   );
 
   expect(screen.getByText('Claude Code · 3 sessions · 2 projects')).toBeDefined();
-  // Two figures, two columns: the middot lined up only the share.
   expect(screen.getByText('75')).toBeDefined();
   expect(screen.getByText('75%')).toBeDefined();
   expect(screen.getByText('25')).toBeDefined();

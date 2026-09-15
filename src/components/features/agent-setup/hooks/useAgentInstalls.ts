@@ -17,12 +17,8 @@ export interface AgentInstalls {
   readonly install: (agent: AgentId) => Promise<boolean>;
 }
 
-/*
- * Installed-ness is a fact about this machine, not the selected project, so
- * this checks once on mount rather than keying off a projectPath the way the
- * setup hooks do. A completed install re-checks rather than trusting its own
- * "ok" response, since a real install can partially succeed.
- */
+// Installed-ness is a fact about the machine, not the project, so this checks
+// once on mount. A finished install re-checks: one can partially succeed.
 export const useAgentInstalls = (): AgentInstalls => {
   const [agents, setAgents] = useState<Partial<Record<AgentId, AgentInstallStatus>>>();
   const [checkError, setCheckError] = useState<string | null>(null);

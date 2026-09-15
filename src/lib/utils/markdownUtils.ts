@@ -4,14 +4,9 @@ interface CellSpan {
 }
 
 /*
- * The block constructs that mark text as a document rather than prose that
- * happens to hold punctuation, matched by line-anchored pattern rather than a
- * full parse. This only gates whether the Parsed / Raw card appears, so a rare
- * borderline hit costs a toggle, not correctness, and a CommonMark parse (with
- * unified and remark-parse behind it) is not worth carrying for that. GFM
- * tables are deliberately absent: a pipe-and-dash grid in tool output must not
- * read as a table. Inline emphasis or a lone code span never counts, so a log
- * line with one asterisk stays raw.
+ * Line-anchored patterns rather than a full parse: this only gates whether the
+ * Parsed / Raw card appears, so a borderline hit costs a toggle, not
+ * correctness. GFM tables are absent so a pipe grid in output is not a table.
  */
 const HEADING = /^ {0,3}#{1,6}[ \t]/mu;
 const BLOCKQUOTE = /^ {0,3}> /mu;
@@ -182,16 +177,10 @@ const toGfmRows = (rows: readonly string[][], columns: number): string => {
   ].join('\n');
 };
 
-/**
- * Rewrite a box-drawing table (┌─┬─┐ │ ├─┼─┤ └─┴─┘) as a GFM pipe table so it
- * renders as a real <table> instead of a monospace block. Returns null for
- * anything that is not a grid of two or more rows and columns: a file tree, a
- * single boxed value, loose box art.
- *
- * ponytail: a run of content lines between two rules is treated as one row
- * whose cells wrapped. A table that rules only its header and stacks its body
- * in one band merges those body rows. The table libraries all rule every row,
- * so revisit only if a merged table turns up.
+/*
+ * Null for anything that is not a grid of two or more rows and columns.
+ * ponytail: a run of content lines between two rules is one row whose cells
+ * wrapped, so a table ruling only its header merges its body rows.
  */
 const boxTableToGfm = (lines: readonly string[]): string | null => {
   const width = Math.max(...lines.map((line) => {
@@ -232,13 +221,10 @@ const boxTableToGfm = (lines: readonly string[]): string | null => {
   return toGfmRows(rows, spans.length);
 };
 
-/**
- * A CLI draws a table or a file tree with box-drawing characters, which line up
- * only in a monospace font. remark has no construct for either. A grid of two
- * or more rows and columns becomes a GFM pipe table so it renders as a real
- * <table>; a file tree or loose box art is wrapped in a code fence so the
- * monospace code path keeps its alignment. A run already inside a fence is left
- * be.
+/*
+ * Box-drawing lines up only in a monospace font and remark has no construct for
+ * it. A grid becomes a GFM table; a file tree or loose box art is fenced so the
+ * code path keeps its alignment. A run already inside a fence is left be.
  */
 export const normalizeBoxDrawing = (text: string): string => {
   const out: string[] = [];

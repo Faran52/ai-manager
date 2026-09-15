@@ -21,16 +21,10 @@ export interface SegmentedControlProps<TValue extends string> {
 
 const INSTANT = { duration: 0 };
 
-/**
- * Native radios in a fieldset rather than a hand-rolled `role="radiogroup"`.
- * A radio group is a promise about the keyboard — arrow keys, roving focus, one
- * tab stop for the set — and the browser already keeps that promise. Only the
- * appearance is ours.
- *
- * The selected segment's fill is one element carried between options on a shared
- * `layoutId`, so it slides to the pick rather than snapping. Generic in its
- * value so a caller gets its own union back out of `onChange`: a `string` here
- * would push a type guard into every caller for a case that cannot arise.
+/*
+ * Native radios in a fieldset, so the browser owns the arrow keys, roving focus
+ * and the single tab stop. Generic in its value so a caller gets its own union
+ * back from onChange, rather than a type guard for a case that cannot arise.
  */
 export const SegmentedControl = <TValue extends string>({
   options,

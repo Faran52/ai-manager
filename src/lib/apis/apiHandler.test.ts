@@ -96,11 +96,6 @@ describe('withJsonErrors', () => {
     expect(response.status).toBe(200);
   });
 
-  /**
-   * The log is half of what this does. A 500 the server could not explain is
-   * the one failure where the cause only survives if something wrote it down,
-   * so the trace is asserted rather than left to appear in the test output.
-   */
   test('converts unexpected throws into the JSON error shape', async () => {
     const logged = vi.spyOn(console, 'error').mockImplementation(() => {
       return undefined;

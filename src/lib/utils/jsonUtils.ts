@@ -15,7 +15,6 @@ const isContainer = (value: unknown): value is JsonObject | readonly JsonValue[]
   return typeof value === 'object' && value !== null;
 };
 
-// Parses text that may not be JSON, yielding `null` for anything without records to walk.
 export const parseJsonContainer = (text: string): JsonValue => {
   try {
     const parsed: unknown = JSON.parse(text);

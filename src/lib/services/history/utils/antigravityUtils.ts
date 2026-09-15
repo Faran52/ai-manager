@@ -1,21 +1,7 @@
-/**
- * Antigravity CLI, whose on-disk shape is reverse engineered rather than
- * documented by the vendor, so every step here is best effort: a malformed line
- * or an unknown enum value is skipped rather than failing the session.
- *
- * ```text
- * ~/.gemini/antigravity-cli/
- * ├── history.jsonl                 one line per prompt, the conversation index
- * └── brain/<conversation-uuid>/
- *     └── .system_generated/logs/transcript_full.jsonl
- * ```
- *
- * The store holds more than this (`conversations/<uuid>.db` protobuf SQLite,
- * `implicit/*.pb`, `scratch/`). None of it is read, deliberately.
- *
- * This covers the CLI only. Antigravity desktop keeps a separate store under
- * `~/.gemini/antigravity/`, read by `antigravityDesktopUtils` and merged into
- * the three readers below.
+/*
+ * Antigravity CLI, reverse engineered rather than documented, so every step is
+ * best effort: a malformed line is skipped rather than failing the session.
+ * Covers the CLI only; the desktop store is antigravityDesktopUtils.
  */
 import {
   readdir,
@@ -129,12 +115,8 @@ const readIndex = async (root: string): Promise<ReadonlyMap<string, Conversation
   return index;
 };
 
-/**
- * One step record becomes at most one turn.
- *
- * Replayed context and system bookkeeping are not turns, and a step with no
- * content is thinking or a bare tool call with nothing to show.
- */
+// Replayed context and system bookkeeping are not turns, and a step with no
+// content is thinking or a bare tool call with nothing to show.
 const entryOf = (
   record: JsonObject,
   conversationId: string,

@@ -32,12 +32,8 @@ export interface DisclosureProps {
  */
 const INSTANT = { duration: 0 };
 
-/*
- * One collapsible for every transcript row that opens to a bounded region:
- * thinking, tool output, injected context. A disclosure animates its height,
- * the one layout property the motion rules allow, on a tween with zero bounce
- * so the rows below slide rather than wobble.
- */
+// Height is the one layout property the motion rules allow. Zero bounce so the
+// rows below slide rather than wobble.
 export const Disclosure: FC<DisclosureProps> = ({
   summary,
   children,

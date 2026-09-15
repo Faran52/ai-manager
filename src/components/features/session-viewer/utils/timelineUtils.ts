@@ -90,14 +90,10 @@ const orphansOf = (
   return map;
 };
 
-/**
- * Flattens a feed into exactly the rows the timeline will draw, day separators
- * included.
- *
- * Filtered entries are dropped here rather than returning null mid-render, and
- * separators are rows rather than decoration, because a virtualized list
- * indexes by position: anything the model does not count is a gap the
- * virtualizer reserves no space for.
+/*
+ * A virtualized list indexes by position, so anything the model does not count
+ * is a gap it reserves no space for. That is why filtered entries are dropped
+ * here rather than returning null mid-render, and separators are rows.
  */
 export const buildTimelineModel = (
   entries: readonly HistoryEntry[],

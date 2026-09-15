@@ -143,7 +143,6 @@ describe('parseGeminiHistory', () => {
       status: 'error',
       text: 'exit 1',
     });
-    // The third call never reported a result, so it has nothing to pair with.
     expect(outcomes.size).toBe(2);
   });
 

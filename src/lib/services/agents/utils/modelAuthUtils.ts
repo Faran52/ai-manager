@@ -9,12 +9,8 @@ import { isJsonObject, parseJsonContainer } from '@utils/jsonUtils';
 import type { AgentId, AgentOption } from '@config/agents';
 import type { JsonValue } from '@utils/jsonUtils';
 
-/*
- * Model and auth configuration is read-only and per-agent. Each format carries
- * its own shape here; this is where agents diverge, so it is not abstracted
- * into a shared interface. A surface that has no model or auth concept
- * collapses to its format tag.
- */
+// Each format carries its own shape: this is where agents diverge, so it is not
+// abstracted into a shared interface.
 export type ModelAuthState
   = | {
     readonly format: 'claude';

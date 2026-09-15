@@ -42,10 +42,6 @@ test('marks only the value in force', async () => {
     .toBe('false');
 });
 
-/*
- * Order is a single value, so choosing one is the end of the interaction and
- * the menu closes. That is what separates it from the checkbox rows above it.
- */
 test('reports the chosen value and closes', async () => {
   const onChange = vi.fn();
 

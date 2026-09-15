@@ -19,12 +19,8 @@ export interface RootResolutionOptions {
   readonly platform?: NodeJS.Platform | undefined;
 }
 
-/**
- * Agents that keep history inside projects are pointed at several likely
- * parents, and the working directory is often one of those parents' children.
- * Scanning both would walk the same tree twice for no new results, so a root
- * that sits inside another is dropped.
- */
+// Scanning a root that sits inside another walks the same tree twice for no new
+// results.
 const withoutNested = (roots: readonly string[]): readonly string[] => {
   const outermost = [...new Set(roots)].sort((left, right) => {
     return left.length - right.length;
@@ -37,15 +33,10 @@ const withoutNested = (roots: readonly string[]): readonly string[] => {
   });
 };
 
-/**
- * CLAUDE_CONFIG_DIR (or CODEX_HOME) only reaches this process when whatever
- * launched it set the variable, which a shell alias wrapping just the
- * `claude` binary never does: the value lives in that one subprocess's own
- * environment and nowhere this app can read it from, on any OS. A second
- * profile is found by name instead, so nothing needs configuring on any
- * machine and it works whatever the sibling is called, as long as it still
- * starts with the default's own name. Case-insensitive, because NTFS does
- * not distinguish them and a user typing the name by hand would not either.
+/*
+ * CLAUDE_CONFIG_DIR only reaches this process when whatever launched it set the
+ * variable, which a shell alias never does. A second profile is found by name
+ * instead. Case-insensitive, because NTFS does not distinguish them.
  */
 const siblingRoots = (home: string, defaultName: string): readonly string[] => {
   const needle = defaultName.toLowerCase();
@@ -79,12 +70,9 @@ export const CLAUDE_HOME_NAME = '.claude';
 export const CODEX_HOME_NAME = '.codex';
 
 /*
- * The label a badge adds for a root beyond the plain default: ".claude-personal"
- * reads as "Personal", so a project or session found there is not shown as
- * indistinguishable "Claude Code". Undefined for the plain default name itself,
- * and for a root that does not follow the naming convention at all (a custom
- * CLAUDE_CONFIG_DIR with nothing to derive from), so this can be called on
- * every root uniformly rather than only the ones known to be siblings.
+ * Undefined for the plain default name and for a root that follows no naming
+ * convention, so this can be called on every root uniformly rather than only
+ * the ones already known to be siblings.
  */
 export const rootProfileLabel = (root: string, defaultName: string): string | undefined => {
   const name = basename(root);
@@ -133,11 +121,9 @@ const appData = (home: string, platform: NodeJS.Platform): string => {
     : join(home, '.local', 'share');
 };
 
-/**
- * A packaged desktop app is launched by the OS rather than from a shell, so its
- * working directory is the filesystem root. Scanning from there walks the whole
- * disk, which on macOS means a permission prompt for Desktop, Downloads, every
- * cloud-sync folder and every mounted volume. The working directory is only a
+/*
+ * A packaged app is launched by the OS, so its working directory is the
+ * filesystem root, and scanning from there walks the whole disk. It is only a
  * plausible project parent when it sits inside the home directory.
  */
 const workingRoot = (home: string): readonly string[] => {
@@ -208,12 +194,10 @@ export const resolveAgentPaths = ({
      */
     'openhands': [envPath(env, 'OPENHANDS_PERSISTENCE_DIR', join(home, '.openhands'))],
     'openinterpreter': [envPath(env, 'INTERPRETER_HOME', join(home, '.openinterpreter'))],
-    /**
-     * PearAI is a VS Code fork (dataFolderName ".pearai", confirmed from its
-     * own product.json) whose AI chat is a Continue fork, so its real data is
-     * most likely VS Code's own globalStorage layout, not a CLI-style
-     * dotfile; kept alongside the original guess since neither is confirmed
-     * against a real install.
+    /*
+     * PearAI is a VS Code fork whose chat is a Continue fork, so its data is most
+     * likely the VS Code globalStorage layout. Neither guess is confirmed against
+     * a real install, so both are kept.
      */
     'pearai': [join(home, '.pearai', 'sessions'), join(pearai, 'globalStorage')],
     'pi': [join(home, '.pi', 'agent', 'sessions')],

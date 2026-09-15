@@ -22,12 +22,8 @@ export const MAX_RULES = 500;
 
 export const MAX_RULE_LENGTH = 400;
 
-/*
- * Where each agent keeps the file that configures it, rather than only where
- * Claude does. An agent absent here has no general settings file at all: it
- * configures MCP servers and rules in their own files, which the Health tab
- * already reads, and inventing a settings page for it would show an empty one.
- */
+// An agent absent here has no general settings file: it configures servers and
+// rules in their own files, which the Health tab already reads.
 export const SURFACES: Partial<Record<AgentId, readonly SurfaceSpec[]>> = {
   claude: [
     {

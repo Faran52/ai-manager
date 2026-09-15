@@ -12,12 +12,10 @@ export const BRANCH_PREFIX = '"gitBranch":"';
 export const UUID_PREFIX = '"uuid":"';
 export const JSONL_SUFFIX = '.jsonl';
 
-/**
- * Agents that keep history inside the projects themselves force a walk of
- * ordinary source trees. Dependency and build directories cannot hold agent
- * history, and they hold the overwhelming majority of the files, so pruning
- * them is the difference between a scan that takes a second and one that does
- * not.
+/*
+ * Dependency and build directories cannot hold agent history and hold most of
+ * the files, so pruning them is the difference between a scan that takes a
+ * second and one that does not.
  */
 export const SKIPPED_SCAN_DIRS: ReadonlySet<string> = new Set([
   '.astro',
@@ -177,11 +175,9 @@ export const CODEX_ESCAPES = new Map([
 ]);
 
 /*
- * Cline drives tools with XML inside the assistant's own text instead of a
- * structured tool_use block, so every call renders as raw markup unless it is
- * read back out. The known names are a list rather than "any tag" because
- * prose and code samples carry angle brackets too, and treating those as calls
- * would eat the transcript around them.
+ * Cline drives tools with XML inside the assistant own text, so calls render as
+ * raw markup unless read back out. A name list rather than any tag, because
+ * prose and code samples carry angle brackets too.
  */
 export const CLINE_TOOLS = new Set([
   'access_mcp_resource',

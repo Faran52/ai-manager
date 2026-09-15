@@ -23,8 +23,6 @@ const scrollable = (scrollHeight = 2_000, clientHeight = 500): HTMLDivElement =>
   return element;
 };
 
-// happy-dom drops the modifier flags a WheelEventInit carries, so they are set
-// on the event itself rather than asserted through a constructor that ignores them.
 const wheel = (element: HTMLElement, init: WheelEventInit & { readonly modifier?: 'ctrl' | 'meta' }): void => {
   const {
     modifier,
@@ -42,7 +40,6 @@ const wheel = (element: HTMLElement, init: WheelEventInit & { readonly modifier?
   element.dispatchEvent(event);
 };
 
-// Each frame is one 60Hz tick, so the easing advances exactly as it would live.
 const runFrames = (count: number): void => {
   for (let tick = 1; tick <= count; tick += 1) {
     const pending = frames.shift();

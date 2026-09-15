@@ -29,26 +29,9 @@ interface OpenHandsSession {
 }
 
 /*
- * OpenHands persists one JSON file per event rather than one file per
- * session: .../<conversation-id>/events/event-00001-<uuid>.json,
- * event-00002-<uuid>.json, and so on (current layout; the previous one
- * nested the same shape one level up under "sessions" instead of
- * "conversations" — this walk does not care which, only that the immediate
- * parent directory is named "events"). A session is the whole events/
- * folder, read back together in filename order (the zero-padded sequence
- * number sorts correctly as a plain string), not any one file in it.
- *
- * A MessageEvent row ({type, source, role, content}, verified against
- * OpenHands' own docs) already matches the generic reader's top-level
- * role/content check, so this reuses parseStructuredHistory over the whole
- * merged array rather than re-deriving entries. ActionEvent/ObservationEvent
- * rows carry no role field and are dropped by that same reader, same as an
- * unrecognised role anywhere else, rather than guessed at.
- *
- * No project concept exists in this format (a conversation is not tied to a
- * working directory the way it is for the JSONL-per-session agents), so
- * every conversation groups under one 'unknown' project, the same
- * convention llm and crush already use for the same reason.
+ * OpenHands persists one JSON file per event, so a session is the whole events/
+ * folder read back in filename order. A MessageEvent row already suits the
+ * generic reader. No project concept exists, so all of it groups under unknown.
  */
 const EVENTS_DIR = 'events';
 const EVENT_FILE = /^event-\d+-.+\.json$/u;

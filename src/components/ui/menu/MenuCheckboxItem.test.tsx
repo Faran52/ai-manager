@@ -42,10 +42,6 @@ test('reports a change with the next state', async () => {
   expect(onChange).toHaveBeenCalledWith(true);
 });
 
-/*
- * A filter list is read as a set. Closing on each tick would make choosing
- * three agents three separate trips through the menu.
- */
 test('keeps the menu open after a tick', async () => {
   await open(false);
   await userEvent.click(screen.getByRole('menuitemcheckbox', { name: /Claude Code/ }));

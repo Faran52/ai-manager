@@ -27,7 +27,6 @@ const ariaSortFor = (key: SortKey, sort: SortState): 'ascending' | 'descending' 
   return sort.direction === 'asc' ? 'ascending' : 'descending';
 };
 
-// A column heading that sorts the table on a click and shows which way it is sorted.
 export const SortHead: FC<SortHeadProps> = ({
   sortKey,
   sort,

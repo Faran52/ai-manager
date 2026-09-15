@@ -33,12 +33,8 @@ export interface MessageFilterMenuProps {
 
 const CONTENT_KEYS = ['text', 'thinking', 'tools', 'commands'] as const;
 
-/*
- * The transcript's own funnel, the same shape the sidebar columns use: a
- * `Filter by` heading, then Participants and Content each opening their list as
- * a submenu rather than spilling every checkbox into the parent. The trigger
- * carries `data-active` when anything is narrowed.
- */
+// Participants and Content each open as a submenu rather than spilling every
+// checkbox into the parent. The trigger carries data-active when narrowed.
 export const MessageFilterMenu: FC<MessageFilterMenuProps> = ({ filters, onChange }) => {
   const { t } = useTranslation('session');
   const [open, setOpen] = useState(false);

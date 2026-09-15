@@ -16,12 +16,8 @@ const prefersReduced = (): boolean => {
   return window.matchMedia(REDUCED_MOTION_QUERY).matches;
 };
 
-/*
- * The global prefers-reduced-motion CSS rule zeroes CSS transitions, but Motion
- * drives height and opacity through requestAnimationFrame where that rule cannot
- * reach. A component animating with Motion reads the preference here and drops
- * its transition to nothing.
- */
+// The global prefers-reduced-motion CSS rule cannot reach Motion, which drives
+// height and opacity through requestAnimationFrame.
 export const useReducedMotion = (): boolean => {
   return useSyncExternalStore(subscribe, prefersReduced);
 };

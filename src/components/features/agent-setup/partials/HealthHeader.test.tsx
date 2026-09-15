@@ -34,7 +34,6 @@ test('leads with the verdict, the counts and the spend on one line', () => {
   expect(screen.getByRole('heading', { name: 'Configured agents look healthy' })).toBeDefined();
   expect(screen.getByText('7 of 9 set up · $12.50 recorded')).toBeDefined();
   expect(screen.getByText('Trusted')).toBeDefined();
-  // Nothing is wrong, so no findings chip crowds the trust one.
   expect(screen.queryByText(/setup problem/u)).toBeNull();
 });
 

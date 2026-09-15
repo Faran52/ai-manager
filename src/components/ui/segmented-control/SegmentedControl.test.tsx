@@ -66,10 +66,6 @@ test('reports the chosen value', async () => {
   expect(onChange).toHaveBeenCalledWith('system');
 });
 
-/*
- * The reason for native radios over a hand-rolled group: the browser already
- * answers the arrow keys and keeps one tab stop for the whole set.
- */
 test('moves between segments with the arrow keys', async () => {
   const onChange = vi.fn();
 

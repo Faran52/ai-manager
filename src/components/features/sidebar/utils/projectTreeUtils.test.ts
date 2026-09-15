@@ -161,7 +161,6 @@ describe('worktrees', () => {
     expect(groups[0]?.name).toBe('app');
     expect(groups[0]?.actualPath).toBe('/repo/app');
     expect(groups[0]?.sessionCount).toBe(4);
-    // The main tree is unnamed; only the worktree says which branch it is.
     expect(groups[0]?.agents.map((branch) => {
       return branch.worktree;
     })).toEqual([undefined, 'app-feature-x']);

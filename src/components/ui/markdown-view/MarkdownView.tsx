@@ -23,11 +23,9 @@ type View = 'parsed' | 'raw';
 export interface MarkdownViewProps {
   readonly text: string;
   /*
-   * Assistant prose, reasoning and injected instruction bodies are Markdown by
-   * nature, so plain sentences among them still parse (inline emphasis, links).
-   * Tool output and a typed message stay raw when they carry no Markdown.
-   * Either way the Parsed / Raw card appears only when a real Markdown block is
-   * present, so a one line answer never grows a toggle.
+   * Prose, reasoning and instruction bodies are Markdown by nature; tool output
+   * and a typed message stay raw when they carry none. Either way the toggle
+   * appears only when a real Markdown block is present.
    */
   readonly trusted?: boolean;
   /*
@@ -48,12 +46,9 @@ const LABEL_KEYS: Record<View, string> = {
 const INSTANT = { duration: 0 };
 
 /*
- * The transcript is virtualised, so a card scrolled out of the window unmounts
- * and its toggle would snap back to Parsed on return. Keep the last choice per
- * body text at module scope: no id has to be threaded through the turn
- * components, and two identical blocks sharing a toggle is harmless. Bounded in
- * practice (one transcript's blocks) and cleared on reload.
- * ponytail: plain Map, no eviction. Swap for LruCache if a heap snapshot cares.
+ * The transcript is virtualised, so a card that scrolls out unmounts and its
+ * toggle would snap back to Parsed. Keyed on body text so no id is threaded
+ * through. ponytail: plain Map, no eviction. LruCache if a heap snapshot cares.
  */
 const rememberedView = new Map<string, View>();
 

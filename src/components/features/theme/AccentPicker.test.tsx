@@ -38,10 +38,6 @@ test('applies and persists a chosen accent', async () => {
   expect(document.documentElement.dataset.accent).toBe('rose');
 });
 
-/*
- * A custom colour has no [data-accent] rule to hit, so it has to ride an inline
- * --primary. That is the half of this control the six swatches never exercise.
- */
 test('takes a custom colour from the system picker', () => {
   render(<AccentPicker />);
   fireEvent.change(screen.getByLabelText('Custom colour'), { target: { value: '#ff8800' } });

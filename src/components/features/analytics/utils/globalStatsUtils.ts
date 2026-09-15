@@ -4,7 +4,6 @@ export interface GlobalStatsResponse {
   readonly stats: GlobalStats;
 }
 
-// The shape the global stats endpoint answers with, checked before it is trusted.
 export const isGlobalStatsResponse = (value: unknown): value is GlobalStatsResponse => {
   return typeof value === 'object'
     && value !== null

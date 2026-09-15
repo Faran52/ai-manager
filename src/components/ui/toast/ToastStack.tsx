@@ -18,12 +18,8 @@ export interface ToastStackProps {
   readonly onDismiss: (id: number) => void;
 }
 
-/*
- * Always mounted so the live region predates its first message, which screen
- * readers require. `layout` is what pushes an earlier toast down (or up, on
- * exit) when another arrives; each one still slides in from the trailing
- * edge on its own.
- */
+// Always mounted so the live region predates its first message, which screen
+// readers require. layout is what pushes an earlier toast aside.
 export const ToastStack: FC<ToastStackProps> = ({ toasts, onDismiss }) => {
   return (
     <div className="toast-stack" role="status" aria-live="polite">

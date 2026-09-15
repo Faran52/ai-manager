@@ -15,12 +15,8 @@ import type { ToolInputRow } from '@services/history/historyService';
 export interface ParsedInjectedContext {
   // The AGENTS.md body Codex wraps in <INSTRUCTIONS>, kept as markdown.
   readonly instructions?: string | undefined;
-  /**
-   * cwd, shell, date and timezone from Codex's <environment_context>, or cwd and
-   * mode from Cline's <environment_details>. The parts of either block that a
-   * transcript reader does not need (the <filesystem> permission tree, the file
-   * list, the open tabs) are dropped.
-   */
+  // cwd, shell, date and timezone from Codex, or cwd and mode from Cline. The
+  // parts a transcript reader does not need are dropped.
   readonly environment?: readonly ToolInputRow[] | undefined;
   // Display names from <recommended_plugins>, without the trailing `(id@source)`.
   readonly plugins?: readonly string[] | undefined;
@@ -33,12 +29,8 @@ interface Carved {
   readonly rest: string;
 }
 
-/*
- * One sweep that replaces every <tag>...</tag> pair with its trimmed body. An
- * indexOf walk, the way carve() and the Cline reader read tags, because a lazy
- * `[\s\S]*?` between a tag and its backreferenced close is the shape that
- * backtracks super-linearly.
- */
+// An indexOf walk rather than a regex: a lazy match between a tag and its
+// backreferenced close is the shape that backtracks super-linearly.
 const unwrapOnce = (text: string): string => {
   let result = '';
   let cursor = 0;
@@ -61,14 +53,10 @@ const unwrapOnce = (text: string): string => {
   return result + text.slice(cursor);
 };
 
-/**
- * Peel every framing wrapper off a blob of injected context so no raw tag
- * reaches the Markdown renderer, where a hyphen tag renders as an invisible
- * node and an underscore tag prints its angle brackets. An attached-file
- * envelope is rewritten to its path and body first, before the generic peel
- * shreds it into a stray path, the word "file" and a wall of content. Repeats
- * because one pair can hide another (a <system-reminder> around more markup);
- * injected context never nests deeper than a couple.
+/*
+ * No raw tag may reach the Markdown renderer, where a hyphen tag renders as an
+ * invisible node and an underscore tag prints its brackets. The file envelope
+ * is rewritten first, before the generic peel shreds it. Repeats: pairs nest.
  */
 export const stripEnvelopes = (text: string): string => {
   let current = unwrapFileRefs(text);
@@ -169,13 +157,9 @@ const pluginNames = (block: string): readonly string[] => {
 };
 
 /*
- * Injected context arrives as a run of pseudo-XML blocks and header lines: an
- * instruction body (Codex's <INSTRUCTIONS>, or a Claude skill's SKILL.md under
- * its "Base directory" line), an <environment_context> or Cline's
- * <environment_details>, a <recommended_plugins> list. Split them so each reads
- * as what it is, rather than as one wall of tags. Returns undefined when none of
- * the markers are present, so every other agent's injected context falls
- * through unchanged.
+ * Splits the run of pseudo-XML blocks so each reads as what it is rather than
+ * as one wall of tags. Undefined when no marker is present, so every other
+ * agent injected context falls through unchanged.
  */
 export const parseInjectedContext = (text: string): ParsedInjectedContext | undefined => {
   const env = carve(text, '<environment_context>', '</environment_context>');

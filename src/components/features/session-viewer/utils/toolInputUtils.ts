@@ -15,7 +15,6 @@ export type RowedInput = Extract<ToolCall['input'], RowedInputDiscriminator>;
 
 export type FileChange = Extract<ToolCallInput, { kind: 'file-write' | 'file-edit' | 'multi-edit' }>;
 
-// Flattens the structured tool inputs that render as label/value rows.
 export const inputRows = (input: RowedInput): readonly ToolInputRow[] => {
   switch (input.kind) {
     case 'file-read':
@@ -87,13 +86,8 @@ export const inputRows = (input: RowedInput): readonly ToolInputRow[] => {
   }
 };
 
-/**
- * What the agent asked to be changed, shown the way a change is normally read.
- * A written file has nothing before it, so it reads as an addition throughout;
- * an edit reads as the replacement it is. This is the request rather than the
- * result: where an agent recorded the change it actually applied, the card
- * shows that instead.
- */
+// The request rather than the result: where an agent recorded the change it
+// actually applied, the card shows that instead.
 export const changeOf = (input: FileChange): ReturnType<typeof diffLines> => {
   if (input.kind === 'file-write') {
     return diffLines('', input.content);

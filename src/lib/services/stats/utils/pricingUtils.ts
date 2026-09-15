@@ -39,11 +39,9 @@ const safeCost = (costUsd: number | undefined): number | undefined => {
 };
 
 /*
- * Claude Code records what it billed against a model name carrying the context
- * tier (`claude-opus-5[1m]`); a transcript records the bare name. Folding the
- * tier away is what lets the two meet. Tiers are priced apart, so folding two
- * of them together blends their rates, which still beats no rate at all.
- * ponytail: split the key by tier once a transcript records which one it used.
+ * Claude Code bills against a name carrying the context tier, a transcript
+ * records the bare name, so folding the tier away lets the two meet. Blending
+ * two tiers beats no rate. ponytail: split once a transcript records the tier.
  */
 const modelKey = (model: string): string => {
   const tier = model.indexOf('[');

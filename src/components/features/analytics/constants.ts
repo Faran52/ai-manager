@@ -1,10 +1,7 @@
 /*
- * The four washes, idle first. Cells and the legend both read this one list, so
- * the key under the grid can never drift from the grid. It tracks the accent
- * (--primary), not --ok: the heatmap is a mark the reader colours in Settings
- * like every bar in the report, and --ok is a fixed status colour that would
- * ignore that choice. Idle is --recess, a hole, so "quiet" and "nothing" look
- * different rather than both being the palest shade.
+ * Cells and the legend read this one list, so the key cannot drift from the
+ * grid. It tracks the accent rather than --ok, which would ignore the reader
+ * choice in Settings. Idle is --recess so quiet and nothing look different.
  */
 export const WASH_SCALE = ['bg-recess', 'bg-primary/40', 'bg-primary/70', 'bg-primary'] as const;
 

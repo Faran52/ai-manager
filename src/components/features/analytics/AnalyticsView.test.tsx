@@ -173,12 +173,6 @@ const renderView = (
   return view;
 };
 
-/**
- * The view asks for the machine-wide report as it mounts, whichever scope it is
- * showing. A test that renders it and asserts synchronously would otherwise end
- * with that request still in flight, and its answer would land as a state
- * update after the test that caused it had finished.
- */
 const settled = async (view: ReturnType<typeof renderView>) => {
   await act(async () => {
     await Promise.resolve();

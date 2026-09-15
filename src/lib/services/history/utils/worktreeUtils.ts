@@ -9,25 +9,15 @@ interface ResolvedRoot {
 }
 
 /*
- * A linked worktree's `.git` is a file rather than a directory, and it names
- * the repository that owns it:
- *
- *   gitdir: /path/to/repo/.git/worktrees/<name>
- *
- * ponytail: this reads the layout `git worktree add` writes. A repository moved
- * with --separate-git-dir points elsewhere, and the pointer to follow then is
- * the `commondir` file beside that gitdir; read it if such a store turns up.
+ * A linked worktree .git is a file naming its repository, as
+ * "gitdir: /path/to/repo/.git/worktrees/<name>". ponytail: this reads what
+ * git worktree add writes; follow commondir if a --separate-git-dir store turns up.
  */
 const GITDIR_PREFIX = 'gitdir:';
 const WORKTREE_SEGMENT = '/worktrees/';
 
-/**
- * The repository a path belongs to, when that path is a linked worktree.
- *
- * Undefined for the main tree, for a folder that is not a repository at all,
- * and for anything unreadable, because all three mean the same thing here:
- * this project is grouped under its own path.
- */
+// Undefined for the main tree, a folder that is no repository, and anything
+// unreadable: all three mean the project groups under its own path.
 export const repoRootOf = async (projectPath: string): Promise<string | undefined> => {
   try {
     const marker = (await readFile(join(projectPath, '.git'), 'utf8')).trim();
@@ -53,13 +43,10 @@ export const repoRootOf = async (projectPath: string): Promise<string | undefine
   }
 };
 
-/**
- * Tags each project with the repository it is a worktree of.
- *
+/*
  * A branch checked out beside the main tree is its own folder, so every agent
- * records it as a separate project. They are one piece of work, and the sidebar
- * groups on this to say so. One small read per distinct folder, deduplicated,
- * because several agents commonly report the same one.
+ * records it as a separate project. They are one piece of work. One read per
+ * distinct folder, deduplicated, since agents commonly report the same one.
  */
 export const withRepoRoots = async (
   projects: readonly ProjectSummary[],

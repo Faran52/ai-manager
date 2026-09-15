@@ -45,12 +45,8 @@ export interface SettingsViewProps {
   readonly profile?: string | undefined;
 }
 
-/**
- * The tone is the list: allow, deny and ask are opposites that used to render
- * identically, and additionalDirectories below is not a verdict on a tool.
- * A placeholder each, because one shared example rendered the three lists as
- * the same field repeated three times.
- */
+// A placeholder each, because one shared example rendered allow, deny and ask
+// as the same field repeated three times.
 const RULE_LISTS = [
   {
     list: 'allow',

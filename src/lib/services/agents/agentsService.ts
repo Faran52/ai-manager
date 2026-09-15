@@ -150,14 +150,8 @@ const PROFILE_HOME_NAME: Partial<Record<AgentId, string>> = {
   codex: CODEX_HOME_NAME,
 };
 
-/**
- * `pathsFor` fans across every sibling profile of an agent, which is what a
- * search across an unknown profile wants. A caller that already has one
- * project or session's own `.profile` wants just the one root it came from,
- * otherwise a project id colliding across two profiles (the same working
- * directory opened under both) gets counted once per profile sharing it.
- * A no-op for every agent format that never sets `.profile` in the first place.
- */
+// A caller holding one project or session own .profile wants just the root it
+// came from, or a project id colliding across two profiles is counted twice.
 export const pathsForProfile = (
   roots: AgentRoots,
   agent: AgentId,

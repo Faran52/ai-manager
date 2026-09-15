@@ -62,7 +62,6 @@ describe('repoRootOf', () => {
   });
 
   test('says nothing for a main tree, whose .git is a directory', async () => {
-    // Reading a directory as a file throws, which is the same answer as absent.
     await writeFile(join(root, 'other'), 'x', 'utf8');
 
     expect(await repoRootOf(join(root, 'missing'))).toBeUndefined();
@@ -103,7 +102,6 @@ describe('withRepoRoots', () => {
         name: 'feature-x',
         actualPath: root,
       }),
-      // A store that records no folder at all is left exactly as it came.
       project({
         id: 'p3',
         actualPath: undefined,

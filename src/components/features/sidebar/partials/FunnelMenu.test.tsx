@@ -78,7 +78,6 @@ describe('FunnelMenu', () => {
     await open();
     await openSub(/Agents/u);
 
-    // An agent with no project here is shown but cannot be toggled.
     const gemini = await screen.findByRole('menuitemcheckbox', { name: /Gemini/u });
 
     expect(gemini.getAttribute('aria-disabled')).toBe('true');

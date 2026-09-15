@@ -18,12 +18,8 @@ import { useAgentInstalls } from '../hooks/useAgentInstalls';
 import type { AgentId } from '@config/agents';
 import type { FC } from 'react';
 
-/*
- * Installed-ness is a fact about this machine, not the selected project, so
- * this renders unconditionally in the Health tab rather than behind the
- * projectSelected gate AgentSetupPanel's own rows sit behind, and after
- * them, in the same list style as "not set up here".
- */
+// Installed-ness is a fact about the machine, not the project, so this renders
+// unconditionally rather than behind the projectSelected gate the rows use.
 export const AgentInstallSection: FC = () => {
   const { t } = useTranslation('setup');
   const {

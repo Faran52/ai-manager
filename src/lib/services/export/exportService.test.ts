@@ -268,7 +268,6 @@ describe('entriesToHtml', () => {
     expect(html).toContain('<dt>Project</dt><dd>/repo/app</dd>');
     expect(html).toContain('<dd>2026-08-01T12:00:00.000Z</dd>');
     expect(html).toContain('<dt>Entries</dt><dd>6</dd>');
-    // Nothing to fetch beside it, so the file opens anywhere it is sent.
     expect(html).toContain('<style>');
     expect(html).not.toContain('<link');
   });
@@ -313,7 +312,6 @@ describe('entriesToHtml', () => {
     expect(html).not.toContain(opener);
     expect(html).toContain('&lt;b&gt;live&lt;/b&gt;');
     expect(html).toContain('it&#39;s fine');
-    // The ampersand pass runs first, so an entity is never encoded twice.
     expect(html).toContain('a &amp; b');
     expect(html).not.toContain('&amp;amp;');
   });

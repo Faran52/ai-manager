@@ -55,7 +55,6 @@ test('refuses a blank and a duplicate name, and cancels back out', async () => {
   await userEvent.type(screen.getByLabelText('Variable name'), 'A');
   expect(screen.getByText('Add').closest('button')?.disabled).toBe(true);
 
-  // Enter routes through the same guard, so it cannot bypass the disabled button.
   await userEvent.type(screen.getByLabelText('Value'), '{Enter}');
   expect(onChange).not.toHaveBeenCalled();
 

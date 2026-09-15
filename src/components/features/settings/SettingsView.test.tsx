@@ -109,7 +109,6 @@ test('parks an unsaved edit when the scope changes rather than discarding it', a
   await userEvent.click(screen.getByTitle('Add a rule to Denied'));
   await userEvent.type(screen.getByLabelText('Add a rule to Denied'), 'Read(./.env){Enter}');
   expect(screen.getByText('Unsaved changes')).toBeDefined();
-  // The tab counts the parked edit, not the file it has not been written to yet.
   expect(screen.getByText('User').closest('button')?.textContent).toContain('2');
 
   await userEvent.click(screen.getByText('Project'));
@@ -287,7 +286,6 @@ test('reads a surface it may not write instead of offering the editors', () => {
   expect(screen.getByText('Read-only here')).toBeDefined();
   expect(screen.getByText('model')).toBeDefined();
   expect(screen.getByText('mcp_servers.webstorm')).toBeDefined();
-  // None of the Claude-shaped editors, and nothing to press that would write.
   expect(screen.queryByText('Allowed')).toBeNull();
   expect(screen.queryByText('Environment variables')).toBeNull();
   expect(screen.queryByText('Save settings')).toBeNull();
@@ -322,8 +320,6 @@ test('never promises to create a file it has no way to write', () => {
     />,
   );
 
-  // The read-only branch has no Save button, so the two together were a
-  // contradiction: three of the five agents opened on one.
   expect(screen.getByText('not on disk')).toBeDefined();
   expect(screen.queryByText(/will be created on save/u)).toBeNull();
   expect(screen.queryByText('Save settings')).toBeNull();

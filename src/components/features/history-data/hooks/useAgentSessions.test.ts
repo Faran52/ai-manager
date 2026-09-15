@@ -86,7 +86,6 @@ describe('useAgentSessions', () => {
     expect(result.current.data?.map((entry) => {
       return entry.projectId;
     }).sort()).toEqual(['a', 'b']);
-    // The third project is codex, not this agent, so it never gets a request.
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
@@ -101,9 +100,6 @@ describe('useAgentSessions', () => {
     const fetchMock = vi.fn((_url: RequestInfo | URL, init?: RequestInit) => {
       const body: unknown = JSON.parse(typeof init?.body === 'string' ? init.body : '{}');
       const projectId = (body as { projectId: string }).projectId;
-      // The route fans out across every root sharing this project id, so a
-      // caller scoped to one profile can still get another profile's session
-      // back in the same response; the hook has to filter it out itself.
       const sessions = projectId === 'd'
         ? [
             {
@@ -133,8 +129,6 @@ describe('useAgentSessions', () => {
       expect(result.current.data).toHaveLength(1);
     });
     expect(result.current.data?.[0]?.filePath).toBe('/d.jsonl');
-    // Only the Personal project (id "d") is fetched, not the default
-    // profile's "a"/"b".
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 

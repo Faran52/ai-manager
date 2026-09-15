@@ -2,12 +2,10 @@ import type { PatchHunk } from '@services/history/historyService';
 
 const CONTEXT_LINES = 3;
 
-/**
- * A line-by-line comparison costs one cell per pair of lines. Edits made by an
- * agent are almost always local, so trimming the matching head and tail leaves
- * a window small enough to compare exactly. When it does not, the window is
- * reported as one replacement rather than spending minutes finding a prettier
- * way to say the same thing.
+/*
+ * A line-by-line comparison costs one cell per pair of lines. Agent edits are
+ * almost always local, so trimming the matching head and tail leaves a window
+ * small enough to compare exactly; a larger one is reported as one replacement.
  */
 const MAX_CELLS = 1_000_000;
 
@@ -121,12 +119,8 @@ const splitLines = (text: string): readonly string[] => {
   return text.split('\n');
 };
 
-/**
- * Produces the single hunk that covers everything which changed, with a few
- * matching lines either side for orientation. One hunk rather than several
- * keeps this honest: the snapshots are whole files, so the reader is being
- * shown the entire difference, not a selection from it.
- */
+// One hunk rather than several keeps this honest: the snapshots are whole files,
+// so the reader is shown the entire difference, not a selection from it.
 export const diffLines = (beforeText: string, afterText: string): readonly PatchHunk[] => {
   const before = splitLines(beforeText);
   const after = splitLines(afterText);
@@ -165,13 +159,10 @@ const countOf = (value: string | undefined): number | undefined => {
   return value == null ? undefined : Number(value);
 };
 
-/**
- * Some agents record the difference they applied rather than the file it was
- * applied to, already written as a unified diff. Reading it back is cheaper and
- * more faithful than reconstructing one, so their own account is kept.
- *
- * Anything outside a hunk is ignored: the headers naming the file are already
- * known from the tool call that produced them.
+/*
+ * Some agents record the diff they applied rather than the file, so reading
+ * their own account back is cheaper and more faithful than reconstructing one.
+ * Anything outside a hunk is ignored: the tool call already named the file.
  */
 export const parseUnifiedDiff = (text: string): readonly PatchHunk[] => {
   const hunks: PatchHunk[] = [];

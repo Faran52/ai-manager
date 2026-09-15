@@ -37,16 +37,10 @@ interface MutableThreadRun {
   parts: SessionRow[];
 }
 
-/**
- * Rewinding a session writes the messages up to that point into a fresh file,
- * so one conversation ends up as several transcripts that all begin with the
- * same first message. That shared root is the only recorded link between them:
- * no transcript on disk carries a parent pointer into another file, and the
- * `leafUuid` on a `last-prompt` record bookmarks a prompt rather than a file.
- *
- * A transcript that records no root stands alone. Grouping by a clock gap
- * instead fired on seven pairs in one project here and was wrong on every one
- * of them, so there is no fallback guess.
+/*
+ * Rewinding writes the messages so far into a fresh file, so one conversation
+ * becomes several transcripts sharing a first message. That root is the only
+ * recorded link. Grouping by clock gap instead was wrong on all seven pairs here.
  */
 const groupKey = (session: SessionSummary): string => {
   return session.rootUuid == null
@@ -108,12 +102,8 @@ export const buildSessionThreads = (
   });
 };
 
-/**
- * The card an expanded thread's parts render inside: a head row and the
- * continuation rows immediately after it, together, so a part reads as
- * belonging to its thread instead of just sitting under it. A standalone
- * row, threaded or not yet expanded, is a run of its own with no parts.
- */
+// A head row and the continuation rows after it, together, so a part reads as
+// belonging to its thread instead of just sitting under it.
 export const groupThreadRuns = (rows: readonly SessionRow[]): readonly ThreadRun[] => {
   const runs: MutableThreadRun[] = [];
 

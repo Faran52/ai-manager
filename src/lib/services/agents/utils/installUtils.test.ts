@@ -39,7 +39,6 @@ const stubbedBinary = async (name: string, script: string): Promise<string> => {
 test('lists exactly the agents with a verified install command', () => {
   expect(installableAgents).toEqual(Object.keys(AGENT_INSTALLS));
   expect(installableAgents).toContain('codebuddy');
-  // Named collisions, GUI-only installers, and auth-gated setup: never guessed.
   expect(installableAgents).not.toContain('kimi');
   expect(installableAgents).not.toContain('forgecode');
   expect(installableAgents).not.toContain('pearai');

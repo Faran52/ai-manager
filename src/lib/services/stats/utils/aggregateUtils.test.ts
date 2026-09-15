@@ -160,7 +160,6 @@ describe('aggregateSession', () => {
       ],
     })], true);
 
-    // The tool list still counts the calls; the names are what it cannot say.
     expect(aggregate.tools).toEqual({
       Skill: 3,
       Task: 2,

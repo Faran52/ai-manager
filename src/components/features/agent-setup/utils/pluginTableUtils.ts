@@ -81,12 +81,8 @@ const COMPARATORS: Record<SortKey, Comparator> = {
   },
 };
 
-/*
- * Position is identity, not status: a plugin keeps its row when it is toggled
- * on or off, sorted only by whatever column the reader picked (the plugin's
- * own name by default). The old rank-then-alphabetical order moved a row the
- * instant its switch changed, which read as the table losing track of it.
- */
+// Position is identity, not status: a plugin keeps its row when toggled. The
+// old rank-then-alphabetical order moved a row the instant its switch changed.
 export const ordered = (
   plugins: readonly InstalledPlugin[],
   byId: ReadonlyMap<string, PluginCostAttribution>,

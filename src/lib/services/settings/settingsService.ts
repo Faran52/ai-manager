@@ -36,10 +36,9 @@ export interface AgentSettingsSurface {
   readonly path: string;
   readonly format: SettingsFormat;
   /*
-   * Claude's settings.json is the only shape this editor has ever written, and
-   * the only one whose permissions and env blocks it understands. Every other
-   * agent keeps a file of its own schema, so writing Claude's keys into one
-   * would invent configuration that agent never asked for.
+   * Claude settings.json is the only shape this editor understands. Every other
+   * agent keeps its own schema, so writing Claude keys into one would invent
+   * configuration that agent never asked for.
    */
   readonly editable: boolean;
 }
@@ -224,12 +223,8 @@ const readJsonSurface = async (surface: AgentSettingsSurface): Promise<ScopeSett
   };
 };
 
-/*
- * The section headers and root keys of a TOML file, which is as much as this
- * reads of one. Codex and Grok keep their configuration in TOML, and naming
- * what a file holds is enough to say where a setting lives without adding a
- * TOML dependency to write it.
- */
+// Naming what a file holds is enough to say where a setting lives, without
+// adding a TOML dependency to write it.
 const tomlKeys = (text: string): readonly string[] => {
   const keys: string[] = [];
   let inTable = false;
@@ -261,11 +256,9 @@ const tomlKeys = (text: string): readonly string[] => {
     }
 
     /*
-     * A key under a table belongs to that table, which the header above already
-     * named. Collecting these too defeated the outermost-name rule from the
-     * other side: a real config listed sixty keys, most of them env vars nested
-     * four deep inside `[mcp_servers.<name>.env]`, for a file configuring
-     * thirteen areas. Only the keys above the first header are root keys.
+     * A key under a table belongs to the table its header already named. Collecting
+     * these too listed sixty keys, mostly env vars nested four deep, for a file
+     * configuring thirteen areas.
      */
     if (inTable) {
       continue;
@@ -316,14 +309,8 @@ const readTomlSurface = async (
   };
 };
 
-/**
- * One agent's settings files, each reporting what it holds and whether this
- * editor may write it.
- *
- * A surface that is not editable still reports its keys, because knowing which
- * file carries a setting is the part that is hard to find, and reading it is
- * safe where writing its schema would be a guess.
- */
+// A surface that is not editable still reports its keys: knowing which file
+// carries a setting is the hard part, and reading is safe where writing is a guess.
 export const readAgentSettings = async (
   agent: AgentId,
   projectPath: string,
@@ -390,12 +377,8 @@ export const writeScopeSettings = async (
     throw new Error('Select a project before editing its settings.');
   }
 
-  /*
-   * The guard belongs here rather than only in the view. A surface is
-   * read-only because its schema is not Claude's, so writing permissions and
-   * env into it would invent configuration the agent never asked for, and a
-   * request that reaches the service directly must be refused too.
-   */
+  // The guard belongs here rather than only in the view, because a request that
+  // reaches the service directly must be refused too.
   const surface = settingsSurfacesFor(agent, projectPath, home, claudeDir).find((entry) => {
     return entry.scope === scope;
   });

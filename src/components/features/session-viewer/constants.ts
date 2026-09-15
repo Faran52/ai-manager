@@ -27,13 +27,8 @@ export const WRAPPER_NAME = /^[a-z][a-z\d_-]*$/u;
 // A line that is nothing but one such tag: an unclosed opener, or a stray closer.
 export const LONE_WRAPPER = /^[ \t]*<\/?[a-z][\w-]*>[ \t]*\r?\n?/gmu;
 
-/**
- * The line an instruction payload is filed under, at the very start of the
- * block: the "# AGENTS.md/CLAUDE.md instructions for <path>" an agent prints
- * above its rules, or the "Base directory for this skill: <path>" Claude Code
- * prints above a skill's SKILL.md. Redundant once the body is rendered under
- * its own label.
- */
+// The line an instruction payload is filed under, redundant once the body is
+// rendered under its own label.
 export const HEADER = /^(?:# (?:AGENTS|CLAUDE)\.md instructions for |Base directory for this skill: ).*(?:\r?\n)?/u;
 
 // A "- Name (id@source)" bullet. `\S.*` after the spaces keeps this linear: the
@@ -48,21 +43,14 @@ export const ENV_FIELDS: readonly (readonly [string, string])[] = [
 ];
 
 /*
- * Codex opens the turn with catalog prose on how apps, plugins and skills work
- * in general. It is the same boilerplate every session and describes none of
- * this one, so it is dropped the way the <filesystem> tree is. A carve per tag
- * rather than one regex: a lazy match between a tag and its backreferenced
- * close backtracks super-linearly on a long turn.
+ * Catalog prose that is the same every session and describes none of it. A
+ * carve per tag rather than one regex: a lazy match to a backreferenced close
+ * backtracks super-linearly on a long turn.
  */
 export const NOISE_BLOCKS = ['apps_instructions', 'plugins_instructions', 'skills_instructions'];
 
-/*
- * Cline's <environment_details> is a run of "# Section" blocks. The working
- * directory and the mode are the two a transcript reader needs; the file list,
- * the open tabs, the detected-tools dump and the context-window gauge are the
- * same noise as Codex's <filesystem> tree, so they go with the rest of the
- * block.
- */
+// The working directory and the mode are the two a transcript reader needs. The
+// file list, open tabs and context gauge are noise, like the filesystem tree.
 export const CLINE_FIELDS: readonly (readonly [string, RegExp])[] = [
   ['cwd', /^# Current Working Directory \(([^)]+)\) Files$/mu],
   ['mode', /^# Current Mode\r?\n(.+)$/mu],

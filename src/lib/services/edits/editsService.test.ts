@@ -271,7 +271,6 @@ describe('changes an agent reported after the fact', () => {
           output: 'Success',
         },
       }),
-      // A result that changed nothing, so an outcome without a report is read too.
       JSON.stringify({
         type: 'response_item',
         timestamp: '2026-06-01T10:02:00Z',

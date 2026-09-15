@@ -1,23 +1,7 @@
-/**
- * Antigravity desktop, whose store is `~/.gemini/antigravity/` and whose shape
- * is reverse engineered rather than documented by the vendor.
- *
- * ```text
- * ~/.gemini/antigravity/
- * ├── brain/<session-id>/        task.md, implementation_plan.md, walkthrough.md
- * │   └── manifest.json          stepCount
- * └── conversations/<id>.pb      protobuf, tool names readable as plain ASCII
- * ```
- *
- * There is no decryption and no `.proto` here. The session's own artifacts are
- * markdown, and the `.pb` carries its tool phrases as printable bytes, so
- * replacing everything unprintable with a space and matching the phrases reads
- * them without a schema. What this cannot give is a turn-by-turn transcript:
- * the store keeps the artifacts a session produced, not the conversation that
- * produced them, so a session reads as its task, its plan and its walkthrough.
- *
- * No desktop store exists on the dev machine, so this is written to the layout
- * above rather than checked against real data; see PLAN.md.
+/*
+ * Antigravity desktop, reverse engineered rather than documented. The .pb
+ * carries its tool phrases as printable bytes, so blanking the unprintable
+ * reads them without a schema. No transcript exists: only session artifacts.
  */
 import {
   readdir,

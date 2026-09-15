@@ -1,13 +1,8 @@
 // Command and meta-text markers used when parsing Claude Code session lines.
 export const COMMAND_NAME = /<command-name>([^<]+)<\/command-name>/;
 export const COMMAND_ARGS = /<command-args>([^<]*)<\/command-args>/;
-/*
- * A slash command leaves three companion lines: a <local-command-caveat>
- * boilerplate warning, the <command-name>/<command-message>/<command-args>
- * echo, and its <local-command-stdout>. The /command chip (from COMMAND_NAME)
- * carries everything the caveat and the echo do, so those tags are stripped
- * outright. The stdout is genuine text, so COMMAND_OUTPUT unwraps it instead.
- */
+// The /command chip carries everything the caveat and the echo do, so those
+// tags are stripped outright. The stdout is genuine text, so it is unwrapped.
 export const COMMAND_ECHO
   = /<(command-(?:name|message|args)|local-command-caveat)>[\s\S]*?<\/\1>\s*/gu;
 export const COMMAND_OUTPUT

@@ -25,10 +25,6 @@ const open = async (): Promise<void> => {
   await userEvent.click(screen.getByRole('button', { name: 'Open' }));
 };
 
-/*
- * The value on the trigger is the point of a submenu here: the row says what it
- * is set to without the reader having to open it.
- */
 test('states what the row is set to on the trigger', async () => {
   await open();
 

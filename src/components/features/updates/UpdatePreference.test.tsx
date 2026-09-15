@@ -12,7 +12,6 @@ afterEach(() => {
   localStorage.clear();
 });
 
-// Checking is the default: a build that never looks cannot tell you it is stale.
 test('checks on launch until told otherwise', () => {
   render(<UpdatePreference />);
 

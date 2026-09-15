@@ -143,7 +143,6 @@ describe('readStorageReport', () => {
 
     await fill(join(home, '.claude', 'readable.jsonl'), 700);
     await fill(join(guarded, 'hidden.jsonl'), 5_000);
-    // Listable but not traversable, so the name is known and nothing else is.
     await chmod(guarded, 0o600);
 
     const report = await readStorageReport(options(home));
@@ -159,8 +158,6 @@ describe('readStorageReport', () => {
   test('measures a root that is a single file rather than a directory', async () => {
     const home = await newHome();
 
-    // The XDG path, which is an amazon-q root on every platform. The macOS
-    // Application Support path is not one when the suite runs on Linux CI.
     await fill(join(home, '.local', 'share', 'amazon-q', 'data.sqlite3'), 700);
 
     const report = await readStorageReport(options(home));

@@ -31,13 +31,10 @@ export const BAR_LIST_GRID = `
   [grid-template-columns:minmax(0,max-content)_minmax(3.5rem,1fr)_max-content]
 `;
 
-/**
- * One row form for everything ranked: label, bar on a shared baseline, figure.
- *
- * The row is `display: contents` so its three parts become cells of the list's
- * own grid. That is what keeps every bar in a card the same length, which is
- * the only thing that makes two bars comparable, while the label and the figure
- * take exactly the width their longest entry needs and no more.
+/*
+ * display: contents makes the three parts cells of the list own grid. That is
+ * what keeps every bar in a card the same length, which is the only thing that
+ * makes two bars comparable, while label and figure take the width they need.
  */
 export const BarRow: FC<BarRowProps> = ({
   label,

@@ -22,14 +22,8 @@ export interface HealthHeaderProps {
   readonly usage: ProjectUsage | null;
 }
 
-/**
- * The verdict, the counts, and the two facts that are states rather than
- * figures.
- *
- * These were four metric tiles, which repeated the set-up count already in the
- * verdict line and rendered trust as a word in a style meant for numbers. Trust
- * and findings are conditions, so they read as chips.
- */
+// Trust and findings are conditions, not figures, so they read as chips. As
+// metric tiles they repeated the set-up count the verdict line already gives.
 export const HealthHeader: FC<HealthHeaderProps> = ({
   configured,
   total,

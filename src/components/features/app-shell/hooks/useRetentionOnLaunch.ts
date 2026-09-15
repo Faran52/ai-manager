@@ -5,11 +5,10 @@ import { runRetention } from '@lib/apis/apiClient';
 
 import { useToast } from '@ui/index';
 
-/**
- * The agents prune on their own schedule and this app is only running some of
- * the time, so the one moment it can get ahead of them is launch. Safe to do
- * unasked because retention copies and never deletes; a failure stays silent
- * rather than greeting someone with an error they did not ask for.
+/*
+ * Agents prune on their own schedule and this app runs only some of the time,
+ * so launch is the one moment it can get ahead of them. Safe unasked because
+ * retention copies and never deletes, and a failure stays silent.
  */
 export const useRetentionOnLaunch = (): void => {
   const { t } = useTranslation('archive');

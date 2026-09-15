@@ -61,9 +61,6 @@ import type {
 beforeEach(() => {
   vi.stubEnv('XDG_DATA_HOME', tmpdir());
   vi.stubEnv('XDG_CONFIG_HOME', tmpdir());
-  // Unset, not a real path: a developer running this suite from a shell that
-  // sets either for their own CLAUDE_CONFIG_DIR-style profile must not have
-  // that profile's real sessions leak into a test that only controls `home`.
   vi.stubEnv('CLAUDE_CONFIG_DIR', '');
   vi.stubEnv('CODEX_HOME', '');
 });
@@ -760,7 +757,6 @@ describe('handleAgentInstall', () => {
   test('rejects a body naming no installable agent', async () => {
     expect((await handleAgentInstall(post('"not an object"'))).status).toBe(400);
     expect((await handleAgentInstall(post({}))).status).toBe(400);
-    // A real agent id, but not one with a verified install command.
     expect((await handleAgentInstall(post({ agent: 'kimi' }))).status).toBe(400);
   });
 
@@ -1047,7 +1043,6 @@ describe('settings endpoints', () => {
     expect(await jsonOf(await handleReadSettings(post({ projectPath: project }), { home })))
       .toMatchObject({ scopes: [{ scope: 'user' }, { scope: 'project' }, { scope: 'local' }] });
 
-    // A named agent reads its own files; an unnamed one still means Claude.
     expect(await jsonOf(await handleReadSettings(post({
       projectPath: project,
       agent: 'codex',
