@@ -1,10 +1,5 @@
-import {
-  mkdir,
-  mkdtemp,
-  writeFile,
-} from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:net';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import {
@@ -12,6 +7,8 @@ import {
   expect,
   test,
 } from 'vitest';
+
+import { newAgentWorkspace } from '@mocks/agentWorkspaceFixtures';
 
 import { managedAgents } from '../constants';
 
@@ -22,28 +19,9 @@ import {
   readAgentSetup,
 } from './setupUtils';
 
-interface Workspace {
-  home: string;
-  project: string;
-}
-
-const workspace = async (): Promise<Workspace> => {
-  const root = await mkdtemp(join(tmpdir(), 'setup-'));
-  const home = join(root, 'home');
-  const project = join(root, 'project');
-
-  await mkdir(home, { recursive: true });
-  await mkdir(project, { recursive: true });
-
-  return {
-    home,
-    project,
-  };
-};
-
 describe('readAgentSetup', () => {
   test('reads Gemini servers from user and project settings, and its rules file', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newAgentWorkspace('setup-');
 
     await mkdir(join(home, '.gemini'), { recursive: true });
     await mkdir(join(project, '.gemini'), { recursive: true });
@@ -86,7 +64,7 @@ describe('readAgentSetup', () => {
   });
 
   test('separates Claude user-wide servers from the project entry in the same file', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newAgentWorkspace('setup-');
 
     await writeFile(join(home, '.claude.json'), JSON.stringify({
       mcpServers: { everywhere: {} },
@@ -122,7 +100,7 @@ describe('readAgentSetup', () => {
   });
 
   test('reads Codex servers from TOML headers without counting sub-tables', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newAgentWorkspace('setup-');
 
     await mkdir(join(home, '.codex'), { recursive: true });
     await writeFile(join(home, '.codex', 'config.toml'), [
@@ -143,7 +121,7 @@ describe('readAgentSetup', () => {
   });
 
   test('reports nothing rather than failing when an agent is not set up', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newAgentWorkspace('setup-');
 
     for (const agent of managedAgents) {
       const setup = await readAgentSetup(agent, project, home);
@@ -159,7 +137,7 @@ describe('readAgentSetup', () => {
   });
 
   test('reports nothing for an agent with no setup surface', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newAgentWorkspace('setup-');
 
     expect(await readAgentSetup('aider', project, home)).toEqual({
       agent: 'aider',
@@ -170,7 +148,7 @@ describe('readAgentSetup', () => {
   });
 
   test('ignores a settings file that is not valid JSON', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newAgentWorkspace('setup-');
 
     await mkdir(join(home, '.gemini'), { recursive: true });
     await writeFile(join(home, '.gemini', 'settings.json'), '{ truncated');
@@ -179,7 +157,7 @@ describe('readAgentSetup', () => {
   });
 
   test('lists a Cursor rules directory file by file', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newAgentWorkspace('setup-');
 
     await mkdir(join(project, '.cursor', 'rules'), { recursive: true });
     await writeFile(join(project, '.cursor', 'rules', 'style.mdc'), 'style');
@@ -194,7 +172,7 @@ describe('readAgentSetup', () => {
   });
 
   test('ignores a rules path that is neither a file nor a directory', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newAgentWorkspace('setup-');
     const socket = createServer();
 
     await new Promise<void>((resolve) => {
@@ -213,7 +191,7 @@ describe('readAgentSetup', () => {
   });
 
   test('survives hand-edited config that is malformed', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newAgentWorkspace('setup-');
 
     await writeFile(join(home, '.claude.json'), JSON.stringify({ projects: { [project]: { trusted: true } } }));
     await mkdir(join(home, '.codex'), { recursive: true });
@@ -240,7 +218,7 @@ describe('readAgentSetup', () => {
   });
 
   test('reads antigravity MCP from user and project config files', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newAgentWorkspace('setup-');
 
     await mkdir(join(home, '.gemini', 'config'), { recursive: true });
     await mkdir(join(project, '.agents'), { recursive: true });
@@ -259,7 +237,7 @@ describe('readAgentSetup', () => {
   });
 
   test('reads antigravity rules from project and user locations', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newAgentWorkspace('setup-');
 
     await writeFile(join(project, 'AGENTS.md'), 'rules');
     await mkdir(join(home, '.gemini'), { recursive: true });
@@ -280,7 +258,7 @@ describe('readAgentSetup', () => {
   });
 
   test('reads grok MCP from TOML user and project configs', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newAgentWorkspace('setup-');
 
     await mkdir(join(home, '.grok'), { recursive: true });
     await mkdir(join(project, '.grok'), { recursive: true });
@@ -301,7 +279,7 @@ describe('readAgentSetup', () => {
   });
 
   test('reads grok rules from project AGENTS.md and user GEMINI.md-style file', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newAgentWorkspace('setup-');
 
     await writeFile(join(project, 'AGENTS.md'), 'rules');
     await mkdir(join(home, '.grok'), { recursive: true });
@@ -322,7 +300,7 @@ describe('readAgentSetup', () => {
   });
 
   test('reads cursor-agent MCP from user and project mcp.json', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newAgentWorkspace('setup-');
 
     await mkdir(join(home, '.cursor'), { recursive: true });
     await writeFile(join(home, '.cursor', 'mcp.json'), JSON.stringify({
@@ -341,7 +319,7 @@ describe('readAgentSetup', () => {
   });
 
   test('reads cursor-agent rules from project directory, AGENTS.md, and user rules', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newAgentWorkspace('setup-');
 
     await mkdir(join(project, '.cursor', 'rules'), { recursive: true });
     await writeFile(join(project, '.cursor', 'rules', 'style.mdc'), 'style');
@@ -364,7 +342,7 @@ describe('readAgentSetup', () => {
 
 describe('readAgentSetup for a sibling Claude profile', () => {
   test('reads that config dir and labels the setup with its profile', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newAgentWorkspace('setup-');
     const personal = join(home, '.claude-personal');
 
     await mkdir(personal, { recursive: true });
@@ -387,7 +365,7 @@ describe('readAgentSetup for a sibling Claude profile', () => {
   });
 
   test('gives the default root no profile and reads its .claude.json from home', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newAgentWorkspace('setup-');
 
     await mkdir(join(home, '.claude'), { recursive: true });
     await writeFile(join(home, '.claude.json'), JSON.stringify({

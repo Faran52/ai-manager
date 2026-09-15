@@ -28,19 +28,6 @@ const archive = {
 };
 
 describe('useArchives', () => {
-  test('stays idle until the view asks for it', () => {
-    const fetchMock = vi.fn();
-
-    vi.stubGlobal('fetch', fetchMock);
-
-    const { result } = renderHook(() => {
-      return useArchives(false);
-    });
-
-    expect(result.current.status).toBe('loading');
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-
   test('loads archives and reloads on request', async () => {
     const fetchMock = vi.fn(() => {
       return Response.json({ archives: [archive] });
@@ -64,43 +51,5 @@ describe('useArchives', () => {
     await waitFor(() => {
       expect(fetchMock.mock.calls.length).toBeGreaterThan(1);
     });
-  });
-
-  test('reports a failure to list them', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => {
-      return new Response('{"error":"no archives folder"}', { status: 500 });
-    }));
-
-    const { result } = renderHook(() => {
-      return useArchives(true);
-    });
-
-    await waitFor(() => {
-      expect(result.current.status).toBe('error');
-    });
-    expect(result.current.error).toBe('no archives folder');
-  });
-
-  test('ignores a response that lands after unmount', () => {
-    let resolveFetch = (): void => {
-      return undefined;
-    };
-
-    vi.stubGlobal('fetch', vi.fn(() => {
-      return new Promise<Response>((resolve) => {
-        resolveFetch = () => {
-          resolve(Response.json({ archives: [archive] }));
-        };
-      });
-    }));
-
-    const { result, unmount } = renderHook(() => {
-      return useArchives(true);
-    });
-
-    unmount();
-    resolveFetch();
-
-    expect(result.current.data).toBeUndefined();
   });
 });

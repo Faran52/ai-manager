@@ -36,14 +36,10 @@ import type {
   ProjectSummary,
   SessionSummary,
   ToolOutcome,
+  ToolParts,
   ToolStatus,
 } from '../types';
 import type { RawToolInput } from './claudeRawUtils';
-
-interface ToolParts {
-  readonly blocks: readonly AssistantBlock[];
-  readonly outcomes: readonly ToolOutcome[];
-}
 
 interface OpenCodeReference {
   readonly databasePath: string;

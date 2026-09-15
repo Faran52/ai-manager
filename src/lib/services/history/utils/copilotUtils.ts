@@ -45,6 +45,7 @@ import type {
   TokenUsage,
   ToolCall,
   ToolOutcome,
+  ToolParts,
 } from '../types';
 import type { RawToolInput } from './claudeRawUtils';
 import type { FileFacts } from './fileFactsUtils';
@@ -52,11 +53,6 @@ import type { FileFacts } from './fileFactsUtils';
 interface ToolInvocationParts {
   readonly call: ToolCall;
   readonly outcome: ToolOutcome;
-}
-
-interface ToolParts {
-  readonly blocks: readonly AssistantBlock[];
-  readonly outcomes: readonly ToolOutcome[];
 }
 
 interface RequestEntries {

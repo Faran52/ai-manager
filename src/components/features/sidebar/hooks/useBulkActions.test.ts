@@ -1,5 +1,3 @@
-import { createElement } from 'react';
-
 import {
   act,
   renderHook,
@@ -14,17 +12,11 @@ import {
   vi,
 } from 'vitest';
 
-import { ToastProvider } from '@ui/index';
+import { toastWrapper } from '@mocks/toastHostFixtures';
 
 import { useBulkActions } from './useBulkActions';
 
 import type { SessionSummary } from '@services/history/historyService';
-import type { ToastProviderProps } from '@ui/toast/ToastProvider';
-import type { ReactNode } from 'react';
-
-const wrapper = ({ children }: ToastProviderProps): ReactNode => {
-  return createElement(ToastProvider, null, children);
-};
 
 const SESSIONS: readonly SessionSummary[] = [{
   agent: 'claude',
@@ -51,7 +43,7 @@ describe('useBulkActions', () => {
 
     const { result } = renderHook(() => {
       return useBulkActions(SESSIONS, 'webapp');
-    }, { wrapper });
+    }, { wrapper: toastWrapper });
 
     act(() => {
       result.current.archiveSelected();
@@ -70,7 +62,7 @@ describe('useBulkActions', () => {
 
     const { result } = renderHook(() => {
       return useBulkActions(SESSIONS, undefined);
-    }, { wrapper });
+    }, { wrapper: toastWrapper });
 
     act(() => {
       result.current.archiveSelected();
@@ -86,7 +78,7 @@ describe('useBulkActions', () => {
 
     const { result } = renderHook(() => {
       return useBulkActions(SESSIONS, undefined);
-    }, { wrapper });
+    }, { wrapper: toastWrapper });
 
     act(() => {
       result.current.exportSelected();

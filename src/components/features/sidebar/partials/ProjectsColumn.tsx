@@ -7,6 +7,8 @@ import {
   PanelLeft,
 } from 'lucide-react';
 
+import { toggleInArray } from '@utils/arrayUtils';
+
 import {
   IconButton,
   SectionHeader,
@@ -100,11 +102,7 @@ export const ProjectsColumn: FC<ProjectsColumnProps> = ({
         return [agent];
       }
 
-      return current.includes(agent)
-        ? current.filter((item) => {
-            return item !== agent;
-          })
-        : [...current, agent];
+      return toggleInArray(current, agent);
     });
   };
 

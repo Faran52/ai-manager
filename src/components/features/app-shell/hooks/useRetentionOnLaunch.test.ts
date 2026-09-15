@@ -1,5 +1,3 @@
-import { createElement } from 'react';
-
 import { renderHook, screen } from '@testing-library/react';
 import {
   afterEach,
@@ -8,17 +6,11 @@ import {
   vi,
 } from 'vitest';
 
-import { ToastProvider } from '@ui/index';
+import { toastWrapper } from '@mocks/toastHostFixtures';
 
 import { useRetentionOnLaunch } from './useRetentionOnLaunch';
 
 import type { RunRetentionResponse } from '@lib/apis/contracts';
-import type { ToastProviderProps } from '@ui/toast/ToastProvider';
-import type { ReactNode } from 'react';
-
-const wrapper = ({ children }: ToastProviderProps): ReactNode => {
-  return createElement(ToastProvider, null, children);
-};
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -41,7 +33,7 @@ test('reports how many sessions retention archived at launch', async () => {
       archiveId: 'a1',
     },
   });
-  renderHook(useRetentionOnLaunch, { wrapper });
+  renderHook(useRetentionOnLaunch, { wrapper: toastWrapper });
 
   expect(await screen.findByText(/2 sessions/u)).toBeDefined();
 });
@@ -53,7 +45,7 @@ test('stays quiet when nothing was archived or the run failed', async () => {
       archiveId: undefined,
     },
   });
-  const { unmount } = renderHook(useRetentionOnLaunch, { wrapper });
+  const { unmount } = renderHook(useRetentionOnLaunch, { wrapper: toastWrapper });
 
   await new Promise((resolve) => {
     setTimeout(resolve, 0);
@@ -62,7 +54,7 @@ test('stays quiet when nothing was archived or the run failed', async () => {
   unmount();
 
   respondWith({ error: 'boom' }, false);
-  renderHook(useRetentionOnLaunch, { wrapper });
+  renderHook(useRetentionOnLaunch, { wrapper: toastWrapper });
   await new Promise((resolve) => {
     setTimeout(resolve, 0);
   });

@@ -1,6 +1,7 @@
 export * from './hooks/useAgentSessions';
 export * from './hooks/useAgentSetup';
 export * from './hooks/useArchives';
+export * from './hooks/useAsyncResource';
 export * from './hooks/useFileHistory';
 export * from './hooks/useLiveList';
 export * from './hooks/useMessages';

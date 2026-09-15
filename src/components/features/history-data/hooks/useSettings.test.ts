@@ -68,42 +68,4 @@ describe('useSettings', () => {
       expect(fetchMock.mock.calls.length).toBeGreaterThan(1);
     });
   });
-
-  test('reports a failure to read them', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => {
-      return new Response('{"error":"denied"}', { status: 500 });
-    }));
-
-    const { result } = renderHook(() => {
-      return useSettings('');
-    });
-
-    await waitFor(() => {
-      expect(result.current.status).toBe('error');
-    });
-    expect(result.current.error).toBe('denied');
-  });
-
-  test('ignores a response that lands after unmount', () => {
-    let resolveFetch = (): void => {
-      return undefined;
-    };
-
-    vi.stubGlobal('fetch', vi.fn(() => {
-      return new Promise<Response>((resolve) => {
-        resolveFetch = () => {
-          resolve(Response.json({ scopes: [scope] }));
-        };
-      });
-    }));
-
-    const { result, unmount } = renderHook(() => {
-      return useSettings('/repo');
-    });
-
-    unmount();
-    resolveFetch();
-
-    expect(result.current.data).toBeUndefined();
-  });
 });

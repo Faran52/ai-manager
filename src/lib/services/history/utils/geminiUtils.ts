@@ -26,6 +26,7 @@ import type {
   ProjectSummary,
   SessionSummary,
   ToolOutcome,
+  ToolParts,
 } from '../types';
 import type { RawToolInput } from './claudeRawUtils';
 
@@ -44,11 +45,6 @@ interface GeminiFileSession extends ParsedGeminiHistory {
   readonly filePath: string;
   readonly modifiedMs: number;
   readonly sizeBytes: number;
-}
-
-interface ToolParts {
-  readonly blocks: readonly AssistantBlock[];
-  readonly outcomes: readonly ToolOutcome[];
 }
 
 interface ChatRecords {

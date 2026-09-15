@@ -13,26 +13,9 @@ import {
   test,
 } from 'vitest';
 
+import { newClaudeWorkspace } from '@mocks/agentWorkspaceFixtures';
+
 import { validateAgentSetup } from './validationUtils';
-
-interface Workspace {
-  home: string;
-  project: string;
-}
-
-const workspace = async (): Promise<Workspace> => {
-  const root = await mkdtemp(join(tmpdir(), 'validate-'));
-  const home = join(root, 'home');
-  const project = join(root, 'project');
-
-  await mkdir(join(home, '.claude', 'plugins'), { recursive: true });
-  await mkdir(join(project, '.claude'), { recursive: true });
-
-  return {
-    home,
-    project,
-  };
-};
 
 const userSettings = async (home: string, settings: object): Promise<void> => {
   await writeFile(join(home, '.claude', 'settings.json'), JSON.stringify(settings));
@@ -58,7 +41,7 @@ const hook = (command: string): object => {
 
 describe('validateAgentSetup', () => {
   test('reports nothing for a healthy setup', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newClaudeWorkspace('validate-');
     const script = join(project, 'run.sh');
 
     await writeFile(script, '#!/bin/sh\n');
@@ -69,7 +52,7 @@ describe('validateAgentSetup', () => {
   });
 
   test('reports a hook script that is missing', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newClaudeWorkspace('validate-');
 
     await userSettings(home, hook(`${join(project, 'gone.sh')} --flag`));
 
@@ -82,7 +65,7 @@ describe('validateAgentSetup', () => {
   });
 
   test('reports a hook script that is not executable', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newClaudeWorkspace('validate-');
     const script = join(project, 'run.sh');
 
     await writeFile(script, '#!/bin/sh\n');
@@ -98,7 +81,7 @@ describe('validateAgentSetup', () => {
   });
 
   test('ignores a hook that runs a command found on PATH', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newClaudeWorkspace('validate-');
 
     await userSettings(home, hook('echo hello'));
 
@@ -106,7 +89,7 @@ describe('validateAgentSetup', () => {
   });
 
   test('reports a plugin enabled from an unknown marketplace', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newClaudeWorkspace('validate-');
 
     await writeFile(
       join(home, '.claude', 'plugins', 'known_marketplaces.json'),
@@ -128,7 +111,7 @@ describe('validateAgentSetup', () => {
   });
 
   test('accepts a marketplace declared only in settings', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newClaudeWorkspace('validate-');
 
     await userSettings(home, {
       enabledPlugins: { 'local@extra': true },
@@ -146,7 +129,7 @@ describe('validateAgentSetup', () => {
   });
 
   test('reports a marketplace folder that no longer resolves', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newClaudeWorkspace('validate-');
 
     await mkdir(join(project, 'plugins', 'present'), { recursive: true });
     await projectSettings(project, {
@@ -181,7 +164,7 @@ describe('validateAgentSetup', () => {
   });
 
   test('reports a project MCP server that was never approved', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newClaudeWorkspace('validate-');
 
     await writeFile(join(project, '.mcp.json'), JSON.stringify({
       mcpServers: {
@@ -208,7 +191,7 @@ describe('validateAgentSetup', () => {
   });
 
   test('reports nothing when a project declares no MCP servers', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newClaudeWorkspace('validate-');
 
     await writeFile(join(project, '.mcp.json'), JSON.stringify({ other: {} }));
 
@@ -216,7 +199,7 @@ describe('validateAgentSetup', () => {
   });
 
   test('reads past every shape a hand-edited settings file can take', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newClaudeWorkspace('validate-');
 
     await userSettings(home, {
       hooks: {
@@ -238,7 +221,7 @@ describe('validateAgentSetup', () => {
   });
 
   test('resolves an absolute marketplace path as given', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newClaudeWorkspace('validate-');
 
     await projectSettings(project, {
       extraKnownMarketplaces: {
@@ -260,7 +243,7 @@ describe('validateAgentSetup', () => {
   });
 
   test('ignores an approval list that is not a list of names', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newClaudeWorkspace('validate-');
 
     await writeFile(join(project, '.mcp.json'), JSON.stringify({ mcpServers: { pending: {} } }));
     await writeFile(join(home, '.claude.json'), JSON.stringify({
@@ -427,7 +410,7 @@ describe('codex', () => {
 
 describe('validateAgentSetup for a sibling Claude profile', () => {
   test('reads that config dir and tags each finding with the profile', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newClaudeWorkspace('validate-');
     const personal = join(home, '.claude-personal');
 
     await mkdir(personal, { recursive: true });

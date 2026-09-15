@@ -1,60 +1,28 @@
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from 'react';
+import { useCallback } from 'react';
 
 import { fetchSettings } from '@lib/apis/apiClient';
 
-import { runLoad } from '../utils/asyncResourceUtils';
+import { useAsyncResource } from './useAsyncResource';
 
 import type { AgentId } from '@config/agents';
 import type { ScopeSettings } from '@services/settings/settingsService';
-import type { AsyncResource, AsyncSnapshot } from '../utils/asyncResourceUtils';
+import type { AsyncResource } from '../utils/asyncResourceUtils';
 
 export const useSettings = (
   projectPath: string | null,
   agent: AgentId = 'claude',
   profile?: string,
 ): AsyncResource<readonly ScopeSettings[]> => {
-  const [snapshot, setSnapshot] = useState<AsyncSnapshot<readonly ScopeSettings[]>>({ status: 'loading' });
-  const [nonce, setNonce] = useState(0);
+  // Resolved at render rather than inside the loader: the loader only ever runs
+  // with a project chosen, so a fallback in there would be an unreachable branch.
+  const path = projectPath ?? '';
+  const load = useCallback(async () => {
+    return (await fetchSettings({
+      projectPath: path,
+      agent,
+      profile,
+    })).scopes;
+  }, [agent, path, profile]);
 
-  useEffect(() => {
-    if (projectPath == null) {
-      return undefined;
-    }
-
-    let active = true;
-
-    void runLoad(
-      async () => {
-        return (await fetchSettings({
-          projectPath,
-          agent,
-          profile,
-        })).scopes;
-      },
-      (next) => {
-        if (active) {
-          setSnapshot(next);
-        }
-      },
-    );
-
-    return () => {
-      active = false;
-    };
-  }, [agent, nonce, profile, projectPath]);
-
-  const reload = useCallback(() => {
-    setNonce((value) => {
-      return value + 1;
-    });
-  }, []);
-
-  return {
-    ...snapshot,
-    reload,
-  };
+  return useAsyncResource(load, projectPath != null);
 };

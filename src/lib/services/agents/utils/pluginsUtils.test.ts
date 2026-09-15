@@ -1,9 +1,4 @@
-import {
-  mkdir,
-  mkdtemp,
-  writeFile,
-} from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import {
@@ -12,26 +7,9 @@ import {
   test,
 } from 'vitest';
 
+import { newClaudeWorkspace } from '@mocks/agentWorkspaceFixtures';
+
 import { readClaudePlugins } from './pluginsUtils';
-
-interface Workspace {
-  home: string;
-  project: string;
-}
-
-const workspace = async (): Promise<Workspace> => {
-  const root = await mkdtemp(join(tmpdir(), 'plugins-'));
-  const home = join(root, 'home');
-  const project = join(root, 'project');
-
-  await mkdir(join(home, '.claude', 'plugins'), { recursive: true });
-  await mkdir(join(project, '.claude'), { recursive: true });
-
-  return {
-    home,
-    project,
-  };
-};
 
 const write = async (file: string, value: object): Promise<void> => {
   await writeFile(file, JSON.stringify(value));
@@ -58,7 +36,7 @@ describe('readClaudePlugins', () => {
   ];
 
   test('reports what applies here, and whether it is switched on', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newClaudeWorkspace('plugins-');
 
     await write(join(home, '.claude', 'plugins', 'installed_plugins.json'), {
       version: 2,
@@ -84,7 +62,7 @@ describe('readClaudePlugins', () => {
   });
 
   test('prefers this project’s install over the user-wide one', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newClaudeWorkspace('plugins-');
 
     await write(join(home, '.claude', 'plugins', 'installed_plugins.json'), {
       plugins: {
@@ -111,7 +89,7 @@ describe('readClaudePlugins', () => {
   });
 
   test('lets a project switch on a plugin the user has not', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newClaudeWorkspace('plugins-');
 
     await write(join(home, '.claude', 'plugins', 'installed_plugins.json'), {
       plugins: { 'local@official': [{ scope: 'user' }] },
@@ -129,7 +107,7 @@ describe('readClaudePlugins', () => {
   });
 
   test('marks a plugin whose marketplace this machine does not know', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newClaudeWorkspace('plugins-');
 
     await write(join(home, '.claude', 'plugins', 'installed_plugins.json'), {
       plugins: { 'orphan@vanished': [{ scope: 'user' }] },
@@ -144,7 +122,7 @@ describe('readClaudePlugins', () => {
   });
 
   test('reads past entries that are not shaped like installs', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newClaudeWorkspace('plugins-');
 
     await write(join(home, '.claude', 'plugins', 'installed_plugins.json'), {
       plugins: {
@@ -162,7 +140,7 @@ describe('readClaudePlugins', () => {
   });
 
   test('reports nothing when no plugins are installed', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newClaudeWorkspace('plugins-');
 
     expect(await readClaudePlugins(project, home)).toEqual([]);
   });
@@ -170,7 +148,7 @@ describe('readClaudePlugins', () => {
 
 describe('readClaudePlugins for a sibling profile', () => {
   test('reads the registry files from that config dir', async () => {
-    const { home, project } = await workspace();
+    const { home, project } = await newClaudeWorkspace('plugins-');
     const personal = join(home, '.claude-personal');
 
     await mkdir(join(personal, 'plugins'), { recursive: true });

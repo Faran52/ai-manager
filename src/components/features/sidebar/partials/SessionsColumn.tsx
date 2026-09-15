@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
+import { toggleInArray } from '@utils/arrayUtils';
+
 import {
   collapseTransition,
   IconButton,
@@ -129,21 +131,13 @@ export const SessionsColumn: FC<SessionsColumnProps> = ({
 
   const toggleThread = (key: string): void => {
     setExpandedThreads((current) => {
-      return current.includes(key)
-        ? current.filter((item) => {
-            return item !== key;
-          })
-        : [...current, key];
+      return toggleInArray(current, key);
     });
   };
 
   const toggleGroup = (bucket: RecencyBucket): void => {
     setCollapsedGroups((current) => {
-      return current.includes(bucket)
-        ? current.filter((item) => {
-            return item !== bucket;
-          })
-        : [...current, bucket];
+      return toggleInArray(current, bucket);
     });
   };
 

@@ -6,6 +6,8 @@ import {
 
 import { agentOption } from '@config/agents';
 
+import { toggleInArray } from '@utils/arrayUtils';
+
 import type { SessionSummary } from '@services/history/historyService';
 
 export interface SessionSelection {
@@ -87,11 +89,7 @@ export const useSessionSelection = (
     exit,
     toggle: (session) => {
       setSelectedPaths((current) => {
-        return current.includes(session.filePath)
-          ? current.filter((filePath) => {
-              return filePath !== session.filePath;
-            })
-          : [...current, session.filePath];
+        return toggleInArray(current, session.filePath);
       });
     },
     toggleAll: () => {

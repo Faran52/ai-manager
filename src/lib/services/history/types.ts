@@ -179,6 +179,15 @@ export interface UserTurnEntry extends TurnBase {
   readonly outcomes: readonly ToolOutcome[];
 }
 
+/*
+ * What a turn's blocks and the outcomes they produced come back as together.
+ * Three readers build the pair and the shape has to match on all of them.
+ */
+export interface ToolParts {
+  readonly blocks: readonly AssistantBlock[];
+  readonly outcomes: readonly ToolOutcome[];
+}
+
 export interface AssistantTurnEntry extends TurnBase {
   readonly kind: 'assistant';
   readonly model?: string | undefined;
