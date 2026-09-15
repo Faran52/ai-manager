@@ -59,7 +59,11 @@ export const ModelDistribution: FC<ModelDistributionProps> = ({ models }) => {
               formatValue={formatTokens}
               qualifier={(
                 <Badge tone={model.basis === 'unpriced' ? 'warn' : 'neutral'}>
-                  {t(BASIS_KEYS[model.basis])}
+                  {/* One casing for all three, and a step smaller than the
+                      figure beside it: a qualifier, not a second label. */}
+                  <span className="text-eyebrow tracking-wider uppercase">
+                    {t(BASIS_KEYS[model.basis])}
+                  </span>
                 </Badge>
               )}
               trailing={(
