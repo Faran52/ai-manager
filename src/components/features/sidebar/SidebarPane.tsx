@@ -1162,16 +1162,42 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
                                   </span>
                                 </button>
                               </li>
-                              {!shut && groupThreadRuns(group.rows).map(({ head, parts }, index) => {
-                                /**
-                                 * partCount, not parts.length: a collapsed thread has
-                                 * no parts to render yet but still needs the stable,
-                                 * animatable wrapper so expanding it can transition in.
-                                 */
-                                return head.partCount > 1
-                                  ? renderThreadGroup(head, parts)
-                                  : renderSessionRow(head, false, index);
-                              })}
+                              {/* The group opens and shuts on the same disclosure
+                                  motion as a thread, rather than cutting. */}
+                              <AnimatePresence initial={false}>
+                                {!shut && (
+                                  <motion.li
+                                    key="rows"
+                                    initial={{
+                                      height: 0,
+                                      opacity: 0,
+                                    }}
+                                    animate={{
+                                      height: 'auto',
+                                      opacity: 1,
+                                    }}
+                                    exit={{
+                                      height: 0,
+                                      opacity: 0,
+                                    }}
+                                    transition={collapse}
+                                    className="overflow-hidden"
+                                  >
+                                    <ul>
+                                      {groupThreadRuns(group.rows).map(({ head, parts }, index) => {
+                                        /**
+                                         * partCount, not parts.length: a collapsed thread has
+                                         * no parts to render yet but still needs the stable,
+                                         * animatable wrapper so expanding it can transition in.
+                                         */
+                                        return head.partCount > 1
+                                          ? renderThreadGroup(head, parts)
+                                          : renderSessionRow(head, false, index);
+                                      })}
+                                    </ul>
+                                  </motion.li>
+                                )}
+                              </AnimatePresence>
                             </Fragment>
                           );
                         })}
