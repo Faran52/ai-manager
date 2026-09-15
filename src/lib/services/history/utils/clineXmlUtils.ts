@@ -1,4 +1,11 @@
 import { parseToolInput } from '../../session/utils/parserUtils';
+import {
+  CLINE_NAME,
+  CLINE_PARSER_NAMES,
+  CLINE_PATH_TOOLS,
+  CLINE_TASK_PROGRESS,
+  CLINE_TOOLS,
+} from '../constants';
 
 import type { AssistantBlock } from '../types';
 import type { RawTodoItem, RawToolInput } from './claudeRawUtils';
@@ -10,45 +17,6 @@ interface Tag {
   readonly end: number;
 }
 
-/*
- * Cline drives tools with XML inside the assistant's own text instead of a
- * structured tool_use block, so every call renders as raw markup unless it is
- * read back out. The known names are a list rather than "any tag" because
- * prose and code samples carry angle brackets too, and treating those as calls
- * would eat the transcript around them.
- */
-const TOOLS = new Set([
-  'access_mcp_resource',
-  'ask_followup_question',
-  'attempt_completion',
-  'browser_action',
-  'execute_command',
-  'list_code_definition_names',
-  'list_files',
-  'new_task',
-  'plan_mode_respond',
-  'read_file',
-  'replace_in_file',
-  'search_files',
-  'use_mcp_tool',
-  'web_fetch',
-  'write_to_file',
-]);
-
-// Cline's name for a tool the shared parser already knows under Claude's name.
-const PARSER_NAMES = new Map([
-  ['execute_command', 'Bash'],
-  ['read_file', 'Read'],
-  ['search_files', 'Grep'],
-  ['write_to_file', 'Write'],
-]);
-
-const PATH_TOOLS = new Set(['read_file', 'replace_in_file', 'write_to_file']);
-
-export const TASK_PROGRESS = 'task_progress';
-
-const NAME = /^[a-z_][a-z0-9_]*$/;
-
 const tagAt = (text: string, from: number): Tag | undefined => {
   for (let open = text.indexOf('<', from); open !== -1; open = text.indexOf('<', open + 1)) {
     const nameEnd = text.indexOf('>', open);
@@ -58,7 +26,7 @@ const tagAt = (text: string, from: number): Tag | undefined => {
     }
 
     const name = text.slice(open + 1, nameEnd);
-    const close = NAME.test(name) ? text.indexOf(`</${name}>`, nameEnd) : -1;
+    const close = CLINE_NAME.test(name) ? text.indexOf(`</${name}>`, nameEnd) : -1;
 
     if (close !== -1) {
       return {
@@ -103,7 +71,7 @@ const todosOf = (body: string): readonly RawTodoItem[] => {
 
 const inputOf = (name: string, params: ReadonlyMap<string, string>): RawToolInput => {
   const path = params.get('path');
-  const names = PATH_TOOLS.has(name);
+  const names = CLINE_PATH_TOOLS.has(name);
 
   return {
     command: params.get('command'),
@@ -126,7 +94,7 @@ const todoBlock = (body: string, id: string): readonly AssistantBlock[] => {
         blockType: 'tool-use',
         call: {
           id,
-          name: TASK_PROGRESS,
+          name: CLINE_TASK_PROGRESS,
           input: parseToolInput('TodoWrite', { todos }),
         },
       }];
@@ -156,14 +124,14 @@ export const parseClineBlocks = (text: string, uuid: string): readonly Assistant
   for (let tag = tagAt(text, cursor); tag != null; tag = tagAt(text, cursor)) {
     cursor = tag.end;
 
-    if (!TOOLS.has(tag.name) && tag.name !== TASK_PROGRESS) {
+    if (!CLINE_TOOLS.has(tag.name) && tag.name !== CLINE_TASK_PROGRESS) {
       continue;
     }
 
     blocks.push(...textBlock(text.slice(spoken, tag.start)));
     spoken = tag.end;
 
-    if (tag.name === TASK_PROGRESS) {
+    if (tag.name === CLINE_TASK_PROGRESS) {
       blocks.push(...todoBlock(tag.body, `${uuid}-${String(blocks.length)}`));
       continue;
     }
@@ -175,11 +143,11 @@ export const parseClineBlocks = (text: string, uuid: string): readonly Assistant
       call: {
         id: `${uuid}-${String(blocks.length)}`,
         name: tag.name,
-        input: parseToolInput(PARSER_NAMES.get(tag.name) ?? tag.name, inputOf(tag.name, params)),
+        input: parseToolInput(CLINE_PARSER_NAMES.get(tag.name) ?? tag.name, inputOf(tag.name, params)),
       },
     });
 
-    const progress = params.get(TASK_PROGRESS);
+    const progress = params.get(CLINE_TASK_PROGRESS);
 
     if (progress != null) {
       blocks.push(...todoBlock(progress, `${uuid}-${String(blocks.length)}`));

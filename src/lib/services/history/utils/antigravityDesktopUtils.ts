@@ -31,6 +31,20 @@ import { appConfig } from '@config/appConfig';
 import { isJsonObject, parseJsonContainer } from '@utils/jsonUtils';
 import { humanPreview } from '@utils/titleUtils';
 
+import {
+  ANTIGRAVITY_ARTIFACTS,
+  ANTIGRAVITY_BRAIN,
+  ANTIGRAVITY_CONVERSATIONS,
+  ANTIGRAVITY_KEPT,
+  ANTIGRAVITY_MANIFEST,
+  ANTIGRAVITY_PRINTABLE_MAX,
+  ANTIGRAVITY_PRINTABLE_MIN,
+  ANTIGRAVITY_SPACE,
+  ANTIGRAVITY_TASK,
+  ANTIGRAVITY_TOOL_PHRASES,
+  ANTIGRAVITY_UNPLACED,
+} from '../constants';
+
 import { conversationMessageCount } from './outcomeUtils';
 
 import type { AgentId } from '@config/agents';
@@ -58,37 +72,11 @@ interface Artifact {
   readonly modifiedMs: number;
 }
 
-const BRAIN = 'brain';
-const CONVERSATIONS = 'conversations';
-const MANIFEST = 'manifest.json';
-const TASK = 'task.md';
-const UNPLACED = 'unplaced';
-
-/* Read in this order: the first heading found is the session's label. */
-const ARTIFACTS = ['task.md', 'implementation_plan.md', 'walkthrough.md'];
-
-/*
- * The tool phrases Antigravity writes into a conversation's protobuf as plain
- * text. The phrase is the handle: the enum around it has no published schema,
- * so there is nothing to decode it against.
- */
-const TOOL_PHRASES: readonly (readonly [string, string])[] = [
-  ['opening url', 'BrowserOpenUrl'],
-  ['getting dom', 'BrowserGetDom'],
-  ['getting console logs', 'BrowserGetConsoleLogs'],
-  ['clicking', 'BrowserClick'],
-  ['taking screenshot', 'BrowserScreenshot'],
-  ['scrolling mouse wheel', 'BrowserScrollMouseWheel'],
-];
-
-const PRINTABLE_MIN = 32;
-const PRINTABLE_MAX = 126;
-const SPACE = 32;
-const KEPT = new Set([9, 10, 13]);
-
 const readable = (bytes: Uint8Array): string => {
   const cleaned = bytes.map((byte) => {
-    return (byte >= PRINTABLE_MIN && byte <= PRINTABLE_MAX) || KEPT.has(byte) ? byte : SPACE;
+    const printable = byte >= ANTIGRAVITY_PRINTABLE_MIN && byte <= ANTIGRAVITY_PRINTABLE_MAX;
+
+    return printable || ANTIGRAVITY_KEPT.has(byte) ? byte : ANTIGRAVITY_SPACE;
   });
 
   return Buffer.from(cleaned).toString('latin1').toLowerCase();
@@ -100,9 +88,9 @@ const occurrences = (text: string, phrase: string): number => {
 
 const toolBlocks = async (root: string, id: string): Promise<readonly AssistantBlock[]> => {
   try {
-    const text = readable(await readFile(join(root, CONVERSATIONS, `${id}.pb`)));
+    const text = readable(await readFile(join(root, ANTIGRAVITY_CONVERSATIONS, `${id}.pb`)));
 
-    return TOOL_PHRASES.flatMap(([phrase, name]) => {
+    return ANTIGRAVITY_TOOL_PHRASES.flatMap(([phrase, name]) => {
       return Array.from({ length: occurrences(text, phrase) }, (_unused, index) => {
         return {
           blockType: 'tool-use',
@@ -141,7 +129,7 @@ const headingOf = (text: string): string | undefined => {
 };
 
 const artifactsOf = async (dir: string): Promise<readonly Artifact[]> => {
-  const read = await Promise.all(ARTIFACTS.map(async (name) => {
+  const read = await Promise.all(ANTIGRAVITY_ARTIFACTS.map(async (name) => {
     try {
       const path = join(dir, name);
       const [text, info] = await Promise.all([readFile(path, 'utf8'), stat(path)]);
@@ -167,7 +155,7 @@ const artifactsOf = async (dir: string): Promise<readonly Artifact[]> => {
 
 const workspaceOf = async (dir: string): Promise<string | undefined> => {
   try {
-    const parsed = parseJsonContainer(await readFile(join(dir, MANIFEST), 'utf8'));
+    const parsed = parseJsonContainer(await readFile(join(dir, ANTIGRAVITY_MANIFEST), 'utf8'));
     const workspace = isJsonObject(parsed) ? parsed.workspace ?? parsed.workspacePath : undefined;
 
     return typeof workspace === 'string' && workspace.length > 0 ? workspace : undefined;
@@ -189,10 +177,10 @@ const entriesOf = (
 ): readonly HistoryEntry[] => {
   const timestamp = new Date(timestampMs).toISOString();
   const task = artifacts.find((artifact) => {
-    return artifact.name === TASK;
+    return artifact.name === ANTIGRAVITY_TASK;
   });
   const produced = artifacts.filter((artifact) => {
-    return artifact.name !== TASK;
+    return artifact.name !== ANTIGRAVITY_TASK;
   });
   const blocks: readonly AssistantBlock[] = [
     ...produced.map((artifact) => {
@@ -229,7 +217,7 @@ const entriesOf = (
 };
 
 const sessionOf = async (root: string, id: string): Promise<DesktopSession | undefined> => {
-  const dir = join(root, BRAIN, id);
+  const dir = join(root, ANTIGRAVITY_BRAIN, id);
   const [artifacts, tools, workspace] = await Promise.all([
     artifactsOf(dir),
     toolBlocks(root, id),
@@ -267,7 +255,7 @@ const sessionOf = async (root: string, id: string): Promise<DesktopSession | und
 const scan = async (roots: readonly string[]): Promise<readonly DesktopSession[]> => {
   const found = await Promise.all(roots.map(async (root) => {
     try {
-      const dirs = await readdir(join(root, BRAIN), { withFileTypes: true });
+      const dirs = await readdir(join(root, ANTIGRAVITY_BRAIN), { withFileTypes: true });
 
       return await Promise.all(dirs.filter((dir) => {
         return dir.isDirectory();
@@ -286,7 +274,7 @@ const scan = async (roots: readonly string[]): Promise<readonly DesktopSession[]
 };
 
 const projectIdOf = (session: DesktopSession): string => {
-  return session.workspace ?? UNPLACED;
+  return session.workspace ?? ANTIGRAVITY_UNPLACED;
 };
 
 export const listAntigravityDesktopSessions = async (

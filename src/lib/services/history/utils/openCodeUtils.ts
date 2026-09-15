@@ -11,6 +11,16 @@ import { containedIn } from '@utils/pathUtils';
 import { humanPreview, humanTitle } from '@utils/titleUtils';
 
 import { parseToolInput, splitUserText } from '../../session/utils/parserUtils';
+import {
+  OPENCODE_CANONICAL_TOOLS,
+  OPENCODE_EMPTY_PAYLOAD,
+  OPENCODE_LINE_GUTTER,
+  OPENCODE_MESSAGE_LIMIT,
+  OPENCODE_PAGER_NOTE,
+  OPENCODE_PART_LIMIT,
+  OPENCODE_PREFIX,
+  OPENCODE_READ_ENVELOPE,
+} from '../constants';
 
 import { conversationMessageCount } from './outcomeUtils';
 import { databaseFiles } from './sqliteUtils';
@@ -60,10 +70,6 @@ const asText = (value: SQLOutputValue | undefined): string | null => {
   return typeof value === 'string' ? value : null;
 };
 
-const OPENCODE_PREFIX = 'oc:';
-const MESSAGE_LIMIT = 20_000;
-const PART_LIMIT = 60_000;
-
 const encodeReference = (reference: OpenCodeReference): string => {
   return `${OPENCODE_PREFIX}${Buffer.from(JSON.stringify(reference)).toString('base64url')}`;
 };
@@ -92,16 +98,14 @@ const decodeReference = (filePath: string): OpenCodeReference | undefined => {
   }
 };
 
-const EMPTY_PAYLOAD: JsonObject = {};
-
 const payloadOf = (raw: string | null): JsonObject => {
   if (raw == null) {
-    return EMPTY_PAYLOAD;
+    return OPENCODE_EMPTY_PAYLOAD;
   }
 
   const parsed = parseJsonContainer(raw);
 
-  return isJsonObject(parsed) ? parsed : EMPTY_PAYLOAD;
+  return isJsonObject(parsed) ? parsed : OPENCODE_EMPTY_PAYLOAD;
 };
 
 const textAt = (payload: JsonObject): string => {
@@ -120,22 +124,12 @@ const statusOf = (state: JsonObject): ToolStatus => {
   return status === 'completed' ? 'ok' : 'interrupted';
 };
 
-/*
- * OpenCode's `read` wraps the file body in <path>/<type>/<content> tags, numbers
- * every line, and appends a pager note. The path is already on the call's own
- * row and none of the rest is file content, so all of it is stripped and the
- * card shows the file the way it reads: a markdown file renders, code prints.
- */
-const READ_ENVELOPE = /^<path>[^\n]*<\/path>\n<type>[^\n]*<\/type>\n<content>\n?([\s\S]*?)\n?<\/content>\s*$/u;
-const LINE_GUTTER = /^\d+:[ \t]?/gmu;
-const PAGER_NOTE = /\((?:End of file|File has more lines)[^)]*\)\s*$/u;
-
 const unwrapReadEnvelope = (output: string): string => {
-  const inner = READ_ENVELOPE.exec(output)?.[1];
+  const inner = OPENCODE_READ_ENVELOPE.exec(output)?.[1];
 
   return inner == null
     ? output
-    : inner.replace(LINE_GUTTER, '').replace(PAGER_NOTE, '').trimEnd();
+    : inner.replace(OPENCODE_LINE_GUTTER, '').replace(OPENCODE_PAGER_NOTE, '').trimEnd();
 };
 
 const outputText = (state: JsonObject): string | undefined => {
@@ -185,23 +179,6 @@ const outcomeFromPart = (callId: string, state: JsonObject): ToolOutcome => {
   };
 };
 
-const CANONICAL_TOOLS = new Map<string, string>([
-  ['bash', 'Bash'],
-  ['write', 'Write'],
-  ['edit', 'Edit'],
-  ['patch', 'MultiEdit'],
-  ['multi-edit', 'MultiEdit'],
-  ['multiedit', 'MultiEdit'],
-  ['read', 'Read'],
-  ['glob', 'Glob'],
-  ['grep', 'Grep'],
-  ['websearch', 'WebSearch'],
-  ['webfetch', 'WebFetch'],
-  ['todowrite', 'TodoWrite'],
-  ['task', 'Task'],
-  ['agent', 'Agent'],
-]);
-
 const stringField = (payload: JsonObject, key: string): string | undefined => {
   const value = payload[key];
 
@@ -227,7 +204,7 @@ const usageFromMessage = (payload: JsonObject): AssistantTurnEntry['usage'] => {
     return undefined;
   }
 
-  const cache = isJsonObject(tokens.cache) ? tokens.cache : EMPTY_PAYLOAD;
+  const cache = isJsonObject(tokens.cache) ? tokens.cache : OPENCODE_EMPTY_PAYLOAD;
 
   return {
     inputTokens: optionalNumber(tokens, 'input') ?? 0,
@@ -275,15 +252,15 @@ const rawInputOf = (state: JsonObject): RawToolInput => {
 
 const blockFromPart = (part: JsonObject, callId: string): AssistantBlock => {
   const tool = stringField(part, 'tool') ?? 'tool';
-  const state = isJsonObject(part.state) ? part.state : EMPTY_PAYLOAD;
-  const input = isJsonObject(state.input) ? state.input : EMPTY_PAYLOAD;
+  const state = isJsonObject(part.state) ? part.state : OPENCODE_EMPTY_PAYLOAD;
+  const input = isJsonObject(state.input) ? state.input : OPENCODE_EMPTY_PAYLOAD;
 
   return {
     blockType: 'tool-use',
     call: {
       id: callId,
       name: tool,
-      input: parseToolInput(CANONICAL_TOOLS.get(tool.toLowerCase()) ?? tool, rawInputOf(input)),
+      input: parseToolInput(OPENCODE_CANONICAL_TOOLS.get(tool.toLowerCase()) ?? tool, rawInputOf(input)),
     },
   };
 };
@@ -292,7 +269,7 @@ const partsFor = (database: DatabaseSync, messageId: string): readonly PartRow[]
   const rows = database.prepare(
     'SELECT id AS pid, data AS pdata FROM part WHERE message_id = ?'
     + ' ORDER BY time_created ASC, id ASC LIMIT '
-    + String(PART_LIMIT),
+    + String(OPENCODE_PART_LIMIT),
   ).all(messageId);
 
   return rows.map((row) => {
@@ -335,7 +312,7 @@ const assistantBlocksFrom = (
     }
     else if (parsed.type === 'tool') {
       const callId = stringField(parsed, 'callID') ?? part.pid;
-      const state = isJsonObject(parsed.state) ? parsed.state : EMPTY_PAYLOAD;
+      const state = isJsonObject(parsed.state) ? parsed.state : OPENCODE_EMPTY_PAYLOAD;
 
       blocks.push(blockFromPart(parsed, callId));
 
@@ -355,7 +332,7 @@ const buildSession = (database: DatabaseSync, sessionId: string): SessionBuild =
   const messages = database.prepare(
     'SELECT id AS mid, time_created AS mtime, data AS mdata FROM message'
     + ' WHERE session_id = ? ORDER BY time_created ASC LIMIT '
-    + String(MESSAGE_LIMIT),
+    + String(OPENCODE_MESSAGE_LIMIT),
   ).all(sessionId).map((row) => {
     return {
       mid: asString(row.mid),

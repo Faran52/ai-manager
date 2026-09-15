@@ -16,6 +16,20 @@ import {
 import { humanPreview } from '@utils/titleUtils';
 
 import { parseToolInput, splitUserText } from '../../session/utils/parserUtils';
+import {
+  COPILOT_BACKTICK_PATTERN,
+  COPILOT_CACHED_SESSIONS,
+  COPILOT_CHAT_SESSIONS_DIR,
+  COPILOT_FILE_URL_PREFIX,
+  COPILOT_INCLUDE_PATTERN,
+  COPILOT_LINK_PATTERN,
+  COPILOT_REQUESTS_KEY,
+  COPILOT_RESPONSE_KEY,
+  COPILOT_TOOL_NAMES,
+  COPILOT_TRAILING_PUNCTUATION,
+  COPILOT_URL_PATTERN,
+  COPILOT_WORKSPACE_DEPTH,
+} from '../constants';
 
 import { fileFactsStore } from './fileFactsUtils';
 import { conversationMessageCount, firstUserMessageText } from './outcomeUtils';
@@ -84,33 +98,6 @@ interface RequestDraft {
   timestamp?: number;
 }
 
-// One file per session, so this covers a long history of them.
-const CACHED_SESSIONS = 2_048;
-
-const WORKSPACE_DEPTH = 3;
-const CHAT_SESSIONS_DIR = 'chatSessions';
-
-const REQUESTS_KEY = 'requests';
-const RESPONSE_KEY = 'response';
-
-const TOOL_NAMES = new Map<string, string>([
-  ['copilot_readFile', 'Read'],
-  ['copilot_replaceString', 'Edit'],
-  ['copilot_multiReplaceString', 'MultiEdit'],
-  ['run_in_terminal', 'Bash'],
-  ['copilot_findFiles', 'Glob'],
-  ['copilot_findTextInFiles', 'Grep'],
-  ['copilot_fetchWebPage', 'WebFetch'],
-  ['vscode_fetchWebPage_internal', 'WebFetch'],
-  ['manage_todo_list', 'TodoWrite'],
-]);
-
-const LINK_PATTERN = /\]\(([^)\s]+)\)/u;
-const INCLUDE_PATTERN = /\(`([^`]*)`\)/u;
-const BACKTICK_PATTERN = /`([^`]*)`/gu;
-const URL_PATTERN = /https?:\/\/[^\s`)\]]+/iu;
-const FILE_URL_PREFIX = 'file://';
-
 const fieldValue = (source: JsonValue | undefined, key: string): JsonValue | undefined => {
   return isJsonObject(source) ? source[key] : undefined;
 };
@@ -157,7 +144,7 @@ const firstNonEmpty = (values: readonly string[]): string | undefined => {
 };
 
 const backtickGroup = (text: string, position: number): string | undefined => {
-  return [...text.matchAll(BACKTICK_PATTERN)][position]?.[1];
+  return [...text.matchAll(COPILOT_BACKTICK_PATTERN)][position]?.[1];
 };
 
 const safeDecode = (raw: string): string | undefined => {
@@ -172,7 +159,7 @@ const safeDecode = (raw: string): string | undefined => {
 const filePathCandidate = (href: string): string | undefined => {
   const stem = safeDecode(href) ?? href;
 
-  if (!stem.startsWith(FILE_URL_PREFIX)) {
+  if (!stem.startsWith(COPILOT_FILE_URL_PREFIX)) {
     return stem.length > 0 ? stem : undefined;
   }
 
@@ -185,7 +172,7 @@ const filePathCandidate = (href: string): string | undefined => {
 };
 
 const decodedLinkTarget = (text: string): string | undefined => {
-  const href = LINK_PATTERN.exec(text)?.[1];
+  const href = COPILOT_LINK_PATTERN.exec(text)?.[1];
 
   if (href == null) {
     return undefined;
@@ -204,13 +191,11 @@ const fileFromMessages = (...candidates: readonly string[]): string | undefined 
   });
 };
 
-const TRAILING_PUNCTUATION = new Set(['.', ',', ';', ':', '!', '?', ')']);
-
 // Scanning backwards keeps this linear, a trailing `[...]+$` regex backtracks.
 const withoutTrailingPunctuation = (value: string): string => {
   let end = value.length;
 
-  while (end > 0 && TRAILING_PUNCTUATION.has(value.charAt(end - 1))) {
+  while (end > 0 && COPILOT_TRAILING_PUNCTUATION.has(value.charAt(end - 1))) {
     end -= 1;
   }
 
@@ -218,7 +203,7 @@ const withoutTrailingPunctuation = (value: string): string => {
 };
 
 const webUrl = (text: string): string | undefined => {
-  const matched = URL_PATTERN.exec(text)?.[0];
+  const matched = COPILOT_URL_PATTERN.exec(text)?.[0];
   const found = matched == null ? undefined : withoutTrailingPunctuation(matched);
 
   return found != null && found.length > 0 ? found : undefined;
@@ -236,7 +221,7 @@ const callName = (toolId: string | undefined): string => {
     return 'Tool';
   }
 
-  return TOOL_NAMES.get(toolId) ?? humanToolName(toolId);
+  return COPILOT_TOOL_NAMES.get(toolId) ?? humanToolName(toolId);
 };
 
 const terminalCommand = (item: JsonObject): string => {
@@ -290,7 +275,7 @@ const rawInputFor = (toolId: string, item: JsonObject): RawToolInput => {
     case 'run_in_terminal':
       return { command: terminalCommand(item) };
     case 'copilot_findTextInFiles': {
-      const include = INCLUDE_PATTERN.exec(invocation)?.[1]
+      const include = COPILOT_INCLUDE_PATTERN.exec(invocation)?.[1]
         ?? backtickGroup(invocation, 1)
         ?? backtickGroup(pastTense, 1);
       const pattern = backtickGroup(invocation, 0) ?? '';
@@ -540,7 +525,7 @@ const addDraft = (state: ReplayState, record: JsonObject): void => {
   state.requests.push(draft);
 
   for (const [key, value] of Object.entries(record)) {
-    if (key === RESPONSE_KEY && isJsonArray(value)) {
+    if (key === COPILOT_RESPONSE_KEY && isJsonArray(value)) {
       for (const item of value) {
         if (isJsonObject(item)) {
           draft.responseItems.push(item);
@@ -571,7 +556,7 @@ const appendResponses = (draft: RequestDraft, value: JsonValue): void => {
 };
 
 const applySetPatch = (state: ReplayState, keys: readonly JsonValue[], value: JsonValue): void => {
-  if (keys[0] !== REQUESTS_KEY || keys.length !== 3) {
+  if (keys[0] !== COPILOT_REQUESTS_KEY || keys.length !== 3) {
     return;
   }
 
@@ -600,7 +585,7 @@ const appendDrafts = (state: ReplayState, value: JsonValue): void => {
 };
 
 const applyAppendPatch = (state: ReplayState, keys: readonly JsonValue[], value: JsonValue): void => {
-  if (keys[0] !== REQUESTS_KEY) {
+  if (keys[0] !== COPILOT_REQUESTS_KEY) {
     return;
   }
 
@@ -610,7 +595,7 @@ const applyAppendPatch = (state: ReplayState, keys: readonly JsonValue[], value:
     return;
   }
 
-  if (keys.length !== 3 || keys[2] !== RESPONSE_KEY) {
+  if (keys.length !== 3 || keys[2] !== COPILOT_RESPONSE_KEY) {
     return;
   }
 
@@ -650,7 +635,7 @@ const applySnapshot = (state: ReplayState, record: JsonObject): void => {
     state.title = title;
   }
 
-  for (const request of valuesIn(record, REQUESTS_KEY)) {
+  for (const request of valuesIn(record, COPILOT_REQUESTS_KEY)) {
     if (isJsonObject(request)) {
       addDraft(state, request);
     }
@@ -794,7 +779,7 @@ const sessionFiles = async (root: string): Promise<readonly string[]> => {
 
       const filePath = join(dirent.parentPath, dirent.name);
 
-      return basename(dirname(filePath)) === CHAT_SESSIONS_DIR ? [filePath] : [];
+      return basename(dirname(filePath)) === COPILOT_CHAT_SESSIONS_DIR ? [filePath] : [];
     });
   }
   catch {
@@ -802,7 +787,7 @@ const sessionFiles = async (root: string): Promise<readonly string[]> => {
   }
 };
 
-const copilotFacts = fileFactsStore<CopilotSessionFacts | undefined>(CACHED_SESSIONS);
+const copilotFacts = fileFactsStore<CopilotSessionFacts | undefined>(COPILOT_CACHED_SESSIONS);
 
 const fileSession = async (filePath: string): Promise<CopilotFileSession | undefined> => {
   const facts = await copilotFacts(filePath, (content) => {
@@ -845,7 +830,7 @@ const workspaceRecordFolder = async (dir: string): Promise<string | undefined> =
 const workspaceFolderFor = async (filePath: string): Promise<string | undefined> => {
   let dir = dirname(filePath);
 
-  for (let level = 0; level < WORKSPACE_DEPTH; level += 1) {
+  for (let level = 0; level < COPILOT_WORKSPACE_DEPTH; level += 1) {
     const folder = await workspaceRecordFolder(dir);
 
     if (folder != null) {

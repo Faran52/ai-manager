@@ -1,5 +1,16 @@
 import { basename } from 'node:path';
 
+import {
+  CODEX_ESCAPES,
+  CODEX_FILE_HEADER,
+  CODEX_HELPER,
+  CODEX_JSON_PAIR,
+  CODEX_PATCH_CLOSE,
+  CODEX_PATCH_OPEN,
+  CODEX_ROW_LIMIT,
+  CODEX_SHELL_FIELD,
+} from '../constants';
+
 import type {
   ChangedFile,
   PatchHunk,
@@ -24,24 +35,6 @@ interface PatchedFile {
   readonly op: 'add' | 'update' | 'delete';
   readonly hunk: PatchHunk | undefined;
 }
-
-const PATCH_OPEN = '*** Begin Patch';
-const PATCH_CLOSE = '*** End Patch';
-const FILE_HEADER = /^\*\*\* (?:Add|Update|Delete) File: /u;
-const HELPER = /\btools\.([A-Za-z_$][\w$]*)\s*\(/u;
-const SHELL_FIELD = /[{,]\s*["']?(?:cmd|command)["']?\s*:\s*/gu;
-/**
- * A "key": "value" pair, as it appears in a JSON argument blob or an embedded
- * object literal. Values holding an escaped quote are cut at it, which is fine
- * for a display row.
- */
-const JSON_PAIR = /"([A-Za-z_$][\w$]*)"\s*:\s*"([^"]*)"/gu;
-const ROW_LIMIT = 300;
-const ESCAPES = new Map([
-  ['n', '\n'],
-  ['t', '\t'],
-  ['r', '\r'],
-]);
 
 const opOf = (header: string): PatchedFile['op'] => {
   if (header.includes('Add')) {
@@ -71,7 +64,7 @@ const readLiteral = (source: string, open: number): string | undefined => {
     const char = source.charAt(index);
 
     if (escaped) {
-      body += ESCAPES.get(char) ?? char;
+      body += CODEX_ESCAPES.get(char) ?? char;
       escaped = false;
       continue;
     }
@@ -93,7 +86,7 @@ const readLiteral = (source: string, open: number): string | undefined => {
 
 const unescape = (value: string): string => {
   return value.replaceAll(/\\(.)/gu, (_, char: string) => {
-    return ESCAPES.get(char) ?? char;
+    return CODEX_ESCAPES.get(char) ?? char;
   });
 };
 
@@ -125,7 +118,7 @@ const lastArrayString = (source: string, open: number): string | undefined => {
 };
 
 const shellCommands = (source: string): readonly string[] => {
-  return [...source.matchAll(SHELL_FIELD)].flatMap((match) => {
+  return [...source.matchAll(CODEX_SHELL_FIELD)].flatMap((match) => {
     const at = match.index + match[0].length;
     const value = source.charAt(at) === '['
       ? lastArrayString(source, at)
@@ -138,7 +131,7 @@ const shellCommands = (source: string): readonly string[] => {
 // The patch text: the string literal that carries `*** Begin Patch`, or the bare
 // span when it was not written as a literal.
 const patchText = (source: string): string | undefined => {
-  const marker = source.indexOf(PATCH_OPEN);
+  const marker = source.indexOf(CODEX_PATCH_OPEN);
 
   if (marker < 0) {
     return undefined;
@@ -151,9 +144,9 @@ const patchText = (source: string): string | undefined => {
     return literal;
   }
 
-  const close = source.indexOf(PATCH_CLOSE, marker);
+  const close = source.indexOf(CODEX_PATCH_CLOSE, marker);
 
-  return close < 0 ? source.slice(marker) : source.slice(marker, close + PATCH_CLOSE.length);
+  return close < 0 ? source.slice(marker) : source.slice(marker, close + CODEX_PATCH_CLOSE.length);
 };
 
 const hunkOf = (lines: readonly string[]): PatchHunk | undefined => {
@@ -198,7 +191,7 @@ const parsePatchEnvelope = (text: string): readonly PatchedFile[] => {
   };
 
   for (const line of text.split('\n')) {
-    const header = FILE_HEADER.exec(line)?.[0];
+    const header = CODEX_FILE_HEADER.exec(line)?.[0];
 
     if (header != null) {
       flush();
@@ -323,7 +316,7 @@ const planTodos = (source: string): readonly TodoItem[] => {
 const fieldRows = (source: string): readonly ToolInputRow[] => {
   const seen = new Set<string>();
 
-  return [...source.matchAll(JSON_PAIR)].flatMap((match) => {
+  return [...source.matchAll(CODEX_JSON_PAIR)].flatMap((match) => {
     const label = match[1];
     const raw = match[2];
 
@@ -335,7 +328,7 @@ const fieldRows = (source: string): readonly ToolInputRow[] => {
 
     return [{
       label,
-      value: unescape(raw).slice(0, ROW_LIMIT),
+      value: unescape(raw).slice(0, CODEX_ROW_LIMIT),
     }];
   });
 };
@@ -391,7 +384,7 @@ export const decodeCodexTool = (
     return patchDecoded(callId, parsePatchEnvelope(patch));
   }
 
-  const helper = HELPER.exec(src)?.[1];
+  const helper = CODEX_HELPER.exec(src)?.[1];
 
   if (helper?.startsWith('mcp__') === true) {
     return mcpDecoded(callId, src, helper);

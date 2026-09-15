@@ -14,8 +14,18 @@ import {
   parseJsonContainer,
 } from '@utils/jsonUtils';
 
+import {
+  EDITED_KEYS,
+  EMPTY_PERMISSIONS,
+  MAX_RULE_LENGTH,
+  MAX_RULES,
+  PERMISSION_KEYS,
+  SURFACES,
+} from './constants';
+
 import type { AgentId } from '@config/agents';
 import type { JsonObject, JsonValue } from '@utils/jsonUtils';
+import type { SurfaceSpec } from './constants';
 
 export type SettingsScope = 'user' | 'project' | 'local';
 
@@ -32,13 +42,6 @@ export interface AgentSettingsSurface {
    * would invent configuration that agent never asked for.
    */
   readonly editable: boolean;
-}
-
-interface SurfaceSpec {
-  readonly scope: SettingsScope;
-  readonly format: SettingsFormat;
-  readonly editable: boolean;
-  readonly path: (home: string, project: string, claudeDir: string) => string;
 }
 
 export interface SettingsPermissions {
@@ -73,11 +76,6 @@ export interface SettingsPatch {
 
 export const settingsScopes: readonly SettingsScope[] = ['user', 'project', 'local'];
 
-const PERMISSION_KEYS = ['allow', 'deny', 'ask', 'additionalDirectories'] as const;
-const EDITED_KEYS = new Set<string>(['permissions', 'env']);
-const MAX_RULES = 500;
-const MAX_RULE_LENGTH = 400;
-
 const isScope = (value: string): value is SettingsScope => {
   return settingsScopes.some((scope) => {
     return scope === value;
@@ -85,93 +83,6 @@ const isScope = (value: string): value is SettingsScope => {
 };
 
 export const isSettingsScope = isScope;
-
-/*
- * Where each agent keeps the file that configures it, rather than only where
- * Claude does. An agent absent here has no general settings file at all: it
- * configures MCP servers and rules in their own files, which the Health tab
- * already reads, and inventing a settings page for it would show an empty one.
- */
-const SURFACES: Partial<Record<AgentId, readonly SurfaceSpec[]>> = {
-  claude: [
-    {
-      scope: 'user',
-      format: 'json',
-      editable: true,
-      path: (_home, _project, claudeDir) => {
-        return join(claudeDir, 'settings.json');
-      },
-    },
-    {
-      scope: 'project',
-      format: 'json',
-      editable: true,
-      path: (_home, project) => {
-        return join(project, '.claude', 'settings.json');
-      },
-    },
-    {
-      scope: 'local',
-      format: 'json',
-      editable: true,
-      path: (_home, project) => {
-        return join(project, '.claude', 'settings.local.json');
-      },
-    },
-  ],
-  gemini: [
-    {
-      scope: 'user',
-      format: 'json',
-      editable: false,
-      path: (home) => {
-        return join(home, '.gemini', 'settings.json');
-      },
-    },
-    {
-      scope: 'project',
-      format: 'json',
-      editable: false,
-      path: (_home, project) => {
-        return join(project, '.gemini', 'settings.json');
-      },
-    },
-  ],
-  opencode: [{
-    scope: 'user',
-    format: 'json',
-    editable: false,
-    path: (home) => {
-      return join(home, '.config', 'opencode', 'opencode.json');
-    },
-  }],
-  codex: [{
-    scope: 'user',
-    format: 'toml',
-    editable: false,
-    path: (home) => {
-      return join(home, '.codex', 'config.toml');
-    },
-  }],
-  grok: [
-    {
-      scope: 'user',
-      format: 'toml',
-      editable: false,
-      path: (home) => {
-        return join(home, '.grok', 'config.toml');
-      },
-    },
-    {
-      scope: 'project',
-      format: 'toml',
-      editable: false,
-      path: (_home, project) => {
-        return join(project, '.grok', 'config.toml');
-      },
-    },
-  ],
-};
 
 // The agents SURFACES covers, checked against config's picker list in a test.
 const surfacedAgentsWith = (
@@ -256,13 +167,6 @@ const permissionsFrom = (root: JsonObject): SettingsPermissions => {
     ask: stringList(block?.ask),
     additionalDirectories: stringList(block?.additionalDirectories),
   };
-};
-
-const EMPTY_PERMISSIONS: SettingsPermissions = {
-  allow: [],
-  deny: [],
-  ask: [],
-  additionalDirectories: [],
 };
 
 const readRoot = async (path: string): Promise<{

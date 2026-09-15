@@ -12,9 +12,10 @@ import { parseJsonContainer } from '@utils/jsonUtils';
 import { humanPreview } from '@utils/titleUtils';
 
 import { splitUserText } from '../../session/utils/parserUtils';
+import { CLINE_TASK_PROGRESS } from '../constants';
 
 import { clineOutcomes } from './clineOutcomeUtils';
-import { parseClineBlocks, TASK_PROGRESS } from './clineXmlUtils';
+import { parseClineBlocks } from './clineXmlUtils';
 import { conversationMessageCount, firstUserMessageText } from './outcomeUtils';
 import { listTree } from './treeUtils';
 
@@ -310,7 +311,7 @@ const withClineOutcomes = (entries: readonly StructuredEntry[]): readonly Struct
   return entries.map((entry) => {
     if (entry.kind === 'assistant') {
       callIds = entry.blocks.flatMap((block) => {
-        return block.blockType === 'tool-use' && block.call.name !== TASK_PROGRESS
+        return block.blockType === 'tool-use' && block.call.name !== CLINE_TASK_PROGRESS
           ? [block.call.id]
           : [];
       });
