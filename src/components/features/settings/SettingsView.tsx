@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -10,6 +10,7 @@ import {
   Save,
   SlidersHorizontal,
 } from 'lucide-react';
+import { motion } from 'motion/react';
 
 import { projectScopedSettingsAgents } from '@config/agents';
 
@@ -20,6 +21,7 @@ import { toErrorMessage } from '@utils/errorUtils';
 import {
   Badge,
   Button,
+  controlTransition,
   EmptyState,
   Spinner,
 } from '@ui/index';
@@ -180,6 +182,9 @@ export const SettingsView: FC<SettingsViewProps> = ({
   const { t } = useTranslation('settings');
   const scopes = settings.data ?? [];
   const [active, setActive] = useState<SettingsScope>('user');
+  // One underline for the strip, so it slides between files rather than
+  // vanishing under one tab and appearing under the next.
+  const markerId = useId();
   /**
    * Keyed by path, so switching scope parks an edit rather than discarding it.
    * A key present is the definition of unsaved: it is dropped once the file has
@@ -266,17 +271,24 @@ export const SettingsView: FC<SettingsViewProps> = ({
                 }}
                 className={cn(
                   `
-                    -mb-px flex items-center gap-1.5 border-b-2 px-3 py-1.5
-                    text-xs font-medium transition-colors
+                    relative flex items-center gap-1.5 px-3 py-1.5 text-xs
+                    font-medium transition-colors
                   `,
                   scope.scope === active
-                    ? 'border-primary text-foreground'
+                    ? 'text-foreground'
                     : `
-                      border-transparent text-muted-foreground
+                      text-muted-foreground
                       hover:text-foreground
                     `,
                 )}
               >
+                {scope.scope === active && (
+                  <motion.span
+                    className="absolute inset-x-0 -bottom-px h-0.5 bg-primary"
+                    layoutId={markerId}
+                    transition={controlTransition}
+                  />
+                )}
                 {t(SCOPE_LABELS[scope.scope])}
                 {/*
                   What is in the file, so three scopes do not have to be opened
