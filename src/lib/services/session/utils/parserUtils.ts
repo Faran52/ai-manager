@@ -373,12 +373,11 @@ const resultPartText = (part: RawResultPart): string => {
 };
 
 const partText = (parts: readonly RawResultPart[]): string => {
-  return parts
-    .map(resultPartText)
-    .filter((text) => {
-      return text.length > 0;
-    })
-    .join('\n\n');
+  const texts = parts.map(resultPartText).filter((text) => {
+    return text.length > 0;
+  });
+
+  return texts.join('\n\n');
 };
 
 const attachedImages = (blocks: readonly RawContentBlock[]): readonly ResultImage[] => {
@@ -489,14 +488,13 @@ const userText = (content: string | undefined, blocks: readonly RawContentBlock[
     return content;
   }
 
-  return blocks
-    .map((block) => {
-      return block.type === 'text' ? (block.text ?? '') : '';
-    })
-    .filter((text) => {
-      return text.length > 0;
-    })
-    .join('\n\n');
+  const texts = blocks.map((block) => {
+    return block.type === 'text' ? (block.text ?? '') : '';
+  }).filter((text) => {
+    return text.length > 0;
+  });
+
+  return texts.join('\n\n');
 };
 
 const parseUserTurn = (raw: RawHistoryLine): UserTurnEntry | undefined => {

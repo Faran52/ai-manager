@@ -48,9 +48,11 @@ const groupKeyOf = (project: ProjectSummary): string => {
 };
 
 const baseNameOf = (path: string): string => {
-  return path.split('/').filter((segment) => {
+  const segments = path.split('/').filter((segment) => {
     return segment.length > 0;
-  }).at(-1) ?? path;
+  });
+
+  return segments.at(-1) ?? path;
 };
 
 export const buildProjectTree = (

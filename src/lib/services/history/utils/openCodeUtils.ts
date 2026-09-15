@@ -286,11 +286,13 @@ const partsFor = (database: DatabaseSync, messageId: string): readonly PartRow[]
 };
 
 const userTextFrom = (parts: readonly PartRow[]): string => {
-  return parts.map((part) => {
+  const texts = parts.map((part) => {
     const parsed = payloadOf(part.pdata);
 
     return parsed.type === 'text' ? textAt(parsed) : '';
-  }).filter(Boolean).join('\n\n');
+  });
+
+  return texts.filter(Boolean).join('\n\n');
 };
 
 const assistantBlocksFrom = (parts: readonly PartRow[]): ToolParts => {
@@ -331,11 +333,12 @@ const assistantBlocksFrom = (parts: readonly PartRow[]): ToolParts => {
 };
 
 const buildSession = (database: DatabaseSync, sessionId: string): SessionBuild => {
-  const messages = database.prepare(
+  const messageRows = database.prepare(
     'SELECT id AS mid, time_created AS mtime, data AS mdata FROM message'
     + ' WHERE session_id = ? ORDER BY time_created ASC LIMIT '
     + String(OPENCODE_MESSAGE_LIMIT),
-  ).all(sessionId).map((row) => {
+  ).all(sessionId);
+  const messages = messageRows.map((row) => {
     return {
       mid: asString(row.mid),
       mtime: asNumber(row.mtime),

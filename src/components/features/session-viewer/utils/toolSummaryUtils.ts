@@ -28,14 +28,13 @@ const baseName = (path: string): string => {
 
 // One separator everywhere, applied after the collapse so it survives it.
 const detailOf = (...parts: readonly string[]): string => {
-  const joined = parts
-    .map((part) => {
-      return part.replaceAll(/\s+/gu, ' ').trim();
-    })
-    .filter((part) => {
-      return part.length > 0;
-    })
-    .join(' · ');
+  const collapsed = parts.map((part) => {
+    return part.replaceAll(/\s+/gu, ' ').trim();
+  });
+  const present = collapsed.filter((part) => {
+    return part.length > 0;
+  });
+  const joined = present.join(' · ');
 
   return joined.length <= DETAIL_MAX ? joined : `${joined.slice(0, DETAIL_MAX - 1)}…`;
 };

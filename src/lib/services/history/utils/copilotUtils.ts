@@ -886,9 +886,11 @@ export const listCopilotSessions = async (
     }));
   }));
 
-  return summaries.flat(2).filter((summary) => {
+  const inProject = summaries.flat(2).filter((summary) => {
     return projectId == null || summary.projectId === projectId;
-  }).sort((left, right) => {
+  });
+
+  return inProject.sort((left, right) => {
     return right.lastTimestampMs - left.lastTimestampMs;
   });
 };

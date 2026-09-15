@@ -178,23 +178,22 @@ export const listRecentEdits = async (
     }
   }
 
-  return [...files.values()]
-    .sort((left, right) => {
-      return right.lastEditedMs - left.lastEditedMs;
-    })
-    .slice(0, MAX_FILES)
-    .map((file) => {
-      return {
-        path: file.path,
-        edits: file.edits,
-        writes: file.writes,
-        sessionCount: file.sessions.size,
-        lastEditedMs: file.lastEditedMs,
-        recent: [...file.recent]
-          .sort((left, right) => {
-            return right.timestampMs - left.timestampMs;
-          })
-          .slice(0, RECENT_PER_FILE),
-      };
-    });
+  const newestFirst = [...files.values()].sort((left, right) => {
+    return right.lastEditedMs - left.lastEditedMs;
+  });
+
+  return newestFirst.slice(0, MAX_FILES).map((file) => {
+    return {
+      path: file.path,
+      edits: file.edits,
+      writes: file.writes,
+      sessionCount: file.sessions.size,
+      lastEditedMs: file.lastEditedMs,
+      recent: [...file.recent]
+        .sort((left, right) => {
+          return right.timestampMs - left.timestampMs;
+        })
+        .slice(0, RECENT_PER_FILE),
+    };
+  });
 };

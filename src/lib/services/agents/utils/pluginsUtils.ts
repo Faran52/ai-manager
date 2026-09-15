@@ -79,7 +79,7 @@ export const readClaudePlugins = async (
     ...Object.keys(objectAt(projectSettings, 'extraKnownMarketplaces')),
   ]);
 
-  return Object.entries(objectAt(installed, 'plugins')).flatMap(([id, installs]) => {
+  const applicable = Object.entries(objectAt(installed, 'plugins')).flatMap(([id, installs]) => {
     const install = applicableInstall(installs, projectPath);
     const marketplace = id.split('@')[1];
 
@@ -97,7 +97,9 @@ export const readClaudePlugins = async (
       version: stringAt(install, 'version') ?? 'unknown',
       knownMarketplace: marketplaces.has(marketplace),
     }];
-  }).sort((left, right) => {
+  });
+
+  return applicable.sort((left, right) => {
     return left.id.localeCompare(right.id);
   });
 };

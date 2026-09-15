@@ -92,11 +92,12 @@ export const rhythmFrom = (
   nowMs: number,
 ): StatsRhythm => {
   const hourCounts = histogram(hours, HOURS_IN_DAY);
-  const numbers = activity.map((day) => {
+  const dated = activity.map((day) => {
     return dayNumber(day.date);
   }).filter((day) => {
     return Number.isFinite(day);
-  }).sort((left, right) => {
+  });
+  const numbers = dated.toSorted((left, right) => {
     return left - right;
   });
   const first = numbers[0];

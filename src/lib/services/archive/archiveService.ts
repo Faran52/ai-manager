@@ -278,14 +278,14 @@ export const listArchives = async (home?: string): Promise<readonly ArchiveSumma
     return readArchive(name, home);
   }));
 
-  return manifests
-    .filter((manifest): manifest is ArchiveManifest => {
-      return manifest != null;
-    })
-    .map(summarise)
-    .sort((left, right) => {
-      return right.createdMs - left.createdMs;
-    });
+  const found = manifests.filter((manifest): manifest is ArchiveManifest => {
+    return manifest != null;
+  });
+  const summaries = found.map(summarise);
+
+  return summaries.sort((left, right) => {
+    return right.createdMs - left.createdMs;
+  });
 };
 
 /**

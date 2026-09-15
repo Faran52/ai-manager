@@ -49,7 +49,7 @@ const modelsFrom = (entry: JsonObject): readonly ModelUsage[] => {
     return [];
   }
 
-  return Object.entries(usage).flatMap(([model, value]) => {
+  const models = Object.entries(usage).flatMap(([model, value]) => {
     if (!isJsonObject(value)) {
       return [];
     }
@@ -62,7 +62,9 @@ const modelsFrom = (entry: JsonObject): readonly ModelUsage[] => {
       cacheCreationTokens: numberAt(value, 'cacheCreationInputTokens'),
       costUsd: numberAt(value, 'costUSD'),
     }];
-  }).sort((left, right) => {
+  });
+
+  return models.sort((left, right) => {
     return right.costUsd - left.costUsd;
   });
 };

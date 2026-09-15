@@ -123,9 +123,11 @@ const contentText = (content: JsonValue | undefined): string => {
     return '';
   }
 
-  return content.map(partText).filter((text) => {
+  const texts = content.map(partText).filter((text) => {
     return text.length > 0;
-  }).join('\n');
+  });
+
+  return texts.join('\n');
 };
 
 const thinkingBlocks = (record: JsonObject): readonly AssistantBlock[] => {
@@ -503,11 +505,14 @@ export const listGeminiSessions = async (
 ): Promise<readonly SessionSummary[]> => {
   const sessions = await scanSessions(roots);
 
-  return sessions.filter((session) => {
+  const inProject = sessions.filter((session) => {
     return projectId == null || projectIdOf(session) === projectId;
-  }).map((session) => {
+  });
+  const summaries = inProject.map((session) => {
     return summaryOf(agent, session);
-  }).sort((left, right) => {
+  });
+
+  return summaries.sort((left, right) => {
     return right.lastTimestampMs - left.lastTimestampMs;
   });
 };

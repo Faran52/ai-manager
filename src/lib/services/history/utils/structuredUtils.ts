@@ -88,7 +88,9 @@ const textFrom = (value: JsonValue | undefined): string => {
   }
 
   if (Array.isArray(value)) {
-    return value.map(textFrom).filter(Boolean).join('\n');
+    const texts = value.map(textFrom).filter(Boolean);
+
+    return texts.join('\n');
   }
 
   if (!isRecord(value)) {
@@ -530,11 +532,14 @@ export const listStructuredSessions = async (
 ): Promise<readonly SessionSummary[]> => {
   const sessions = await scanStructuredSessions(agent, roots);
 
-  return sessions.filter((session) => {
+  const inProject = sessions.filter((session) => {
     return projectId == null || session.summary.projectId === projectId;
-  }).map((session) => {
+  });
+  const summaries = inProject.map((session) => {
     return session.summary;
-  }).sort((left, right) => {
+  });
+
+  return summaries.sort((left, right) => {
     return right.lastTimestampMs - left.lastTimestampMs;
   });
 };

@@ -407,9 +407,11 @@ export const listNewestSessions = async (
     return routesFor(project.agent).sessions(project.agent, roots[project.agent], project.id);
   }));
 
-  return found.flat().sort((left, right) => {
+  const newestFirst = found.flat().sort((left, right) => {
     return right.lastTimestampMs - left.lastTimestampMs;
-  }).slice(0, limit);
+  });
+
+  return newestFirst.slice(0, limit);
 };
 
 export const listAgentSessions = async (

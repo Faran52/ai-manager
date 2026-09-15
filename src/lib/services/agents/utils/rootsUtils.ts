@@ -51,16 +51,16 @@ const siblingRoots = (home: string, defaultName: string): readonly string[] => {
   const needle = defaultName.toLowerCase();
 
   try {
-    return readdirSync(home, { withFileTypes: true })
-      .filter((entry) => {
-        return entry.isDirectory() && entry.name.toLowerCase().startsWith(needle);
-      })
-      .map((entry) => {
-        return join(home, entry.name);
-      })
-      .sort((left, right) => {
-        return left.localeCompare(right, undefined, { sensitivity: 'base' });
-      });
+    const siblings = readdirSync(home, { withFileTypes: true }).filter((entry) => {
+      return entry.isDirectory() && entry.name.toLowerCase().startsWith(needle);
+    });
+    const paths = siblings.map((entry) => {
+      return join(home, entry.name);
+    });
+
+    return paths.sort((left, right) => {
+      return left.localeCompare(right, undefined, { sensitivity: 'base' });
+    });
   }
   catch {
     return [];

@@ -154,9 +154,11 @@ const mergeBand = (lines: readonly string[], spans: readonly CellSpan[]): string
   });
 
   return Array.from({ length: spans.length }, (_unused, col) => {
-    return grid.map((cells) => {
+    const column = grid.map((cells) => {
       return cells[col];
-    }).filter(Boolean).join(' ');
+    }).filter(Boolean);
+
+    return column.join(' ');
   });
 };
 

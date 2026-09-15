@@ -106,15 +106,15 @@ const lastArrayString = (source: string, open: number): string | undefined => {
   const close = source.indexOf(']', open);
   const slice = close < 0 ? source.slice(open) : source.slice(open, close);
 
-  return [...slice.matchAll(/"((?:[^"\\]|\\.)*)"/gu)]
-    .map((match) => {
-      /* v8 ignore next -- the pattern always captures group 1 when it matches */
-      return unescape(match[1] ?? '');
-    })
-    .filter((part) => {
-      return part.length > 0;
-    })
-    .at(-1);
+  const quoted = [...slice.matchAll(/"((?:[^"\\]|\\.)*)"/gu)].map((match) => {
+    /* v8 ignore next -- the pattern always captures group 1 when it matches */
+    return unescape(match[1] ?? '');
+  });
+  const present = quoted.filter((part) => {
+    return part.length > 0;
+  });
+
+  return present.at(-1);
 };
 
 const shellCommands = (source: string): readonly string[] => {

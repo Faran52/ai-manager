@@ -507,9 +507,11 @@ const gooseSessions = (
     return [];
   }
 
-  return database.prepare(
+  const sessionRows = database.prepare(
     'SELECT id, name, working_dir, created_at, updated_at FROM sessions ORDER BY updated_at DESC',
-  ).all().flatMap((row) => {
+  ).all();
+
+  return sessionRows.flatMap((row) => {
     const sessionId = sqliteText(row.id);
     const entries = gooseEntries(database, sessionId, fallbackMs);
 
@@ -642,7 +644,11 @@ const crushSessions = (
     return [];
   }
 
-  return database.prepare('SELECT id, title FROM sessions ORDER BY updated_at DESC').all().flatMap((row) => {
+  const sessionRows = database
+    .prepare('SELECT id, title FROM sessions ORDER BY updated_at DESC')
+    .all();
+
+  return sessionRows.flatMap((row) => {
     const sessionId = sqliteText(row.id);
     const entries = crushEntries(database, sessionId, fallbackMs);
 
@@ -670,7 +676,9 @@ const llmSessions = (
     return [];
   }
 
-  return database.prepare('SELECT id, name FROM conversations').all().flatMap((row) => {
+  const conversationRows = database.prepare('SELECT id, name FROM conversations').all();
+
+  return conversationRows.flatMap((row) => {
     const conversationId = sqliteText(row.id);
     const entries = llmEntries(database, conversationId, fallbackMs);
 
@@ -707,9 +715,11 @@ const zedSessions = (
     return [];
   }
 
-  return database.prepare(
+  const threadRows = database.prepare(
     'SELECT id, summary, updated_at, data_type, data FROM threads ORDER BY updated_at DESC',
-  ).all().flatMap((row) => {
+  ).all();
+
+  return threadRows.flatMap((row) => {
     try {
       const sessionId = sqliteText(row.id);
       const content = zedData(sqliteText(row.data_type), row.data);

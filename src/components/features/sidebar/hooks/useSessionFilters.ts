@@ -39,12 +39,14 @@ export const useSessionFilters = (
         return true;
       }
 
-      return [
+      const haystack = [
         session.title,
         session.summary,
         session.preview,
         session.gitBranch,
-      ].join(' ').toLowerCase().includes(needle);
+      ].join(' ').toLowerCase();
+
+      return haystack.includes(needle);
     });
   }, [dateFilter, nowMs, sessions, text]);
 
