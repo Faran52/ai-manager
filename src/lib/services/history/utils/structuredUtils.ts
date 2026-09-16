@@ -6,11 +6,8 @@ import {
   relative,
 } from 'node:path';
 
-import { sumBy } from 'es-toolkit';
-
 import { appConfig } from '@config/appConfig';
 
-import { maxOf } from '@utils/arrayUtils';
 import { parseJsonContainer } from '@utils/jsonUtils';
 import { humanPreview } from '@utils/titleUtils';
 
@@ -20,6 +17,7 @@ import { CLINE_TASK_PROGRESS } from '../constants';
 import { clineOutcomes } from './clineOutcomeUtils';
 import { parseClineBlocks } from './clineXmlUtils';
 import { conversationMessageCount, firstUserMessageText } from './outcomeUtils';
+import { projectsFromSessions } from './projectSummaryUtils';
 import { listTree } from './treeUtils';
 
 import type { AgentId } from '@config/agents';
@@ -490,32 +488,18 @@ export const listStructuredProjects = async (
   roots: readonly string[],
 ): Promise<readonly ProjectSummary[]> => {
   const sessions = await scanStructuredSessions(agent, roots);
-  const grouped = new Map<string, StructuredSession[]>();
+  const summaries = sessions.map((session) => {
+    return session.summary;
+  });
 
-  for (const session of sessions) {
-    const values = grouped.get(session.summary.projectId) ?? [];
-
-    values.push(session);
-    grouped.set(session.summary.projectId, values);
-  }
-
-  return [...grouped.entries()].map(([id, values]) => {
-    const actualPath = values.reduce((_path, value) => {
-      return value.summary.cwd;
-    }, id);
+  // The newest session names the folder, which is what a project is on disk.
+  return projectsFromSessions(agent, summaries, (id, members) => {
+    // v8 ignore next -- every structured session records the folder it sits in
+    const actualPath = members.at(-1)?.cwd ?? id;
 
     return {
-      agent,
-      id,
       name: CLINE_FORKS[basename(actualPath)] ?? basename(actualPath),
       actualPath,
-      sessionCount: values.length,
-      messageCount: sumBy(values, (value) => {
-        return value.summary.messageCount;
-      }),
-      lastActivityMs: maxOf(values, (value) => {
-        return value.summary.lastTimestampMs;
-      }),
     };
   });
 };

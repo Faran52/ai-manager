@@ -3,13 +3,10 @@ import {
   readFile,
   stat,
 } from 'node:fs/promises';
-import { basename, join } from 'node:path';
-
-import { sumBy } from 'es-toolkit';
+import { join } from 'node:path';
 
 import { appConfig } from '@config/appConfig';
 
-import { maxOf } from '@utils/arrayUtils';
 import {
   isJsonArray,
   isJsonObject,
@@ -20,6 +17,7 @@ import { humanPreview } from '@utils/titleUtils';
 import { parseToolInput, splitUserText } from '../../session/utils/parserUtils';
 
 import { conversationMessageCount, firstUserMessageText } from './outcomeUtils';
+import { namedByFolder, projectsFromSessions } from './projectSummaryUtils';
 
 import type { AgentId } from '@config/agents';
 import type { JsonObject, JsonValue } from '@utils/jsonUtils';
@@ -518,37 +516,11 @@ export const listGeminiProjects = async (
   roots: readonly string[],
 ): Promise<readonly ProjectSummary[]> => {
   const sessions = await scanSessions(roots);
-  const byProject = new Map<string, GeminiFileSession[]>();
-
-  for (const session of sessions) {
-    const id = projectIdOf(session);
-    const bucket = byProject.get(id) ?? [];
-
-    bucket.push(session);
-    byProject.set(id, bucket);
-  }
-
-  return [...byProject.entries()].map(([id, values]) => {
-    const folder = values.find((value) => {
-      return value.cwd != null;
-    })?.cwd;
-
-    return {
-      agent,
-      id,
-      name: folder == null ? 'Unknown project' : basename(folder),
-      actualPath: folder,
-      sessionCount: values.length,
-      messageCount: sumBy(values, (value) => {
-        return conversationMessageCount(value.entries);
-      }),
-      lastActivityMs: maxOf(values, (value) => {
-        return value.lastTimestampMs;
-      }),
-    } satisfies ProjectSummary;
-  }).sort((left, right) => {
-    return right.lastActivityMs - left.lastActivityMs;
+  const summaries = sessions.map((session) => {
+    return summaryOf(agent, session);
   });
+
+  return projectsFromSessions(agent, summaries, namedByFolder('Unknown project'));
 };
 
 export const loadGeminiEntries = async (

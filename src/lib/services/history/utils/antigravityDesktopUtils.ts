@@ -33,6 +33,7 @@ import {
 } from '../constants';
 
 import { conversationMessageCount } from './outcomeUtils';
+import { namedByFolder, projectsFromSessions } from './projectSummaryUtils';
 
 import type { AgentId } from '@config/agents';
 import type {
@@ -296,36 +297,9 @@ export const listAntigravityDesktopProjects = async (
   agent: AgentId,
   roots: readonly string[],
 ): Promise<readonly ProjectSummary[]> => {
-  const sessions = await scan(roots);
-  const byProject = new Map<string, DesktopSession[]>();
+  const sessions = await listAntigravityDesktopSessions(agent, roots);
 
-  for (const session of sessions) {
-    const id = projectIdOf(session);
-    const bucket = byProject.get(id) ?? [];
-
-    bucket.push(session);
-    byProject.set(id, bucket);
-  }
-
-  return [...byProject.entries()].map(([id, values]) => {
-    const workspace = values.find((value) => {
-      return value.workspace != null;
-    })?.workspace;
-
-    return {
-      agent,
-      id,
-      name: workspace == null ? 'Unplaced conversations' : basename(workspace),
-      actualPath: workspace,
-      sessionCount: values.length,
-      messageCount: sumBy(values, (value) => {
-        return conversationMessageCount(value.entries);
-      }),
-      lastActivityMs: maxOf(values, (value) => {
-        return value.timestampMs;
-      }),
-    } satisfies ProjectSummary;
-  });
+  return projectsFromSessions(agent, sessions, namedByFolder('Unplaced conversations'));
 };
 
 // A desktop session is a directory of artifacts, where a CLI session is one file.

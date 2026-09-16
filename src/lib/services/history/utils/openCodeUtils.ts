@@ -2,11 +2,8 @@ import { stat } from 'node:fs/promises';
 import { basename } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
-import { sumBy } from 'es-toolkit';
-
 import { appConfig } from '@config/appConfig';
 
-import { maxOf } from '@utils/arrayUtils';
 import { parseUnifiedDiff } from '@utils/diffUtils';
 import { truncate } from '@utils/formatUtils';
 import { isJsonObject, parseJsonContainer } from '@utils/jsonUtils';
@@ -26,6 +23,7 @@ import {
 } from '../constants';
 
 import { conversationMessageCount } from './outcomeUtils';
+import { projectsFromSessions } from './projectSummaryUtils';
 import { databaseFiles } from './sqliteUtils';
 
 import type { AgentId } from '@config/agents';
@@ -541,36 +539,15 @@ export const listOpenCodeProjects = async (
   agent: AgentId,
   roots: readonly string[],
 ): Promise<readonly ProjectSummary[]> => {
-  const sessions = await scanSessions(agent, roots);
-  const grouped = new Map<string, SessionSummary[]>();
-
-  for (const session of sessions) {
-    const values = grouped.get(session.projectId) ?? [];
-
-    values.push(session);
-    grouped.set(session.projectId, values);
-  }
-
-  return [...grouped.entries()].map(([id, values]) => {
-    const cwd = values.find((value) => {
-      return value.cwd != null;
+  return projectsFromSessions(agent, await scanSessions(agent, roots), (id, members) => {
+    const cwd = members.find((member) => {
+      return member.cwd != null;
     })?.cwd;
 
     return {
-      agent,
-      id,
-      name: cwd != null ? basename(cwd) : basename(id),
+      name: basename(cwd ?? id),
       actualPath: cwd,
-      sessionCount: values.length,
-      messageCount: sumBy(values, (value) => {
-        return value.messageCount;
-      }),
-      lastActivityMs: maxOf(values, (value) => {
-        return value.lastTimestampMs;
-      }),
     };
-  }).sort((left, right) => {
-    return right.lastActivityMs - left.lastActivityMs;
   });
 };
 

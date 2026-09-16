@@ -10,11 +10,8 @@ import {
 } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
-import { sumBy } from 'es-toolkit';
-
 import { appConfig } from '@config/appConfig';
 
-import { maxOf } from '@utils/arrayUtils';
 import { isJsonObject, parseJsonContainer } from '@utils/jsonUtils';
 import { humanPreview } from '@utils/titleUtils';
 
@@ -26,6 +23,7 @@ import {
   loadAntigravityDesktopEntries,
 } from './antigravityDesktopUtils';
 import { conversationMessageCount, firstUserMessageText } from './outcomeUtils';
+import { namedByFolder, projectsFromSessions } from './projectSummaryUtils';
 
 import type { AgentId } from '@config/agents';
 import type { JsonObject } from '@utils/jsonUtils';
@@ -288,6 +286,26 @@ const projectIdOf = (session: AntigravitySession): string => {
   return session.workspace ?? UNPLACED;
 };
 
+const summaryOf = (agent: AgentId, session: AntigravitySession): SessionSummary => {
+  return {
+    agent,
+    id: session.conversationId,
+    actualSessionId: session.conversationId,
+    filePath: session.filePath,
+    projectId: projectIdOf(session),
+    title: session.title,
+    preview: session.preview == null
+      ? undefined
+      : humanPreview(session.preview, appConfig.previewLength),
+    messageCount: conversationMessageCount(session.entries),
+    firstTimestampMs: session.firstTimestampMs,
+    lastTimestampMs: session.lastTimestampMs,
+    modifiedMs: session.modifiedMs,
+    sizeBytes: session.sizeBytes,
+    cwd: session.workspace,
+  };
+};
+
 export const listAntigravitySessions = async (
   agent: AgentId,
   roots: readonly string[],
@@ -297,28 +315,14 @@ export const listAntigravitySessions = async (
     scanSessions(roots),
     listAntigravityDesktopSessions(agent, roots, projectId),
   ]);
-
-  return [...desktop, ...sessions.filter((session) => {
+  const inProject = sessions.filter((session) => {
     return projectId == null || projectIdOf(session) === projectId;
-  }).map((session) => {
-    return {
-      agent,
-      id: session.conversationId,
-      actualSessionId: session.conversationId,
-      filePath: session.filePath,
-      projectId: projectIdOf(session),
-      title: session.title,
-      preview: session.preview == null
-        ? undefined
-        : humanPreview(session.preview, appConfig.previewLength),
-      messageCount: conversationMessageCount(session.entries),
-      firstTimestampMs: session.firstTimestampMs,
-      lastTimestampMs: session.lastTimestampMs,
-      modifiedMs: session.modifiedMs,
-      sizeBytes: session.sizeBytes,
-      cwd: session.workspace,
-    } satisfies SessionSummary;
-  })].sort((left, right) => {
+  });
+  const summaries = inProject.map((session) => {
+    return summaryOf(agent, session);
+  });
+
+  return [...desktop, ...summaries].sort((left, right) => {
     return right.lastTimestampMs - left.lastTimestampMs;
   });
 };
@@ -331,35 +335,12 @@ export const listAntigravityProjects = async (
     scanSessions(roots),
     listAntigravityDesktopProjects(agent, roots),
   ]);
-  const byProject = new Map<string, AntigravitySession[]>();
+  const summaries = sessions.map((session) => {
+    return summaryOf(agent, session);
+  });
+  const cli = projectsFromSessions(agent, summaries, namedByFolder('Unplaced conversations'));
 
-  for (const session of sessions) {
-    const id = projectIdOf(session);
-    const bucket = byProject.get(id) ?? [];
-
-    bucket.push(session);
-    byProject.set(id, bucket);
-  }
-
-  return [...desktop, ...[...byProject.entries()].map(([id, values]) => {
-    const workspace = values.find((value) => {
-      return value.workspace != null;
-    })?.workspace;
-
-    return {
-      agent,
-      id,
-      name: workspace == null ? 'Unplaced conversations' : basename(workspace),
-      actualPath: workspace,
-      sessionCount: values.length,
-      messageCount: sumBy(values, (value) => {
-        return conversationMessageCount(value.entries);
-      }),
-      lastActivityMs: maxOf(values, (value) => {
-        return value.lastTimestampMs;
-      }),
-    } satisfies ProjectSummary;
-  })].sort((left, right) => {
+  return [...desktop, ...cli].sort((left, right) => {
     return right.lastActivityMs - left.lastActivityMs;
   });
 };

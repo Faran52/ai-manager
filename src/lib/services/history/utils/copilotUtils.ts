@@ -6,11 +6,8 @@ import {
 } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { sumBy } from 'es-toolkit';
-
 import { appConfig } from '@config/appConfig';
 
-import { maxOf } from '@utils/arrayUtils';
 import {
   isJsonArray,
   isJsonObject,
@@ -36,6 +33,7 @@ import {
 
 import { fileFactsStore } from './fileFactsUtils';
 import { conversationMessageCount, firstUserMessageText } from './outcomeUtils';
+import { namedByFolder, projectsFromSessions } from './projectSummaryUtils';
 
 import type { AgentId } from '@config/agents';
 import type { JsonObject, JsonValue } from '@utils/jsonUtils';
@@ -898,37 +896,7 @@ export const listCopilotProjects = async (
   agent: AgentId,
   roots: readonly string[],
 ): Promise<readonly ProjectSummary[]> => {
-  const sessions = await listCopilotSessions(agent, roots);
-  const grouped = new Map<string, SessionSummary[]>();
-
-  for (const session of sessions) {
-    const values = grouped.get(session.projectId) ?? [];
-
-    values.push(session);
-    grouped.set(session.projectId, values);
-  }
-
-  return [...grouped.entries()].map(([id, values]) => {
-    const folder = values.find((value) => {
-      return value.cwd != null;
-    })?.cwd;
-
-    return {
-      agent,
-      id,
-      name: folder != null ? basename(folder) : 'Unknown project',
-      actualPath: folder,
-      sessionCount: values.length,
-      messageCount: sumBy(values, (value) => {
-        return value.messageCount;
-      }),
-      lastActivityMs: maxOf(values, (value) => {
-        return value.lastTimestampMs;
-      }),
-    } satisfies ProjectSummary;
-  }).sort((left, right) => {
-    return right.lastActivityMs - left.lastActivityMs;
-  });
+  return projectsFromSessions(agent, await listCopilotSessions(agent, roots), namedByFolder('Unknown project'));
 };
 
 export const loadCopilotEntries = async (filePath: string): Promise<readonly HistoryEntry[] | undefined> => {
