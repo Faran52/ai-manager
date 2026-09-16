@@ -1,7 +1,7 @@
 import { PaneDivider } from '@ui/index';
 
+import type { WidthRange } from '@ui/index';
 import type { FC } from 'react';
-import type { WidthRange } from '../hooks/usePaneLayout';
 
 export interface ColumnGapProps {
   // A folded column has no width to resize, but the 8px still has to be

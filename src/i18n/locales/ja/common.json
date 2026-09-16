@@ -65,6 +65,7 @@
   "navSettings": "設定",
   "navPrimary": "ビュー",
   "searchAllChatsLabel": "すべてのチャットを検索",
+  "searching": "検索中…",
   "typeTwoCharacters": "2 文字以上入力してください。",
   "languageSystem": "システムに合わせる",
   "languageSystemNamed": "システム（{{language}}）",

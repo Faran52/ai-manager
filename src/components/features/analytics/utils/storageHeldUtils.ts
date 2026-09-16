@@ -14,6 +14,15 @@ export interface Held {
   readonly disposable: readonly StorageEntry[];
 }
 
+// Two "cache" rows under one agent tell the reader nothing; the parent folder does.
+export const entryLabel = (entry: StorageEntry, siblings: readonly StorageEntry[]): string => {
+  const repeated = siblings.some((other) => {
+    return other !== entry && other.name === entry.name;
+  });
+
+  return repeated ? entry.path.split('/').slice(-2).join('/') : entry.name;
+};
+
 // What the storage panel shows: every agent, or the one named, with its totals
 // and the entries the agents can rebuild on their own.
 export const heldBy = (report: StorageReport | undefined, agent: AgentId | undefined): Held => {

@@ -9,11 +9,9 @@ import {
   sidebarWidthStorageKey,
 } from '@config/storageKeys';
 
-export interface WidthRange {
-  readonly min: number;
-  readonly max: number;
-  readonly fallback: number;
-}
+import { storedWidth } from '@ui/index';
+
+import type { WidthRange } from '@ui/index';
 
 export interface PaneLayout {
   readonly projectsWidth: number;
@@ -40,12 +38,6 @@ export const SESSIONS_WIDTH: WidthRange = {
 
 // The width a column folds to: its strip of marks, w-14 in the tailwind scale.
 export const COLLAPSED_WIDTH = '3.5rem';
-
-const storedWidth = (key: string, range: WidthRange): number => {
-  const stored = Number(localStorage.getItem(key));
-
-  return Number.isFinite(stored) && stored >= range.min ? Math.min(stored, range.max) : range.fallback;
-};
 
 /*
  * The two sidebar columns' widths and whether each is folded, remembered

@@ -129,7 +129,7 @@ export const SearchDialog: FC<SearchDialogProps> = ({
           </p>
         )}
         {hasQuery && search.phase === 'loading' && (
-          <p className="px-3 py-6 text-center text-sm text-muted-foreground">Searching…</p>
+          <p className="px-3 py-6 text-center text-sm text-muted-foreground">{t('searching')}</p>
         )}
         {hasQuery && search.phase === 'error' && (
           <p className="px-3 py-6 text-center text-sm text-destructive">{search.error}</p>

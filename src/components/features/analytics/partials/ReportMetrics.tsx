@@ -58,7 +58,7 @@ export const ReportMetrics: FC<ReportMetricsProps> = ({ stats }) => {
       />
       <MetricCard
         label={t('computeTime')}
-        value={stats.totals.usageRecorded
+        value={stats.totals.usageRecorded && stats.totals.durationMs > 0
           ? formatDurationMs(stats.totals.durationMs)
           : t('notRecorded', { ns: 'common' })}
         hint={stats.totals.usageRecorded

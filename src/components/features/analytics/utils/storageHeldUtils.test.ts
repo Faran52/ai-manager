@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 
-import { heldBy } from './storageHeldUtils';
+import { entryLabel, heldBy } from './storageHeldUtils';
 
 import type { StorageReport } from '@services/storage/storageService';
 
@@ -51,4 +51,30 @@ test('totals every agent, or only the one named, and lists what can be rebuilt',
   expect(one.shown).toHaveLength(1);
   expect(one.totalBytes).toBe(10);
   expect(heldBy(undefined, undefined).shown).toEqual([]);
+});
+
+test('labels an entry by name unless a sibling shares it, then by its parent folder too', () => {
+  const cache = {
+    name: 'cache',
+    path: '/home/.codex/cache',
+    bytes: 1,
+    reclaimable: true,
+  };
+  const tmpCache = {
+    name: 'cache',
+    path: '/home/.codex/tmp/cache',
+    bytes: 1,
+    reclaimable: true,
+  };
+  const plugins = {
+    name: 'plugins',
+    path: '/home/.codex/plugins',
+    bytes: 1,
+    reclaimable: false,
+  };
+  const entries = [cache, tmpCache, plugins];
+
+  expect(entryLabel(cache, entries)).toBe('.codex/cache');
+  expect(entryLabel(tmpCache, entries)).toBe('tmp/cache');
+  expect(entryLabel(plugins, entries)).toBe('plugins');
 });

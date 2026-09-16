@@ -31,6 +31,11 @@ describe('formatTokens', () => {
     expect(formatTokens(1_234_567)).toBe('1.2M');
     expect(formatTokens(12_000_000)).toBe('12M');
   });
+
+  test('abbreviates billions instead of a four-digit million count', () => {
+    expect(formatTokens(10_571_000_000)).toBe('11B');
+    expect(formatTokens(1_250_000_000)).toBe('1.3B');
+  });
 });
 
 describe('formatCost', () => {

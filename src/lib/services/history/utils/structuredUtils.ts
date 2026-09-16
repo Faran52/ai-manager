@@ -39,6 +39,12 @@ interface StructuredSession {
   readonly entries: readonly HistoryEntry[];
 }
 
+interface SessionIdentity {
+  readonly cwd: string;
+  readonly id: string;
+  readonly projectId: string;
+}
+
 interface WalkOptions {
   readonly agent: AgentId;
   readonly maxDepth: number;
@@ -389,11 +395,7 @@ const projectIdFor = (root: string, filePath: string): string => {
  * `tasks/` is the project, which keeps Cline, Roo and Kilo apart instead of
  * turning every task id into its own single-session project.
  */
-const identityFor = (agent: AgentId, root: string, filePath: string): {
-  readonly cwd: string;
-  readonly id: string;
-  readonly projectId: string;
-} => {
+const identityFor = (agent: AgentId, root: string, filePath: string): SessionIdentity => {
   if (agent === 'cline') {
     return {
       cwd: dirname(root),

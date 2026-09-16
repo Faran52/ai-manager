@@ -42,3 +42,4 @@ export * from './toast/Toast';
 export * from './toast/ToastProvider';
 export * from './tooltip/Tooltip';
 export * from './utils/patchUtils';
+export * from './utils/storedWidthUtils';

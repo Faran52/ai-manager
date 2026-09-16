@@ -69,3 +69,19 @@ test('says so when the agent recorded no usage at all', () => {
 
   expect(screen.getAllByText('Not recorded')).toHaveLength(2);
 });
+
+test('says compute time was not recorded when the agent logged tokens but no durations', () => {
+  render(
+    <ReportMetrics stats={{
+      ...stats,
+      totals: {
+        ...stats.totals,
+        durationMs: 0,
+      },
+    }}
+    />,
+  );
+
+  expect(screen.getByText('Not recorded')).toBeDefined();
+  expect(screen.getByText('$0.40 derived cost')).toBeDefined();
+});

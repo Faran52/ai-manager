@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { clamp } from 'es-toolkit';
 import {
   CircleAlert,
   FileText,
@@ -25,6 +26,7 @@ import {
   EmptyState,
   IconButton,
   Spinner,
+  storedWidth,
   useSmoothScroll,
 } from '@ui/index';
 import { useMessages } from '@features/history-data';
@@ -47,6 +49,7 @@ import type { AgentId } from '@config/agents';
 import type { AsyncStatus } from '@features/history-data';
 import type { EditedFile, FileEdit } from '@services/edits/editsService';
 import type { HistoryEntry } from '@services/history/historyService';
+import type { WidthRange } from '@ui/index';
 import type { FC, ReactNode } from 'react';
 import type { TimelineNavigation } from './MessageTimeline';
 import type { CompanionPanel } from './partials';
@@ -73,14 +76,10 @@ export interface SessionViewerProps {
     | undefined;
 }
 
-const DEFAULT_COMPANION_WIDTH = 280;
-
-const initialNavigatorWidth = (): number => {
-  const stored = Number(localStorage.getItem(messageNavigatorWidthStorageKey));
-
-  return Number.isFinite(stored) && stored >= MIN_COMPANION_WIDTH
-    ? Math.min(stored, MAX_COMPANION_WIDTH)
-    : DEFAULT_COMPANION_WIDTH;
+const COMPANION_WIDTH: WidthRange = {
+  min: MIN_COMPANION_WIDTH,
+  max: MAX_COMPANION_WIDTH,
+  fallback: 280,
 };
 
 // The model the assistant last answered on, for the meta line. The transcript
@@ -115,7 +114,9 @@ export const SessionViewer: FC<SessionViewerProps> = ({
   const [panel, setPanel] = useState<CompanionPanel>(() => {
     return localStorage.getItem(messageNavigatorOpenStorageKey) === 'false' ? 'none' : 'navigator';
   });
-  const [navigatorWidth, setNavigatorWidth] = useState(initialNavigatorWidth);
+  const [navigatorWidth, setNavigatorWidth] = useState(() => {
+    return storedWidth(messageNavigatorWidthStorageKey, COMPANION_WIDTH);
+  });
   const [navigation, setNavigation] = useState<TimelineNavigation | null>(null);
   const supportsSidechains = agentOption(agent).supportsSidechains === true;
   const feed = useMessages(
@@ -384,10 +385,7 @@ export const SessionViewer: FC<SessionViewerProps> = ({
           }}
           onResize={(delta) => {
             setNavigatorWidth((width) => {
-              return Math.min(
-                Math.max(width - delta, MIN_COMPANION_WIDTH),
-                MAX_COMPANION_WIDTH,
-              );
+              return clamp(width - delta, MIN_COMPANION_WIDTH, MAX_COMPANION_WIDTH);
             });
           }}
           onClose={() => {

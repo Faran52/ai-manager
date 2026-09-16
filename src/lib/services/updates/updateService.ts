@@ -30,7 +30,7 @@ const runtimePlatform = (deps: UpdateDeps): UpdatePlatform | undefined => {
     return deps.platform;
   }
 
-  const os = (globalThis as { Deno?: { build?: { os?: string } } }).Deno?.build?.os;
+  const os = 'Deno' in globalThis ? Deno.build.os : undefined;
 
   if (os === 'darwin' || os === 'linux' || os === 'windows') {
     return os;

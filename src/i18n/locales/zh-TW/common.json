@@ -65,6 +65,7 @@
   "navSettings": "設定",
   "navPrimary": "檢視",
   "searchAllChatsLabel": "搜尋所有對話",
+  "searching": "搜尋中…",
   "typeTwoCharacters": "請至少輸入兩個字元。",
   "languageSystem": "跟隨系統",
   "languageSystemNamed": "跟隨系統（{{language}}）",

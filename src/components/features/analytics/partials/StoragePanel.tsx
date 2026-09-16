@@ -17,7 +17,7 @@ import {
   Spinner,
 } from '@ui/index';
 
-import { heldBy } from '../utils/storageHeldUtils';
+import { entryLabel, heldBy } from '../utils/storageHeldUtils';
 
 import type { AgentId } from '@config/agents';
 import type { AsyncResource } from '@features/history-data';
@@ -181,7 +181,7 @@ export const StoragePanel: FC<StoragePanelProps> = ({
                                   className="min-w-0 flex-1 truncate font-mono"
                                   title={entry.path}
                                 >
-                                  {entry.name}
+                                  {entryLabel(entry, held.entries)}
                                 </span>
                                 <span className="tabular-nums">{sizeLabel(entry.bytes)}</span>
                               </li>

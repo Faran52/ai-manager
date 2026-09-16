@@ -1,4 +1,4 @@
-import type { AgentSetup } from '@services/agents/agentsService';
+import type { AgentSetup, SetupFinding } from '@services/agents/agentsService';
 
 export interface ModelSummary {
   readonly model: string | undefined;
@@ -10,6 +10,22 @@ export interface ModelSummary {
 // One Claude profile per card, so the key is the agent plus the profile.
 export const setupKey = (setup: Pick<AgentSetup, 'agent' | 'profile'>): string => {
   return `${setup.agent}:${setup.profile ?? ''}`;
+};
+
+export const setupByKey = (setups: readonly AgentSetup[], key: string | null): AgentSetup | null => {
+  return setups.find((setup) => {
+    return setupKey(setup) === key;
+  }) ?? null;
+};
+
+// Findings render inside the agent they name, so each card asks for its own.
+export const findingsFor = (
+  findings: readonly SetupFinding[],
+  setup: Pick<AgentSetup, 'agent' | 'profile'>,
+): readonly SetupFinding[] => {
+  return findings.filter((finding) => {
+    return finding.agent === setup.agent && finding.profile === setup.profile;
+  });
 };
 
 export const agentIsConfigured = (setup: AgentSetup): boolean => {

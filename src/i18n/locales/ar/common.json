@@ -65,6 +65,7 @@
   "navSettings": "الإعدادات",
   "navPrimary": "العروض",
   "searchAllChatsLabel": "البحث في كل المحادثات",
+  "searching": "جارٍ البحث…",
   "typeTwoCharacters": "اكتب حرفين على الأقل.",
   "languageSystem": "لغة النظام",
   "languageSystemNamed": "لغة النظام ({{language}})",

@@ -22,7 +22,12 @@ import {
   PluginInventory,
   ProjectTrustCard,
 } from './partials';
-import { agentIsConfigured, setupKey } from './utils/agentSetupUtils';
+import {
+  agentIsConfigured,
+  findingsFor,
+  setupByKey,
+  setupKey,
+} from './utils/agentSetupUtils';
 
 import type {
   AgentSetup,
@@ -68,13 +73,8 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
    */
   const [pluginsKey, setPluginsKey] = useState<string | null>(null);
   const [settingsKey, setSettingsKey] = useState<string | null>(null);
-  const bySetupKey = (key: string | null): AgentSetup | null => {
-    return setups.find((setup) => {
-      return setupKey(setup) === key;
-    }) ?? null;
-  };
-  const pluginsFor = bySetupKey(pluginsKey);
-  const settingsFor = bySetupKey(settingsKey);
+  const pluginsFor = setupByKey(setups, pluginsKey);
+  const settingsFor = setupByKey(setups, settingsKey);
   const settings = useSettings(
     settingsFor == null ? null : projectPath,
     settingsFor?.agent ?? 'claude',
@@ -101,18 +101,8 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
     );
   }
 
-  /*
-   * Findings render inside the agent they name rather than in a list of their
-   * own above the table, where the reader had to carry a summary back down to
-   * the row wearing the warning marker.
-   */
-  const findingsFor = (setup: AgentSetup): readonly SetupFinding[] => {
-    return findings.filter((finding) => {
-      return finding.agent === setup.agent && finding.profile === setup.profile;
-    });
-  };
   const hasFinding = (setup: AgentSetup): boolean => {
-    return findingsFor(setup).length > 0;
+    return findingsFor(findings, setup).length > 0;
   };
   const configured = setups.filter(agentIsConfigured);
   const unconfigured = setups.filter((setup) => {
@@ -173,7 +163,7 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
                 projectPath={projectPath}
                 plugins={setup.plugins ?? []}
                 sessionCount={sessionCounts[setupKey(setup)] ?? 0}
-                findings={findingsFor(setup)}
+                findings={findingsFor(findings, setup)}
                 nowMs={nowMs}
                 open={expanded === setupKey(setup)}
                 onToggle={() => {

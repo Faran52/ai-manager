@@ -1,6 +1,6 @@
 /* The slice of the `deno desktop` runtime the entry uses. This repo typechecks
    under Node, which has no Deno global, and Deno's own lib would be a
-   dependency carried for the sake of two members. */
+   dependency carried for the sake of three members. */
 declare namespace Deno {
   interface BrowserWindowOptions {
     // Initial width in logical pixels.
@@ -14,6 +14,12 @@ declare namespace Deno {
   }
 
   function exit(code: number): never;
+
+  interface Build {
+    readonly os: string;
+  }
+
+  const build: Build;
 }
 
 /* Resolution only: the built server entry exists after `astro build`, and dist

@@ -1,6 +1,11 @@
 import { expect, test } from 'vitest';
 
-import { agentIsConfigured, modelSummaryOf } from './agentSetupUtils';
+import {
+  agentIsConfigured,
+  findingsFor,
+  modelSummaryOf,
+  setupByKey,
+} from './agentSetupUtils';
 
 import type { AgentSetup } from '@services/agents/agentsService';
 
@@ -71,4 +76,27 @@ test('leaves every field unset for a reader that records neither', () => {
     authMethod: undefined,
     provider: undefined,
   });
+});
+
+test('finds a setup by its key and the findings that name it', () => {
+  const personal = setup();
+  const work = setup({ profile: 'work' });
+  const hookMissing = {
+    agent: 'claude' as const,
+    profile: 'work',
+    kind: 'hook' as const,
+    summary: 'hook missing',
+    detail: '',
+  };
+  const serverMissing = {
+    agent: 'codex' as const,
+    kind: 'mcp' as const,
+    summary: 'server missing',
+    detail: '',
+  };
+
+  expect(setupByKey([personal, work], 'claude:work')).toBe(work);
+  expect(setupByKey([personal, work], null)).toBeNull();
+  expect(findingsFor([hookMissing, serverMissing], work)).toEqual([hookMissing]);
+  expect(findingsFor([hookMissing, serverMissing], personal)).toEqual([]);
 });

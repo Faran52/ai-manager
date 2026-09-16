@@ -40,18 +40,19 @@ const GRID = `
 
 export const ModelDistribution: FC<ModelDistributionProps> = ({ models }) => {
   const { t } = useTranslation('analytics');
-  const ordered = [...models].sort((left, right) => {
-    return (right.costUsd ?? -1) - (left.costUsd ?? -1)
-      || right.inputTokens + right.outputTokens - left.inputTokens - left.outputTokens;
+  // The service already orders by cost, then tokens. A model with no tokens is a
+  // synthetic placeholder and has nothing to show.
+  const shown = models.filter((model) => {
+    return model.inputTokens + model.outputTokens > 0;
   });
-  const max = maxOf(ordered, (model) => {
+  const max = maxOf(shown, (model) => {
     return model.inputTokens + model.outputTokens;
   });
 
   return (
     <Panel title={t('modelDistribution')} className="flex h-full flex-col">
       <ul className={GRID} data-model-distribution>
-        {ordered.map((model, index) => {
+        {shown.map((model, index) => {
           return (
             <BarRow
               index={index}
@@ -80,7 +81,7 @@ export const ModelDistribution: FC<ModelDistributionProps> = ({ models }) => {
             />
           );
         })}
-        {models.length === 0 && (
+        {shown.length === 0 && (
           <li className="col-span-4 text-xs text-muted-foreground">{t('noModels')}</li>
         )}
       </ul>

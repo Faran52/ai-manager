@@ -65,6 +65,7 @@
   "navSettings": "Settings",
   "navPrimary": "Views",
   "searchAllChatsLabel": "Search all chats",
+  "searching": "Searching…",
   "typeTwoCharacters": "Type at least two characters.",
   "languageSystem": "System",
   "languageSystemNamed": "System ({{language}})",

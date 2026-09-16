@@ -1,7 +1,12 @@
 const THOUSAND = 1_000;
 const MILLION = 1_000_000;
+const BILLION = 1_000_000_000;
 
 export const formatTokens = (count: number): string => {
+  if (count >= BILLION) {
+    return `${(count / BILLION).toFixed(count >= 10 * BILLION ? 0 : 1)}B`;
+  }
+
   if (count >= MILLION) {
     return `${(count / MILLION).toFixed(count >= 10 * MILLION ? 0 : 1)}M`;
   }

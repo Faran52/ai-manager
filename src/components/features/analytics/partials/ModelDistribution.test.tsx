@@ -52,10 +52,17 @@ test('never displays an invented cost for unpriced models', () => {
         outputTokens: 0,
         basis: 'unpriced',
       },
+      {
+        model: '<synthetic>',
+        requests: 1,
+        inputTokens: 0,
+        outputTokens: 0,
+        basis: 'unpriced',
+      },
     ]}
     />,
   );
 
   expect(screen.getAllByText('No cost recorded')).toHaveLength(2);
-  expect(screen.getAllByText('No cost recorded')).toHaveLength(2);
+  expect(screen.queryByText('<synthetic>')).toBeNull();
 });
