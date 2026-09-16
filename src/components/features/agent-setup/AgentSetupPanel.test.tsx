@@ -56,6 +56,7 @@ test('lists every configured agent with its servers and rules', async () => {
   render(
     <AgentSetupPanel
       projectSelected
+      status="ready"
       trust={{
         known: true,
         trusted: true,
@@ -129,6 +130,7 @@ test.each(SETUP_COUNTS)(
     render(
       <AgentSetupPanel
         projectSelected
+        status="ready"
         trust={{
           known: true,
           trusted: true,
@@ -155,6 +157,7 @@ test('asks for a project before anything else', () => {
   render(
     <AgentSetupPanel
       projectSelected={false}
+      status="ready"
       trust={{
         known: false,
         trusted: false,
@@ -178,6 +181,7 @@ test('says the location is unknown when the project has no folder', () => {
   render(
     <AgentSetupPanel
       projectSelected
+      status="ready"
       trust={{
         known: true,
         trusted: true,
@@ -197,10 +201,35 @@ test('says the location is unknown when the project has no folder', () => {
   expect(screen.queryByText('No agent setup found')).toBeNull();
 });
 
+test('waits on the read behind the panel', () => {
+  render(
+    <AgentSetupPanel
+      projectSelected
+      status="loading"
+      trust={{
+        known: true,
+        trusted: true,
+        onboarded: true,
+      }}
+      sessionCounts={{}}
+      projectPath={PROJECT}
+      setups={[setup('claude')]}
+      findings={[]}
+      usage={null}
+      nowMs={0}
+      onPluginToggle={noToggle}
+    />,
+  );
+
+  expect(screen.getByText('Loading health')).toBeDefined();
+  expect(screen.queryByText('Configured agents look healthy')).toBeNull();
+});
+
 test('names every agent, set up or not', () => {
   render(
     <AgentSetupPanel
       projectSelected
+      status="ready"
       trust={{
         known: true,
         trusted: true,
@@ -224,6 +253,7 @@ test('orders flagged agents first, then healthy, then unused', () => {
   render(
     <AgentSetupPanel
       projectSelected
+      status="ready"
       trust={{
         known: true,
         trusted: true,
@@ -261,6 +291,7 @@ test('flags an agent that a setup finding names', () => {
   render(
     <AgentSetupPanel
       projectSelected
+      status="ready"
       trust={{
         known: true,
         trusted: true,
@@ -288,6 +319,7 @@ test('leads with setup problems when there are any', () => {
   render(
     <AgentSetupPanel
       projectSelected
+      status="ready"
       trust={{
         known: true,
         trusted: true,
@@ -317,6 +349,7 @@ test('counts multiple setup problems', () => {
   render(
     <AgentSetupPanel
       projectSelected
+      status="ready"
       trust={{
         known: true,
         trusted: true,
@@ -355,6 +388,7 @@ test('opens the plugin table in a dialog and closes it again', async () => {
   render(
     <AgentSetupPanel
       projectSelected
+      status="ready"
       trust={{
         known: true,
         trusted: true,
@@ -398,6 +432,7 @@ test('opens an agent\'s configuration in a dialog and closes it again', async ()
   render(
     <AgentSetupPanel
       projectSelected
+      status="ready"
       trust={{
         known: true,
         trusted: true,
@@ -429,6 +464,7 @@ test('shuts a card that is already open instead of leaving it stuck', async () =
   render(
     <AgentSetupPanel
       projectSelected
+      status="ready"
       trust={{
         known: true,
         trusted: true,
@@ -462,6 +498,7 @@ test('shows one card per Claude profile, each with its own findings and count', 
   render(
     <AgentSetupPanel
       projectSelected
+      status="ready"
       trust={{
         known: true,
         trusted: true,
@@ -505,6 +542,7 @@ test('opens a profile card\'s own plugins, not the default root\'s', async () =>
   render(
     <AgentSetupPanel
       projectSelected
+      status="ready"
       trust={{
         known: true,
         trusted: true,

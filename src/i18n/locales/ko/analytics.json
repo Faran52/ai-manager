@@ -17,6 +17,7 @@
   "tryRefreshing": "헤더에서 새로고침해 보세요.",
   "lastActive": "마지막 활동 {{when}}",
   "recordedUsage": "기록된 사용량",
+  "loadingAnalytics": "분석을 불러오는 중",
   "turnCount_one": "{{count}} 턴",
   "turnCount_other": "{{count}} 턴",
   "tokenActivityMissing": "이 에이전트는 토큰 활동을 기록하지 않습니다.",

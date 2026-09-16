@@ -17,6 +17,7 @@
   "tryRefreshing": "請嘗試從頂列重新整理。",
   "lastActive": "最後活動於 {{when}}",
   "recordedUsage": "已記錄的用量",
+  "loadingAnalytics": "正在載入分析",
   "turnCount_one": "{{count}} 輪",
   "turnCount_other": "{{count}} 輪",
   "tokenActivityMissing": "此代理未記錄權杖活動。",

@@ -11,7 +11,6 @@ import {
   Button,
   Notice,
   Panel,
-  Spinner,
   Switch,
   TextInput,
   useMutationRunner,
@@ -40,10 +39,6 @@ export const RetentionCard: FC<RetentionCardProps> = ({ retention, nowMs }) => {
   const days = draftDays ?? String(status?.policy.olderThanDays ?? '');
   const parsedDays = Number(days);
   const validDays = Number.isInteger(parsedDays) && parsedDays >= MIN_DAYS && parsedDays <= MAX_DAYS;
-
-  if (retention.status === 'loading') {
-    return <Spinner />;
-  }
 
   if (status == null) {
     return (

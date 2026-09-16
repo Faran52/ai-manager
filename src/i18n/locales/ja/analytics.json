@@ -17,6 +17,7 @@
   "tryRefreshing": "ヘッダーから更新してみてください。",
   "lastActive": "最終アクティビティ {{when}}",
   "recordedUsage": "記録された使用状況",
+  "loadingAnalytics": "分析を読み込んでいます",
   "turnCount_one": "{{count}} ターン",
   "turnCount_other": "{{count}} ターン",
   "tokenActivityMissing": "このエージェントではトークンの記録がありません。",

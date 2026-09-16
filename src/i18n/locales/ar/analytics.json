@@ -17,6 +17,7 @@
   "tryRefreshing": "جرّب التحديث من الشريط العلوي.",
   "lastActive": "آخر نشاط {{when}}",
   "recordedUsage": "الاستخدام المُسجَّل",
+  "loadingAnalytics": "جارٍ تحميل التحليلات",
   "tokenActivityMissing": "لا يُسجَّل نشاط الرموز لهذا الوكيل.",
   "loadFailedFor": "تعذّر تحميل تحليلات {{project}}",
   "noAnalyticsFor": "لا توجد تحليلات لـ {{project}}",

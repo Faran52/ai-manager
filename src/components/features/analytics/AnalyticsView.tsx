@@ -1,8 +1,16 @@
 import { useTranslation } from 'react-i18next';
 
-import { BarChart3, CircleAlert } from 'lucide-react';
+import {
+  BarChart3,
+  CircleAlert,
+  History,
+} from 'lucide-react';
 
-import { EmptyState, Spinner } from '@ui/index';
+import {
+  EmptyState,
+  Loader,
+  useMinLoad,
+} from '@ui/index';
 
 import { useGlobalStats } from './hooks/useGlobalStats';
 import { AnalyticsReport } from './partials';
@@ -66,13 +74,14 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
       });
   const selectedStats = effectiveScope === 'global' ? globalStats : stats;
   const selectedStatus = effectiveScope === 'global' ? global.status : status;
+  const waiting = useMinLoad(selectedStatus === 'loading');
   const globalAgents = global.data?.agents ?? [];
 
-  if (selectedStatus === 'loading') {
+  if (waiting) {
     return (
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="flex flex-1 items-center justify-center" data-analytics-loading>
-          <Spinner />
+          <Loader icon={<History />} label={t('loadingAnalytics')} />
         </div>
       </div>
     );

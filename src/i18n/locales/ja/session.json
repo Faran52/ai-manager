@@ -1,4 +1,5 @@
 {
+  "loadingSessions": "セッションを読み込んでいます",
   "noSessionSelected": "セッションが未選択です",
   "pickSession": "サイドバーからプロジェクトとセッションを選んでください。",
   "messages": "メッセージ",

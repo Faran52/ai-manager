@@ -7,6 +7,7 @@ import {
   FileText,
   GitBranch,
   ListTree,
+  MessageSquare,
   Users,
 } from 'lucide-react';
 
@@ -25,8 +26,9 @@ import {
   Button,
   EmptyState,
   IconButton,
-  Spinner,
+  Loader,
   storedWidth,
+  useMinLoad,
   useSmoothScroll,
 } from '@ui/index';
 import { useMessages } from '@features/history-data';
@@ -125,6 +127,7 @@ export const SessionViewer: FC<SessionViewerProps> = ({
     supportsSidechains && includeSidechain,
     sourceModifiedMs,
   );
+  const waiting = useMinLoad(feed.phase === 'loading' && feed.entries.length === 0);
   /**
    * A callback ref, not useRef: the timeline's virtualizer has to attach its
    * scroll listener to this element, and a ref object is still null when the
@@ -196,10 +199,10 @@ export const SessionViewer: FC<SessionViewerProps> = ({
 
   let body: ReactNode;
 
-  if (feed.phase === 'loading' && feed.entries.length === 0) {
+  if (waiting) {
     body = (
-      <div className="flex justify-center py-16">
-        <Spinner />
+      <div className="flex justify-center py-16" data-viewer-loading>
+        <Loader icon={<MessageSquare />} label={t('loadingSessions')} />
       </div>
     );
   }

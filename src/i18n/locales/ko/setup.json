@@ -1,4 +1,5 @@
 {
+  "loadingHealth": "상태를 불러오는 중",
   "setUp": "설정",
   "checkSetup": "설정 확인",
   "notSetUp": "설정되지 않음",

@@ -1,4 +1,5 @@
 {
+  "loadingSessions": "正在加载会话",
   "noSessionSelected": "未选择会话",
   "pickSession": "请从侧边栏选择项目和会话。",
   "messages": "条消息",

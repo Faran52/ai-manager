@@ -1,4 +1,5 @@
 {
+  "loadingHealth": "状態を読み込んでいます",
   "setUp": "セットアップ",
   "checkSetup": "設定を確認",
   "notSetUp": "未設定",

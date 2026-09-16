@@ -29,6 +29,7 @@
   "noteLabel": "Archive note",
   "notePlaceholder": "Optional note, for example \"before the 2.0 upgrade\"",
   "noArchives": "No archives yet",
+  "loadingArchives": "Loading archives",
   "noArchivesHint": "Create one now and today's transcripts survive whatever the agents delete next.",
   "scopedTo": "In {{project}}",
   "showAll": "Show all",

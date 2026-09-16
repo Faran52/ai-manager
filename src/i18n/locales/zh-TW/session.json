@@ -1,4 +1,5 @@
 {
+  "loadingSessions": "正在載入工作階段",
   "noSessionSelected": "未選擇工作階段",
   "pickSession": "請從側邊欄選擇專案與工作階段。",
   "messages": "則訊息",

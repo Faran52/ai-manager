@@ -1,4 +1,5 @@
 {
+  "loadingSessions": "Loading sessions",
   "noSessionSelected": "No session selected",
   "pickSession": "Pick a project and a session from the sidebar.",
   "messages": "messages",

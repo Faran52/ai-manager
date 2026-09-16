@@ -17,6 +17,7 @@
   "tryRefreshing": "请尝试从顶栏刷新。",
   "lastActive": "最后活动于 {{when}}",
   "recordedUsage": "已记录的用量",
+  "loadingAnalytics": "正在加载分析",
   "turnCount_one": "{{count}} 轮",
   "turnCount_other": "{{count}} 轮",
   "tokenActivityMissing": "该智能体未记录令牌活动。",

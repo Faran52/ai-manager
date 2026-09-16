@@ -17,6 +17,7 @@
   "tryRefreshing": "Try refreshing from the header.",
   "lastActive": "last active {{when}}",
   "recordedUsage": "Recorded usage",
+  "loadingAnalytics": "Loading analytics",
   "turnCount_one": "{{count}} turn",
   "turnCount_other": "{{count}} turns",
   "tokenActivityMissing": "Token activity isn't recorded for this agent.",

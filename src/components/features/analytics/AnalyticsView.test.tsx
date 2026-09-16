@@ -248,13 +248,14 @@ test('scopes to one profile of an agent, not its sibling', async () => {
 test('falls back to the empty state for a report agent missing from the payload', async () => {
   await settled(renderView(stats, 'ready', vi.fn(), 'global', { agent: 'codex' }));
 
-  expect(screen.getByText(/No analytics for webapp/)).toBeDefined();
+  expect(await screen.findByText(/No analytics for webapp/)).toBeDefined();
 });
 
 test('shows project loading and empty states', async () => {
   const view = await settled(renderView(null, 'loading'));
 
   expect(screen.getByRole('status')).toBeDefined();
+  expect(screen.getByText('Loading analytics')).toBeDefined();
 
   view.rerender(
     <AnalyticsView
@@ -269,7 +270,7 @@ test('shows project loading and empty states', async () => {
     />,
   );
 
-  expect(screen.getByText(/No analytics for webapp/)).toBeDefined();
+  expect(await screen.findByText(/No analytics for webapp/)).toBeDefined();
 });
 
 test('renders project metrics, panels and opens a top session', async () => {

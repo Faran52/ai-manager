@@ -16,10 +16,11 @@ import {
   Button,
   ConfirmDialog,
   EmptyState,
+  Loader,
   Notice,
   SectionHeader,
-  Spinner,
   TextInput,
+  useMinLoad,
   useMutationRunner,
 } from '@ui/index';
 
@@ -66,6 +67,8 @@ export const ArchiveView: FC<ArchiveViewProps> = ({
   });
   const totals = totalsOf(list);
   const reload = archives.reload;
+  // Both reads: retention draws the card at the top of this pane.
+  const waiting = useMinLoad(archives.status === 'loading' || retention.status === 'loading');
 
   const runCreate = (): void => {
     void mutation.run(async () => {
@@ -82,6 +85,14 @@ export const ArchiveView: FC<ArchiveViewProps> = ({
       reload();
     });
   };
+
+  if (waiting) {
+    return (
+      <div className="flex h-full items-center justify-center" data-archive-loading>
+        <Loader icon={<Archive className="size-6" />} label={t('loadingArchives')} />
+      </div>
+    );
+  }
 
   return (
     <div className="h-full overflow-y-auto p-4" data-archive-view>
@@ -157,8 +168,6 @@ export const ArchiveView: FC<ArchiveViewProps> = ({
             </span>
           )}
         />
-
-        {archives.status === 'loading' && <Spinner />}
 
         {archives.status === 'ready' && list.length === 0 && (
           <EmptyState

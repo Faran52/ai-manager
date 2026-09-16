@@ -29,6 +29,7 @@
   "noteLabel": "归档备注",
   "notePlaceholder": "可选备注，例如“升级到 2.0 之前”",
   "noArchives": "还没有归档",
+  "loadingArchives": "正在加载归档",
   "noArchivesHint": "现在创建一个，无论智能体下次删掉什么，今天的记录都还在。",
   "scopedTo": "在 {{project}} 中",
   "showAll": "显示全部",

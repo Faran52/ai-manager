@@ -514,6 +514,10 @@ describe('SessionViewer message navigator', () => {
     await waitFor(() => {
       expect(screen.getByLabelText('User 1')).toBeDefined();
     });
+    // The timeline it scrolls is not mounted until the loader clears.
+    await waitFor(() => {
+      expect(document.querySelector('[data-viewer-loading]')).toBeNull();
+    });
     await userEvent.click(screen.getByLabelText('User 1'));
 
     expect(screen.getAllByText('the question').length).toBeGreaterThan(1);

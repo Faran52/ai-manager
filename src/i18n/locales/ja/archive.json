@@ -29,6 +29,7 @@
   "noteLabel": "アーカイブのメモ",
   "notePlaceholder": "任意のメモ（例：2.0 アップグレード前）",
   "noArchives": "アーカイブはまだありません",
+  "loadingArchives": "アーカイブを読み込んでいます",
   "noArchivesHint": "今すぐ作成すれば、エージェントが次に削除しても今日の記録は残ります。",
   "scopedTo": "{{project}} 内",
   "showAll": "すべて表示",

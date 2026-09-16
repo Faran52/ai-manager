@@ -11,7 +11,9 @@ import {
   EmptyState,
   Eyebrow,
   fadeTransition,
+  Loader,
   Modal,
+  useMinLoad,
 } from '@ui/index';
 import { useSettings } from '@features/history-data';
 import { SettingsView } from '@features/settings';
@@ -29,6 +31,7 @@ import {
   setupKey,
 } from './utils/agentSetupUtils';
 
+import type { AsyncStatus } from '@features/history-data';
 import type {
   AgentSetup,
   InstalledPlugin,
@@ -41,6 +44,8 @@ import type { FC } from 'react';
 export interface AgentSetupPanelProps {
   readonly projectSelected: boolean;
   readonly projectPath: string;
+  // The read behind the panel, for the loader's wait.
+  readonly status: AsyncStatus;
   readonly setups: readonly AgentSetup[];
   readonly findings: readonly SetupFinding[];
   readonly usage: ProjectUsage | null;
@@ -54,6 +59,7 @@ export interface AgentSetupPanelProps {
 export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
   projectSelected,
   projectPath,
+  status,
   setups,
   findings,
   usage,
@@ -80,6 +86,7 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
     settingsFor?.agent ?? 'claude',
     settingsFor?.profile,
   );
+  const waiting = useMinLoad(status === 'loading');
 
   if (!projectSelected) {
     return (
@@ -98,6 +105,14 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
         title={t('projectLocationUnknown', { ns: 'sidebar' })}
         hint={t('noFolderOnDisk')}
       />
+    );
+  }
+
+  if (waiting) {
+    return (
+      <div className="flex justify-center py-16" data-health-loading>
+        <Loader icon={<HeartPulse />} label={t('loadingHealth')} />
+      </div>
     );
   }
 

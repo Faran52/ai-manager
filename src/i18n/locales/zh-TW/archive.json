@@ -29,6 +29,7 @@
   "noteLabel": "封存備註",
   "notePlaceholder": "選填備註，例如「升級到 2.0 之前」",
   "noArchives": "尚無封存",
+  "loadingArchives": "正在載入封存",
   "noArchivesHint": "現在建立一份，無論代理下次刪掉什麼，今天的紀錄都還在。",
   "scopedTo": "在 {{project}} 中",
   "showAll": "顯示全部",
