@@ -73,8 +73,6 @@
   "promptsOnly": "プロンプトのみ",
   "settingsAppearance": "外観",
   "settingsAbout": "このアプリについて",
-  "settingsAboutIntro": "このビルドの内容と、自動で行う動作。",
-  "settingsVersion": "バージョン",
   "settingsAppearanceIntro": "アプリの見え方と読みやすさ。",
   "themeHint": "システムは OS の切り替えに追従します。",
   "accentHint": "選択、バー、アクティブなマークの色です。6 色を同梱し、最後の見本は OS のカラーピッカーを開きます。",

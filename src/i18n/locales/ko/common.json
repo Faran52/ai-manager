@@ -73,8 +73,6 @@
   "promptsOnly": "프롬프트만",
   "settingsAppearance": "모양",
   "settingsAbout": "정보",
-  "settingsAboutIntro": "이 빌드가 무엇이며 스스로 무엇을 하는지.",
-  "settingsVersion": "버전",
   "settingsAppearanceIntro": "앱이 보이고 읽히는 방식.",
   "themeHint": "시스템은 OS 설정 변경을 따릅니다.",
   "accentHint": "선택 항목, 막대, 활성 표시의 색입니다. 여섯 가지를 제공하며 마지막 견본은 시스템 색상 선택기를 엽니다.",

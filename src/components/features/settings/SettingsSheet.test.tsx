@@ -48,17 +48,18 @@ describe('SettingsSheet', () => {
 
   test('moves between panes', async () => {
     sheet();
-    await user.click(screen.getByRole('button', { name: 'About' }));
+    await user.click(screen.getByRole('button', { name: 'Updates' }));
 
-    expect(screen.getByRole('heading', { name: 'About' })).toBeDefined();
     expect(screen.queryByRole('heading', { name: 'Appearance' })).toBeNull();
+    expect(screen.getByText(/does not match its signature/)).toBeDefined();
   });
 
-  test('names the build it is', async () => {
+  test('leaves what the build is to the about window that carries it', async () => {
     sheet();
-    await user.click(screen.getByRole('button', { name: 'About' }));
+    await user.click(screen.getByRole('button', { name: 'Updates' }));
 
-    expect(screen.getByText('Version')).toBeDefined();
+    expect(screen.queryByText('Version')).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'About' })).toBeNull();
   });
 
   test('closes on Escape, like every other sheet', async () => {

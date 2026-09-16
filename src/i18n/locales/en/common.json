@@ -73,8 +73,6 @@
   "promptsOnly": "Prompts only",
   "settingsAppearance": "Appearance",
   "settingsAbout": "About",
-  "settingsAboutIntro": "What this build is, and what it does on its own.",
-  "settingsVersion": "Version",
   "settingsAppearanceIntro": "How the app looks and reads.",
   "themeHint": "System follows the OS as it switches.",
   "accentHint": "Colours selection, bars and the active marks. Six ship; the last swatch opens the system colour picker for anything else.",

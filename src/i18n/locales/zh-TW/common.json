@@ -73,8 +73,6 @@
   "promptsOnly": "僅提示詞",
   "settingsAppearance": "外觀",
   "settingsAbout": "關於",
-  "settingsAboutIntro": "此版本是什麼，以及它會自動做什麼。",
-  "settingsVersion": "版本",
   "settingsAppearanceIntro": "應用程式的外觀與可讀性。",
   "themeHint": "「系統」會跟隨作業系統的切換。",
   "accentHint": "用於選取項目、圖表條與作用中標記。內建六種，最後一個色塊會開啟系統選色器。",

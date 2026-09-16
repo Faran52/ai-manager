@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Info, Palette } from 'lucide-react';
-
-import { appConfig } from '@config/appConfig';
+import { Download, Palette } from 'lucide-react';
 
 import { cn } from '@utils/cnUtils';
 
@@ -21,7 +19,7 @@ import { SettingRow } from './partials';
 import type { ThemeMode } from '@features/theme';
 import type { FC, ReactNode } from 'react';
 
-export type SettingsPane = 'about' | 'appearance';
+export type SettingsPane = 'appearance' | 'updates';
 
 export interface SettingsSheetProps {
   readonly open: boolean;
@@ -43,9 +41,9 @@ const PANES: readonly Destination[] = [
     icon: <Palette className="size-4" />,
   },
   {
-    id: 'about',
-    labelKey: 'settingsAbout',
-    icon: <Info className="size-4" />,
+    id: 'updates',
+    labelKey: 'settingsUpdates',
+    icon: <Download className="size-4" />,
   },
 ];
 
@@ -133,18 +131,11 @@ export const SettingsSheet: FC<SettingsSheetProps> = ({
             </section>
           )}
 
-          {pane === 'about' && (
+          {pane === 'updates' && (
             <section>
-              <h3 className="text-value font-semibold">{t('settingsAbout')}</h3>
-              <p className="mt-1 text-body text-muted-foreground">{t('settingsAboutIntro')}</p>
-              <div className="mt-4">
-                <SettingRow label={t('settingsVersion')} hint={appConfig.version}>
-                  <span />
-                </SettingRow>
-                <SettingRow label={t('settingsUpdates')} hint={t('settingsUpdatesHint')}>
-                  <UpdatePreference />
-                </SettingRow>
-              </div>
+              <SettingRow label={t('settingsUpdates')} hint={t('settingsUpdatesHint')}>
+                <UpdatePreference />
+              </SettingRow>
             </section>
           )}
         </div>

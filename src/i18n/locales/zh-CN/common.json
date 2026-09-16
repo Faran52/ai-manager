@@ -73,8 +73,6 @@
   "promptsOnly": "仅提示词",
   "settingsAppearance": "外观",
   "settingsAbout": "关于",
-  "settingsAboutIntro": "此版本是什么，以及它会自动做什么。",
-  "settingsVersion": "版本",
   "settingsAppearanceIntro": "应用的外观与可读性。",
   "themeHint": "“系统”会跟随操作系统的切换。",
   "accentHint": "用于选中项、图表条和活动标记。内置六种，最后一个色块会打开系统取色器。",
