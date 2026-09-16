@@ -20,7 +20,7 @@ const MENU_KEYS: Record<AppCommand, string> = {
   showShortcuts: 'shortcuts',
 };
 
-const entry = (label: Label, id: AppCommand, accelerator?: string): Deno.MenuItem => {
+const entry = (label: Label, id: AppCommand, accelerator?: string): AppMenuItem => {
   const item = {
     label: label(MENU_KEYS[id]),
     id,
@@ -37,8 +37,8 @@ const entry = (label: Label, id: AppCommand, accelerator?: string): Deno.MenuIte
   };
 };
 
-const role = (name: string): Deno.MenuItem => {
-  return { role: { role: name } };
+const role = (name: AppMenuRole): AppMenuItem => {
+  return { role: name };
 };
 
 /*
@@ -47,7 +47,7 @@ const role = (name: string): Deno.MenuItem => {
  * than items because a webview takes those from the menu, and an app without
  * one loses the shortcuts altogether.
  */
-export const applicationMenu = (label: Label): readonly Deno.MenuItem[] => {
+export const applicationMenu = (label: Label): readonly AppMenuItem[] => {
   return [
     {
       submenu: {

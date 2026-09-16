@@ -9,4 +9,3 @@ export * from './utils/sessionEndpointUtils';
 export * from './utils/settingsEndpointUtils';
 export * from './utils/statsEndpointUtils';
 export * from './utils/storageEndpointUtils';
-export * from './utils/updateEndpointUtils';

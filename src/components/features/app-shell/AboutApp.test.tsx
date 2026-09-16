@@ -4,7 +4,6 @@ import {
   afterEach,
   expect,
   test,
-  vi,
 } from 'vitest';
 
 import { appConfig } from '@config/appConfig';
@@ -12,7 +11,7 @@ import { appConfig } from '@config/appConfig';
 import { AboutApp } from './AboutApp';
 
 afterEach(() => {
-  vi.unstubAllGlobals();
+  Reflect.deleteProperty(window, 'bindings');
 });
 
 test('fills its own window with what the app says about itself', () => {
@@ -23,10 +22,21 @@ test('fills its own window with what the app says about itself', () => {
   expect(screen.getByText(appConfig.version)).toBeDefined();
 });
 
-test('asks the feed itself, sharing nothing with the window that opened it', async () => {
-  vi.stubGlobal('fetch', vi.fn(() => {
-    return Response.json({ update: { stage: 'none' } });
-  }));
+test('asks the updater itself, sharing nothing with the window that opened it', async () => {
+  Object.defineProperty(window, 'bindings', {
+    configurable: true,
+    value: {
+      desktopPlatform: () => {
+        return Promise.resolve('darwin');
+      },
+      setApplicationMenu: () => {
+        return Promise.resolve(undefined);
+      },
+      checkForUpdate: () => {
+        return Promise.resolve({ available: false });
+      },
+    },
+  });
 
   render(<AboutApp />);
 

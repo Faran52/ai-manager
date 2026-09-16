@@ -9,8 +9,6 @@ export interface AppConfig {
   readonly maxMatchesPerFile: number;
 }
 
-export * from './envVars';
-
 export const appConfig: AppConfig = {
   version: '0.2.0',
   pageSize: 120,

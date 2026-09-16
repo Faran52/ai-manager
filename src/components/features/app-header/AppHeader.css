@@ -11,6 +11,23 @@
     padding-inline: 0.75rem;
     background: var(--chrome);
     border-bottom: 1px solid var(--border);
+
+    /* The window has no bar of its own to be dragged by, so this row is it. */
+    -webkit-app-region: drag;
+  }
+
+  /* Everything that answers a click has to keep the click. A dragged region
+     swallows one, and the whole row is dragged. */
+  .titlebar :is(a, button, fieldset, input, label, select, [role="button"]) {
+    -webkit-app-region: no-drag;
+  }
+
+  /* macOS draws the traffic lights over this row rather than in a bar above it,
+     so the leading edge reserves the width they take. Physical rather than
+     logical: the buttons stay on the left in Arabic too. Pixels rather than
+     rem: they are the window's furniture, and do not follow the text size. */
+  [data-desktop="darwin"] .titlebar {
+    padding-left: 80px;
   }
 
   .titlebar-search {

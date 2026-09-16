@@ -74,6 +74,19 @@ const virtualizedTimeline = {
   },
 };
 
-const rules = [...config, placement, virtualizedTimeline];
+/*
+ * The preload. Electron loads a sandboxed preload with `require` into an
+ * isolated world: no ES modules there, and keeping the sandbox on is what
+ * keeps Node out of the page.
+ */
+const desktopPreload = {
+  name: 'ai-manager/desktop-preload',
+  files: ['scripts/desktopPreload.cjs'],
+  rules: {
+    '@typescript-eslint/no-require-imports': 'off',
+  },
+};
+
+const rules = [...config, placement, virtualizedTimeline, desktopPreload];
 
 export default rules;

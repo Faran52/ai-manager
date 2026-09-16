@@ -25,7 +25,6 @@ import {
   SETTINGS_WRITE,
   STATS,
   STORAGE,
-  UPDATE_CHECK,
 } from './constants';
 
 import type { EndpointDefinition } from './constants';
@@ -66,7 +65,6 @@ import type {
   SettingsResponse,
   StatsResponse,
   StorageResponse,
-  UpdateCheckResponse,
   WriteRetentionBody,
   WriteSettingsBody,
   WriteSettingsResponse,
@@ -129,10 +127,6 @@ const requestEndpoint = async <T extends object>(endpoint: EndpointDefinition<T>
   }
 
   throw new Error(`${endpoint.label} returned an unexpected shape`);
-};
-
-export const fetchUpdateCheck = (): Promise<UpdateCheckResponse> => {
-  return requestEndpoint(UPDATE_CHECK, {});
 };
 
 export const fetchProjects = (): Promise<ProjectsResponse> => {

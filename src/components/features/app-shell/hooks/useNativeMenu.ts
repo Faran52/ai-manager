@@ -16,7 +16,7 @@ const WINDOWED_PLATFORM = 'windows';
 
 const install = async (
   bindings: DesktopBindings,
-  items: readonly Deno.MenuItem[],
+  items: readonly AppMenuItem[],
   signal: AbortSignal,
   onInstalled: () => void,
 ): Promise<void> => {

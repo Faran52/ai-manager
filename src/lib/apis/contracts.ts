@@ -217,11 +217,3 @@ export interface AgentInstallCheckResponse {
 export interface AgentInstallBody {
   readonly agent: AgentId;
 }
-
-export interface UpdateCheckResponse {
-  readonly update: {
-    readonly notes?: string | undefined;
-    readonly stage: string;
-    readonly version?: string | undefined;
-  };
-}

@@ -3,41 +3,35 @@ import { useTranslation } from 'react-i18next';
 
 import { Download } from 'lucide-react';
 
-import { fetchUpdateCheck } from '@lib/apis/apiClient';
-
 import { Button } from '@ui/index';
+
+import { useUpdateCheck } from './hooks/useUpdateCheck';
+import { useUpdateProbe } from './hooks/useUpdateProbe';
 
 import type { FC } from 'react';
 
+/*
+ * The launch check, which is the only one the reader never asks for, so it is
+ * the one the preference governs. A failed check is not worth interrupting
+ * anyone over: nothing but an available version puts a row on screen.
+ */
 export const UpdateBanner: FC = () => {
   const { t } = useTranslation('update');
-  const [version, setVersion] = useState<string | undefined>(undefined);
+  const { updateCheck } = useUpdateCheck();
+  const {
+    stage,
+    version,
+    check,
+  } = useUpdateProbe();
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    let active = true;
+    if (updateCheck === 'launch') {
+      check();
+    }
+  }, [check, updateCheck]);
 
-    const check = async (): Promise<void> => {
-      try {
-        const response = await fetchUpdateCheck();
-
-        if (active && response.update.stage === 'available') {
-          setVersion(response.update.version);
-        }
-      }
-      catch {
-        // A failed check is not worth interrupting anyone over.
-      }
-    };
-
-    void check();
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  if (version == null || dismissed) {
+  if (stage !== 'available' || dismissed) {
     return null;
   }
 
