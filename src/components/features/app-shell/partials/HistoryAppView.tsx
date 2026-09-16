@@ -166,7 +166,12 @@ export const HistoryAppView: FC = () => {
   // The transcript the viewer has loaded, lifted here so the titlebar's
   // export menu can sit beside Archive rather than inside the viewer's header.
   const [openEntries, setOpenEntries] = useState<readonly HistoryEntry[]>([]);
-  const projectSessions = useSessions(selectedProject, view === 'sessions');
+  /*
+   * Only the one the pane is about reads. Both are live, and the agent list
+   * fans out a request per project, so the idle one polling in the background
+   * every few seconds was work whose answer was thrown away on arrival.
+   */
+  const projectSessions = useSessions(reportScope == null ? selectedProject : null, view === 'sessions');
   const agentSessions = useAgentSessions(reportScope, visibleProjects, view === 'sessions');
   const sessions = reportScope != null ? agentSessions : projectSessions;
   const stats = useProjectStats(view === 'analytics' ? selectedProject : null);
