@@ -7,7 +7,7 @@ const config = await defineConfig({
   astro: true,
   libraries: ['tailwind'],
   tailwindEntryPoint: './src/styles/global.css',
-  ignores: ['dist/**', 'coverage/**', '.claude/**', '.agents/**', 'plugins/linteljs/**', '.astro/**'],
+  ignores: ['dist/**', 'coverage/**', '.claude/**', '.agents/**', 'plugins/linteljs/**', '.astro/**', 'docs/mocks/**'],
   aliases: {
     '@components/*': './src/components/*',
     '@ui/*': './src/components/ui/*',
