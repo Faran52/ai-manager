@@ -18,16 +18,15 @@ import {
 import { buildProjectTree } from '../utils/projectTreeUtils';
 
 import type { AgentId } from '@config/agents';
+import type { AsyncStatus } from '@features/history-data';
 import type { ProjectSummary } from '@services/history/historyService';
 import type { FC, MouseEvent } from 'react';
 import type { DateFilter } from '../utils/dateFilterUtils';
 import type { FunnelOrder } from './FunnelMenu';
 
-type Status = 'loading' | 'ready' | 'error';
-
 export interface ProjectTreeProps {
   readonly projects: readonly ProjectSummary[];
-  readonly projectsStatus: Status;
+  readonly projectsStatus: AsyncStatus;
   readonly agentFilter: readonly AgentId[];
   readonly textFilter: string;
   readonly dateFilter: DateFilter;

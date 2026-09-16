@@ -143,14 +143,10 @@ const runLoad = async (feed: Feed, setState: Dispatch<SetStateAction<Feed>>): Pr
 
 export const useMessages = (
   filePath: string | null,
-  agentOrIncludeSidechain: AgentId | boolean,
-  requestedIncludeSidechain?: boolean,
+  agent: AgentId,
+  includeSidechain: boolean,
   sourceModifiedMs = 0,
 ): MessageFeed => {
-  const agent = typeof agentOrIncludeSidechain === 'boolean' ? 'claude' : agentOrIncludeSidechain;
-  const includeSidechain = typeof agentOrIncludeSidechain === 'boolean'
-    ? agentOrIncludeSidechain
-    : requestedIncludeSidechain === true;
   const [feed, setFeed] = useState<Feed>(() => {
     return freshFeed(filePath, agent, includeSidechain);
   });

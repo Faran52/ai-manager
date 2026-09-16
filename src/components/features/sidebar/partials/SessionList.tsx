@@ -18,6 +18,7 @@ import { groupThreadRuns } from '../utils/sessionThreadUtils';
 import { SessionListRow } from './SessionListRow';
 import { SessionThreadGroup } from './SessionThreadGroup';
 
+import type { AsyncStatus } from '@features/history-data';
 import type { Transition } from 'motion/react';
 import type { FC } from 'react';
 import type { RecencyBucket, RecencyGroup } from '../utils/sessionGroupUtils';
@@ -30,7 +31,7 @@ export interface SessionListProps {
   readonly onToggleGroup: (bucket: RecencyBucket) => void;
   readonly context: SessionRowContext;
   readonly collapse: Transition;
-  readonly status: 'loading' | 'ready' | 'error';
+  readonly status: AsyncStatus;
   // A project or a report agent is picked; without one there is nothing to list.
   readonly scoped: boolean;
   // How many sessions the scope holds before the filters, and after them.

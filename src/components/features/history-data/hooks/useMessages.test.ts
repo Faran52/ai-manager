@@ -80,7 +80,7 @@ const stubFetch = (): void => {
 describe('useMessages', () => {
   test('stays empty and ready without a file', async () => {
     const { result } = renderHook(() => {
-      return useMessages(null, false);
+      return useMessages(null, 'claude', false);
     });
 
     await waitFor(() => {
@@ -110,7 +110,7 @@ describe('useMessages', () => {
     };
 
     const { result } = renderHook(() => {
-      return useMessages('/f.jsonl', false);
+      return useMessages('/f.jsonl', 'claude', false);
     });
 
     await waitFor(() => {
@@ -153,7 +153,7 @@ describe('useMessages', () => {
 
     const { result, rerender } = renderHook(
       (props: HookProps) => {
-        return useMessages('/f.jsonl', props.include);
+        return useMessages('/f.jsonl', 'claude', props.include);
       },
       { initialProps: { include: true } },
     );
@@ -178,7 +178,7 @@ describe('useMessages', () => {
     }));
 
     const { result } = renderHook(() => {
-      return useMessages('/missing.jsonl', false);
+      return useMessages('/missing.jsonl', 'claude', false);
     });
 
     await waitFor(() => {
@@ -201,7 +201,7 @@ describe('useMessages guards', () => {
     );
 
     const { result, unmount } = renderHook(() => {
-      return useMessages('/f.jsonl', false);
+      return useMessages('/f.jsonl', 'claude', false);
     });
 
     unmount();
@@ -223,7 +223,7 @@ describe('useMessages guards', () => {
 
     vi.stubGlobal('fetch', fetchMock);
     const { result } = renderHook(() => {
-      return useMessages('/f.jsonl', false);
+      return useMessages('/f.jsonl', 'claude', false);
     });
 
     await waitFor(() => {

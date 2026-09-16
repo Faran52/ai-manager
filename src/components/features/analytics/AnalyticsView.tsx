@@ -8,7 +8,11 @@ import { useGlobalStats } from './hooks/useGlobalStats';
 import { AnalyticsReport } from './partials';
 
 import type { AgentId } from '@config/agents';
-import type { AsyncResource, ReportScope } from '@features/history-data';
+import type {
+  AsyncResource,
+  AsyncStatus,
+  ReportScope,
+} from '@features/history-data';
 import type { ProjectUsage } from '@services/agents/agentsService';
 import type { SessionSummary } from '@services/history/historyService';
 import type { ProjectStats, SessionTokenTotals } from '@services/stats/statsService';
@@ -16,14 +20,12 @@ import type { StorageReport } from '@services/storage/storageService';
 import type { FC } from 'react';
 import type { Scope } from './hooks/useAnalyticsScope';
 
-type LoadState = 'loading' | 'ready' | 'error';
-
 export interface AnalyticsViewProps {
   readonly stats: ProjectStats | null | undefined;
   // What the agents hold on disk is global by nature, so it is shown whichever
   // scope the reader is in rather than switching with it.
   readonly storage: AsyncResource<StorageReport>;
-  readonly status: LoadState;
+  readonly status: AsyncStatus;
   readonly projectName: string;
   // Identifies the project rather than naming it, so that picking a different
   // one is noticed even where two projects share a name.

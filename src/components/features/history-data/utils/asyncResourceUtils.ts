@@ -2,15 +2,17 @@ import { toErrorMessage } from '@utils/errorUtils';
 
 import type { Dispatch, SetStateAction } from 'react';
 
+export type AsyncStatus = 'loading' | 'ready' | 'error';
+
 export interface AsyncResource<T> {
-  readonly status: 'loading' | 'ready' | 'error';
+  readonly status: AsyncStatus;
   readonly data?: T | undefined;
   readonly error?: string | undefined;
   readonly reload: () => void;
 }
 
 export interface AsyncSnapshot<T> {
-  status: 'loading' | 'ready' | 'error';
+  status: AsyncStatus;
   data?: T | undefined;
   error?: string | undefined;
 }

@@ -25,7 +25,7 @@ import {
 } from './partials';
 
 import type { AgentId } from '@config/agents';
-import type { ReportScope } from '@features/history-data';
+import type { AsyncStatus, ReportScope } from '@features/history-data';
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
 import type { PopupPosition } from '@ui/index';
 import type { FC, MouseEvent } from 'react';
@@ -33,13 +33,13 @@ import type { SidebarMenuTarget } from './partials';
 
 export interface SidebarPaneProps {
   readonly projects: readonly ProjectSummary[];
-  readonly projectsStatus: 'loading' | 'ready' | 'error';
+  readonly projectsStatus: AsyncStatus;
   // Looked up for a session row's project badge, shown only once sessions can
   // span more than one project (a report agent's own, across every project).
   readonly projectNames: ReadonlyMap<string, string>;
   readonly selectedProject: ProjectSummary | null;
   readonly sessions: readonly SessionSummary[];
-  readonly sessionsStatus: 'loading' | 'ready' | 'error';
+  readonly sessionsStatus: AsyncStatus;
   readonly selectedFilePath: string | null;
   readonly nowMs: number;
   readonly onSelectProject: (project: ProjectSummary) => void;

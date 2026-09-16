@@ -14,7 +14,11 @@ import {
 
 import { AnalyticsView } from './AnalyticsView';
 
-import type { AsyncResource, ReportScope } from '@features/history-data';
+import type {
+  AsyncResource,
+  AsyncStatus,
+  ReportScope,
+} from '@features/history-data';
 import type { GlobalStats, ProjectStats } from '@services/stats/statsService';
 import type { StorageReport } from '@services/storage/storageService';
 
@@ -152,7 +156,7 @@ const storageResource: AsyncResource<StorageReport> = {
 
 const renderView = (
   projectStats: ProjectStats | null = stats,
-  status: 'loading' | 'ready' | 'error' = 'ready',
+  status: AsyncStatus = 'ready',
   onOpenSession = vi.fn(),
   scope: 'global' | 'project' = 'project',
   reportScope: ReportScope | null = null,

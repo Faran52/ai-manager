@@ -1,15 +1,11 @@
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from 'react';
+import { useCallback } from 'react';
 
 import { fetchAgentSetup } from '@lib/apis/apiClient';
 
-import { runLoad } from '../utils/asyncResourceUtils';
+import { useAsyncResource } from './useAsyncResource';
 
 import type { AgentSetupResponse } from '@lib/apis/contracts';
-import type { AsyncResource, AsyncSnapshot } from '../utils/asyncResourceUtils';
+import type { AsyncResource } from '../utils/asyncResourceUtils';
 
 const NONE: AgentSetupResponse = {
   setups: [],
@@ -25,36 +21,9 @@ const NONE: AgentSetupResponse = {
 
 // An empty path is the idle signal: no project is open, so there is nothing to read.
 export const useAgentSetup = (projectPath: string): AsyncResource<AgentSetupResponse> => {
-  const [snapshot, setSnapshot] = useState<AsyncSnapshot<AgentSetupResponse>>({ status: 'loading' });
-  const [nonce, setNonce] = useState(0);
+  const load = useCallback(async () => {
+    return projectPath.length === 0 ? NONE : await fetchAgentSetup({ projectPath });
+  }, [projectPath]);
 
-  useEffect(() => {
-    let active = true;
-
-    void runLoad(
-      async () => {
-        return projectPath.length === 0 ? NONE : await fetchAgentSetup({ projectPath });
-      },
-      (next) => {
-        if (active) {
-          setSnapshot(next);
-        }
-      },
-    );
-
-    return () => {
-      active = false;
-    };
-  }, [nonce, projectPath]);
-
-  const reload = useCallback(() => {
-    setNonce((value) => {
-      return value + 1;
-    });
-  }, []);
-
-  return {
-    ...snapshot,
-    reload,
-  };
+  return useAsyncResource(load, true);
 };

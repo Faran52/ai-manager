@@ -6,6 +6,7 @@ import { Notice, Spinner } from '@ui/index';
 
 import { EditedFileList } from './EditedFileList';
 
+import type { AsyncStatus } from '@features/history-data';
 import type { EditedFile, FileEdit } from '@services/edits/editsService';
 import type { FC } from 'react';
 
@@ -18,7 +19,7 @@ export interface FileEditsPanelProps {
     | undefined;
   readonly onClose: () => void;
   // A scan still running must not read as a session that changed nothing.
-  readonly status: 'loading' | 'ready' | 'error';
+  readonly status: AsyncStatus;
   readonly error?: string | undefined;
 }
 

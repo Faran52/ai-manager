@@ -38,6 +38,12 @@ export const useAsyncResource = <T>(
   }, [enabled, load, nonce]);
 
   const reload = useCallback(() => {
+    setSnapshot((current) => {
+      return {
+        ...current,
+        status: current.data === undefined ? 'loading' : current.status,
+      };
+    });
     setNonce((value) => {
       return value + 1;
     });

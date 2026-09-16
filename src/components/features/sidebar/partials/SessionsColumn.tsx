@@ -30,6 +30,7 @@ import { FunnelMenu } from './FunnelMenu';
 import { SessionList } from './SessionList';
 import { SessionSelectionBar } from './SessionSelectionBar';
 
+import type { AsyncStatus } from '@features/history-data';
 import type { SessionSummary } from '@services/history/historyService';
 import type {
   FC,
@@ -48,7 +49,7 @@ export interface SessionsColumnProps {
   readonly onOpen: () => void;
   readonly onClose: () => void;
   readonly sessions: readonly SessionSummary[];
-  readonly sessionsStatus: 'loading' | 'ready' | 'error';
+  readonly sessionsStatus: AsyncStatus;
   // A project or a report agent is picked; without one there is nothing to list.
   readonly scoped: boolean;
   // What an export file is named for; undefined falls back to a generic name.

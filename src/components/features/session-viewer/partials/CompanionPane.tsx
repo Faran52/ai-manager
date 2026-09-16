@@ -8,6 +8,7 @@ import { FileEditsPanel } from './FileEditsPanel';
 import { MessageNavigator } from './MessageNavigator';
 
 import type { AgentId } from '@config/agents';
+import type { AsyncStatus } from '@features/history-data';
 import type { EditedFile, FileEdit } from '@services/edits/editsService';
 import type { HistoryEntry } from '@services/history/historyService';
 import type { FC } from 'react';
@@ -36,7 +37,7 @@ export interface CompanionPaneProps {
   readonly onOpenEdit: ((edit: FileEdit) => void)
     | undefined;
   readonly onClose: () => void;
-  readonly editsStatus: 'loading' | 'ready' | 'error';
+  readonly editsStatus: AsyncStatus;
   readonly editsError?: string | undefined;
 }
 

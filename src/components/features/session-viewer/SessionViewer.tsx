@@ -44,6 +44,7 @@ import {
 } from './utils/messageFilterUtils';
 
 import type { AgentId } from '@config/agents';
+import type { AsyncStatus } from '@features/history-data';
 import type { EditedFile, FileEdit } from '@services/edits/editsService';
 import type { HistoryEntry } from '@services/history/historyService';
 import type { FC, ReactNode } from 'react';
@@ -61,7 +62,7 @@ export interface SessionViewerProps {
   readonly sourceModifiedMs?: number | undefined;
   // The edits this session made, shown beside it rather than in place of it.
   readonly editedFiles?: readonly EditedFile[] | undefined;
-  readonly editsStatus?: 'loading' | 'ready' | 'error' | undefined;
+  readonly editsStatus?: AsyncStatus | undefined;
   readonly editsError?: string | undefined;
   readonly projectPath?: string | undefined;
   readonly nowMs?: number | undefined;

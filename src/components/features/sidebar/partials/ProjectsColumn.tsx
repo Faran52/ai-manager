@@ -24,7 +24,7 @@ import { FunnelMenu } from './FunnelMenu';
 import { ProjectTree } from './ProjectTree';
 
 import type { AgentId } from '@config/agents';
-import type { ReportScope } from '@features/history-data';
+import type { AsyncStatus, ReportScope } from '@features/history-data';
 import type { ProjectSummary } from '@services/history/historyService';
 import type { FC, MouseEvent } from 'react';
 import type { DateFilter } from '../utils/dateFilterUtils';
@@ -37,7 +37,7 @@ export interface ProjectsColumnProps {
   readonly onOpen: () => void;
   readonly onClose: () => void;
   readonly projects: readonly ProjectSummary[];
-  readonly projectsStatus: 'loading' | 'ready' | 'error';
+  readonly projectsStatus: AsyncStatus;
   readonly selectedProject: ProjectSummary | null;
   readonly nowMs: number;
   readonly wholeMachine: boolean;

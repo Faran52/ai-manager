@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 
 import { isGlobalStatsResponse } from '../utils/globalStatsUtils';
 
+import type { AsyncStatus } from '@features/history-data';
 import type { GlobalStats } from '@services/stats/statsService';
 
 export interface GlobalSnapshot {
   readonly data?: GlobalStats | undefined;
-  readonly status: 'loading' | 'ready' | 'error';
+  readonly status: AsyncStatus;
 }
 
 // The whole-machine report, read once on mount and dropped if the view leaves first.
