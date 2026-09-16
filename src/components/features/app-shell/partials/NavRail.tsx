@@ -5,6 +5,7 @@ import {
   Archive,
   BarChart3,
   HeartPulse,
+  Info,
   MessageSquare,
   RefreshCw,
   Settings,
@@ -15,6 +16,8 @@ import { cn } from '@utils/cnUtils';
 
 import {
   controlTransition,
+  Menu,
+  MenuItem,
   Tooltip,
   useReducedMotion,
   useToast,
@@ -30,7 +33,8 @@ export interface NavRailProps {
   readonly flagged: number;
   readonly onReload: () => void;
   readonly onOpenSettings: () => void;
-  // False where a native menu carries Settings, so the rail does not repeat it.
+  readonly onOpenAbout: () => void;
+  // False where a native menu carries these, so the rail does not repeat them.
   readonly showSettings?: boolean | undefined;
 }
 
@@ -85,6 +89,7 @@ export const NavRail: FC<NavRailProps> = ({
   flagged,
   onReload,
   onOpenSettings,
+  onOpenAbout,
   showSettings = true,
 }) => {
   const { t } = useTranslation('common');
@@ -174,16 +179,27 @@ export const NavRail: FC<NavRailProps> = ({
         </button>
       </Tooltip>
       {showSettings && (
-        <Tooltip content={t('navSettings')} side="right">
-          <button
-            type="button"
-            onClick={onOpenSettings}
-            aria-label={t('navSettings')}
-            className={RAIL_BUTTON}
-          >
-            <Settings className="size-4" />
-          </button>
-        </Tooltip>
+        <Menu
+          align="end"
+          label={t('navSettings')}
+          trigger={(
+            <button
+              type="button"
+              aria-label={t('navSettings')}
+              className={RAIL_BUTTON}
+              data-rail-settings
+            >
+              <Settings className="size-4" />
+            </button>
+          )}
+        >
+          <MenuItem icon={<Info className="size-3.5" />} onSelect={onOpenAbout}>
+            {t('settingsAbout')}
+          </MenuItem>
+          <MenuItem icon={<Settings className="size-3.5" />} onSelect={onOpenSettings}>
+            {t('navSettings')}
+          </MenuItem>
+        </Menu>
       )}
     </nav>
   );

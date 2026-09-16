@@ -31,6 +31,7 @@ const mount = (overrides: Partial<NavRailProps> = {}): NavRailProps => {
     onViewChange: vi.fn(),
     onReload: vi.fn(),
     onOpenSettings: vi.fn(),
+    onOpenAbout: vi.fn(),
     ...overrides,
   };
 
@@ -110,12 +111,25 @@ describe('NavRail', () => {
     expect(await screen.findByRole('tooltip')).toBeDefined();
   });
 
-  test('opens settings', async () => {
-    const { onOpenSettings } = mount();
+  test('offers the same two things the menu bar carries elsewhere', async () => {
+    const { onOpenSettings, onOpenAbout } = mount();
 
     await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'About' }));
+
+    expect(onOpenAbout).toHaveBeenCalledOnce();
+    expect(onOpenSettings).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Settings' }));
 
     expect(onOpenSettings).toHaveBeenCalledOnce();
+  });
+
+  test('leaves the gear out where a native menu carries it', () => {
+    mount({ showSettings: false });
+
+    expect(screen.queryByRole('button', { name: 'Settings' })).toBeNull();
   });
 
   test('reloads, and shows refresh progress for three seconds', async () => {

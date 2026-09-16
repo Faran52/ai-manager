@@ -409,6 +409,9 @@ export const HistoryAppView: FC = () => {
             onOpenSettings={() => {
               dialogs.setSettingsOpen(true);
             }}
+            onOpenAbout={() => {
+              runCommand('about');
+            }}
           />
           {/*
             * The sidebar sizes itself from the columns it holds open, so folding

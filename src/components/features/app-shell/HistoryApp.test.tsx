@@ -790,6 +790,7 @@ describe('HistoryApp cross-view flows', () => {
     await screen.findByText('alpha');
 
     await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Settings' }));
     await userEvent.click(await screen.findByRole('radio', { name: 'Dark' }));
 
     expect(localStorage.getItem('acm-theme')).toBe('dark');
@@ -1516,6 +1517,7 @@ describe('HistoryApp settings', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
 
     await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Settings' }));
 
     expect(await screen.findByRole('dialog', { name: 'Settings' })).toBeDefined();
 
@@ -1524,5 +1526,21 @@ describe('HistoryApp settings', () => {
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).toBeNull();
     });
+  });
+
+  test('reaches about from the gear, where there is no menu bar to hold it', async () => {
+    vi.stubGlobal('fetch', vi.fn((url: RequestInfo | URL) => {
+      return toPath(url).endsWith('/projects')
+        ? Response.json(projectPayload)
+        : Response.json({ stats: null });
+    }));
+
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'About' }));
+
+    expect(document.querySelector('[data-about-dialog]')).not.toBeNull();
   });
 });
