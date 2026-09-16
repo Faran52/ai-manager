@@ -12,7 +12,11 @@ import { basename, join } from 'node:path';
 
 import { appConfig } from '@config/appConfig';
 
-import { isJsonObject, parseJsonContainer } from '@utils/jsonUtils';
+import {
+  isJsonObject,
+  numberAt,
+  parseJsonContainer,
+} from '@utils/jsonUtils';
 import { humanPreview } from '@utils/titleUtils';
 
 import { splitUserText } from '../../session/utils/parserUtils';
@@ -66,12 +70,6 @@ const textIn = (source: JsonObject, key: string): string | undefined => {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
 };
 
-const numberIn = (source: JsonObject, key: string): number | undefined => {
-  const value = source[key];
-
-  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
-};
-
 const isoOf = (value: string | undefined): number | undefined => {
   if (value == null) {
     return undefined;
@@ -104,7 +102,7 @@ const readIndex = async (root: string): Promise<ReadonlyMap<string, Conversation
 
       index.set(conversationId, {
         display: textIn(record, 'display'),
-        timestampMs: numberIn(record, 'timestamp'),
+        timestampMs: numberAt(record, 'timestamp'),
         workspace: textIn(record, 'workspace'),
       });
     }
@@ -137,7 +135,7 @@ const entryOf = (
     return [];
   }
 
-  const stepIndex = numberIn(record, 'step_index') ?? lineIndex;
+  const stepIndex = numberAt(record, 'step_index') ?? lineIndex;
   const uuid = `${conversationId}-step-${String(stepIndex)}`;
   const timestamp = new Date(timestampMs).toISOString();
 

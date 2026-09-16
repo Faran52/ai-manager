@@ -4,10 +4,10 @@ import { join } from 'node:path';
 
 import { agentOption } from '@config/agents';
 
-import { isJsonObject, parseJsonContainer } from '@utils/jsonUtils';
+import { readJsonFile } from '@utils/jsonFileUtils';
+import { isJsonObject } from '@utils/jsonUtils';
 
 import type { AgentId, AgentOption } from '@config/agents';
-import type { JsonValue } from '@utils/jsonUtils';
 
 // Each format carries its own shape: this is where agents diverge, so it is not
 // abstracted into a shared interface.
@@ -49,17 +49,8 @@ export type ModelAuthState
   | { readonly format: 'sqlite' }
   | { readonly format: 'openhands' };
 
-const readJson = async (file: string): Promise<JsonValue> => {
-  try {
-    return parseJsonContainer(await readFile(file, 'utf8'));
-  }
-  catch {
-    return null;
-  }
-};
-
 const readClaudeModelAuth = async (claudeDir: string): Promise<ModelAuthState> => {
-  const parsed = await readJson(join(claudeDir, 'settings.json'));
+  const parsed = await readJsonFile(join(claudeDir, 'settings.json'));
   const settings = isJsonObject(parsed) ? parsed : {};
   const model = typeof settings.model === 'string' ? settings.model : undefined;
   const env = isJsonObject(settings.env) ? settings.env : {};
@@ -118,7 +109,7 @@ const readCodexModelAuth = async (home: string): Promise<ModelAuthState> => {
   }
 
   let authMethod: 'oauth' | 'api-key' | 'none' = 'none';
-  const authParsed = await readJson(join(home, '.codex', 'auth.json'));
+  const authParsed = await readJsonFile(join(home, '.codex', 'auth.json'));
 
   if (isJsonObject(authParsed)) {
     authMethod = isJsonObject(authParsed.tokens)
@@ -135,7 +126,7 @@ const readCodexModelAuth = async (home: string): Promise<ModelAuthState> => {
 };
 
 const readGeminiModelAuth = async (home: string): Promise<ModelAuthState> => {
-  const parsed = await readJson(join(home, '.gemini', 'settings.json'));
+  const parsed = await readJsonFile(join(home, '.gemini', 'settings.json'));
   const settings = isJsonObject(parsed) ? parsed : {};
   const model = typeof settings.model === 'string' ? settings.model : undefined;
 
@@ -147,7 +138,7 @@ const readGeminiModelAuth = async (home: string): Promise<ModelAuthState> => {
 };
 
 const readOpenCodeModelAuth = async (home: string): Promise<ModelAuthState> => {
-  const parsed = await readJson(join(home, '.config', 'opencode', 'opencode.json'));
+  const parsed = await readJsonFile(join(home, '.config', 'opencode', 'opencode.json'));
   const config = isJsonObject(parsed) ? parsed : {};
   const model = typeof config.model === 'string' ? config.model : undefined;
 

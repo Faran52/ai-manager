@@ -25,3 +25,26 @@ export const parseJsonContainer = (text: string): JsonValue => {
     return null;
   }
 };
+
+// Readers of parsed config and history files, whose shape is never promised.
+export const valueAt = (source: JsonValue | undefined, key: string): JsonValue | undefined => {
+  return isJsonObject(source) ? source[key] : undefined;
+};
+
+export const objectAt = (source: JsonValue | undefined, key: string): JsonObject | undefined => {
+  const value = valueAt(source, key);
+
+  return isJsonObject(value) ? value : undefined;
+};
+
+export const textAt = (source: JsonValue | undefined, key: string): string | undefined => {
+  const value = valueAt(source, key);
+
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+};
+
+export const numberAt = (source: JsonValue | undefined, key: string): number | undefined => {
+  const value = valueAt(source, key);
+
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+};

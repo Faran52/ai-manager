@@ -4,7 +4,12 @@ import {
   it,
 } from 'vitest';
 
-import { parseJsonContainer } from './jsonUtils';
+import {
+  numberAt,
+  objectAt,
+  parseJsonContainer,
+  textAt,
+} from './jsonUtils';
 
 describe('parseJsonContainer', () => {
   it('keeps objects and arrays', () => {
@@ -21,5 +26,27 @@ describe('parseJsonContainer', () => {
   it('yields null for text that is not JSON', () => {
     expect(parseJsonContainer('{unterminated')).toBeNull();
     expect(parseJsonContainer('')).toBeNull();
+  });
+});
+
+describe('field readers', () => {
+  const source = {
+    nested: { deep: true },
+    name: 'x',
+    empty: '',
+    count: 3,
+    huge: Number.POSITIVE_INFINITY,
+  };
+
+  it('reads an object, a non-empty string and a finite number under a key', () => {
+    expect(objectAt(source, 'nested')).toEqual({ deep: true });
+    expect(objectAt(source, 'name')).toBeUndefined();
+    expect(objectAt('not an object', 'nested')).toBeUndefined();
+    expect(textAt(source, 'name')).toBe('x');
+    expect(textAt(source, 'empty')).toBeUndefined();
+    expect(textAt(undefined, 'name')).toBeUndefined();
+    expect(numberAt(source, 'count')).toBe(3);
+    expect(numberAt(source, 'huge')).toBeUndefined();
+    expect(numberAt(null, 'count')).toBeUndefined();
   });
 });

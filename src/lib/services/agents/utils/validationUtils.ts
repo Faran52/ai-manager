@@ -7,17 +7,19 @@ import {
   resolve,
 } from 'node:path';
 
+import { readJsonFile } from '@utils/jsonFileUtils';
 import {
   isJsonArray,
   isJsonObject,
-  parseJsonContainer,
+  objectAt,
+  valueAt,
 } from '@utils/jsonUtils';
 
 import { CLAUDE_HOME_NAME, rootProfileLabel } from './rootsUtils';
 import { defaultClaudeDir } from './setupUtils';
 
 import type { AgentId } from '@config/agents';
-import type { JsonObject, JsonValue } from '@utils/jsonUtils';
+import type { JsonValue } from '@utils/jsonUtils';
 
 export interface SetupFinding {
   readonly agent: AgentId;
@@ -41,23 +43,10 @@ interface CodexMcpFields {
   enabled: boolean;
 }
 
-const readJson = async (file: string): Promise<JsonValue> => {
-  try {
-    return parseJsonContainer(await readFile(file, 'utf8'));
-  }
-  catch {
-    return null;
-  }
-};
+const stringsAt = (parsed: JsonValue | undefined, key: string): readonly string[] => {
+  const value = valueAt(parsed, key);
 
-const objectAt = (parsed: JsonValue, key: string): JsonObject => {
-  const root = isJsonObject(parsed) ? parsed[key] : undefined;
-
-  return isJsonObject(root) ? root : {};
-};
-
-const stringsAt = (parsed: JsonObject, key: string): readonly string[] => {
-  return (isJsonArray(parsed[key]) ? parsed[key] : []).flatMap((entry) => {
+  return (isJsonArray(value) ? value : []).flatMap((entry) => {
     return typeof entry === 'string' ? [entry] : [];
   });
 };
@@ -87,7 +76,7 @@ const hookScriptPath = (command: string): string | undefined => {
 };
 
 const hookCommands = (settings: JsonValue): readonly string[] => {
-  return Object.values(objectAt(settings, 'hooks')).flatMap((matchers) => {
+  return Object.values(objectAt(settings, 'hooks') ?? {}).flatMap((matchers) => {
     return (isJsonArray(matchers) ? matchers : []).flatMap((matcher) => {
       const entries = isJsonObject(matcher) ? matcher.hooks : undefined;
 
@@ -128,10 +117,10 @@ const brokenHooks = async (settings: JsonValue): Promise<readonly SetupFinding[]
 const unknownMarketplaces = (settings: JsonValue, known: JsonValue): readonly SetupFinding[] => {
   const names = new Set([
     ...Object.keys(isJsonObject(known) ? known : {}),
-    ...Object.keys(objectAt(settings, 'extraKnownMarketplaces')),
+    ...Object.keys(objectAt(settings, 'extraKnownMarketplaces') ?? {}),
   ]);
 
-  return Object.keys(objectAt(settings, 'enabledPlugins')).flatMap((entry) => {
+  return Object.keys(objectAt(settings, 'enabledPlugins') ?? {}).flatMap((entry) => {
     const marketplace = entry.split('@')[1];
 
     if (marketplace == null || names.has(marketplace)) {
@@ -152,7 +141,7 @@ const missingMarketplaceDirs = async (
   settings: JsonValue,
   base: string,
 ): Promise<readonly SetupFinding[]> => {
-  const entries = Object.entries(objectAt(settings, 'extraKnownMarketplaces'));
+  const entries = Object.entries(objectAt(settings, 'extraKnownMarketplaces') ?? {});
   const checked = await Promise.all(entries.map(async ([name, value]) => {
     const source = isJsonObject(value) ? value.source : undefined;
     const kind = isJsonObject(source) ? source.source : undefined;
@@ -183,7 +172,7 @@ const missingMarketplaceDirs = async (
 };
 
 const unapprovedMcp = (projectMcp: JsonValue, userConfig: JsonValue, projectPath: string): readonly SetupFinding[] => {
-  const declared = Object.keys(objectAt(projectMcp, 'mcpServers'));
+  const declared = Object.keys(objectAt(projectMcp, 'mcpServers') ?? {});
 
   if (declared.length === 0) {
     return [];
@@ -327,11 +316,11 @@ const validateClaudeSetup = async (
     ? join(home, '.claude.json')
     : join(claudeDir, '.claude.json');
   const [userSettings, projectSettings, known, userConfig, projectMcp] = await Promise.all([
-    readJson(join(claudeDir, 'settings.json')),
-    readJson(join(projectPath, '.claude', 'settings.json')),
-    readJson(join(claudeDir, 'plugins', 'known_marketplaces.json')),
-    readJson(userConfigPath),
-    readJson(join(projectPath, '.mcp.json')),
+    readJsonFile(join(claudeDir, 'settings.json')),
+    readJsonFile(join(projectPath, '.claude', 'settings.json')),
+    readJsonFile(join(claudeDir, 'plugins', 'known_marketplaces.json')),
+    readJsonFile(userConfigPath),
+    readJsonFile(join(projectPath, '.mcp.json')),
   ]);
 
   const [userHooks, projectHooks, userDirs, projectDirs] = await Promise.all([

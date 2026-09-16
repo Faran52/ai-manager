@@ -12,6 +12,8 @@ import {
   isJsonArray,
   isJsonObject,
   parseJsonContainer,
+  textAt,
+  valueAt,
 } from '@utils/jsonUtils';
 import { humanPreview } from '@utils/titleUtils';
 
@@ -106,16 +108,6 @@ interface RequestDraft {
   timestamp?: number;
 }
 
-const fieldValue = (source: JsonValue | undefined, key: string): JsonValue | undefined => {
-  return isJsonObject(source) ? source[key] : undefined;
-};
-
-const textIn = (source: JsonValue | undefined, key: string): string | undefined => {
-  const value = fieldValue(source, key);
-
-  return typeof value === 'string' && value.length > 0 ? value : undefined;
-};
-
 const plainString = (value: JsonValue | undefined): string | undefined => {
   return typeof value === 'string' ? value : undefined;
 };
@@ -125,7 +117,7 @@ const finiteNumber = (value: JsonValue | undefined): number | undefined => {
 };
 
 const valuesIn = (source: JsonValue | undefined, key: string): readonly JsonValue[] => {
-  const value = fieldValue(source, key);
+  const value = valueAt(source, key);
 
   return isJsonArray(value) ? value : [];
 };
@@ -136,7 +128,7 @@ const chatText = (part: JsonValue | undefined): string => {
     return part;
   }
 
-  const inner = fieldValue(part, 'value');
+  const inner = valueAt(part, 'value');
 
   return typeof inner === 'string' ? inner : '';
 };
@@ -233,25 +225,25 @@ const callName = (toolId: string | undefined): string => {
 };
 
 const terminalCommand = (item: JsonObject): string => {
-  const data = fieldValue(item, 'toolSpecificData');
-  const commandLine = fieldValue(data, 'commandLine');
+  const data = valueAt(item, 'toolSpecificData');
+  const commandLine = valueAt(data, 'commandLine');
 
   return firstNonEmpty([
-    textIn(commandLine, 'original') ?? '',
-    textIn(commandLine, 'toolEdited') ?? '',
-    textIn(commandLine, 'forDisplay') ?? '',
+    textAt(commandLine, 'original') ?? '',
+    textAt(commandLine, 'toolEdited') ?? '',
+    textAt(commandLine, 'forDisplay') ?? '',
   ]) ?? '';
 };
 
 const todoItems = (item: JsonObject): readonly TodoItem[] => {
-  return valuesIn(fieldValue(item, 'toolSpecificData'), 'todoList').flatMap((record) => {
-    const content = textIn(record, 'title') ?? textIn(record, 'id');
+  return valuesIn(valueAt(item, 'toolSpecificData'), 'todoList').flatMap((record) => {
+    const content = textAt(record, 'title') ?? textAt(record, 'id');
 
     return content == null
       ? []
       : [{
           content,
-          status: textIn(record, 'status') ?? 'pending',
+          status: textAt(record, 'status') ?? 'pending',
         }];
   });
 };
@@ -262,8 +254,8 @@ const fetchUrl = (item: JsonObject): string => {
   return firstNonEmpty([
     webUrl(chatTextIn(item, 'invocationMessage')) ?? '',
     webUrl(chatTextIn(item, 'pastTenseMessage')) ?? '',
-    textIn(referenced, 'external') ?? '',
-    textIn(referenced, 'path') ?? '',
+    textAt(referenced, 'external') ?? '',
+    textAt(referenced, 'path') ?? '',
   ]) ?? '';
 };
 
@@ -504,7 +496,7 @@ const absorbRequestField = (draft: RequestDraft, key: string, value: JsonValue):
       break;
     }
     case 'message': {
-      const text = plainString(fieldValue(value, 'text'));
+      const text = plainString(valueAt(value, 'text'));
 
       if (text != null) {
         draft.messageText = text;
@@ -513,7 +505,7 @@ const absorbRequestField = (draft: RequestDraft, key: string, value: JsonValue):
       break;
     }
     case 'result':
-      draft.resolvedModel = textIn(fieldValue(value, 'metadata'), 'resolvedModel') ?? draft.resolvedModel;
+      draft.resolvedModel = textAt(valueAt(value, 'metadata'), 'resolvedModel') ?? draft.resolvedModel;
       break;
     default:
       break;
@@ -631,8 +623,8 @@ const applyPatch = (state: ReplayState, patch: JsonObject): void => {
 };
 
 const applySnapshot = (state: ReplayState, record: JsonObject): void => {
-  const sessionId = textIn(record, 'sessionId');
-  const title = textIn(record, 'customTitle');
+  const sessionId = textAt(record, 'sessionId');
+  const title = textAt(record, 'customTitle');
 
   if (sessionId != null) {
     state.sessionId = sessionId;

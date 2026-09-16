@@ -12,6 +12,7 @@ import { appConfig } from '@config/appConfig';
 import {
   isJsonArray,
   isJsonObject,
+  objectAt,
   parseJsonContainer,
 } from '@utils/jsonUtils';
 import { containedIn } from '@utils/pathUtils';
@@ -157,12 +158,6 @@ const jsonString = (value: JsonValue | undefined): string | undefined => {
 
 const jsonNumber = (value: JsonValue | undefined): number | undefined => {
   return typeof value === 'number' ? value : undefined;
-};
-
-const objectAt = (record: JsonObject, key: string): JsonObject | undefined => {
-  const value = record[key];
-
-  return isJsonObject(value) ? value : undefined;
 };
 
 const timestampRange = (entries: readonly SqliteEntry[]): TimestampRange => {

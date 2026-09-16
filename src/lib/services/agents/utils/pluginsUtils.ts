@@ -1,11 +1,12 @@
-import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
+import { readJsonFile } from '@utils/jsonFileUtils';
 import {
   isJsonArray,
   isJsonObject,
-  parseJsonContainer,
+  objectAt,
+  textAt,
 } from '@utils/jsonUtils';
 
 import { type SetupScope } from './setupUtils';
@@ -21,38 +22,17 @@ export interface InstalledPlugin {
   readonly knownMarketplace: boolean;
 }
 
-const readJson = async (file: string): Promise<JsonValue> => {
-  try {
-    return parseJsonContainer(await readFile(file, 'utf8'));
-  }
-  catch {
-    return null;
-  }
-};
-
-const objectAt = (parsed: JsonValue, key: string): JsonObject => {
-  const root = isJsonObject(parsed) ? parsed[key] : undefined;
-
-  return isJsonObject(root) ? root : {};
-};
-
-const stringAt = (record: JsonObject, key: string): string | undefined => {
-  const value = record[key];
-
-  return typeof value === 'string' ? value : undefined;
-};
-
 // This project's install wins; one recorded for another project does not apply at all.
 const applicableInstall = (installs: JsonValue, projectPath: string): JsonObject | undefined => {
   const entries = (isJsonArray(installs) ? installs : []).flatMap((install) => {
     return isJsonObject(install) ? [install] : [];
   });
   const forProject = entries.find((install) => {
-    return stringAt(install, 'scope') === 'project' && stringAt(install, 'projectPath') === projectPath;
+    return textAt(install, 'scope') === 'project' && textAt(install, 'projectPath') === projectPath;
   });
 
   return forProject ?? entries.find((install) => {
-    return stringAt(install, 'scope') === 'user';
+    return textAt(install, 'scope') === 'user';
   });
 };
 
@@ -63,23 +43,23 @@ export const readClaudePlugins = async (
   claudeDir = join(home, '.claude'),
 ): Promise<readonly InstalledPlugin[]> => {
   const [installed, known, userSettings, projectSettings] = await Promise.all([
-    readJson(join(claudeDir, 'plugins', 'installed_plugins.json')),
-    readJson(join(claudeDir, 'plugins', 'known_marketplaces.json')),
-    readJson(join(claudeDir, 'settings.json')),
-    readJson(join(projectPath, '.claude', 'settings.json')),
+    readJsonFile(join(claudeDir, 'plugins', 'installed_plugins.json')),
+    readJsonFile(join(claudeDir, 'plugins', 'known_marketplaces.json')),
+    readJsonFile(join(claudeDir, 'settings.json')),
+    readJsonFile(join(projectPath, '.claude', 'settings.json')),
   ]);
 
   const enabled = {
-    ...objectAt(userSettings, 'enabledPlugins'),
-    ...objectAt(projectSettings, 'enabledPlugins'),
+    ...(objectAt(userSettings, 'enabledPlugins') ?? {}),
+    ...(objectAt(projectSettings, 'enabledPlugins') ?? {}),
   };
   const marketplaces = new Set([
     ...Object.keys(isJsonObject(known) ? known : {}),
-    ...Object.keys(objectAt(userSettings, 'extraKnownMarketplaces')),
-    ...Object.keys(objectAt(projectSettings, 'extraKnownMarketplaces')),
+    ...Object.keys((objectAt(userSettings, 'extraKnownMarketplaces') ?? {})),
+    ...Object.keys((objectAt(projectSettings, 'extraKnownMarketplaces') ?? {})),
   ]);
 
-  const applicable = Object.entries(objectAt(installed, 'plugins')).flatMap(([id, installs]) => {
+  const applicable = Object.entries((objectAt(installed, 'plugins') ?? {})).flatMap(([id, installs]) => {
     const install = applicableInstall(installs, projectPath);
     const marketplace = id.split('@')[1];
 
@@ -87,14 +67,14 @@ export const readClaudePlugins = async (
       return [];
     }
 
-    const scope: SetupScope = stringAt(install, 'scope') === 'project' ? 'project' : 'user';
+    const scope: SetupScope = textAt(install, 'scope') === 'project' ? 'project' : 'user';
 
     return [{
       id,
       marketplace,
       scope,
       enabled: enabled[id] === true,
-      version: stringAt(install, 'version') ?? 'unknown',
+      version: textAt(install, 'version') ?? 'unknown',
       knownMarketplace: marketplaces.has(marketplace),
     }];
   });

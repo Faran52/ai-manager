@@ -11,6 +11,7 @@ import {
   isJsonArray,
   isJsonObject,
   parseJsonContainer,
+  textAt,
 } from '@utils/jsonUtils';
 import { humanPreview } from '@utils/titleUtils';
 
@@ -82,16 +83,6 @@ const TOOL_NAMES = new Map<string, string>([
   ['web_fetch', 'WebFetch'],
 ]);
 
-const fieldValue = (source: JsonValue | undefined, key: string): JsonValue | undefined => {
-  return isJsonObject(source) ? source[key] : undefined;
-};
-
-const textIn = (source: JsonValue | undefined, key: string): string | undefined => {
-  const value = fieldValue(source, key);
-
-  return typeof value === 'string' && value.length > 0 ? value : undefined;
-};
-
 const stampOf = (value: JsonValue | undefined): number | undefined => {
   if (typeof value === 'string') {
     const parsed = Date.parse(value);
@@ -108,7 +99,7 @@ const partText = (part: JsonValue | undefined): string => {
     return part;
   }
 
-  return textIn(part, 'text') ?? '';
+  return textAt(part, 'text') ?? '';
 };
 
 const contentText = (content: JsonValue | undefined): string => {
@@ -135,8 +126,8 @@ const thinkingBlocks = (record: JsonObject): readonly AssistantBlock[] => {
   }
 
   return thoughts.flatMap((thought) => {
-    const subject = textIn(thought, 'subject');
-    const description = textIn(thought, 'description') ?? '';
+    const subject = textAt(thought, 'subject');
+    const description = textAt(thought, 'description') ?? '';
     const thinking = subject == null ? description : `**${subject}**\n${description}`;
 
     return thinking.length === 0
@@ -157,9 +148,9 @@ const outcomeTextOf = (result: JsonValue | undefined): string | undefined => {
     return result;
   }
 
-  return textIn(result, 'output')
-    ?? textIn(result, 'content')
-    ?? textIn(result, 'text')
+  return textAt(result, 'output')
+    ?? textAt(result, 'content')
+    ?? textAt(result, 'text')
     ?? (result == null ? undefined : JSON.stringify(result));
 };
 
@@ -181,9 +172,9 @@ const toolPartsOf = (record: JsonObject, fallbackId: string): ToolParts => {
       continue;
     }
 
-    const rawName = textIn(call, 'name') ?? 'Tool';
+    const rawName = textAt(call, 'name') ?? 'Tool';
     const name = TOOL_NAMES.get(rawName) ?? rawName;
-    const toolUseId = textIn(call, 'id') ?? `${fallbackId}-tool-${String(index)}`;
+    const toolUseId = textAt(call, 'id') ?? `${fallbackId}-tool-${String(index)}`;
 
     blocks.push({
       blockType: 'tool-use',
@@ -200,7 +191,7 @@ const toolPartsOf = (record: JsonObject, fallbackId: string): ToolParts => {
 
     outcomes.push({
       toolUseId,
-      status: textIn(call, 'status') === 'error' ? 'error' : 'ok',
+      status: textAt(call, 'status') === 'error' ? 'error' : 'ok',
       text: outcomeTextOf(call.result),
       images: [],
     });
@@ -269,8 +260,8 @@ const entryOf = (
   index: number,
   fallbackMs: number,
 ): readonly GeminiEntry[] => {
-  const kind = textIn(record, 'type');
-  const uuid = textIn(record, 'id') ?? `entry-${String(index)}`;
+  const kind = textAt(record, 'type');
+  const uuid = textAt(record, 'id') ?? `entry-${String(index)}`;
   const stamp = stampOf(record.timestamp) ?? fallbackMs;
   const timestamp = new Date(stamp).toISOString();
   const text = contentText(record.content);
@@ -327,7 +318,7 @@ const entryOf = (
     uuid,
     timestamp,
     sidechain: false,
-    model: textIn(record, 'model'),
+    model: textAt(record, 'model'),
     blocks,
   };
 
@@ -372,7 +363,7 @@ export const parseGeminiHistory = (
 
   return {
     entries,
-    sessionId: textIn(meta, 'sessionId') ?? 'gemini-session',
+    sessionId: textAt(meta, 'sessionId') ?? 'gemini-session',
     preview: firstUserMessageText(entries),
     firstTimestampMs: Math.min(...stamps),
     lastTimestampMs: Math.max(...stamps),
