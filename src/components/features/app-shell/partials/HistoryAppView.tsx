@@ -47,16 +47,20 @@ import {
 import { SettingsSheet } from '@features/settings';
 import { SidebarPane } from '@features/sidebar';
 import { useTheme } from '@features/theme';
-import { UpdateBanner } from '@features/updates';
+import { UpdateBanner, useUpdateProbe } from '@features/updates';
 
 import { useAppShortcuts } from '../hooks/useAppShortcuts';
+import { useDesktop } from '../hooks/useDesktop';
+import { useNativeMenu } from '../hooks/useNativeMenu';
 import { useRetentionOnLaunch } from '../hooks/useRetentionOnLaunch';
 import { useWorkspaceSelection } from '../hooks/useWorkspaceSelection';
 
+import { AboutDialog } from './AboutDialog';
 import { NavRail } from './NavRail';
 import { ShortcutsDialog } from './ShortcutsDialog';
 
 import type { AgentId } from '@config/agents';
+import type { AppCommand } from '@config/appCommands';
 import type { AppView } from '@features/app-header';
 import type {
   HistoryEntry,
@@ -83,6 +87,57 @@ export const HistoryAppView: FC = () => {
     return Date.now();
   });
   const dialogs = useAppShortcuts(setView, projects.reload);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const updateProbe = useUpdateProbe();
+  const { setSettingsOpen, setShortcutsOpen } = dialogs;
+  const reloadProjects = projects.reload;
+
+  // The native menu reaches the same things the rail and the keys already do.
+  const runCommand = useCallback((command: AppCommand): void => {
+    const actions: Record<AppCommand, () => void> = {
+      /*
+       * A window where the platform draws one, the dialog everywhere else. The
+       * window outlives this one, so nothing here waits on it.
+       */
+      about: () => {
+        const openAbout = window.bindings?.openAbout;
+
+        if (openAbout == null) {
+          setAboutOpen(true);
+
+          return;
+        }
+
+        void openAbout();
+      },
+      settings: () => {
+        setSettingsOpen(true);
+      },
+      viewSessions: () => {
+        setView('sessions');
+      },
+      viewAnalytics: () => {
+        setView('analytics');
+      },
+      viewHealth: () => {
+        setView('health');
+      },
+      viewArchive: () => {
+        setView('archive');
+      },
+      reload: reloadProjects,
+      showShortcuts: () => {
+        setShortcutsOpen(true);
+      },
+    };
+
+    actions[command]();
+  }, [reloadProjects, setSettingsOpen, setShortcutsOpen]);
+
+  // True once the window is carrying the menu, which owns Settings there.
+  const nativeMenu = useNativeMenu(runCommand);
+  // Only an installed build can replace itself, so only it offers the check.
+  const desktop = useDesktop();
 
   useRetentionOnLaunch();
 
@@ -350,6 +405,7 @@ export const HistoryAppView: FC = () => {
             view={view}
             onViewChange={setView}
             onReload={projects.reload}
+            showSettings={!nativeMenu}
             onOpenSettings={() => {
               dialogs.setSettingsOpen(true);
             }}
@@ -401,6 +457,16 @@ export const HistoryAppView: FC = () => {
             </motion.div>
           </div>
         </div>
+
+        <AboutDialog
+          open={aboutOpen}
+          stage={updateProbe.stage}
+          version={updateProbe.version}
+          onCheck={desktop ? updateProbe.check : undefined}
+          onClose={() => {
+            setAboutOpen(false);
+          }}
+        />
 
         <ShortcutsDialog
           open={dialogs.shortcutsOpen}

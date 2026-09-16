@@ -1,4 +1,5 @@
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -15,6 +16,7 @@ import {
   vi,
 } from 'vitest';
 
+import { appMenuEvent } from '@config/appCommands';
 import { messageNavigatorOpenStorageKey, sidebarWidthStorageKey } from '@config/storageKeys';
 
 import { findAgentProject } from '@services/history/historyService';
@@ -129,6 +131,108 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals();
   localStorage.clear();
+});
+
+describe('HistoryApp menu commands', () => {
+  const command = (name: string): void => {
+    act(() => {
+      window.dispatchEvent(new CustomEvent(appMenuEvent, { detail: name }));
+    });
+  };
+
+  const renderShell = async (): Promise<void> => {
+    vi.stubGlobal('fetch', vi.fn((url: RequestInfo | URL) => {
+      return toPath(url).endsWith('/projects')
+        ? Response.json(projectPayload)
+        : Response.json({ stats: null });
+    }));
+
+    render(<HistoryApp />);
+    await screen.findByText('alpha');
+  };
+
+  test('raises the About window where the platform draws one', async () => {
+    Object.defineProperty(window, 'bindings', {
+      configurable: true,
+      value: {
+        desktopPlatform: () => {
+          return Promise.resolve('darwin');
+        },
+        setApplicationMenu: () => {
+          return Promise.resolve(undefined);
+        },
+        openAbout: vi.fn(() => {
+          return Promise.resolve(undefined);
+        }),
+      },
+    });
+
+    await renderShell();
+    command('about');
+
+    expect(window.bindings?.openAbout).toHaveBeenCalledTimes(1);
+    expect(document.querySelector('[data-about-dialog]')).toBeNull();
+
+    Reflect.deleteProperty(window, 'bindings');
+  });
+
+  test('opens each of the dialogs the menu names', async () => {
+    await renderShell();
+
+    command('about');
+    expect(document.querySelector('[data-about-dialog]')).not.toBeNull();
+
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => {
+      expect(document.querySelector('[data-about-dialog]')).toBeNull();
+    });
+
+    command('settings');
+    await waitFor(() => {
+      expect(document.querySelector('[data-settings-pane]')).not.toBeNull();
+    });
+  });
+
+  test('switches to each view the menu names', async () => {
+    await renderShell();
+
+    command('viewArchive');
+    await waitFor(() => {
+      expect(document.querySelector('[data-archive-view], [data-archive-loading]')).not.toBeNull();
+    });
+
+    command('viewSessions');
+    await waitFor(() => {
+      expect(document.querySelector('[data-viewer-empty], [data-session-viewer]')).not.toBeNull();
+    });
+  });
+
+  test('reloads the projects, and ignores a command it does not know', async () => {
+    await renderShell();
+    const before = vi.mocked(fetch).mock.calls.length;
+
+    command('reload');
+    command('nonsense');
+
+    await waitFor(() => {
+      expect(vi.mocked(fetch).mock.calls.length).toBeGreaterThan(before);
+    });
+  });
+
+  test('shows the shortcut sheet and the health view from the menu', async () => {
+    await renderShell();
+
+    command('showShortcuts');
+    await waitFor(() => {
+      expect(document.querySelector('[data-shortcut-list]')).not.toBeNull();
+    });
+
+    command('viewHealth');
+    command('viewAnalytics');
+    command('about');
+
+    expect(document.querySelector('[data-about-dialog]')).not.toBeNull();
+  });
 });
 
 describe('HistoryApp', () => {

@@ -1,0 +1,39 @@
+---
+import '../styles/global.css';
+import { accentStorageKey, fontSizeStorageKey, themeStorageKey } from '@config/storageKeys';
+import { AboutApp } from '@features/app-shell';
+
+/*
+ * The About window's own document. It is a second window, so it boots its own
+ * app and reads the same stored appearance the main one does, which is why the
+ * inline script below is the same one index.astro runs.
+ */
+export const prerender = false;
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>About AI Manager</title>
+		<script is:inline define:vars={{ themeStorageKey, accentStorageKey, fontSizeStorageKey }}>
+	const stored = localStorage.getItem(themeStorageKey);
+	const dark = stored === 'dark' || (stored !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+	if (dark) {
+	  document.documentElement.classList.add('dark');
+	}
+	const accent = localStorage.getItem(accentStorageKey) || 'teal';
+	if (accent.startsWith('#')) {
+	  document.documentElement.dataset.accent = 'custom';
+	  document.documentElement.style.setProperty('--primary', accent);
+	}
+ else {
+	  document.documentElement.dataset.accent = accent;
+	}
+	document.documentElement.dataset.fontSize = localStorage.getItem(fontSizeStorageKey) || 'normal';
+	</script>
+	</head>
+	<body>
+		<AboutApp client:only="react" />
+	</body>
+</html>
