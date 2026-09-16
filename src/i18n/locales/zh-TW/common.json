@@ -93,5 +93,10 @@
   "charCount": "{{count}} 個字元",
   "viewToggle": "顯示為",
   "viewParsed": "已解析",
-  "viewRaw": "原文"
+  "viewRaw": "原文",
+  "checkUpdates": "檢查更新…",
+  "menuEdit": "編輯",
+  "menuView": "檢視",
+  "menuWindow": "視窗",
+  "menuHelp": "說明"
 }

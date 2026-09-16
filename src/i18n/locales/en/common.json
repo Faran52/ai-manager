@@ -93,5 +93,10 @@
   "charCount": "{{count}} chars",
   "viewToggle": "Show as",
   "viewParsed": "Parsed",
-  "viewRaw": "Raw"
+  "viewRaw": "Raw",
+  "checkUpdates": "Check for Updates…",
+  "menuEdit": "Edit",
+  "menuView": "View",
+  "menuWindow": "Window",
+  "menuHelp": "Help"
 }

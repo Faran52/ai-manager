@@ -4,5 +4,7 @@
   "later": "Later",
   "downloading": "Downloading update…",
   "restartRequired": "Restart to finish updating",
-  "upToDate": "You are up to date"
+  "upToDate": "You are up to date",
+  "checking": "Checking…",
+  "checkFailed": "Could not check for updates"
 }

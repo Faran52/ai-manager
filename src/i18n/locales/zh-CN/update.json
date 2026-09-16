@@ -4,5 +4,7 @@
   "later": "稍后",
   "downloading": "正在下载更新…",
   "restartRequired": "重启以完成更新",
-  "upToDate": "已是最新版本"
+  "upToDate": "已是最新版本",
+  "checking": "正在检查…",
+  "checkFailed": "无法检查更新"
 }

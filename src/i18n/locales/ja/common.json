@@ -93,5 +93,10 @@
   "charCount": "{{count}} 文字",
   "viewToggle": "表示形式",
   "viewParsed": "整形済み",
-  "viewRaw": "原文"
+  "viewRaw": "原文",
+  "checkUpdates": "アップデートを確認…",
+  "menuEdit": "編集",
+  "menuView": "表示",
+  "menuWindow": "ウインドウ",
+  "menuHelp": "ヘルプ"
 }

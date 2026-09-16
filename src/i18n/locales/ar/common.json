@@ -93,5 +93,10 @@
   "charCount": "{{count}} حرف",
   "viewToggle": "طريقة العرض",
   "viewParsed": "مُنسَّق",
-  "viewRaw": "خام"
+  "viewRaw": "خام",
+  "checkUpdates": "التحقق من التحديثات…",
+  "menuEdit": "تحرير",
+  "menuView": "عرض",
+  "menuWindow": "نافذة",
+  "menuHelp": "مساعدة"
 }

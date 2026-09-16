@@ -30,6 +30,8 @@ export interface NavRailProps {
   readonly flagged: number;
   readonly onReload: () => void;
   readonly onOpenSettings: () => void;
+  // False where a native menu carries Settings, so the rail does not repeat it.
+  readonly showSettings?: boolean | undefined;
 }
 
 interface Destination {
@@ -83,6 +85,7 @@ export const NavRail: FC<NavRailProps> = ({
   flagged,
   onReload,
   onOpenSettings,
+  showSettings = true,
 }) => {
   const { t } = useTranslation('common');
   const { push } = useToast();
@@ -170,16 +173,18 @@ export const NavRail: FC<NavRailProps> = ({
           <RefreshCw className={cn('size-4', refreshing && 'animate-spin')} />
         </button>
       </Tooltip>
-      <Tooltip content={t('navSettings')} side="right">
-        <button
-          type="button"
-          onClick={onOpenSettings}
-          aria-label={t('navSettings')}
-          className={RAIL_BUTTON}
-        >
-          <Settings className="size-4" />
-        </button>
-      </Tooltip>
+      {showSettings && (
+        <Tooltip content={t('navSettings')} side="right">
+          <button
+            type="button"
+            onClick={onOpenSettings}
+            aria-label={t('navSettings')}
+            className={RAIL_BUTTON}
+          >
+            <Settings className="size-4" />
+          </button>
+        </Tooltip>
+      )}
     </nav>
   );
 };

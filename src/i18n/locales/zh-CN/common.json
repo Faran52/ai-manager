@@ -93,5 +93,10 @@
   "charCount": "{{count}} 个字符",
   "viewToggle": "显示为",
   "viewParsed": "已解析",
-  "viewRaw": "原文"
+  "viewRaw": "原文",
+  "checkUpdates": "检查更新…",
+  "menuEdit": "编辑",
+  "menuView": "视图",
+  "menuWindow": "窗口",
+  "menuHelp": "帮助"
 }
