@@ -4,6 +4,7 @@ import {
   loadAgentEntries,
   pathsFor,
 } from '../agents/agentsService';
+import { sessionLabel } from '../history/utils/lookupUtils';
 
 import type { AgentId } from '@config/agents';
 import type { AgentRoots } from '../agents/agentsService';
@@ -160,7 +161,7 @@ export const listRecentEdits = async (
       session.agent,
       pathsFor(roots, session.agent),
     ) ?? [];
-    const title = session.title ?? session.summary ?? session.preview ?? session.id;
+    const title = sessionLabel(session);
 
     for (const entry of entries) {
       const timestampMs = entry.kind === 'summary' ? 0 : Date.parse(entry.timestamp);

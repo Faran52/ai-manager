@@ -9,6 +9,7 @@ import { sumBy } from 'es-toolkit';
 
 import { appConfig } from '@config/appConfig';
 
+import { maxOf } from '@utils/arrayUtils';
 import {
   isJsonArray,
   isJsonObject,
@@ -541,9 +542,9 @@ export const listGeminiProjects = async (
       messageCount: sumBy(values, (value) => {
         return conversationMessageCount(value.entries);
       }),
-      lastActivityMs: values.reduce((latest, value) => {
-        return Math.max(latest, value.lastTimestampMs);
-      }, 0),
+      lastActivityMs: maxOf(values, (value) => {
+        return value.lastTimestampMs;
+      }),
     } satisfies ProjectSummary;
   }).sort((left, right) => {
     return right.lastActivityMs - left.lastActivityMs;

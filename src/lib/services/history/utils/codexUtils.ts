@@ -1,8 +1,11 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
+import { sumBy } from 'es-toolkit';
+
 import { appConfig } from '@config/appConfig';
 
+import { maxOf } from '@utils/arrayUtils';
 import { diffLines, parseUnifiedDiff } from '@utils/diffUtils';
 import { humanPreview } from '@utils/titleUtils';
 
@@ -647,12 +650,12 @@ export const listCodexProjects = async (codexDir: string): Promise<readonly Proj
       name: cwd === 'unknown' ? 'Unknown project' : basename(cwd),
       actualPath: cwd === 'unknown' ? undefined : cwd,
       sessionCount: projectSessions.length,
-      messageCount: projectSessions.reduce((total, session) => {
-        return total + session.messageCount;
-      }, 0),
-      lastActivityMs: projectSessions.reduce((latest, session) => {
-        return Math.max(latest, session.lastTimestampMs, session.modifiedMs);
-      }, 0),
+      messageCount: sumBy(projectSessions, (session) => {
+        return session.messageCount;
+      }),
+      lastActivityMs: maxOf(projectSessions, (session) => {
+        return Math.max(session.lastTimestampMs, session.modifiedMs);
+      }),
     };
 
     return project;

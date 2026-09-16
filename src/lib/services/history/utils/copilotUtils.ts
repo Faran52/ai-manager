@@ -6,8 +6,11 @@ import {
 } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { sumBy } from 'es-toolkit';
+
 import { appConfig } from '@config/appConfig';
 
+import { maxOf } from '@utils/arrayUtils';
 import {
   isJsonArray,
   isJsonObject,
@@ -916,12 +919,12 @@ export const listCopilotProjects = async (
       name: folder != null ? basename(folder) : 'Unknown project',
       actualPath: folder,
       sessionCount: values.length,
-      messageCount: values.reduce((total, value) => {
-        return total + value.messageCount;
-      }, 0),
-      lastActivityMs: values.reduce((latest, value) => {
-        return Math.max(latest, value.lastTimestampMs);
-      }, 0),
+      messageCount: sumBy(values, (value) => {
+        return value.messageCount;
+      }),
+      lastActivityMs: maxOf(values, (value) => {
+        return value.lastTimestampMs;
+      }),
     } satisfies ProjectSummary;
   }).sort((left, right) => {
     return right.lastActivityMs - left.lastActivityMs;

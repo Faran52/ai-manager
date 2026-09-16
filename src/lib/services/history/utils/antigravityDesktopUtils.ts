@@ -10,8 +10,11 @@ import {
 } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
+import { sumBy } from 'es-toolkit';
+
 import { appConfig } from '@config/appConfig';
 
+import { maxOf } from '@utils/arrayUtils';
 import { isJsonObject, parseJsonContainer } from '@utils/jsonUtils';
 import { humanPreview } from '@utils/titleUtils';
 
@@ -213,9 +216,9 @@ const sessionOf = async (root: string, id: string): Promise<DesktopSession | und
   }
 
   // An artifact is written when the session does the work, so the newest is its clock.
-  const timestampMs = artifacts.reduce((latest, artifact) => {
-    return Math.max(latest, artifact.modifiedMs);
-  }, 0);
+  const timestampMs = maxOf(artifacts, (artifact) => {
+    return artifact.modifiedMs;
+  });
   const entries = entriesOf(id, artifacts, tools, timestampMs);
 
   return {
@@ -229,9 +232,9 @@ const sessionOf = async (root: string, id: string): Promise<DesktopSession | und
       return artifact.text;
     }).join('\n\n'),
     timestampMs,
-    sizeBytes: artifacts.reduce((total, artifact) => {
-      return total + artifact.text.length;
-    }, 0),
+    sizeBytes: sumBy(artifacts, (artifact) => {
+      return artifact.text.length;
+    }),
     workspace,
   };
 };
@@ -315,12 +318,12 @@ export const listAntigravityDesktopProjects = async (
       name: workspace == null ? 'Unplaced conversations' : basename(workspace),
       actualPath: workspace,
       sessionCount: values.length,
-      messageCount: values.reduce((total, value) => {
-        return total + conversationMessageCount(value.entries);
-      }, 0),
-      lastActivityMs: values.reduce((latest, value) => {
-        return Math.max(latest, value.timestampMs);
-      }, 0),
+      messageCount: sumBy(values, (value) => {
+        return conversationMessageCount(value.entries);
+      }),
+      lastActivityMs: maxOf(values, (value) => {
+        return value.timestampMs;
+      }),
     } satisfies ProjectSummary;
   });
 };

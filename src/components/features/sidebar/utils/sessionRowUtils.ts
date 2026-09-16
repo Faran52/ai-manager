@@ -1,8 +1,10 @@
+import { sessionLabel } from '@services/history/historyService';
+
 import type { SessionSummary } from '@services/history/historyService';
 
 // A session is named by whatever it carries, and every agent carries a different one of these.
 export const titleOf = (session: SessionSummary): string => {
-  return session.title ?? session.summary ?? session.preview ?? session.id;
+  return sessionLabel(session);
 };
 
 /*

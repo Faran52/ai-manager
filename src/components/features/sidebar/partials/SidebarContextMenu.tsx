@@ -12,6 +12,7 @@ import {
 
 import { agentBadgeLabel, agentOption } from '@config/agents';
 
+import { sessionLabel } from '@services/history/historyService';
 import { copyTextToClipboard } from '@utils/browserFilesUtils';
 import { shellQuote } from '@utils/shellQuoteUtils';
 
@@ -107,7 +108,7 @@ export const SidebarContextMenu: FC<SidebarContextMenuProps> = ({
       }
     : {
         label: t('sessionActions'),
-        title: target.session.title ?? target.session.summary ?? target.session.preview ?? target.session.id,
+        title: sessionLabel(target.session),
         actions: [
           {
             label: t('copySessionId'),

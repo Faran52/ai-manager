@@ -5,6 +5,7 @@ import {
 } from 'react';
 
 import { fetchStats } from '@lib/apis/apiClient';
+import { projectKeyOf } from '@services/history/historyService';
 
 import { runLoad } from '../utils/asyncResourceUtils';
 
@@ -17,7 +18,7 @@ const NO_STATS = null;
 export const useProjectStats = (project: ProjectSummary | null): AsyncResource<ProjectStats | null> => {
   const [snapshot, setSnapshot] = useState<AsyncSnapshot<ProjectStats | null>>({ status: 'loading' });
   const [nonce, setNonce] = useState(0);
-  const projectKey = project == null ? '' : `${project.agent}:${project.id}`;
+  const projectKey = project == null ? '' : projectKeyOf(project.agent, project.id);
   const [prevProjectKey, setPrevProjectKey] = useState(projectKey);
 
   if (projectKey !== prevProjectKey) {

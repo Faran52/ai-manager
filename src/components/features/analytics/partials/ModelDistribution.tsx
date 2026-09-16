@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
+import { maxOf } from '@utils/arrayUtils';
 import { formatCost, formatTokens } from '@utils/formatUtils';
 
 import {
@@ -43,9 +44,9 @@ export const ModelDistribution: FC<ModelDistributionProps> = ({ models }) => {
     return (right.costUsd ?? -1) - (left.costUsd ?? -1)
       || right.inputTokens + right.outputTokens - left.inputTokens - left.outputTokens;
   });
-  const max = ordered.reduce((peak, model) => {
-    return Math.max(peak, model.inputTokens + model.outputTokens);
-  }, 0);
+  const max = maxOf(ordered, (model) => {
+    return model.inputTokens + model.outputTokens;
+  });
 
   return (
     <Panel title={t('modelDistribution')} className="flex h-full flex-col">

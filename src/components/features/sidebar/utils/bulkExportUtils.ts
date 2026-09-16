@@ -1,5 +1,6 @@
 import { fetchMessages } from '@lib/apis/apiClient';
 import { entriesToMarkdown } from '@services/export/exportService';
+import { sessionLabel } from '@services/history/historyService';
 
 import type { HistoryEntry, SessionSummary } from '@services/history/historyService';
 
@@ -55,7 +56,7 @@ export const exportSessions = async (
 
       documents.push(entriesToMarkdown({
         project: projectLabel,
-        title: session.title ?? session.summary ?? session.preview ?? session.id,
+        title: sessionLabel(session),
         exportedAtMs,
       }, entries));
     }

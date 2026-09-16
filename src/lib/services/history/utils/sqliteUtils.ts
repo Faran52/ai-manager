@@ -7,8 +7,11 @@ import {
 import { DatabaseSync } from 'node:sqlite';
 import { zstdDecompressSync } from 'node:zlib';
 
+import { sumBy } from 'es-toolkit';
+
 import { appConfig } from '@config/appConfig';
 
+import { maxOf } from '@utils/arrayUtils';
 import {
   isJsonArray,
   isJsonObject,
@@ -940,12 +943,12 @@ export const listSqliteProjects = async (
       name: basename(id),
       actualPath: id,
       sessionCount: values.length,
-      messageCount: values.reduce((total, value) => {
-        return total + value.summary.messageCount;
-      }, 0),
-      lastActivityMs: values.reduce((latest, value) => {
-        return Math.max(latest, value.summary.lastTimestampMs);
-      }, 0),
+      messageCount: sumBy(values, (value) => {
+        return value.summary.messageCount;
+      }),
+      lastActivityMs: maxOf(values, (value) => {
+        return value.summary.lastTimestampMs;
+      }),
     };
   });
 };

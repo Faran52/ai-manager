@@ -19,7 +19,7 @@ import {
 } from '@utils/jsonUtils';
 
 import { listAgentProjects, listAgentSessions } from '../agents/agentsService';
-import { projectKeyOf } from '../history/utils/lookupUtils';
+import { projectKeyOf, sessionLabel } from '../history/utils/lookupUtils';
 
 import type { AgentId } from '@config/agents';
 import type { JsonValue } from '@utils/jsonUtils';
@@ -68,15 +68,6 @@ export const archiveRoot = (home: string = homedir()): string => {
 // Colons and plus signs are legal in an ISO string and illegal in a Windows path segment.
 const archiveId = (createdMs: number): string => {
   return new Date(createdMs).toISOString().replaceAll(/[:.]/gu, '-');
-};
-
-const sessionTitle = (session: {
-  readonly title?: string | undefined;
-  readonly summary?: string | undefined;
-  readonly preview?: string | undefined;
-  readonly id: string;
-}): string => {
-  return session.title ?? session.summary ?? session.preview ?? session.id;
 };
 
 // A shared database holds every session for an agent at once, so copying it per
@@ -153,7 +144,7 @@ export const createArchive = async (
         projectId: project.id,
         projectName: project.name,
         actualSessionId: session.actualSessionId,
-        title: sessionTitle(session),
+        title: sessionLabel(session),
         messageCount: session.messageCount,
         lastTimestampMs: session.lastTimestampMs,
         sizeBytes: session.sizeBytes,

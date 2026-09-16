@@ -1,3 +1,5 @@
+import { sumBy } from 'es-toolkit';
+
 import type { ModelCost } from '../../agents/agentsService';
 
 export type PricingBasis = 'exact' | 'estimated' | 'unpriced';
@@ -123,12 +125,12 @@ const summarizeModel = (
   billed: ReadonlyMap<string, ModelRate>,
 ): PricedModelUsage => {
   const rate = observedRate(entries) ?? billed.get(modelKey(model));
-  const inputTokens = entries.reduce((total, entry) => {
-    return total + safeTokens(entry.inputTokens);
-  }, 0);
-  const outputTokens = entries.reduce((total, entry) => {
-    return total + safeTokens(entry.outputTokens);
-  }, 0);
+  const inputTokens = sumBy(entries, (entry) => {
+    return safeTokens(entry.inputTokens);
+  });
+  const outputTokens = sumBy(entries, (entry) => {
+    return safeTokens(entry.outputTokens);
+  });
 
   if (rate == null) {
     return {
@@ -188,12 +190,12 @@ export const summarizePricing = (
     return (right.costUsd ?? -1) - (left.costUsd ?? -1)
       || right.inputTokens + right.outputTokens - left.inputTokens - left.outputTokens;
   });
-  const billedTokens = models.reduce((total, model) => {
-    return total + model.inputTokens + model.outputTokens;
-  }, 0);
-  const pricedTokens = models.reduce((total, model) => {
-    return total + (model.basis === 'unpriced' ? 0 : model.inputTokens + model.outputTokens);
-  }, 0);
+  const billedTokens = sumBy(models, (model) => {
+    return model.inputTokens + model.outputTokens;
+  });
+  const pricedTokens = sumBy(models, (model) => {
+    return (model.basis === 'unpriced' ? 0 : model.inputTokens + model.outputTokens);
+  });
 
   return {
     models,
@@ -201,8 +203,8 @@ export const summarizePricing = (
     unpricedModelCount: models.filter((model) => {
       return model.basis === 'unpriced';
     }).length,
-    costUsd: models.reduce((total, model) => {
-      return total + (model.costUsd ?? 0);
-    }, 0),
+    costUsd: sumBy(models, (model) => {
+      return (model.costUsd ?? 0);
+    }),
   };
 };

@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
+import { maxOf } from '@utils/arrayUtils';
 import { cn } from '@utils/cnUtils';
 import { formatTokens } from '@utils/formatUtils';
 
@@ -19,9 +20,9 @@ export interface BarListProps {
 
 export const BarList: FC<BarListProps> = ({ title, items }) => {
   const { t } = useTranslation('common');
-  const max = items.reduce((peak, item) => {
-    return Math.max(peak, item.value);
-  }, 0);
+  const max = maxOf(items, (item) => {
+    return item.value;
+  });
 
   return (
     <Panel title={title} className="flex h-full flex-col">

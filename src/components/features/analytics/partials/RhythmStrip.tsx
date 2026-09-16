@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 
+import { maxOf } from '@utils/arrayUtils';
 import { cn } from '@utils/cnUtils';
 import { formatTokens } from '@utils/formatUtils';
 
@@ -33,9 +34,9 @@ const SWEEP = 0.4;
  * screen and no use at a glance.
  */
 export const RhythmStrip: FC<RhythmStripProps> = ({ slots, caption }) => {
-  const peak = slots.reduce((best, slot) => {
-    return Math.max(best, slot.count);
-  }, 0);
+  const peak = maxOf(slots, (slot) => {
+    return slot.count;
+  });
   /*
    * The sweep is shared rather than per bar, so 24 hours and 7 weekdays take
    * the same time to fill instead of the hours running three times longer.

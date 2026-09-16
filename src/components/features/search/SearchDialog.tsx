@@ -8,6 +8,8 @@ import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon } from 'lucide-react';
 import { motion } from 'motion/react';
 
+import { projectKeyOf } from '@services/history/historyService';
+
 import {
   arriveInSequence,
   Button,
@@ -133,7 +135,7 @@ export const SearchDialog: FC<SearchDialogProps> = ({
           <p className="px-3 py-6 text-center text-sm text-destructive">{search.error}</p>
         )}
         {groups.map((group) => {
-          const projectName = projectNames.get(`${group.first.agent}:${group.first.projectId}`)
+          const projectName = projectNames.get(projectKeyOf(group.first.agent, group.first.projectId))
             ?? group.first.projectId;
 
           return (

@@ -289,12 +289,12 @@ export const readStorageReport = async (
 
   return {
     agents,
-    totalBytes: agents.reduce((total, agent) => {
-      return total + agent.bytes;
-    }, 0),
-    reclaimableBytes: agents.reduce((total, agent) => {
-      return total + agent.reclaimableBytes;
-    }, 0),
+    totalBytes: sumBy(agents, (agent) => {
+      return agent.bytes;
+    }),
+    reclaimableBytes: sumBy(agents, (agent) => {
+      return agent.reclaimableBytes;
+    }),
     partial: budget.remaining <= 0,
   };
 };

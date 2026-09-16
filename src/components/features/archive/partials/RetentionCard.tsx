@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Loader2, ShieldCheck } from 'lucide-react';
 
 import { runRetention, writeRetention } from '@lib/apis/apiClient';
+import { sessionLabel } from '@services/history/historyService';
 import { toErrorMessage } from '@utils/errorUtils';
 import { formatTimeAgo } from '@utils/formatUtils';
 
@@ -191,7 +192,7 @@ export const RetentionCard: FC<RetentionCardProps> = ({ retention, nowMs }) => {
                 "
               >
                 <span className="min-w-0 flex-1 truncate text-foreground">
-                  {session.title ?? session.summary ?? session.preview ?? session.id}
+                  {sessionLabel(session)}
                 </span>
                 <span>{formatTimeAgo(session.lastTimestampMs, nowMs, i18n.language)}</span>
               </li>

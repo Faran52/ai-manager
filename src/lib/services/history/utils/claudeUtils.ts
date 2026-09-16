@@ -9,6 +9,7 @@ import { sumBy } from 'es-toolkit';
 
 import { appConfig } from '@config/appConfig';
 
+import { maxOf } from '@utils/arrayUtils';
 import { LruCache } from '@utils/lruCacheUtils';
 import { humanPreview, humanTitle } from '@utils/titleUtils';
 
@@ -365,9 +366,9 @@ export const listProjects = async (claudeDir: string): Promise<readonly ProjectS
       messageCount: sumBy(sessions, (session) => {
         return session.messageCount;
       }),
-      lastActivityMs: sessions.reduce((latest, session) => {
-        return Math.max(latest, session.lastTimestampMs);
-      }, 0),
+      lastActivityMs: maxOf(sessions, (session) => {
+        return session.lastTimestampMs;
+      }),
     });
   }
 

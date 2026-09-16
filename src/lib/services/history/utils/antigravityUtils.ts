@@ -10,8 +10,11 @@ import {
 } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
+import { sumBy } from 'es-toolkit';
+
 import { appConfig } from '@config/appConfig';
 
+import { maxOf } from '@utils/arrayUtils';
 import { isJsonObject, parseJsonContainer } from '@utils/jsonUtils';
 import { humanPreview } from '@utils/titleUtils';
 
@@ -349,12 +352,12 @@ export const listAntigravityProjects = async (
       name: workspace == null ? 'Unplaced conversations' : basename(workspace),
       actualPath: workspace,
       sessionCount: values.length,
-      messageCount: values.reduce((total, value) => {
-        return total + conversationMessageCount(value.entries);
-      }, 0),
-      lastActivityMs: values.reduce((latest, value) => {
-        return Math.max(latest, value.lastTimestampMs);
-      }, 0),
+      messageCount: sumBy(values, (value) => {
+        return conversationMessageCount(value.entries);
+      }),
+      lastActivityMs: maxOf(values, (value) => {
+        return value.lastTimestampMs;
+      }),
     } satisfies ProjectSummary;
   })].sort((left, right) => {
     return right.lastActivityMs - left.lastActivityMs;

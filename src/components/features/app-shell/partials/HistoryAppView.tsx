@@ -13,6 +13,7 @@ import {
   deleteSession,
   renameSession,
 } from '@lib/apis/apiClient';
+import { projectKeyOf } from '@services/history/historyService';
 
 import { fadeTransition, useToast } from '@ui/index';
 import {
@@ -93,7 +94,7 @@ export const HistoryAppView: FC = () => {
     highlightTimestamp,
     archivedSession,
   } = workspace;
-  const projectKey = selectedProject == null ? '' : `${selectedProject.agent}:${selectedProject.id}`;
+  const projectKey = selectedProject == null ? '' : projectKeyOf(selectedProject.agent, selectedProject.id);
   const { scope: analyticsScope, setScope: setAnalyticsScope } = useAnalyticsScope(projectKey);
 
   // Widening to the whole machine, by either route, also resets the report scope.
@@ -150,7 +151,7 @@ export const HistoryAppView: FC = () => {
 
   const projectNames = useMemo(() => {
     return new Map<string, string>(visibleProjects.map((project) => {
-      return [`${project.agent}:${project.id}`, project.name];
+      return [projectKeyOf(project.agent, project.id), project.name];
     }));
   }, [visibleProjects]);
 

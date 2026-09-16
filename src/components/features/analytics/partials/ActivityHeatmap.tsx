@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { motion } from 'motion/react';
 
+import { maxOf } from '@utils/arrayUtils';
 import { formatTokens } from '@utils/formatUtils';
 
 import {
@@ -51,9 +52,9 @@ export const ActivityHeatmap: FC<ActivityHeatmapProps> = ({ activity }) => {
     return Date.now();
   });
   const [hovered, setHovered] = useState<HoveredDay | null>(null);
-  const peak = activity.reduce((best, day) => {
-    return Math.max(best, day.tokens);
-  }, 0);
+  const peak = maxOf(activity, (day) => {
+    return day.tokens;
+  });
   const months = monthsOf(weeksTo(activity, todayMs));
 
   // One shared tooltip rather than a Provider, Root and Portal per cell:

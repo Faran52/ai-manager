@@ -5,6 +5,7 @@ import {
   listAgentSessions,
   pathsFor,
 } from '../agents/agentsService';
+import { projectKeyOf } from '../history/utils/lookupUtils';
 import { loadSessionEntriesOrEmpty } from '../session/utils/loaderUtils';
 
 import type { AgentId } from '@config/agents';
@@ -181,7 +182,7 @@ export const searchAgentHistory = async (
     return projectId == null || project.id === projectId;
   });
   const projectKeys = new Set(projects.map((project) => {
-    return `${project.agent}:${project.id}`;
+    return projectKeyOf(project.agent, project.id);
   }));
   const agents = [...new Set(projects.map((project) => {
     return project.agent;
@@ -189,7 +190,7 @@ export const searchAgentHistory = async (
 
   for (const agent of agents) {
     const sessions = (await listAgentSessions(roots, agent)).filter((session) => {
-      return projectKeys.has(`${agent}:${session.projectId}`);
+      return projectKeys.has(projectKeyOf(agent, session.projectId));
     });
 
     for (const session of sessions) {

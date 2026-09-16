@@ -1,8 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import { basename, dirname } from 'node:path';
 
+import { sumBy } from 'es-toolkit';
+
 import { appConfig } from '@config/appConfig';
 
+import { maxOf } from '@utils/arrayUtils';
 import { parseJsonContainer } from '@utils/jsonUtils';
 import { containedIn } from '@utils/pathUtils';
 import { humanPreview } from '@utils/titleUtils';
@@ -152,12 +155,12 @@ export const listOpenHandsProjects = async (
     id: UNKNOWN_PROJECT,
     name: UNKNOWN_PROJECT,
     sessionCount: sessions.length,
-    messageCount: sessions.reduce((total, session) => {
-      return total + session.messageCount;
-    }, 0),
-    lastActivityMs: sessions.reduce((latest, session) => {
-      return Math.max(latest, session.lastTimestampMs);
-    }, 0),
+    messageCount: sumBy(sessions, (session) => {
+      return session.messageCount;
+    }),
+    lastActivityMs: maxOf(sessions, (session) => {
+      return session.lastTimestampMs;
+    }),
   }];
 };
 

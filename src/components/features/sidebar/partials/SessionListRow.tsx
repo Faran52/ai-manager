@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 
 import { agentOption } from '@config/agents';
 
+import { projectKeyOf } from '@services/history/historyService';
 import { cn } from '@utils/cnUtils';
 import { formatTimeAgo } from '@utils/formatUtils';
 
@@ -149,7 +150,7 @@ export const SessionListRow: FC<SessionListRowProps> = ({
               text-figure text-faint
             "
             >
-              {context.projectNames.get(`${session.agent}:${session.projectId}`) ?? session.projectId}
+              {context.projectNames.get(projectKeyOf(session.agent, session.projectId)) ?? session.projectId}
             </span>
           )}
           <span className="

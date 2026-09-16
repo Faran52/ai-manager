@@ -5,6 +5,7 @@ import {
 } from 'react';
 
 import { fetchRecentEdits } from '@lib/apis/apiClient';
+import { projectKeyOf } from '@services/history/historyService';
 
 import { runLoad } from '../utils/asyncResourceUtils';
 
@@ -24,7 +25,7 @@ export const useRecentEdits = (
 ): AsyncResource<readonly EditedFile[]> => {
   const [snapshot, setSnapshot] = useState<AsyncSnapshot<readonly EditedFile[]>>({ status: 'loading' });
   const [nonce, setNonce] = useState(0);
-  const chosen = project == null ? '' : `${project.agent}:${project.id}`;
+  const chosen = project == null ? '' : projectKeyOf(project.agent, project.id);
   const projectKey = `${String(enabled)} ${chosen}`;
   const [prevProjectKey, setPrevProjectKey] = useState(projectKey);
 

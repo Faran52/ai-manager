@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
+import { maxOf } from '@utils/arrayUtils';
 import { cn } from '@utils/cnUtils';
 import { formatTokens } from '@utils/formatUtils';
 
@@ -33,9 +34,9 @@ const WEEKDAY_KEYS = [
 
 export const WorkRhythm: FC<WorkRhythmProps> = ({ rhythm, effort }) => {
   const { t } = useTranslation('analytics');
-  const weekdayPeak = rhythm.weekdays.reduce((best, count) => {
-    return Math.max(best, count);
-  }, 0);
+  const weekdayPeak = maxOf(rhythm.weekdays, (count) => {
+    return count;
+  });
   const facts: readonly (readonly [string, string])[] = [
     [t('peakHour'), rhythm.peakHour == null
       ? t('notRecorded', { ns: 'common' })

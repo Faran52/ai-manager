@@ -6,6 +6,7 @@ import { sumBy } from 'es-toolkit';
 
 import { appConfig } from '@config/appConfig';
 
+import { maxOf } from '@utils/arrayUtils';
 import { parseUnifiedDiff } from '@utils/diffUtils';
 import { truncate } from '@utils/formatUtils';
 import { isJsonObject, parseJsonContainer } from '@utils/jsonUtils';
@@ -564,9 +565,9 @@ export const listOpenCodeProjects = async (
       messageCount: sumBy(values, (value) => {
         return value.messageCount;
       }),
-      lastActivityMs: values.reduce((latest, value) => {
-        return Math.max(latest, value.lastTimestampMs);
-      }, 0),
+      lastActivityMs: maxOf(values, (value) => {
+        return value.lastTimestampMs;
+      }),
     };
   }).sort((left, right) => {
     return right.lastActivityMs - left.lastActivityMs;

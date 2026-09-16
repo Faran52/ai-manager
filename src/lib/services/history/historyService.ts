@@ -2,9 +2,11 @@
 // by their sibling services, so components can take history types without pulling in node:fs.
 export * from './types';
 export * from './utils/claudeRawUtils';
+export type { SessionLabelSource } from './utils/lookupUtils';
 export {
   findAgentProject,
   projectKeyOf,
+  sessionLabel,
 } from './utils/lookupUtils';
 export {
   conversationMessageCount,

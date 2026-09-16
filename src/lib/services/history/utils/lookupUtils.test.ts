@@ -4,7 +4,7 @@ import {
   test,
 } from 'vitest';
 
-import { findAgentProject } from './lookupUtils';
+import { findAgentProject, sessionLabel } from './lookupUtils';
 
 import type { ProjectSummary } from '../types';
 
@@ -49,4 +49,27 @@ describe('findAgentProject', () => {
   test('returns null for an absent project list', () => {
     expect(findAgentProject(undefined, 'alpha', 'claude')).toBeNull();
   });
+});
+
+test('sessionLabel names a session by title, then summary, then preview, then id', () => {
+  const base = {
+    id: 'id',
+    title: undefined,
+    summary: undefined,
+    preview: undefined,
+  };
+
+  expect(sessionLabel({
+    ...base,
+    title: 'Fix login',
+  })).toBe('Fix login');
+  expect(sessionLabel({
+    ...base,
+    summary: 'summarised',
+  })).toBe('summarised');
+  expect(sessionLabel({
+    ...base,
+    preview: 'first words',
+  })).toBe('first words');
+  expect(sessionLabel(base)).toBe('id');
 });

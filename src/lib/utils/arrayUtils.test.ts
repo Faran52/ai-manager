@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 
-import { toggleInArray } from './arrayUtils';
+import { maxOf, toggleInArray } from './arrayUtils';
 
 test('adds a value that is absent, to the end', () => {
   expect(toggleInArray(['a', 'b'], 'c')).toEqual(['a', 'b', 'c']);
@@ -16,4 +16,13 @@ test('leaves the original untouched', () => {
   toggleInArray(values, 'b');
 
   expect(values).toEqual(['a']);
+});
+
+test('maxOf picks the largest value and reads an empty list as zero', () => {
+  expect(maxOf([{ n: 3 }, { n: 9 }, { n: 4 }], (item) => {
+    return item.n;
+  })).toBe(9);
+  expect(maxOf([], () => {
+    return 1;
+  })).toBe(0);
 });
