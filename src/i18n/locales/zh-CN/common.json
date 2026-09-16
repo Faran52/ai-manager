@@ -6,6 +6,7 @@
   "deletePermanently": "永久删除",
   "failedToLoad": "加载失败",
   "loading": "加载中",
+  "startingUp": "正在启动",
   "none": "无",
   "noMatches": "没有匹配项。",
   "notRecorded": "未记录",

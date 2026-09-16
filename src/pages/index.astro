@@ -1,7 +1,32 @@
 ---
 import '../styles/global.css';
-import { accentStorageKey, fontSizeStorageKey, themeStorageKey } from '@config/storageKeys';
+import { accentStorageKey, fontSizeStorageKey, languageStorageKey, themeStorageKey } from '@config/storageKeys';
 import { HistoryApp } from '@features/app-shell';
+import ar from '../i18n/locales/ar/common.json';
+import en from '../i18n/locales/en/common.json';
+import ja from '../i18n/locales/ja/common.json';
+import ko from '../i18n/locales/ko/common.json';
+import zhCN from '../i18n/locales/zh-CN/common.json';
+import zhTW from '../i18n/locales/zh-TW/common.json';
+
+/*
+ * The island is client:only, so nothing at all is painted until the bundle has
+ * downloaded, parsed and hydrated. On a cold start that is a blank window for
+ * as long as it takes. The fallback fills it with the same mark the panes use,
+ * and Astro drops it the moment the app takes over.
+ *
+ * The label is read from the locale files rather than written again here, so
+ * the one this page can pick without JavaScript is English and the inline
+ * script below swaps it for the reader's own.
+ */
+const startingUp = {
+  ar: ar.startingUp,
+  en: en.startingUp,
+  ja: ja.startingUp,
+  ko: ko.startingUp,
+  'zh-CN': zhCN.startingUp,
+  'zh-TW': zhTW.startingUp,
+};
 ---
 
 <html lang="en">
@@ -34,6 +59,25 @@ import { HistoryApp } from '@features/app-shell';
 	</script>
 	</head>
 	<body>
-		<HistoryApp client:only="react" />
+		<HistoryApp client:only="react">
+			<div
+				slot="fallback"
+				class="flex h-dvh items-center justify-center bg-recess text-foreground"
+				data-booting
+			>
+				<div class="loader">
+					<div class="loader-mark"></div>
+					<p class="loader-stage" data-booting-stage>{startingUp.en}</p>
+				</div>
+			</div>
+		</HistoryApp>
+		<script is:inline define:vars={{ languageStorageKey, startingUp }}>
+	const stage = document.querySelector('[data-booting-stage]');
+	const tag = localStorage.getItem(languageStorageKey) || navigator.language || 'en';
+	const label = startingUp[tag] || startingUp[tag.split('-')[0]];
+	if (stage && label) {
+	  stage.textContent = label;
+	}
+	</script>
 	</body>
 </html>
