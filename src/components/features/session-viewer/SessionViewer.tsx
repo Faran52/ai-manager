@@ -33,6 +33,7 @@ import {
 } from '@ui/index';
 import { useMessages } from '@features/history-data';
 
+import { LOAD_AHEAD_MARGIN } from './constants';
 import { MessageTimeline } from './MessageTimeline';
 import {
   CompanionPane,
@@ -134,6 +135,8 @@ export const SessionViewer: FC<SessionViewerProps> = ({
    * child mounts, so nothing would ever re-render to hand it over.
    */
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
+  // The foot of the loaded rows, watched so the next page arrives before it does.
+  const [endMarker, setEndMarker] = useState<HTMLDivElement | null>(null);
   const visibleEntries = countVisibleEntries(feed.entries, filters);
   const model = modelOf(feed.entries);
   const filtersActive = hasActiveMessageFilters(filters);
@@ -145,6 +148,32 @@ export const SessionViewer: FC<SessionViewerProps> = ({
     : t('itemsLoaded', { count: feed.entries.length });
 
   useSmoothScroll(scrollElement);
+
+  /*
+   * Scrolling toward the end loads the next page, so the button below it is a
+   * fallback rather than the only way on. A null root means the viewport, which
+   * is the right answer for the render before the scroll element is handed over.
+   */
+  useEffect(() => {
+    if (endMarker == null || !feed.hasMore) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting === true) {
+        feed.loadMore();
+      }
+    }, {
+      root: scrollElement,
+      rootMargin: LOAD_AHEAD_MARGIN,
+    });
+
+    observer.observe(endMarker);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [endMarker, feed, scrollElement]);
 
   // The command bar's export menu reads the entries this viewer loaded.
   useEffect(() => {
@@ -227,8 +256,8 @@ export const SessionViewer: FC<SessionViewerProps> = ({
           navigation={navigation}
         />
         {feed.hasMore && (
-          <div className="flex justify-center pt-4 pb-2">
-            <Button variant="subtle" onClick={feed.loadMore} data-load-more>
+          <div className="flex justify-center pt-4 pb-2" data-load-more ref={setEndMarker}>
+            <Button variant="subtle" onClick={feed.loadMore}>
               {t('loadMore', { count: remaining })}
             </Button>
           </div>

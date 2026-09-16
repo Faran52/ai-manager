@@ -17,6 +17,8 @@ import {
 
 import { messageNavigatorOpenStorageKey, messageNavigatorWidthStorageKey } from '@config/storageKeys';
 
+import { intersect } from '@mocks/intersectionObserver';
+
 import { SessionViewer } from './SessionViewer';
 
 beforeEach(() => {
@@ -148,6 +150,57 @@ describe('SessionViewer', () => {
     });
 
     await userEvent.click(screen.getByText(/Load more/));
+
+    await waitFor(() => {
+      expect(screen.getByText('second chunk')).toBeDefined();
+    });
+    expect(screen.queryByText(/Load more/)).toBeNull();
+  });
+
+  test('appends the next page when the end of the loaded rows comes into view', async () => {
+    let callCount = 0;
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => {
+        callCount += 1;
+        const first = callCount === 1;
+
+        return new Response(
+          JSON.stringify({
+            entries: [
+              {
+                kind: 'user',
+                uuid: first ? 'u1' : 'u2',
+                timestamp: 't',
+                sidechain: false,
+                meta: false,
+                text: first ? 'first chunk' : 'second chunk',
+                outcomes: [],
+              },
+            ],
+            total: 2,
+            hasMore: first,
+            nextOffset: first ? 1 : 2,
+          }),
+        );
+      }),
+    );
+
+    render(
+      <SessionViewer filePath="/f.jsonl" sessionTitle={undefined} highlightTimestamp={undefined} />,
+    );
+    await waitFor(() => {
+      expect(screen.getByText('first chunk')).toBeDefined();
+    });
+
+    expect(document.querySelector('[data-load-more]')).not.toBeNull();
+
+    // Nothing is loaded while the end is still below the fold.
+    intersect(false);
+    expect(screen.queryByText('second chunk')).toBeNull();
+
+    intersect(true);
 
     await waitFor(() => {
       expect(screen.getByText('second chunk')).toBeDefined();

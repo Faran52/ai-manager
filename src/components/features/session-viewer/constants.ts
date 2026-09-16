@@ -17,6 +17,13 @@ export const ASSISTANT_BLOCK_PX = 120;
 
 export const OVERSCAN = 6;
 
+/*
+ * How far below the viewport the next page starts loading. A screen's worth, so
+ * the rows are there by the time the reader scrolls onto them and the button
+ * below them is never the only way down.
+ */
+export const LOAD_AHEAD_MARGIN = '800px';
+
 /**
  * An attribute-free lowercase tag name: every framing wrapper the agents emit
  * (<environment_details>, <system-reminder>, <path>/<type>/<content>) and almost

@@ -3,6 +3,8 @@
 import { initI18n } from '@i18n/index';
 import { MotionGlobalConfig } from 'motion/react';
 
+import { installIntersectionObserver } from './intersectionObserver';
+
 interface AnimationCancel {
   cancel: (this: Animation) => void;
 }
@@ -18,6 +20,8 @@ MotionGlobalConfig.skipAnimations = true;
 // Components call useTranslation directly, so the runtime has to exist before
 // any of them render or they would only ever show raw keys.
 initI18n();
+
+installIntersectionObserver();
 
 /**
  * happy-dom builds `Animation.finished` eagerly and rejects it from `cancel()`.
