@@ -20,6 +20,14 @@ three `services/*/constants.ts` are data. A test asserting `pageSize === 120` re
 it and fails for every deliberate edit. The keys in `storageKeys.ts` are imported by the boot script
 in `index.astro` rather than repeated in it, so there is no drift to pin either.
 
+**The endpoint table.** `lib/apis/constants.ts` is the twenty-seven route definitions and the
+one-line response guard beside each. `'projects' in value && Array.isArray(value.projects)` has
+nothing a test could assert that is not the line itself, and every guard is already exercised
+through the client call that uses it in `apiClient.test.ts`.
+
+**`lib/apis/endpoints.ts`.** A barrel over `lib/apis/utils/*EndpointUtils.ts`, kept under its own
+name because the twenty-eight route adapters import it. Same reason as the other barrels.
+
 **API route adapters.** `src/pages/api/*.ts` are eight-line delegates. Their logic lives in
 `lib/apis/endpoints.ts`, which has its own test, and their wiring cannot be unit tested here because
 **`src/pages/` is the router**: a `*.test.ts` beside a route becomes a route. Adding them made the
