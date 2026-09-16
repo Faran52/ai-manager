@@ -15,6 +15,12 @@ export default getViteConfig({
      * Unconditional: engines.node is >=26.8.1, past the version where it matters.
      */
     execArgv: ['--no-experimental-webstorage'],
+    /*
+     * A git worktree under `.claude` is a second checkout of this same repo, so
+     * every one of its tests would be collected again alongside ours and run
+     * against whatever that branch happens to hold.
+     */
+    exclude: ['**/node_modules/**', '**/dist/**', '.claude/**'],
     coverage: {
       provider: 'v8',
       include: ['src/**/*.{ts,tsx,mts,js,jsx,mjs}'],
@@ -29,6 +35,7 @@ export default getViteConfig({
         'src/lib/services/history/utils/claudeRawUtils.ts',
         'src/lib/services/history/types.ts',
         'src/lib/apis/contracts.ts',
+        '.claude/**',
       ],
       thresholds: {
         lines: 100,
