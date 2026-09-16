@@ -80,7 +80,11 @@ export const FileEditsPanel: FC<FileEditsPanelProps> = ({
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-2">
-        {status === 'loading' && <Spinner />}
+        {status === 'loading' && (
+          <div className="flex justify-center py-4" data-edits-loading>
+            <Spinner />
+          </div>
+        )}
 
         {status === 'error' && (
           <Notice>{error}</Notice>

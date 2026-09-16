@@ -144,7 +144,11 @@ export const SettingsView: FC<SettingsViewProps> = ({
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         <div className="mx-auto grid max-w-3xl gap-4">
-          {settings.status === 'loading' && <Spinner />}
+          {settings.status === 'loading' && (
+            <div className="flex justify-center py-8" data-settings-loading>
+              <Spinner />
+            </div>
+          )}
 
           {settings.status === 'error' && (
             <Notice>{settings.error}</Notice>

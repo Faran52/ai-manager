@@ -84,7 +84,11 @@ export const StoragePanel: FC<StoragePanelProps> = ({
     <div className="grid gap-3" data-storage-panel>
       <p className="text-sm text-muted-foreground">{t('storageIntro')}</p>
 
-      {storage.status === 'loading' && <Spinner />}
+      {storage.status === 'loading' && (
+        <div className="flex justify-center py-6" data-storage-loading>
+          <Spinner />
+        </div>
+      )}
 
       {storage.status === 'error' && (
         <Notice>{storage.error}</Notice>
