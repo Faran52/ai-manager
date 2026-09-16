@@ -3,6 +3,7 @@
 @import "@fontsource-variable/geist-mono/wght.css";
 @import "./tokens.css";
 @import "../components/features/app-header/AppHeader.css";
+@import "../components/ui/loader/Loader.css";
 @import "../components/features/agent-tag/AgentTag.css";
 @import "../components/ui/agent-mark/AgentMark.css";
 @import "../components/features/sidebar/Sidebar.css";

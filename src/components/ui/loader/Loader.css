@@ -1,0 +1,67 @@
+@layer components {
+  .loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .loader-mark {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    margin-block-end: 14px;
+    border: 1px solid var(--hair);
+    border-radius: 50%;
+  }
+
+  /*
+   * One conic arc turning behind the mark. Transform only; reduced motion
+   * stops the loop in global.css.
+   */
+  .loader-mark::before {
+    position: absolute;
+    inset: 0;
+    content: "";
+    background: conic-gradient(from 0deg, transparent 0deg, color-mix(in srgb, var(--primary) 70%, transparent) 90deg, transparent 150deg);
+    border-radius: 50%;
+    mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+    animation: loader-turn 1.1s linear infinite;
+  }
+
+  .loader-glyph {
+    display: grid;
+    place-items: center;
+    color: var(--primary);
+    animation: loader-breathe 2.4s ease-in-out infinite;
+  }
+
+  .loader-glyph svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .loader-stage {
+    margin: 0;
+    font-size: var(--text-body);
+    color: var(--foreground-2);
+  }
+}
+
+@keyframes loader-turn {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes loader-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}

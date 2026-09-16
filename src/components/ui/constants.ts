@@ -120,3 +120,7 @@ export const MAX_FRAME_MS = 100;
 export const SYNC_TOLERANCE = 2;
 export const WHEEL_LINE_PX = 16;
 export const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+
+// Under testing-library's 1000ms default timeout, or every wait behind a
+// loader becomes a race.
+export const LOADER_MIN_MS = 400;
