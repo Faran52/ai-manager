@@ -1,5 +1,5 @@
 export interface AppConfig {
-  // Kept in step with package.json and deno.json, the updater compares against it.
+  // Kept in step with package.json, the updater compares releases against it.
   readonly version: string;
   readonly pageSize: number;
   readonly maxPageSize: number;
