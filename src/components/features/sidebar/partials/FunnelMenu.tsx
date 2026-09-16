@@ -177,9 +177,7 @@ export const FunnelMenu: FC<FunnelMenuProps> = ({
         >
           <MenuRadioGroup
             value={dateFilter}
-            onChange={(value) => {
-              onDateFilterChange(value as DateFilter);
-            }}
+            onChange={onDateFilterChange}
             options={DATE_FILTERS.map((filter) => {
               return {
                 value: filter,
@@ -192,9 +190,7 @@ export const FunnelMenu: FC<FunnelMenuProps> = ({
         <MenuLabel>{t('orderBy')}</MenuLabel>
         <MenuRadioGroup
           value={order}
-          onChange={(value) => {
-            onOrderChange(value as FunnelOrder);
-          }}
+          onChange={onOrderChange}
           options={[
             {
               value: 'newest',
