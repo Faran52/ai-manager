@@ -11,7 +11,7 @@ only carries the exemptions, which no rule can see.
 **Barrels.** `index.ts` files re-export and nothing else. A test would assert that an export exists,
 which the compiler already refuses to build without.
 
-**Type-only modules.** `contracts.ts`, `history/types.ts`, `updates/types.ts` and
+**Type-only modules.** `contracts.ts`, `history/types.ts` and
 `history/utils/claudeRawUtils.ts` declare interfaces and export no runtime value. There is nothing to
 call. `claudeRawUtils.ts` is 171 lines and 17 interfaces with zero runtime exports.
 
@@ -20,13 +20,13 @@ three `services/*/constants.ts` are data. A test asserting `pageSize === 120` re
 it and fails for every deliberate edit. The keys in `storageKeys.ts` are imported by the boot script
 in `index.astro` rather than repeated in it, so there is no drift to pin either.
 
-**The endpoint table.** `lib/apis/constants.ts` is the twenty-seven route definitions and the
+**The endpoint table.** `lib/apis/constants.ts` is the twenty-six route definitions and the
 one-line response guard beside each. `'projects' in value && Array.isArray(value.projects)` has
 nothing a test could assert that is not the line itself, and every guard is already exercised
 through the client call that uses it in `apiClient.test.ts`.
 
 **`lib/apis/endpoints.ts`.** A barrel over `lib/apis/utils/*EndpointUtils.ts`, kept under its own
-name because the twenty-eight route adapters import it. Same reason as the other barrels.
+name because the twenty-seven route adapters import it. Same reason as the other barrels.
 
 **API route adapters.** `src/pages/api/*.ts` are eight-line delegates. Their logic lives in
 `lib/apis/endpoints.ts`, which has its own test, and their wiring cannot be unit tested here because

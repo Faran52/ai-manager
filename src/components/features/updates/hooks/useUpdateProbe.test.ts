@@ -12,27 +12,42 @@ import {
 
 import { useUpdateProbe } from './useUpdateProbe';
 
-const stub = (body: object): void => {
-  vi.stubGlobal('fetch', vi.fn(() => {
-    return Response.json(body);
-  }));
+const stubUpdater = (checkForUpdate: () => Promise<DesktopUpdate>): void => {
+  Object.defineProperty(window, 'bindings', {
+    configurable: true,
+    value: {
+      desktopPlatform: () => {
+        return Promise.resolve('darwin');
+      },
+      setApplicationMenu: () => {
+        return Promise.resolve(undefined);
+      },
+      checkForUpdate,
+    },
+  });
 };
 
 afterEach(() => {
-  vi.unstubAllGlobals();
+  Reflect.deleteProperty(window, 'bindings');
 });
 
 test('asks nothing until it is asked', () => {
-  vi.stubGlobal('fetch', vi.fn());
+  const checkForUpdate = vi.fn(() => {
+    return Promise.resolve({ available: false });
+  });
+
+  stubUpdater(checkForUpdate);
 
   const { result } = renderHook(useUpdateProbe);
 
   expect(result.current.stage).toBe('idle');
-  expect(vi.mocked(fetch)).not.toHaveBeenCalled();
+  expect(checkForUpdate).not.toHaveBeenCalled();
 });
 
 test('reports a build that is current', async () => {
-  stub({ update: { stage: 'none' } });
+  stubUpdater(() => {
+    return Promise.resolve({ available: false });
+  });
 
   const { result } = renderHook(useUpdateProbe);
 
@@ -46,11 +61,11 @@ test('reports a build that is current', async () => {
 });
 
 test('names the version waiting when there is one', async () => {
-  stub({
-    update: {
-      stage: 'available',
+  stubUpdater(() => {
+    return Promise.resolve({
+      available: true,
       version: '9.9.9',
-    },
+    });
   });
 
   const { result } = renderHook(useUpdateProbe);
@@ -65,10 +80,10 @@ test('names the version waiting when there is one', async () => {
   expect(result.current.version).toBe('9.9.9');
 });
 
-test('says so rather than going quiet when the feed cannot be reached', async () => {
-  vi.stubGlobal('fetch', vi.fn(() => {
+test('says so rather than going quiet when the updater throws', async () => {
+  stubUpdater(() => {
     return Promise.reject(new Error('offline'));
-  }));
+  });
 
   const { result } = renderHook(useUpdateProbe);
 
@@ -82,11 +97,11 @@ test('says so rather than going quiet when the feed cannot be reached', async ()
 });
 
 test('says it is checking while the answer is still coming', () => {
-  vi.stubGlobal('fetch', vi.fn(() => {
-    return new Promise<Response>(() => {
+  stubUpdater(() => {
+    return new Promise<DesktopUpdate>(() => {
       return undefined;
     });
-  }));
+  });
 
   const { result } = renderHook(useUpdateProbe);
 
@@ -95,4 +110,14 @@ test('says it is checking while the answer is still coming', () => {
   });
 
   expect(result.current.stage).toBe('checking');
+});
+
+test('has nothing to ask in a browser', () => {
+  const { result } = renderHook(useUpdateProbe);
+
+  act(() => {
+    result.current.check();
+  });
+
+  expect(result.current.stage).toBe('failed');
 });

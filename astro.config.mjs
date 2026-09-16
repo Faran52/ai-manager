@@ -9,27 +9,6 @@ const reactCompiler = process.env.VITEST === undefined
   ? { babel: { plugins: ['babel-plugin-react-compiler'] } }
   : {};
 
-/**
- * The release feed and its public key, inlined into the bundle at build time.
- *
- * A packaged app runs with the user's environment rather than the one that
- * built it, so leaving these to `process.env` alone ships every release with
- * update checking off. CI passes them in as variables; locally they come from
- * `.env`, which Node reads itself here because `vite` is not a direct
- * dependency. Only these two names are inlined, so the rest of `.env` stays out
- * of the bundle.
- */
-try {
-  process.loadEnvFile();
-}
-catch {
-  // No .env, which is the normal case in CI.
-}
-
-const bakedEnv = (name) => {
-  return JSON.stringify(process.env[name] ?? '');
-};
-
 /*
  * Vite's dev module runner cannot inline CommonJS packages: forcing
  * `ssr.noExternal` makes `astro dev` crash on React's CJS entry
@@ -47,28 +26,23 @@ export default defineConfig({
   /*
    * Nothing here goes through `astro:assets`: every image is either in `public/`
    * or a runtime `<img src>` in a React component. Astro still bundles its
-   * default Sharp image service, and `deno desktop` then follows Sharp's
-   * per-platform `require("@img/sharp-<platform>/sharp.node")` switch and embeds
-   * the native libvips build for all sixteen targets, ~1.3 GB, into the desktop
-   * binary. The passthrough service drops Sharp from the graph entirely.
+   * default Sharp image service, which drags the native libvips build into the
+   * server graph and, from there, into the packaged app. The passthrough
+   * service drops Sharp from the graph entirely.
    */
   image: { service: passthroughImageService() },
   vite: {
     plugins: [tailwindcss()],
     /*
-     * Bundle every npm dependency into `dist/server` so the desktop build can
-     * drop `node_modules` entirely (`deno desktop --exclude ./node_modules`).
-     * Vite externalises node_modules in SSR by default, which left `clsx`
-     * unresolved at runtime and forced the whole 1.35 GB tree into the binary.
+     * Bundle every npm dependency into `dist/server` so the packaged app can
+     * drop `node_modules` entirely. Vite externalises node_modules in SSR by
+     * default, which left `clsx` unresolved at runtime and would put the whole
+     * 1.35 GB tree inside the app.
      */
     ssr: isSSRBundling ? { noExternal: true } : {},
-    define: {
-      'import.meta.env.UPDATE_FEED_URL': bakedEnv('UPDATE_FEED_URL'),
-      'import.meta.env.UPDATE_PUBLIC_KEY': bakedEnv('UPDATE_PUBLIC_KEY'),
-    },
     /*
      * The 500 kB default warns about transfer over a network. This bundle is
-     * read off local disk by the desktop build, where the client chunk is 1042
+     * read off local disk by the packaged app, where the client chunk is 1042
      * kB and transfers in 10ms, so splitting it would buy nothing. The limit
      * sits just above that rather than off, so real growth still says so.
      */

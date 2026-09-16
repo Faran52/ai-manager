@@ -6,7 +6,6 @@ import {
   resolveAgentPaths,
   runPluginAction,
 } from '@services/agents/agentsService';
-import { checkForUpdate } from '@services/updates';
 
 import type { AgentId } from '@config/agents';
 import type {
@@ -14,7 +13,6 @@ import type {
   AgentBinaryRunner,
   AgentRoots,
 } from '@services/agents/agentsService';
-import type { UpdateConfig } from '@services/updates';
 import type { ListSessionsBody } from '../contracts';
 
 /*
@@ -31,11 +29,6 @@ export interface EndpointDeps {
   readonly pluginDetails?: Parameters<typeof readPluginCosts>[1];
   readonly agentInstallCheck?: AgentBinaryResolver;
   readonly agentInstall?: AgentBinaryRunner;
-}
-
-export interface UpdateEndpointDeps {
-  readonly config?: UpdateConfig | undefined;
-  readonly updateDeps?: Parameters<typeof checkForUpdate>[1] | undefined;
 }
 
 export interface ProfileScoped {

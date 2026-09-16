@@ -1,24 +1,18 @@
 # Pushing the tag is the whole release: `git tag v0.1.0 && git push origin v0.1.0`
 # builds, signs and publishes. Separate from ci.yml, which `lintel sync` overwrites.
 #
-# Updates replace the whole bundle rather than patching it. Patching breaks a
-# signed macOS bundle (denoland/deno#36574) and Windows cannot apply patches at
-# all, so one strategy serves every platform.
+# electron-builder makes the installers and electron-updater reads them back.
+# Updates replace the whole bundle rather than patching it, which is the only
+# strategy that works on all three platforms.
 #
 # ponytail: the guard job reruns `pnpm check` rather than polling ci.yml's run on
 # the same commit, the way lintel's release.yml waits for its 11-minute e2e.
 # Nothing here is that expensive, and the three build jobs are gated behind it
 # anyway, so rerunning the cheap gate is less code than a cross-workflow poll.
 #
-# Variables. Both are public halves, baked into the bundle at build time:
-#   UPDATE_FEED_URL              where a shipped build looks for `latest.json`
-#   UPDATE_PUBLIC_KEY            base64 Ed25519 public key from `pnpm release:key`
-#
 # Secrets. A missing one degrades that platform to unsigned rather than failing:
-#   UPDATE_SIGNING_KEY           Ed25519 private key (PEM) from `pnpm release:key`
 #   MACOS_CERTIFICATE            base64 of the Developer ID Application .p12
 #   MACOS_CERTIFICATE_PASSWORD   password for that .p12
-#   MACOS_SIGN_IDENTITY          "Developer ID Application: Name (TEAMID)"
 #   APPLE_ID, APPLE_TEAM_ID      notarization account
 #   APPLE_APP_PASSWORD           app-specific password for notarytool
 #   WINDOWS_CERTIFICATE          base64 of the code-signing .pfx
@@ -34,14 +28,7 @@ permissions:
   contents: read
 
 env:
-  # First Deno release carrying the bundle-signature fix (#36574). Below this,
-  # a built bundle fails `codesign --verify` before an update is ever applied.
-  DENO_VERSION: v2.9.6
   NODE_VERSION: 26.8.1
-  # Inlined into the bundle by astro.config.mjs. Repository variables, not
-  # secrets: both halves are public, and only the private key needs hiding.
-  UPDATE_FEED_URL: ${{ vars.UPDATE_FEED_URL }}
-  UPDATE_PUBLIC_KEY: ${{ vars.UPDATE_PUBLIC_KEY }}
 
 jobs:
   guard:
@@ -83,16 +70,22 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
 
-  macos:
+  # One job per platform, because an installer can only be made on the OS it
+  # installs to: dmg needs hdiutil, NSIS needs Windows, AppImage needs Linux.
+  package:
     needs: guard
-    runs-on: macos-14
-    env:
-      MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
-      MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
-      MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
-      APPLE_ID: ${{ secrets.APPLE_ID }}
-      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-      APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            certificate: MACOS_CERTIFICATE
+            certificatePassword: MACOS_CERTIFICATE_PASSWORD
+          - os: ubuntu-latest
+          - os: windows-latest
+            certificate: WINDOWS_CERTIFICATE
+            certificatePassword: WINDOWS_CERTIFICATE_PASSWORD
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
@@ -100,147 +93,40 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: ${{ env.DENO_VERSION }}
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
 
-      - name: Import signing certificate
-        if: env.MACOS_CERTIFICATE != ''
-        run: |
-          KEYCHAIN="$RUNNER_TEMP/build.keychain"
-          KEYCHAIN_PASSWORD="$(uuidgen)"
-          echo "$MACOS_CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/cert.p12"
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
-          security set-keychain-settings -lut 900 "$KEYCHAIN"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
-          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" \
-            -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: \
-            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" > /dev/null
-          security list-keychain -d user -s "$KEYCHAIN" login.keychain
-          rm -f "$RUNNER_TEMP/cert.p12"
-
-      # The identity carries a team id, so it is injected rather than committed.
-      - name: Set the signing identity
-        if: env.MACOS_SIGN_IDENTITY != ''
-        run: |
-          python3 - <<'PY'
-          import json, os
-          config = json.load(open('deno.json'))
-          config.setdefault('desktop', {}).setdefault('macos', {})['codesignIdentity'] = os.environ['MACOS_SIGN_IDENTITY']
-          json.dump(config, open('deno.json', 'w'), indent=2)
-          PY
-
-      # Deno appends `.app` itself on macOS, so the output path carries no
-      # extension. The bundle keeps the product's spaced name ("AI Manager.app"),
-      # which is what a user sees once it is in /Applications; the published zip
-      # keeps a space-free name for the download URL.
-      - name: Build the app bundle
-        run: |
-          # --exclude ./node_modules: astro.config's ssr.noExternal bundles every
-          # dep into dist/server, so the 1.35 GB node_modules tree (all of Sharp's
-          # per-platform libvips builds, every rolldown binding, the devDeps) does
-          # not belong in the binary. Drops the bundle from 1.4 GB to ~70 MB.
-          deno desktop -E -R -S . --exclude ./node_modules --output "./dist/AI Manager"
-          # ditto keeps the bundle's symlinks and extended attributes; zip does not.
-          ditto -c -k --keepParent "./dist/AI Manager.app" ./AIManager-macos.zip
-
-      - name: Verify the signature survived packaging
-        if: env.MACOS_SIGN_IDENTITY != ''
-        run: codesign --verify --deep --strict --verbose=2 "./dist/AI Manager.app"
-
-      - name: Notarize and staple
-        if: env.APPLE_ID != ''
-        run: |
-          xcrun notarytool submit ./AIManager-macos.zip \
-            --apple-id "$APPLE_ID" \
-            --team-id "$APPLE_TEAM_ID" \
-            --password "$APPLE_APP_PASSWORD" \
-            --wait
-          xcrun stapler staple "./dist/AI Manager.app"
-          # Re-zip so the published archive carries the stapled ticket.
-          rm -f ./AIManager-macos.zip
-          ditto -c -k --keepParent "./dist/AI Manager.app" ./AIManager-macos.zip
+      # --publish never: the release is written once, by the job below, from
+      # every platform's artifacts at the same time. electron-builder still
+      # writes the latest*.yml the updater reads.
+      - name: Build the installers
+        env:
+          CSC_LINK: ${{ secrets[matrix.certificate] }}
+          CSC_KEY_PASSWORD: ${{ secrets[matrix.certificatePassword] }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: pnpm desktop:pack
 
       - uses: actions/upload-artifact@v4
         with:
-          name: macos
-          path: ./AIManager-macos.zip
-
-  linux:
-    needs: guard
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
-      - uses: actions/setup-node@v7
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: ${{ env.DENO_VERSION }}
-
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm build
-      - run: deno desktop -E -R -S . --exclude ./node_modules --output ./AIManager-linux.AppImage
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: linux
-          path: ./AIManager-linux.AppImage
-
-  windows:
-    needs: guard
-    runs-on: windows-latest
-    env:
-      WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
-      WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
-      - uses: actions/setup-node@v7
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: ${{ env.DENO_VERSION }}
-
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm build
-      - run: deno desktop -E -R -S . --exclude ./node_modules --output ./AIManager-windows.msi
-
-      - name: Sign the installer
-        if: env.WINDOWS_CERTIFICATE != ''
-        shell: pwsh
-        run: |
-          $pfx = "$env:RUNNER_TEMP\cert.pfx"
-          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
-          & signtool sign /f $pfx /p $env:WINDOWS_CERTIFICATE_PASSWORD `
-            /tr http://timestamp.digicert.com /td sha256 /fd sha256 `
-            .\AIManager-windows.msi
-          Remove-Item $pfx
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: windows
-          path: ./AIManager-windows.msi
+          name: ${{ matrix.os }}
+          path: |
+            release/*.dmg
+            release/*.zip
+            release/*.exe
+            release/*.AppImage
+            release/*.yml
+            release/*.blockmap
 
   publish:
-    needs: [macos, linux, windows]
+    needs: package
     runs-on: ubuntu-latest
     permissions:
       # Writes the GitHub release on the tag that triggered this run.
       contents: write
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: ${{ env.NODE_VERSION }}
 
       - uses: actions/download-artifact@v4
         with:
@@ -259,16 +145,9 @@ jobs:
             found
           ' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
 
-      - name: Build the update manifest
-        env:
-          UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
-        run: node scripts/buildReleaseManifest.ts "${GITHUB_REF_NAME#v}" artifacts/*
-
       - uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:
           tag_name: ${{ github.ref_name }}
           body_path: ${{ runner.temp }}/notes.md
           generate_release_notes: true
-          files: |
-            artifacts/*
-            latest.json
+          files: artifacts/*

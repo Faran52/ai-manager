@@ -7,16 +7,16 @@ const label = (key: string): string => {
   return `<${key}>`;
 };
 
-const sectionLabels = (items: readonly Deno.MenuItem[]): readonly string[] => {
+const sectionLabels = (items: readonly AppMenuItem[]): readonly string[] => {
   return items.flatMap((item) => {
     return typeof item === 'object' && 'submenu' in item ? [item.submenu.label] : [];
   });
 };
 
 const sectionItems = (
-  items: readonly Deno.MenuItem[],
+  items: readonly AppMenuItem[],
   name: string,
-): readonly Deno.MenuItem[] => {
+): readonly AppMenuItem[] => {
   const found = items.find((item) => {
     return typeof item === 'object' && 'submenu' in item && item.submenu.label === name;
   });
@@ -26,11 +26,9 @@ const sectionItems = (
     : [];
 };
 
-const idsIn = (items: readonly Deno.MenuItem[]): readonly string[] => {
+const idsIn = (items: readonly AppMenuItem[]): readonly string[] => {
   return items.flatMap((item) => {
-    return typeof item === 'object' && 'item' in item && item.item.id != null
-      ? [item.item.id]
-      : [];
+    return typeof item === 'object' && 'item' in item ? [item.item.id] : [];
   });
 };
 
@@ -60,7 +58,7 @@ test('says the same words the rail and the shortcut sheet already use', () => {
 test('leaves cut, copy and paste to the roles a webview needs them from', () => {
   const edit = sectionItems(applicationMenu(label), '<menuEdit>');
   const roles = edit.flatMap((item) => {
-    return typeof item === 'object' && 'role' in item ? [item.role.role] : [];
+    return typeof item === 'object' && 'role' in item ? [item.role] : [];
   });
 
   expect(roles).toEqual(['undo', 'redo', 'cut', 'copy', 'paste', 'selectAll']);
@@ -68,7 +66,7 @@ test('leaves cut, copy and paste to the roles a webview needs them from', () => 
 
 test('carries an accelerator only where one belongs', () => {
   const app = sectionItems(applicationMenu(label), 'AI Manager');
-  const byId = (id: string): Deno.MenuItem | undefined => {
+  const byId = (id: string): AppMenuItem | undefined => {
     return app.find((item) => {
       return typeof item === 'object' && 'item' in item && item.item.id === id;
     });

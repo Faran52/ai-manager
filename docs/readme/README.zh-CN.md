@@ -11,7 +11,7 @@
 没有账号，没有遥测。
 
 基于 [Astro](https://astro.build) 岛屿架构，并通过
-[Deno Desktop](https://docs.deno.com/runtime/desktop/)（Deno ≥ 2.9）发布为桌面应用。
+[Electron](https://www.electronjs.org/)发布为桌面应用。
 
 ![带可展开工具卡片的会话记录](../screenshots/sessions.jpg)
 

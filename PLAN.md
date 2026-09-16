@@ -5,6 +5,15 @@ stays; configuration management is where the work is. Each phase gates the next.
 
 ## Shipped
 
+- **The desktop shell is Electron**, not `deno desktop`. Everything below that
+  names Deno is a record of how it stood then. `deno desktop` could not draw
+  the macOS chrome the shell wanted: `transparentTitlebar` colours the bar and
+  leaves the content inset, `frameless` takes the traffic lights and, on the
+  webview backend, the ability to drag the window at all. The window is
+  hiddenInset now and the app's own first row is what it is dragged by. The
+  page contract is unchanged, the signed update feed gave way to
+  electron-updater, and electron-builder makes the dmg, the NSIS installer and
+  the AppImage.
 - Rename from AI Chat Manager. Repo, bundle identifier, artifacts, and the
   on-disk state directory all moved.
 - **Setup validation** (was Phase 4). `validationUtils` reports missing or

@@ -11,7 +11,7 @@
 沒有背景服務、沒有帳號、沒有遙測。
 
 以 [Astro](https://astro.build) 島嶼架構建構，並透過
-[Deno Desktop](https://docs.deno.com/runtime/desktop/)（Deno ≥ 2.9）發佈為桌面應用程式。
+[Electron](https://www.electronjs.org/)發佈為桌面應用程式。
 
 ![具有可展開工具卡片的工作階段紀錄](../screenshots/sessions.jpg)
 

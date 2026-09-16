@@ -18,7 +18,6 @@ import type {
   SettingsResponse,
   StatsResponse,
   StorageResponse,
-  UpdateCheckResponse,
   WriteSettingsResponse,
 } from './contracts';
 
@@ -62,10 +61,6 @@ const isSearchOutcome = (value: object): value is SearchResponse => {
 
 const isStatsResponse = (value: object): value is StatsResponse => {
   return 'stats' in value;
-};
-
-const isUpdateCheck = (value: object): value is UpdateCheckResponse => {
-  return 'update' in value;
 };
 
 const isMutationResponse = (value: object): value is MutationResponse => {
@@ -135,11 +130,6 @@ export const SEARCH: EndpointDefinition<SearchResponse> = {
   path: '/api/search',
   accepts: isSearchOutcome,
   label: 'search results',
-};
-export const UPDATE_CHECK: EndpointDefinition<UpdateCheckResponse> = {
-  path: '/api/update-check',
-  accepts: isUpdateCheck,
-  label: 'update check',
 };
 export const STATS: EndpointDefinition<StatsResponse> = {
   path: '/api/stats',

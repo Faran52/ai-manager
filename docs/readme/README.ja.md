@@ -12,7 +12,7 @@ AI コーディングセッション履歴を、ローカル優先で高速に�
 テレメトリーもありません。
 
 [Astro](https://astro.build) のアイランドアプリで、
-[Deno Desktop](https://docs.deno.com/runtime/desktop/)（Deno 2.9 以上）で
+[Electron](https://www.electronjs.org/) で
 デスクトップアプリとして配布します。
 
 ![展開可能なツールカードを備えたセッション表示](../screenshots/sessions.jpg)

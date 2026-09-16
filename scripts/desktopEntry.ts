@@ -1,109 +1,213 @@
 /**
- * The desktop entry point.
+ * The desktop shell.
  *
- * `deno desktop` opens the native window before it runs this module, and the
- * entry it generates by default is a bare import of the built server. That
- * leaves nothing on the JavaScript side holding the window, so the close button
- * had no handler behind it: clicking it left the window open and the process
- * running, and the app could only be quit from the menu.
+ * Electron rather than `deno desktop`, which cannot draw the chrome this app
+ * wants: `transparentTitlebar` only colours the bar and leaves the content
+ * inset below it, and `frameless` takes the traffic lights away and, on the
+ * webview backend, the ability to drag the window at all, because WKWebView
+ * ignores `-webkit-app-region` (denoland/deno#35635).
  *
- * Constructing the first BrowserWindow adopts the one already on screen rather
- * than opening a second, which is what finally gives the close event somewhere
- * to land. It is also the only place the window is configured: the `desktop`
- * block in deno.json sets nothing about it, and the 800x600 default is too
- * small for the sidebar and the transcript side by side. `width` and `height`
- * are logical pixels. A minimum size has no constructor option or setter.
- *
- * transparentTitlebar does reach the adopted window: the bar takes the app's
- * own surface instead of reading as system grey. It does not remove the bar,
- * so the traffic lights and the centred title still sit in a strip of their
- * own rather than on the app's first row.
- *
- * The menu is described by the page rather than here. The page holds the labels
- * in the reader's own language and the ids its handlers already know, so this
- * forwards in both directions and decides nothing.
+ * The Astro server runs in this process. It is the same `dist/server/entry.mjs`
+ * a hosted deployment runs, so the window is a browser pointed at loopback and
+ * every route, API and asset behaves as it does anywhere else.
  */
-import '../dist/server/entry.mjs';
+import { once } from 'node:events';
+import { fileURLToPath } from 'node:url';
 
-const mainWindow = new Deno.BrowserWindow({
-  width: 1440,
-  height: 900,
-  transparentTitlebar: true,
-});
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  Menu,
+} from 'electron';
+import electronUpdater from 'electron-updater';
 
-// Which menu belongs in the window and which in the system bar is the page's
-// call, so it is told the platform rather than asked to guess from the agent.
-mainWindow.bind('desktopPlatform', (): Promise<string> => {
-  return Promise.resolve(Deno.build.os);
-});
+import type { MenuItemConstructorOptions } from 'electron';
 
-mainWindow.bind('setApplicationMenu', (items: Deno.MenuItem[]): Promise<void> => {
-  mainWindow.setApplicationMenu(items);
-
-  return Promise.resolve();
-});
+// electron-updater is CommonJS, so ESM sees the default export rather than the
+// named ones its types advertise.
+const { autoUpdater } = electronUpdater;
 
 /*
- * Where the server this process just started is listening. A second window
- * opens blank and has to be sent somewhere, and only this side knows the port.
+ * The product's name, not the package's. The roles the OS fills in for itself
+ * read it, so without this the Quit item says "Quit ai-manager". Set before
+ * `ready`, which is what also puts the app's stored state under that name.
  */
-const servedAt = (path: string): string => {
-  const port = (Deno.env.get('DENO_SERVE_ADDRESS') ?? '').split(':').pop() ?? '';
+app.setName('AI Manager');
 
-  return `http://127.0.0.1:${port}${path}`;
-};
+const HOST = '127.0.0.1';
 
-let aboutWindow: Deno.BrowserWindow | undefined;
+// The event the page listens for, declared in src/types/desktopBindings.d.ts.
+const MENU_COMMAND = 'app-menu-command';
+
+const preload = fileURLToPath(new URL('./desktopPreload.cjs', import.meta.url));
 
 /*
- * About is a window of its own on this platform rather than a sheet over the
- * app, which is what every other Mac app does with it. Choosing it twice
- * raises the one already open instead of stacking a second.
+ * The page speaks the platform's common name rather than Node's build tag, and
+ * decides from it whether the menu belongs in a system bar or its own titlebar.
  */
-mainWindow.bind('openAbout', (): Promise<void> => {
-  if (aboutWindow != null && !aboutWindow.isClosed()) {
-    aboutWindow.focus();
+const platform = process.platform === 'win32' ? 'windows' : process.platform;
 
-    return Promise.resolve();
+/**
+ * The server this process holds, and where it ended up listening.
+ *
+ * Loopback, and a port the OS picks: a fixed one collides with a second copy of
+ * the app, and binding anywhere else would publish an API that deletes projects
+ * and runs the CLI to the network. The server starts itself on import, which is
+ * too early, so autostart is off and the port is settled before anything is
+ * pointed at it.
+ */
+const serve = async (): Promise<string> => {
+  process.env.ASTRO_NODE_AUTOSTART = 'disabled';
+  process.env.HOST = HOST;
+  process.env.PORT = '0';
+
+  const { startServer } = await import('../dist/server/entry.mjs');
+  const listener = startServer().server.server;
+
+  await once(listener, 'listening');
+
+  const address = listener.address();
+
+  // A string address is a unix socket, which this never is.
+  if (typeof address !== 'object' || address === null) {
+    throw new Error('the app server is listening on no port');
   }
 
-  const opened = new Deno.BrowserWindow({
+  return `http://${HOST}:${String(address.port)}`;
+};
+
+/*
+ * Started now, awaited where the answer is needed. Electron emits `ready` only
+ * once this module has finished evaluating, so a top-level await here leaves
+ * `app.whenReady()` pending forever and no window is ever made.
+ */
+const origin = serve();
+
+let mainWindow: BrowserWindow | undefined;
+let aboutWindow: BrowserWindow | undefined;
+
+/*
+ * Electron's own menu description, built from the page's. The page holds the
+ * labels in the reader's language and the ids its handlers already know, so it
+ * describes the menu and this translates it.
+ */
+const toMenuItem = (item: AppMenuItem): MenuItemConstructorOptions => {
+  if (item === 'separator') {
+    return { type: 'separator' };
+  }
+
+  if ('role' in item) {
+    return { role: item.role };
+  }
+
+  if ('submenu' in item) {
+    return {
+      label: item.submenu.label,
+      submenu: item.submenu.items.map(toMenuItem),
+    };
+  }
+
+  const {
+    accelerator,
+    enabled,
+    id,
+    label,
+  } = item.item;
+
+  return {
+    label,
+    enabled,
+    // Omitted rather than undefined: an absent accelerator is not a blank one.
+    ...accelerator == null ? {} : { accelerator },
+    click: () => {
+      mainWindow?.webContents.send(MENU_COMMAND, id);
+    },
+  };
+};
+
+/*
+ * About is a window of its own rather than a sheet over the app, which is what
+ * every other Mac app does with it. Choosing it twice raises the one already
+ * open instead of stacking a second, and closing it leaves the app running.
+ */
+const openAbout = async (): Promise<void> => {
+  if (aboutWindow != null && !aboutWindow.isDestroyed()) {
+    aboutWindow.focus();
+
+    return;
+  }
+
+  const opened = new BrowserWindow({
     title: 'About AI Manager',
     width: 360,
     height: 400,
     resizable: false,
-  });
-
-  opened.navigate(servedAt('/about'));
-
-  /*
-   * The close button is a request, not the act. Without this the button does
-   * nothing, the same way the main window needed a handler before it would
-   * shut, and this one closes the window rather than ending the process.
-   */
-  opened.addEventListener('close', (): void => {
-    opened.close();
+    webPreferences: { preload },
   });
 
   aboutWindow = opened;
 
-  return Promise.resolve();
-});
+  await opened.loadURL(`${await origin}/about`);
+};
 
 /*
- * A click lands here, not in the page, so it is handed back as an event on
- * `window`. The id is one this page supplied a moment ago; stringifying it
- * keeps that true even if a label ever carries a quote.
+ * electron-updater, against the feed electron-builder publishes. It answers
+ * null where it has no feed to read, and a throw travels back to the page as a
+ * rejection, which is what a failed check is: not the same as being current.
  */
-mainWindow.addEventListener('menuclick', (event): void => {
-  const detail = JSON.stringify(event.detail.id);
+const checkForUpdate = async (): Promise<DesktopUpdate> => {
+  const result = await autoUpdater.checkForUpdates();
+  const version = result?.updateInfo.version;
 
-  void mainWindow.executeJs(
-    `window.dispatchEvent(new CustomEvent('app-menu-command', { detail: ${detail} }))`,
-  );
+  return version != null && version !== app.getVersion()
+    ? {
+        available: true,
+        version,
+      }
+    : { available: false };
+};
+
+ipcMain.handle('desktop:platform', () => {
+  return platform;
 });
 
-// Only this window ends the process. A secondary window closing leaves the app up.
-mainWindow.addEventListener('close', (): void => {
-  Deno.exit(0);
+ipcMain.handle('desktop:menu', (_event, items: readonly AppMenuItem[]) => {
+  Menu.setApplicationMenu(Menu.buildFromTemplate(items.map(toMenuItem)));
 });
+
+ipcMain.handle('desktop:about', openAbout);
+
+ipcMain.handle('desktop:update', checkForUpdate);
+
+/*
+ * hiddenInset keeps the traffic lights and drops the bar they sit in, so the
+ * app's own first row runs to the top of the window. The lights are then placed
+ * on the centre line of that row, which AppHeader.css sets to 42px tall, and
+ * the row reserves the width they need on its leading edge.
+ */
+const openMain = async (): Promise<void> => {
+  const window = new BrowserWindow({
+    width: 1440,
+    height: 900,
+    minWidth: 960,
+    minHeight: 600,
+    titleBarStyle: 'hiddenInset',
+    trafficLightPosition: {
+      x: 13,
+      y: 15,
+    },
+    webPreferences: { preload },
+  });
+
+  mainWindow = window;
+
+  // Only this window ends the app. A secondary window closing leaves it running.
+  window.on('closed', () => {
+    app.quit();
+  });
+
+  await window.loadURL(await origin);
+};
+
+void app.whenReady().then(openMain);

@@ -1,4 +1,8 @@
 allowBuilds:
+  # Downloads the Electron binary the desktop shell runs on.
+  'electron': true
+  # Squirrel.Windows only. The Windows target is NSIS, which app-builder makes.
+  'electron-winstaller': false
   'esbuild': true
   'sharp': true
   'unrs-resolver': true
