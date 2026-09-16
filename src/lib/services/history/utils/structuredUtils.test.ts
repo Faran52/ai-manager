@@ -316,6 +316,25 @@ describe('structured history discovery', () => {
     expect(projects[0]?.name).toBe('Cline');
   });
 
+  test('reads a Cline transcript as Cline, and any other file as itself', async () => {
+    const task = await mkdtemp(join(tmpdir(), 'cline-entries-'));
+    const transcript = JSON.stringify([
+      {
+        role: 'user',
+        content: 'Question',
+      },
+    ]);
+    const clinePath = join(task, 'api_conversation_history.json');
+    const plainPath = join(task, 'session.json');
+
+    await writeFile(clinePath, transcript);
+    await writeFile(plainPath, transcript);
+
+    // The filename is what says which agent wrote it, so both sides are read.
+    expect(await loadStructuredEntries(clinePath)).toHaveLength(1);
+    expect(await loadStructuredEntries(plainPath)).toHaveLength(1);
+  });
+
   test('keeps each Cline fork as its own project', async () => {
     const home = await mkdtemp(join(tmpdir(), 'forks-'));
     const transcript = JSON.stringify([{
