@@ -66,5 +66,12 @@ export default defineConfig({
       'import.meta.env.UPDATE_FEED_URL': bakedEnv('UPDATE_FEED_URL'),
       'import.meta.env.UPDATE_PUBLIC_KEY': bakedEnv('UPDATE_PUBLIC_KEY'),
     },
+    /*
+     * The 500 kB default warns about transfer over a network. This bundle is
+     * read off local disk by the desktop build, where the client chunk is 1042
+     * kB and transfers in 10ms, so splitting it would buy nothing. The limit
+     * sits just above that rather than off, so real growth still says so.
+     */
+    build: { chunkSizeWarningLimit: 1_200 },
   },
 });
