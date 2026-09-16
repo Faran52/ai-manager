@@ -18,6 +18,18 @@ export const useAsyncResource = <T>(
 ): AsyncResource<T> => {
   const [snapshot, setSnapshot] = useState<AsyncSnapshot<T>>({ status: 'loading' });
   const [nonce, setNonce] = useState(0);
+  const [prevLoad, setPrevLoad] = useState(() => {
+    return load;
+  });
+
+  // A new `load` is a different resource, not a refresh: wait again rather than
+  // show the last one's answer. `reload` keeps its data on purpose.
+  if (load !== prevLoad) {
+    setPrevLoad(() => {
+      return load;
+    });
+    setSnapshot({ status: 'loading' });
+  }
 
   useEffect(() => {
     if (!enabled) {

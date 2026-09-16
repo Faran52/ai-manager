@@ -49,6 +49,31 @@ describe('useAsyncResource', () => {
     });
   });
 
+  test('waits again when the caller asks for something else', async () => {
+    const first = (): Promise<string> => {
+      return Promise.resolve('first');
+    };
+    const second = (): Promise<string> => {
+      return Promise.resolve('second');
+    };
+
+    const { result, rerender } = renderHook((load: () => Promise<string>) => {
+      return useAsyncResource(load, true);
+    }, { initialProps: first });
+
+    await waitFor(() => {
+      expect(result.current.status).toBe('ready');
+    });
+
+    rerender(second);
+    expect(result.current.status).toBe('loading');
+    expect(result.current.data).toBeUndefined();
+
+    await waitFor(() => {
+      expect(result.current.data).toBe('second');
+    });
+  });
+
   test('reports why a load failed', async () => {
     const load = vi.fn(() => {
       return Promise.reject(new Error('denied'));
