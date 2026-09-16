@@ -67,8 +67,7 @@ export const ArchiveView: FC<ArchiveViewProps> = ({
   });
   const totals = totalsOf(list);
   const reload = archives.reload;
-  // Both reads: retention draws the card at the top of this pane.
-  const waiting = useMinLoad(archives.status === 'loading' || retention.status === 'loading');
+  const waiting = useMinLoad(archives.status === 'loading');
 
   const runCreate = (): void => {
     void mutation.run(async () => {

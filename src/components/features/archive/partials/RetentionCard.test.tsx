@@ -84,7 +84,15 @@ test('says the rule only ever copies', () => {
   expect(screen.getByText(/never deletes/)).toBeDefined();
 });
 
-test('reports a failure to read the policy', () => {
+test('waits in its own frame, then reports a failure to read the policy', () => {
+  const { unmount } = render(
+    <RetentionCard retention={resource('loading', undefined)} nowMs={NOW} />,
+  );
+
+  expect(document.querySelector('[data-retention-loading]')).not.toBeNull();
+  expect(screen.queryByText('Retention')).toBeNull();
+  unmount();
+
   renderCard(resource('error', undefined, noop, 'policy unreadable'));
 
   expect(screen.queryByText('Retention')).toBeNull();

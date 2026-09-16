@@ -11,6 +11,7 @@ import {
   Button,
   Notice,
   Panel,
+  Spinner,
   Switch,
   TextInput,
   useMutationRunner,
@@ -39,6 +40,16 @@ export const RetentionCard: FC<RetentionCardProps> = ({ retention, nowMs }) => {
   const days = draftDays ?? String(status?.policy.olderThanDays ?? '');
   const parsedDays = Number(days);
   const validDays = Number.isInteger(parsedDays) && parsedDays >= MIN_DAYS && parsedDays <= MAX_DAYS;
+
+  if (retention.status === 'loading') {
+    return (
+      <Panel>
+        <div className="flex justify-center py-2" data-retention-loading>
+          <Spinner />
+        </div>
+      </Panel>
+    );
+  }
 
   if (status == null) {
     return (
