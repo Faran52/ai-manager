@@ -3,7 +3,7 @@
 Pushing the tag is the whole release:
 
 ```bash
-pnpm version:set 0.1.0        # package.json, deno.json and appConfig together
+pnpm version:set 0.1.0        # package.json and appConfig together
 # write the ## 0.1.0 section in CHANGELOG.md
 git commit -am "chore: release 0.1.0"
 git tag v0.1.0
@@ -19,27 +19,7 @@ generated commit list underneath.
 
 ## One-time setup
 
-### 1. Update signing key
-
-```bash
-pnpm release:key
-```
-
-Writes an Ed25519 private key to `~/.ai-manager/update-signing-key.pem`
-(mode 600, outside the repository) and prints the public half.
-
-```bash
-gh secret set UPDATE_SIGNING_KEY < ~/.ai-manager/update-signing-key.pem
-```
-
-The public half goes to builds through `UPDATE_PUBLIC_KEY`. A build given a
-public key **rejects an unsigned feed**, which is the point: a release server
-that loses its key cannot silently downgrade anyone to unsigned updates.
-
-Rotating this key invalidates every build carrying the old public half. Treat it
-as a release-breaking change.
-
-### 2. macOS signing and notarization
+### 1. macOS signing and notarization
 
 Needs an **Apple Developer Program** membership. Without it, macOS builds are
 ad-hoc signed and users see Gatekeeper warnings on first launch.
@@ -49,15 +29,15 @@ Export the *Developer ID Application* certificate as a `.p12`, then:
 ```bash
 base64 -i cert.p12 | gh secret set MACOS_CERTIFICATE
 gh secret set MACOS_CERTIFICATE_PASSWORD          # the .p12 password
-gh secret set MACOS_SIGN_IDENTITY                 # Developer ID Application: Name (TEAMID)
 gh secret set APPLE_ID                            # the account's email
 gh secret set APPLE_TEAM_ID
 gh secret set APPLE_APP_PASSWORD                  # app-specific password, not the account password
 ```
 
-Find the identity string with `security find-identity -v -p codesigning`.
+No signing identity string is needed: electron-builder reads the certificate
+out of `CSC_LINK` and finds the identity in it.
 
-### 3. Windows signing
+### 2. Windows signing
 
 Export the code-signing certificate as a `.pfx`, then:
 
@@ -66,74 +46,37 @@ base64 -i cert.pfx | gh secret set WINDOWS_CERTIFICATE
 gh secret set WINDOWS_CERTIFICATE_PASSWORD
 ```
 
-### 4. Point builds at the feed
+### 3. The update feed
 
-```bash
-gh variable set UPDATE_FEED_URL --body "$(node -p "require('./deno.json').desktop.release.baseUrl")"
-gh variable set UPDATE_PUBLIC_KEY --body '<public half printed by step 1>'
-```
-
-Repository *variables*, not secrets: both are public, and only the private key
-needs hiding. `astro.config.mjs` inlines them into the bundle at build time,
-because a packaged app runs with the user's environment rather than the one that
-built it. Read from `process.env` alone, every release would ship with update
-checking off.
-
-A local build picks the same names up from `.env`, which `.env.example` lists.
-Without them a build simply never offers updates.
+There is nothing to set up. `electron-builder.yml` names this repository as the
+provider, electron-builder writes `latest-mac.yml`, `latest.yml` and
+`latest-linux.yml` beside the installers, the publish job attaches them to the
+release, and electron-updater reads them back from there. Authenticity is the
+code signature on the downloaded artifact, so there is no second key to rotate.
 
 ## Why full artifacts rather than patches
 
-`Deno.autoUpdate()` applies bsdiff patches in place. Deno states plainly that
-this is not signature-safe:
-
-> This does not make the auto-update path signature-safe, and isn't trying to.
-> Swapping the dylib breaks the seal wherever the bookkeeping files live.
-> — [denoland/deno#36574](https://github.com/denoland/deno/pull/36574)
-
-A patched macOS bundle fails `codesign --verify`, and Windows never applies
-patches at all because the DLL is locked. So every platform downloads a whole
-signed artifact, verifies it, hands off to an installer and exits. A running app
-cannot replace itself, which is why macOS and Linux spawn a helper that waits for
-the process to exit first, and Windows lets `msiexec` do it.
+electron-updater replaces the whole bundle. A patched macOS bundle fails
+`codesign --verify`, and Windows cannot apply a patch to a running install at
+all, so one strategy serves every platform. macOS updates through the `zip`
+target rather than the `dmg`, which is why both are built: a dmg is a download
+for a person, a zip is one for the updater.
 
 ## Bundle size
 
-The build runs `deno desktop ... --exclude ./node_modules`. Without it `deno
-desktop` embeds the whole npm snapshot from `package.json`, ~1.35 GB: every
-devDependency, and Sharp's per-platform libvips build for all sixteen targets
-reached through its `require("@img/sharp-<platform>/sharp.node")` switch. That is
-a 1.4 GB app that takes ~20s to first paint.
+The app is ~290 MB unpacked and ~129 MB as a dmg. Almost all of that is
+Electron's own Chromium and Node; the app itself is `dist`, about 8 MB.
 
-`astro.config.mjs` makes the exclude safe: `image.service` is the passthrough
-service (nothing here uses `astro:assets`, so Sharp is dead weight) and
-`vite.ssr.noExternal` bundles every remaining dep into `dist/server`, so the
-runtime needs no `node_modules` directory at all. Result is ~70 MB, ~3s to a
-window. If a future dependency does something `noExternal` cannot bundle (a
-native `.node` addon), the desktop build breaks loudly at runtime with a
-resolution error rather than silently shipping it.
+`electron-updater` is the only entry in `dependencies`, and that is deliberate.
+`astro.config.mjs` sets `vite.ssr.noExternal`, which inlines every remaining
+dependency into `dist/server`, so the packaged app carries no `node_modules`
+tree worth the name. `image.service` is the passthrough service for the same
+reason: nothing here uses `astro:assets`, and the default service drags Sharp's
+per-platform libvips builds in behind it.
 
-## Toolchain floor
-
-**Deno 2.9.6 or newer.** [#36418](https://github.com/denoland/deno/issues/36418)
-made a `deno desktop` macOS bundle fail `codesign --verify` two ways: the icon
-was copied into `Contents/Resources` after signing, and the runtime wrote
-`.update-ok` into `Contents/MacOS/` on every launch, so a distributed copy
-invalidated itself on first run. Fixed 2026-08-26 and released in 2.9.6.
-
-Homebrew may lag; the workflow pins the version itself.
-
-Confirmed on this repo with Deno 2.9.5 and an icon configured:
-
-```
-$ codesign --verify --deep --strict "dist/AI Manager.app"
-dist/AI Manager.app: a sealed resource is missing or invalid
-file added: .../Contents/Resources/AppIcon.icns
-```
-
-The icon lands after signing, so it is outside the sealed resource list. The
-symptom only appears once `desktop.app.icons` is set, which is why a bundle
-without an icon can look fine on an old toolchain.
+If a future dependency does something `noExternal` cannot bundle (a native
+`.node` addon), it has to move back into `dependencies`, and the build breaks
+loudly at runtime with a resolution error rather than shipping silently broken.
 
 ## Icons
 
@@ -154,9 +97,6 @@ about never, which is why they are committed rather than generated.
 ## Verifying a release by hand
 
 ```bash
-# the manifest verifies against the public key
-node -e "..."                                   # or just run the app against the feed
-
 # the macOS bundle is signed and notarized
 codesign --verify --deep --strict --verbose=2 "AI Manager.app"
 spctl --assess --type execute --verbose "AI Manager.app"
@@ -165,3 +105,6 @@ xcrun stapler validate "AI Manager.app"
 
 `spctl` is the one that answers the question users actually hit: whether
 Gatekeeper lets it open without a trip to Privacy & Security.
+
+A local build, unsigned and unnotarized, is `pnpm desktop:pack`. It writes to
+`release/`.

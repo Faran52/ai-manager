@@ -11,7 +11,7 @@ AI 코딩 세션 기록을 로컬 우선으로 빠르게 보는 뷰어입니다.
 바로 읽습니다. 데몬도, 계정도, 텔레메트리도 없습니다.
 
 [Astro](https://astro.build) 아일랜드 앱이며
-[Deno Desktop](https://docs.deno.com/runtime/desktop/)(Deno 2.9 이상)으로
+[Electron](https://www.electronjs.org/)으로
 데스크톱에 배포합니다.
 
 ![펼칠 수 있는 도구 카드가 있는 세션 기록](../screenshots/sessions.jpg)

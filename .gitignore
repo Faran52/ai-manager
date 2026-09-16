@@ -26,3 +26,6 @@ pnpm-debug.log*
 # lintel
 coverage/
 *.tsbuildinfo
+
+# desktop packaging output
+release/

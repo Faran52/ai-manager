@@ -1,0 +1,70 @@
+# How the desktop app is packaged. `pnpm desktop:pack` builds one for this
+# machine; release.yml builds all three.
+#
+# Only `dist` and the two shell files ship. Every npm dependency is already
+# inlined into `dist/server` by astro.config's `ssr.noExternal`, which is why
+# electron-updater is the one runtime dependency left in package.json and the
+# only node_modules tree this carries.
+appId: com.faran52.ai-manager
+productName: AI Manager
+copyright: Copyright © 2026 Faran Ali
+
+directories:
+  output: release
+
+files:
+  - dist/**
+  - scripts/desktopEntry.ts
+  - scripts/desktopPreload.cjs
+
+# Where electron-updater looks, and where release.yml uploads. The metadata
+# files electron-builder writes beside the artifacts are what it reads.
+publish:
+  provider: github
+  owner: Faran52
+  repo: ai-manager
+
+mac:
+  category: public.app-category.developer-tools
+  icon: public/icon-1024.png
+  # Notarization refuses an unhardened bundle, and the entitlements below are
+  # the minimum a JIT-compiling runtime needs under it.
+  hardenedRuntime: true
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  notarize: true
+  target:
+    # The zip is not a second download: electron-updater cannot apply a dmg.
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip
+      arch: [arm64, x64]
+
+dmg:
+  # The drag-to-install window: the app on the left, Applications on the right.
+  contents:
+    - x: 140
+      y: 200
+    - x: 400
+      y: 200
+      type: link
+      path: /Applications
+
+win:
+  icon: public/icon.ico
+  target:
+    - target: nsis
+      arch: [x64, arm64]
+
+nsis:
+  # A per-machine install that asks where, rather than a silent one-click.
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+
+linux:
+  icon: public/icon-512.png
+  category: Development
+  target:
+    - target: AppImage
+      arch: [x64, arm64]

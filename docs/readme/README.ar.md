@@ -11,7 +11,7 @@
 من القرص: بلا خدمة خلفية، بلا حساب، بلا تتبّع.
 
 تطبيق جزيرة [Astro](https://astro.build)، يُشحن إلى سطح المكتب عبر
-[Deno Desktop](https://docs.deno.com/runtime/desktop/) (‏Deno ‏≥ 2.9).
+[Electron](https://www.electronjs.org/).
 
 ![سجل الجلسة مع بطاقات أدوات قابلة للتوسيع](../screenshots/sessions.jpg)
 

@@ -11,7 +11,7 @@ A fast, local-first viewer for AI coding-session history. Reads transcripts
 straight off disk: no daemon, no account, no telemetry.
 
 An [Astro](https://astro.build) island app, shipped to the desktop with
-[Deno Desktop](https://docs.deno.com/runtime/desktop/) (Deno ≥ 2.9).
+[Electron](https://www.electronjs.org/).
 
 ![Session transcript with expandable tool cards](docs/screenshots/sessions.jpg)
 

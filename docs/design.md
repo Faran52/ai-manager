@@ -430,7 +430,7 @@ Screens that need service work before they can be built as drawn:
 - `last active` is not on `ProjectStats`. Only `ProjectUsage.lastActiveMs` has it, and `activity`
   resolves to a day rather than an hour. The In / out tile is fine: `StatsTotals` already carries
   both figures.
-- Reveal in Finder does not exist. It needs three OS labels, a widened `deno desktop` grant, and it
+- Reveal in Finder does not exist. It needs three OS labels and a binding onto Electron's `shell`, and it
   belongs on the project's right-click menu rather than in Settings.
 
 One thing found while inventorying and worth a decision of its own: the whole **Prompt history**
