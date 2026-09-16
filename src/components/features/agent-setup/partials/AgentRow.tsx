@@ -195,11 +195,8 @@ export const AgentRow: FC<AgentRowProps> = ({
               transition={collapseTransition}
             >
               {/*
-                  * The counts are in the row already, so this holds what a count
-                  * cannot say: why the row is flagged, which server at what
-                  * scope, and how stale a rules file has gone. A group the agent
-                  * records nothing for prints no line at all, so a bare setup
-                  * stays one line rather than a column of empty placeholders.
+                  * What a count cannot say: why the row is flagged, which server
+                  * at what scope, how stale a rules file is. Empty groups print nothing.
                   */}
               <dl className="
                 ms-3 grid gap-4 border-s border-border ps-4 pt-3.5 pb-4 text-xs

@@ -264,10 +264,8 @@ export const SettingsView: FC<SettingsViewProps> = ({
               />
 
               {/*
-              Folded away: sixteen chips of keys this screen will not touch were
-              the largest block on the card and the least actionable thing on it.
-              A native `details` rather than a state hook, since nothing else
-              needs to know whether it is open.
+              Folded away: the keys this screen will not touch were the largest,
+              least actionable block on the card. Native details, nothing else needs its state.
             */}
               {current.preservedKeys.length > 0 && (
                 <details data-preserved-keys>
@@ -289,11 +287,8 @@ export const SettingsView: FC<SettingsViewProps> = ({
               )}
 
               {/*
-              Sticky so it stays reachable: four rule lists and the environment
-              editor sit above it, and a rule added at the top used to need a
-              scroll to the bottom to commit it. -bottom-4 cancels the scroller's
-              own pb-4, so the opaque bar reaches the true bottom edge instead of
-              leaving a 1rem strip where the row behind it shows through.
+              Sticky so a rule added at the top can be saved without a scroll.
+              -bottom-4 cancels the scroller pb-4 so the bar reaches the true edge.
             */}
               <div className="
                 sticky -bottom-4 -mx-4 -mb-4 flex items-center gap-3

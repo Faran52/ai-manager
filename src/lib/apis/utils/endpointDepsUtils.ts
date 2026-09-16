@@ -71,11 +71,6 @@ export const isRuleList = (value: unknown): value is readonly string[] => {
   });
 };
 
-/**
- * `home` overrides every agent root, not just the two named below. Without it a caller that pins
- * `claudeDir` still resolves the remaining agents against the real home, so a test reads whatever
- * history the developer's machine happens to hold and passes or fails on that.
- */
 // Shared by the sessions list and the project report, which ask for the same pair.
 export const isSessionsBody = (body: object): body is ListSessionsBody => {
   return 'projectId' in body
@@ -85,6 +80,10 @@ export const isSessionsBody = (body: object): body is ListSessionsBody => {
     && isAgent(body.agent);
 };
 
+/*
+ * `home` overrides every agent root, not only the two named. Without it a test
+ * that pins claudeDir still reads the other agents from the real home.
+ */
 export const resolveEndpointRoots = (deps: EndpointDeps | undefined): AgentRoots => {
   const paths = resolveAgentPaths(deps?.home == null
     ? { env: process.env }

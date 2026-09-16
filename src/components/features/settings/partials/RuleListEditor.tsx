@@ -80,10 +80,8 @@ export const RuleListEditor: FC<RuleListEditorProps> = ({
             {rules.length}
           </span>
           {/*
-            The field lives behind this, because four lists each holding an
-            empty input made the card read as a blank form rather than as what
-            the file currently says. Hidden while the field is open, so there is
-            never a second Add on screen competing with the one that commits.
+            The field lives behind this: four empty inputs read as a blank form.
+            Hidden while the field is open so only one Add is on screen.
           */}
           {!adding && (
             <span className="ms-auto">

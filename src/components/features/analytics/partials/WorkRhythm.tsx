@@ -57,11 +57,8 @@ export const WorkRhythm: FC<WorkRhythmProps> = ({ rhythm, effort }) => {
       <div className="mt-3 grid gap-4" data-work-rhythm>
         <RhythmStrip caption={t('byHour')} slots={hourSlots(rhythm.hours)} />
         {/*
-          * Seven values do not need a second chart form when the strip above
-          * already established one. They are "name, magnitude, figure", which
-          * is the row every ranked list in this app uses. The old columns also
-          * drew Saturday and Sunday as the widest blocks on the card, which
-          * read as the largest values rather than the smallest.
+          * Seven values need no second chart form: they are name, magnitude and
+          * figure, the row every ranked list here uses.
           */}
         <div className="grid gap-1">
           <p className="text-body text-muted-foreground">{t('byWeekday')}</p>

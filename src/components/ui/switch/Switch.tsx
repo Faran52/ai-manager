@@ -40,10 +40,8 @@ export const Switch: FC<SwitchProps> = ({
       )}
     >
       {/*
-        * A CSS transform rather than a Motion spring: the travel is signed, and
-        * reading the document direction during render would break server
-        * rendering. Tailwind's rtl variant knows the direction without asking.
-        * The timing is the shared --motion-fast token via Tailwind's default.
+        * A CSS transform, not a Motion spring: the travel is signed, and reading
+        * the document direction during render breaks server rendering.
         */}
       <SwitchThumb
         className={cn(

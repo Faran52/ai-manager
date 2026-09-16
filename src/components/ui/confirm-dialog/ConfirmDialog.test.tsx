@@ -75,7 +75,7 @@ describe('ConfirmDialog', () => {
 
     const confirm = screen.getByRole('button', { name: 'Going…' });
 
-    expect((confirm as HTMLButtonElement).disabled).toBe(true);
+    expect(confirm.hasAttribute('disabled')).toBe(true);
     await userEvent.click(confirm);
     expect(onConfirm).not.toHaveBeenCalled();
   });

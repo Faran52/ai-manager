@@ -1104,8 +1104,11 @@ describe('SidebarPane view scope', () => {
 
     const row = screen.getByRole('button', { name: /Login fix/u }).closest('li');
 
-    expect(row).not.toBeNull();
-    expect(within(row as HTMLElement).getByText('webapp')).toBeDefined();
+    if (row == null) {
+      throw new Error('the session row never rendered');
+    }
+
+    expect(within(row).getByText('webapp')).toBeDefined();
   });
 
   test('falls back to the raw project id when the name lookup misses', () => {
@@ -1122,8 +1125,11 @@ describe('SidebarPane view scope', () => {
 
     const row = screen.getByRole('button', { name: /Login fix/u }).closest('li');
 
-    expect(row).not.toBeNull();
-    expect(within(row as HTMLElement).getByText('p')).toBeDefined();
+    if (row == null) {
+      throw new Error('the session row never rendered');
+    }
+
+    expect(within(row).getByText('p')).toBeDefined();
   });
 
   test('leaves session rows without a project badge when no report agent is active', () => {
@@ -1137,8 +1143,11 @@ describe('SidebarPane view scope', () => {
 
     const row = screen.getByRole('button', { name: /Login fix/u }).closest('li');
 
-    expect(row).not.toBeNull();
-    expect(within(row as HTMLElement).queryByText('webapp')).toBeNull();
+    if (row == null) {
+      throw new Error('the session row never rendered');
+    }
+
+    expect(within(row).queryByText('webapp')).toBeNull();
   });
 
   test('shows the no-sessions state, not the pick-a-project one, for an empty report-agent scope', () => {

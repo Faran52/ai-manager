@@ -98,11 +98,8 @@ export const MarkdownView: FC<MarkdownViewProps> = ({
         />
       </div>
       {/*
-        popLayout drops the outgoing view to absolute the moment it starts to
-        leave, so the box takes the incoming view's height at once rather than
-        holding the old one until the fade ends. layout then glides that height
-        change on collapseTransition, the bounded-region exception a Disclosure
-        already takes, so Raw and Parsed swap without the container snapping.
+        popLayout takes the outgoing view out of flow at once, so the box adopts
+        the incoming height immediately and layout glides it on collapseTransition.
       */}
       <motion.div
         layout

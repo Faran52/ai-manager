@@ -236,10 +236,8 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
             </span>
           </h3>
           {/*
-            * The body is the one scroller, so both tables share it and the
-            * sticky heads have a scrolling ancestor to stick to. It carries no
-            * top padding: a gap above the head is a strip of scrolled row that
-            * stays visible over it.
+            * The body is the one scroller the sticky heads stick to. No top
+            * padding: a gap above the head shows scrolled rows through it.
             */}
           <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
             <PluginInventory

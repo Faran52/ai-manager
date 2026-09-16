@@ -79,11 +79,8 @@ export const ScopeTabs: FC<ScopeTabsProps> = ({
             )}
             {t(SCOPE_LABELS[scope.scope])}
             {/*
-              What is in the file, so three scopes do not have to be opened one
-              at a time to find which of them holds anything. Only where the
-              number means something: the count is of rules this screen
-              manages, which is always zero on a read-only surface and so read
-              as empty beside a file holding thirteen areas.
+              What the file holds, so scopes need not be opened one at a time.
+              Not on a read-only surface: it manages no rules, so it would read as empty.
             */}
             {(!scope.exists || scope.editable === true) && (
               <span className="font-mono text-figure font-normal opacity-60">

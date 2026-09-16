@@ -79,10 +79,8 @@ export const SessionListRow: FC<SessionListRowProps> = ({
         reduceMotion={context.reduceMotion}
       />
       {/*
-        Reserved on every row, threaded or not: a chevron that only exists
-        some of the time shifts the title only some of the time, and a row
-        with no thread reads as broken rather than as carrying one fewer
-        control. Same size as .sidebar-thread-toggle, empty when unused.
+        Reserved on every row: a chevron that only sometimes exists shifts the
+        title only sometimes. Same size as .sidebar-thread-toggle, empty when unused.
       */}
       <div className="flex size-4 shrink-0 items-center justify-center">
         {threaded && (

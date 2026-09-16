@@ -353,11 +353,8 @@ export const HistoryAppView: FC = () => {
             }}
           />
           {/*
-            * The columns are cards on a darker canvas, and the sidebar sizes
-            * itself from the ones it holds open, so folding one gives the width
-            * back to the pane rather than to the other column. The 8px gaps
-            * between them are the resize dividers, which is why there is no gap
-            * class here.
+            * The sidebar sizes itself from the columns it holds open, so folding
+            * one gives width back to the pane. The dividers are the gaps, so no gap class.
             */}
           <div className="flex min-h-0 min-w-0 flex-1 p-2">
             <SidebarPane

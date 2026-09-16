@@ -32,12 +32,7 @@ const feed = (version: string): string => {
 
 const respondWith = (body: string, ok = true): typeof globalThis.fetch => {
   return () => {
-    return Promise.resolve({
-      ok,
-      text: () => {
-        return Promise.resolve(body);
-      },
-    } as Response);
+    return Promise.resolve(new Response(body, { status: ok ? 200 : 500 }));
   };
 };
 

@@ -26,20 +26,15 @@ describe('handleUpdateCheck', () => {
       updateDeps: {
         platform: 'darwin',
         fetch: () => {
-          return Promise.resolve({
-            ok: true,
-            text: () => {
-              return Promise.resolve(JSON.stringify({
-                version: '2.0.0',
-                artifacts: {
-                  darwin: {
-                    name: 'app-2.0.0.zip',
-                    sha256: 'a'.repeat(64),
-                  },
-                },
-              }));
+          return Promise.resolve(new Response(JSON.stringify({
+            version: '2.0.0',
+            artifacts: {
+              darwin: {
+                name: 'app-2.0.0.zip',
+                sha256: 'a'.repeat(64),
+              },
             },
-          } as Response);
+          })));
         },
       },
     });

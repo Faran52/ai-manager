@@ -19,6 +19,8 @@ import { messageNavigatorOpenStorageKey, sidebarWidthStorageKey } from '@config/
 
 import { findAgentProject } from '@services/history/historyService';
 
+import { projectIdOf } from '@mocks/requestBodyFixtures';
+
 import { HistoryApp } from './HistoryApp';
 
 import type { ProjectSummary } from '@services/history/historyService';
@@ -635,8 +637,7 @@ describe('HistoryApp cross-view flows', () => {
         return Response.json(projectPayload);
       }
       if (path.endsWith('/sessions')) {
-        const body: unknown = JSON.parse(typeof init?.body === 'string' ? init.body : '{}');
-        const projectId = (body as { projectId: string }).projectId;
+        const projectId = projectIdOf(init);
 
         return Response.json(sessionsPayload(projectId === 'proj-a' ? 'a' : 'b'));
       }
@@ -807,13 +808,13 @@ describe('HistoryApp header actions', () => {
     await userEvent.click(screen.getByRole('button', { name: /^Sessions/ }));
     await userEvent.click(await screen.findByText('The chosen one'));
 
-    const commandBar = document.querySelector('[data-app-header]');
+    const commandBar = document.querySelector<HTMLElement>('[data-app-header]');
 
     if (commandBar == null) {
       throw new Error('the titlebar never rendered');
     }
 
-    await userEvent.click(within(commandBar as HTMLElement).getByRole('button', { name: 'Archive' }));
+    await userEvent.click(within(commandBar).getByRole('button', { name: 'Archive' }));
 
     expect(await screen.findByText('Session archived')).toBeDefined();
     expect(fetchMock.mock.calls.some(([url]) => {
@@ -848,13 +849,13 @@ describe('HistoryApp header actions', () => {
     await userEvent.click(screen.getByRole('button', { name: /^Sessions/ }));
     await userEvent.click(await screen.findByText('The chosen one'));
 
-    const commandBar = document.querySelector('[data-app-header]');
+    const commandBar = document.querySelector<HTMLElement>('[data-app-header]');
 
     if (commandBar == null) {
       throw new Error('the titlebar never rendered');
     }
 
-    await userEvent.click(within(commandBar as HTMLElement).getByRole('button', { name: 'Archive' }));
+    await userEvent.click(within(commandBar).getByRole('button', { name: 'Archive' }));
 
     expect(await screen.findByText('archive denied')).toBeDefined();
   });

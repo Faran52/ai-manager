@@ -7,6 +7,8 @@ import {
   vi,
 } from 'vitest';
 
+import { projectIdOf } from '@mocks/requestBodyFixtures';
+
 import { useAgentSessions } from './useAgentSessions';
 
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
@@ -68,8 +70,7 @@ describe('useAgentSessions', () => {
 
   test('fans out over every project the agent owns and merges the sessions', async () => {
     const fetchMock = vi.fn((_url: RequestInfo | URL, init?: RequestInit) => {
-      const body: unknown = JSON.parse(typeof init?.body === 'string' ? init.body : '{}');
-      const projectId = (body as { projectId: string }).projectId;
+      const projectId = projectIdOf(init);
 
       return new Response(JSON.stringify({ sessions: [session(projectId, `/${projectId}.jsonl`)] }));
     });
@@ -98,8 +99,7 @@ describe('useAgentSessions', () => {
       },
     ];
     const fetchMock = vi.fn((_url: RequestInfo | URL, init?: RequestInit) => {
-      const body: unknown = JSON.parse(typeof init?.body === 'string' ? init.body : '{}');
-      const projectId = (body as { projectId: string }).projectId;
+      const projectId = projectIdOf(init);
       const sessions = projectId === 'd'
         ? [
             {

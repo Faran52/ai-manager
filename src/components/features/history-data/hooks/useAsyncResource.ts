@@ -8,12 +8,9 @@ import { runLoad } from '../utils/asyncResourceUtils';
 
 import type { AsyncResource, AsyncSnapshot } from '../utils/asyncResourceUtils';
 
-/**
- * Load once when asked, report loading, ready or error, and reload on demand.
- *
- * `load` must be stable, so callers wrap anything parameterised in useCallback:
- * a new identity refetches, which is how a changed project reaches the server.
- * `enabled` false never asks, leaving the resource loading rather than empty.
+/*
+ * `load` must be stable: a new identity refetches, which is how a changed
+ * project reaches the server. `enabled` false never asks.
  */
 export const useAsyncResource = <T>(
   load: () => Promise<T>,

@@ -62,10 +62,13 @@ test('dismisses only the toast whose close button was pressed', async () => {
     />,
   );
 
-  const second = screen.getByText('Second').closest('[data-toast]');
+  const second = screen.getByText('Second').closest<HTMLElement>('[data-toast]');
 
-  expect(second).not.toBeNull();
-  await userEvent.click(within(second as HTMLElement).getByRole('button', { name: 'Close notification' }));
+  if (second == null) {
+    throw new Error('the second toast never rendered');
+  }
+
+  await userEvent.click(within(second).getByRole('button', { name: 'Close notification' }));
 
   expect(onDismiss).toHaveBeenCalledTimes(1);
   expect(onDismiss).toHaveBeenCalledWith(2);

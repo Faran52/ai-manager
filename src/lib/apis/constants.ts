@@ -23,10 +23,8 @@ import type {
 } from './contracts';
 
 /*
- * One definition per route: where it is, what a usable answer looks like, and
- * the name the error message calls it by. The guard beside each one is why the
- * client can hand back a typed value without a cast: a response that does not
- * satisfy it is rejected rather than trusted.
+ * One definition per route. The guard is why the client hands back a typed
+ * value without a cast: an answer that fails it is rejected, not trusted.
  */
 export interface EndpointDefinition<T extends object> {
   readonly path: string;
@@ -34,7 +32,7 @@ export interface EndpointDefinition<T extends object> {
   readonly label: string;
 }
 
-const isAgentSetupResponse = (value: object): value is AgentSetupResponse => {
+export const isAgentSetupResponse = (value: object): value is AgentSetupResponse => {
   return 'setups' in value && Array.isArray(value.setups);
 };
 
@@ -106,7 +104,7 @@ const hasHistory = (value: object): value is FileHistoryResponse => {
     && Array.isArray(value.history.versions);
 };
 
-const hasScopes = (value: object): value is SettingsResponse => {
+export const hasScopes = (value: object): value is SettingsResponse => {
   return 'scopes' in value && Array.isArray(value.scopes);
 };
 

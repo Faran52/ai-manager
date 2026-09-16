@@ -14,6 +14,8 @@ import {
   stubAgentEnv,
 } from '@mocks/endpointRequestFixtures';
 
+import { hasScopes } from '../constants';
+
 import { handleReadSettings, handleWriteSettings } from './settingsEndpointUtils';
 
 stubAgentEnv();
@@ -135,12 +137,16 @@ describe('Claude profiles on the settings endpoint', () => {
     await mkdir(join(home, '.claude'), { recursive: true });
     await mkdir(personal, { recursive: true });
 
-    const scopes = (await jsonOf(await handleReadSettings(post({
+    const body = await jsonOf(await handleReadSettings(post({
       projectPath: project,
       profile: 'Personal',
-    }), { home }))) as { scopes: readonly { path: string }[] };
+    }), { home }));
 
-    expect(scopes.scopes[0]?.path).toBe(join(personal, 'settings.json'));
+    if (body == null || !hasScopes(body)) {
+      throw new Error('the settings read answered without scopes');
+    }
+
+    expect(body.scopes[0]?.path).toBe(join(personal, 'settings.json'));
     expect((await handleReadSettings(post({
       projectPath: project,
       profile: 7,

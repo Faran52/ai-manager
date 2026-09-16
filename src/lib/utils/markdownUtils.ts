@@ -24,10 +24,8 @@ const BOX_ART = /[─-▟]/u;
 const BOX_TABLE = /^[ \t]*[┌╔╭┏╒╓]/mu;
 
 /*
- * A file OpenCode attaches to a message, or a read tool result that reached the
- * renderer with its wrapper intact: <path>..</path> <type>file</type>
- * <content>..</content>, the body often line-numbered. FILE_REF only tests for
- * the shape, FILE_REF_PARTS carves the path and body out to rewrite it.
+ * An attached-file envelope: <path>, <type> and <content> tags, the body often
+ * line-numbered. FILE_REF tests the shape, FILE_REF_PARTS carves it.
  */
 const FILE_REF = /<path>[^\n<]+<\/path>\s*<type>[^\n<]*<\/type>\s*<content>[\s\S]*?<\/content>/u;
 const FILE_REF_PARTS = /<path>([^\n<]+)<\/path>\s*<type>[^\n<]*<\/type>\s*<content>\n?([\s\S]*?)\n?<\/content>/gu;
@@ -59,11 +57,9 @@ export const hasMarkdownMarkup = (text: string): boolean => {
   return (text.match(LIST_ITEM) ?? []).length >= 2;
 };
 
-/**
- * Rewrite an attached-file envelope as its path over its body, the line-number
- * gutter trimmed. A markdown file renders as itself; any other file is fenced so
- * its own punctuation does not turn into markup. remark has no construct for the
- * envelope, so left alone the three tags print and the body reads as one wall.
+/*
+ * A markdown file renders as itself; any other file is fenced so its own
+ * punctuation does not become markup. remark has no construct for the envelope.
  */
 export const unwrapFileRefs = (text: string): string => {
   return text.replace(FILE_REF_PARTS, (_match, rawPath: string, rawBody: string) => {

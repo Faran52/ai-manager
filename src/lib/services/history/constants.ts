@@ -120,10 +120,8 @@ export const OPENCODE_PART_LIMIT = 60_000;
 export const OPENCODE_EMPTY_PAYLOAD: JsonObject = {};
 
 /*
- * OpenCode's `read` wraps the file body in <path>/<type>/<content> tags, numbers
- * every line, and appends a pager note. The path is already on the call's own
- * row and none of the rest is file content, so all of it is stripped and the
- * card shows the file the way it reads: a markdown file renders, code prints.
+ * OpenCode wraps a read in <path>/<type>/<content> tags, numbers every line and
+ * appends a pager note. None of that is file content, so all of it is stripped.
  */
 export const OPENCODE_READ_ENVELOPE
   = /^<path>[^\n]*<\/path>\n<type>[^\n]*<\/type>\n<content>\n?([\s\S]*?)\n?<\/content>\s*$/u;

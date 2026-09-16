@@ -37,10 +37,8 @@ export const SettingsFilePath: FC<SettingsFilePathProps> = ({ scope }) => {
           })}
         </span>
         {/*
-          Under the path, not beside it, so the path keeps the whole row. A
-          read-only surface has no Save button, so promising it would be created
-          on save was a contradiction: three of the five agents opened on a file
-          that said it was about to be written and offered nothing to write it.
+          Under the path so the path keeps the whole row. A read-only surface has
+          no Save, so it must not promise the file will be created on save.
         */}
         {!scope.exists && (
           <span>

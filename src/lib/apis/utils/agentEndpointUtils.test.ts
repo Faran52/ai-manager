@@ -19,6 +19,8 @@ import {
   stubAgentEnv,
 } from '@mocks/endpointRequestFixtures';
 
+import { isAgentSetupResponse } from '../constants';
+
 import {
   handleAgentInstall,
   handleAgentInstallCheck,
@@ -378,9 +380,12 @@ describe('Claude profiles on the health endpoint', () => {
     await writeFile(join(personal, 'CLAUDE.md'), 'personal rules');
 
     const body = await jsonOf(await handleAgentSetup(post({ projectPath: project }), { home }));
-    const claude = (body as { setups: readonly { agent: string;
-      profile?: string;
-      rules: readonly { path: string }[]; }[]; }).setups.filter((setup) => {
+
+    if (body == null || !isAgentSetupResponse(body)) {
+      throw new Error('the agent setup read answered without setups');
+    }
+
+    const claude = body.setups.filter((setup) => {
       return setup.agent === 'claude';
     });
 

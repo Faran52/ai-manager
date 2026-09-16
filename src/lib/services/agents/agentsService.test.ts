@@ -21,12 +21,11 @@ import {
   resolveAgentPaths,
 } from './agentsService';
 
-import type { AgentId } from '@config/agents';
 import type { AgentRoots } from './agentsService';
 
 const rootsWith = (
   home: string,
-  overrides: Partial<Record<AgentId, readonly string[]>>,
+  overrides: Partial<AgentRoots>,
 ): AgentRoots => {
   return {
     ...resolveAgentPaths({
@@ -34,7 +33,7 @@ const rootsWith = (
       home,
     }),
     ...overrides,
-  } as AgentRoots;
+  };
 };
 
 test('aggregates projects and dispatches session discovery by agent', async () => {
