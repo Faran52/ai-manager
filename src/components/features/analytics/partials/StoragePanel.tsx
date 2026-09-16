@@ -15,6 +15,7 @@ import {
   MetricCard,
   Notice,
   Spinner,
+  useMutationRunner,
 } from '@ui/index';
 
 import { entryLabel, heldBy } from '../utils/storageHeldUtils';
@@ -44,8 +45,10 @@ export const StoragePanel: FC<StoragePanelProps> = ({
 }) => {
   const { t } = useTranslation('analytics');
   const [asking, setAsking] = useState(false);
-  const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string>();
+  const mutation = useMutationRunner(() => {
+    setNotice(t('reclaimFailed'));
+  });
   const report = storage.data;
   const {
     shown,
@@ -58,31 +61,21 @@ export const StoragePanel: FC<StoragePanelProps> = ({
   });
   const onlyThisProject = projectSessions != null;
 
-  const freeThem = (): void => {
-    setBusy(true);
+  const freeThem = async (): Promise<void> => {
+    await mutation.run(async () => {
+      const { result } = await reclaimStorage({
+        paths: disposable.map((entry) => {
+          return entry.path;
+        }),
+      });
 
-    void (async (): Promise<void> => {
-      try {
-        const { result } = await reclaimStorage({
-          paths: disposable.map((entry) => {
-            return entry.path;
-          }),
-        });
-
-        setNotice(t('reclaimFreed', {
-          count: result.removed.length,
-          size: sizeLabel(result.freedBytes),
-        }));
-        storage.reload();
-      }
-      catch {
-        setNotice(t('reclaimFailed'));
-      }
-      finally {
-        setBusy(false);
-        setAsking(false);
-      }
-    })();
+      setNotice(t('reclaimFreed', {
+        count: result.removed.length,
+        size: sizeLabel(result.freedBytes),
+      }));
+      storage.reload();
+    });
+    setAsking(false);
   };
 
   const partialHint = report?.partial === true ? t('storagePartial') : undefined;
@@ -204,11 +197,13 @@ export const StoragePanel: FC<StoragePanelProps> = ({
         heading={t('reclaimHeading')}
         confirmLabel={t('reclaimConfirm')}
         busyLabel={t('reclaimBusy')}
-        busy={busy}
+        busy={mutation.busy}
         onClose={() => {
           setAsking(false);
         }}
-        onConfirm={freeThem}
+        onConfirm={() => {
+          void freeThem();
+        }}
         description={(
           <>
             <p>{t('reclaimExplain')}</p>

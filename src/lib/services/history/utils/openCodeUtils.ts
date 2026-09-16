@@ -110,7 +110,7 @@ const payloadOf = (raw: string | null): JsonObject => {
   return isJsonObject(parsed) ? parsed : OPENCODE_EMPTY_PAYLOAD;
 };
 
-const textAt = (payload: JsonObject): string => {
+const partText = (payload: JsonObject): string => {
   const value = payload.text;
 
   return typeof value === 'string' ? value : '';
@@ -286,7 +286,7 @@ const userTextFrom = (parts: readonly PartRow[]): string => {
   const texts = parts.map((part) => {
     const parsed = payloadOf(part.pdata);
 
-    return parsed.type === 'text' ? textAt(parsed) : '';
+    return parsed.type === 'text' ? partText(parsed) : '';
   });
 
   return texts.filter(Boolean).join('\n\n');
@@ -299,16 +299,16 @@ const assistantBlocksFrom = (parts: readonly PartRow[]): ToolParts => {
   for (const part of parts) {
     const parsed = payloadOf(part.pdata);
 
-    if (parsed.type === 'text' && textAt(parsed).length > 0) {
+    if (parsed.type === 'text' && partText(parsed).length > 0) {
       blocks.push({
         blockType: 'text',
-        text: textAt(parsed),
+        text: partText(parsed),
       });
     }
     else if (parsed.type === 'reasoning') {
       blocks.push({
         blockType: 'thinking',
-        thinking: textAt(parsed),
+        thinking: partText(parsed),
       });
     }
     else if (parsed.type === 'tool') {

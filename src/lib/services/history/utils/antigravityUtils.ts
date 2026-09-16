@@ -16,6 +16,7 @@ import {
   isJsonObject,
   numberAt,
   parseJsonContainer,
+  trimmedTextAt,
 } from '@utils/jsonUtils';
 import { humanPreview } from '@utils/titleUtils';
 
@@ -64,12 +65,6 @@ const BRAIN_DIR = 'brain';
 const TRANSCRIPT = join('.system_generated', 'logs', 'transcript_full.jsonl');
 const UNPLACED = 'unplaced';
 
-const textIn = (source: JsonObject, key: string): string | undefined => {
-  const value = source[key];
-
-  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
-};
-
 const isoOf = (value: string | undefined): number | undefined => {
   if (value == null) {
     return undefined;
@@ -94,16 +89,16 @@ const readIndex = async (root: string): Promise<ReadonlyMap<string, Conversation
         continue;
       }
 
-      const conversationId = textIn(record, 'conversationId');
+      const conversationId = trimmedTextAt(record, 'conversationId');
 
       if (conversationId == null || index.has(conversationId)) {
         continue;
       }
 
       index.set(conversationId, {
-        display: textIn(record, 'display'),
+        display: trimmedTextAt(record, 'display'),
         timestampMs: numberAt(record, 'timestamp'),
-        workspace: textIn(record, 'workspace'),
+        workspace: trimmedTextAt(record, 'workspace'),
       });
     }
   }
@@ -122,14 +117,14 @@ const entryOf = (
   lineIndex: number,
   timestampMs: number,
 ): readonly AntigravityEntry[] => {
-  const source = textIn(record, 'source') ?? '';
-  const stepType = textIn(record, 'type') ?? '';
+  const source = trimmedTextAt(record, 'source') ?? '';
+  const stepType = trimmedTextAt(record, 'type') ?? '';
 
   if (stepType === 'CONVERSATION_HISTORY' || source === 'SYSTEM') {
     return [];
   }
 
-  const content = textIn(record, 'content');
+  const content = trimmedTextAt(record, 'content');
 
   if (content == null) {
     return [];
@@ -205,7 +200,7 @@ export const parseAntigravityTranscript = (
       continue;
     }
 
-    lastMs = isoOf(textIn(record, 'created_at')) ?? lastMs;
+    lastMs = isoOf(trimmedTextAt(record, 'created_at')) ?? lastMs;
     entries.push(...entryOf(record, conversationId, lineIndex, lastMs));
   }
 

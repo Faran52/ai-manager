@@ -3,6 +3,7 @@ import {
   describe,
   expect,
   test,
+  vi,
 } from 'vitest';
 
 import { useMutationRunner } from './useMutationRunner';
@@ -48,4 +49,18 @@ test('clears a stale error on request', async () => {
     result.current.clear();
   });
   expect(result.current.error).toBe('');
+});
+
+test('hands the message to onError as well', async () => {
+  const onError = vi.fn();
+  const { result } = renderHook(() => {
+    return useMutationRunner(onError);
+  });
+
+  await act(async () => {
+    await result.current.run(() => {
+      return Promise.reject(new Error('nope'));
+    });
+  });
+  expect(onError).toHaveBeenCalledWith('nope');
 });

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -8,9 +7,7 @@ import {
   Search,
 } from 'lucide-react';
 
-import { toErrorMessage } from '@utils/errorUtils';
-
-import { SegmentedControl } from '@ui/index';
+import { SegmentedControl, useMutationRunner } from '@ui/index';
 
 import type { Scope } from '@features/analytics';
 import type { FC, ReactNode } from 'react';
@@ -48,22 +45,7 @@ export const AppHeader: FC<AppHeaderProps> = ({
   overflow,
 }) => {
   const { t } = useTranslation('common');
-  const [busy, setBusy] = useState(false);
-
-  const runArchive = (archive: () => Promise<void>): void => {
-    setBusy(true);
-    void (async (): Promise<void> => {
-      try {
-        await archive();
-      }
-      catch (cause) {
-        onNotice(toErrorMessage(cause));
-      }
-      finally {
-        setBusy(false);
-      }
-    })();
-  };
+  const mutation = useMutationRunner(onNotice);
 
   return (
     <header className="titlebar" data-app-header>
@@ -118,13 +100,13 @@ export const AppHeader: FC<AppHeaderProps> = ({
         {onArchiveSession != null && (
           <button
             type="button"
-            disabled={busy}
+            disabled={mutation.busy}
             onClick={() => {
-              runArchive(onArchiveSession);
+              void mutation.run(onArchiveSession);
             }}
             className="command-action"
           >
-            {busy
+            {mutation.busy
               ? <Loader2 className="size-3.5 animate-spin" />
               : <Archive className="size-3.5" />}
             {t('archiveAction')}

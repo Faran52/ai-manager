@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { cn } from '@utils/cnUtils';
-import { toErrorMessage } from '@utils/errorUtils';
 
-import { Spinner, Switch } from '@ui/index';
+import {
+  Spinner,
+  Switch,
+  useMutationRunner,
+} from '@ui/index';
 
 import {
   CELL,
@@ -49,8 +52,9 @@ export const PluginInventory: FC<PluginInventoryProps> = ({
   const { costs, error } = usePluginCosts(projectPath, profile);
   // Costs are read with the table, so a null list is still in flight.
   const loadingCosts = costs == null && error == null;
+  // The row whose switch is flipping, so the other rows stay live.
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const mutation = useMutationRunner();
   const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
   const byId = costsById(costs);
 
@@ -60,18 +64,12 @@ export const PluginInventory: FC<PluginInventoryProps> = ({
 
   const toggle = async (plugin: InstalledPlugin): Promise<void> => {
     setBusyId(plugin.id);
-    setActionError(null);
-
-    try {
-      await onToggle(plugin);
-    }
-    catch (cause) {
-      setActionError(toErrorMessage(cause));
-    }
-    finally {
-      setBusyId(null);
-    }
+    await mutation.run(() => {
+      return onToggle(plugin);
+    });
+    setBusyId(null);
   };
+  const shownError = mutation.error.length > 0 ? mutation.error : error;
 
   if (plugins.length === 0) {
     return <p className="pt-3 text-xs text-muted-foreground">{t('none', { ns: 'common' })}</p>;
@@ -192,8 +190,8 @@ export const PluginInventory: FC<PluginInventoryProps> = ({
           })}
         </tbody>
       </table>
-      {(actionError ?? error) != null && (
-        <p className="mt-1 text-xs text-warn">{actionError ?? error}</p>
+      {shownError != null && (
+        <p className="mt-1 text-xs text-warn">{shownError}</p>
       )}
     </section>
   );

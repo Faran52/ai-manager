@@ -12,7 +12,8 @@ export interface MutationRunner {
 }
 
 // One busy flag and one error line for any view that runs a mutation and reports how it went.
-export const useMutationRunner = (): MutationRunner => {
+// A view that shows errors elsewhere, in a toast or a notice line, passes onError.
+export const useMutationRunner = (onError?: (message: string) => void): MutationRunner => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -26,7 +27,10 @@ export const useMutationRunner = (): MutationRunner => {
       return true;
     }
     catch (cause: unknown) {
-      setError(toErrorMessage(cause));
+      const message = toErrorMessage(cause);
+
+      setError(message);
+      onError?.(message);
 
       return false;
     }

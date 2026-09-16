@@ -1,11 +1,9 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { createArchive } from '@lib/apis/apiClient';
 import { saveTextFile } from '@utils/browserFilesUtils';
-import { toErrorMessage } from '@utils/errorUtils';
 
-import { useToast } from '@ui/index';
+import { useMutationRunner, useToast } from '@ui/index';
 
 import { exportSessions } from '../utils/bulkExportUtils';
 
@@ -28,33 +26,25 @@ export const useBulkActions = (
 ): BulkActions => {
   const { t } = useTranslation('sidebar');
   const { push: pushToast } = useToast();
-  const [busy, setBusy] = useState(false);
+  const mutation = useMutationRunner((message) => {
+    pushToast(message, 'error');
+  });
 
   const archiveSelected = (): void => {
-    setBusy(true);
-    void (async (): Promise<void> => {
-      try {
-        const { archive } = await createArchive({
-          note: t('bulkArchiveNote'),
-          sessionKeys: selectedSessions.map((session) => {
-            return `${session.agent}:${session.actualSessionId}`;
-          }),
-        });
+    void mutation.run(async () => {
+      const { archive } = await createArchive({
+        note: t('bulkArchiveNote'),
+        sessionKeys: selectedSessions.map((session) => {
+          return `${session.agent}:${session.actualSessionId}`;
+        }),
+      });
 
-        pushToast(t('bulkArchived', { count: archive.sessionCount }));
-      }
-      catch (cause) {
-        pushToast(toErrorMessage(cause), 'error');
-      }
-      finally {
-        setBusy(false);
-      }
-    })();
+      pushToast(t('bulkArchived', { count: archive.sessionCount }));
+    });
   };
 
   const exportSelected = (): void => {
-    setBusy(true);
-    void (async (): Promise<void> => {
+    void mutation.run(async () => {
       const result = await exportSessions(selectedSessions, scopeName ?? '', Date.now());
 
       if (result.markdown.length > 0) {
@@ -64,12 +54,11 @@ export const useBulkActions = (
       if (result.failed > 0) {
         pushToast(t('bulkExportFailed'), 'error');
       }
-      setBusy(false);
-    })();
+    });
   };
 
   return {
-    busy,
+    busy: mutation.busy,
     archiveSelected,
     exportSelected,
   };

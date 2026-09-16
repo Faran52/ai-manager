@@ -9,6 +9,7 @@ import {
   objectAt,
   parseJsonContainer,
   textAt,
+  trimmedTextAt,
 } from './jsonUtils';
 
 describe('parseJsonContainer', () => {
@@ -45,6 +46,8 @@ describe('field readers', () => {
     expect(textAt(source, 'name')).toBe('x');
     expect(textAt(source, 'empty')).toBeUndefined();
     expect(textAt(undefined, 'name')).toBeUndefined();
+    expect(trimmedTextAt({ id: '  a1 ' }, 'id')).toBe('a1');
+    expect(trimmedTextAt({ id: '   ' }, 'id')).toBeUndefined();
     expect(numberAt(source, 'count')).toBe(3);
     expect(numberAt(source, 'huge')).toBeUndefined();
     expect(numberAt(null, 'count')).toBeUndefined();

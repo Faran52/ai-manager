@@ -43,6 +43,14 @@ export const textAt = (source: JsonValue | undefined, key: string): string | und
   return typeof value === 'string' && value.length > 0 ? value : undefined;
 };
 
+// For identifiers and labels, where surrounding whitespace is noise. Message
+// text keeps its whitespace, so it reads through textAt.
+export const trimmedTextAt = (source: JsonValue | undefined, key: string): string | undefined => {
+  const value = textAt(source, key)?.trim();
+
+  return value != null && value.length > 0 ? value : undefined;
+};
+
 export const numberAt = (source: JsonValue | undefined, key: string): number | undefined => {
   const value = valueAt(source, key);
 
