@@ -28,6 +28,13 @@ import type { MenuItemConstructorOptions } from 'electron';
 // named ones its types advertise.
 const { autoUpdater } = electronUpdater;
 
+/*
+ * The product's name, not the package's. The roles the OS fills in for itself
+ * read it, so without this the Quit item says "Quit ai-manager". Set before
+ * `ready`, which is what also puts the app's stored state under that name.
+ */
+app.setName('AI Manager');
+
 const HOST = '127.0.0.1';
 
 // The event the page listens for, declared in src/types/desktopBindings.d.ts.
@@ -145,25 +152,20 @@ const openAbout = async (): Promise<void> => {
 };
 
 /*
- * electron-updater, against the feed electron-builder publishes. A development
- * run has no feed to read and throws, and a reader who asked should be told
- * that rather than left watching a spinner, so a throw answers "nothing yet".
+ * electron-updater, against the feed electron-builder publishes. It answers
+ * null where it has no feed to read, and a throw travels back to the page as a
+ * rejection, which is what a failed check is: not the same as being current.
  */
 const checkForUpdate = async (): Promise<DesktopUpdate> => {
-  try {
-    const result = await autoUpdater.checkForUpdates();
-    const version = result?.updateInfo.version;
+  const result = await autoUpdater.checkForUpdates();
+  const version = result?.updateInfo.version;
 
-    return version != null && version !== app.getVersion()
-      ? {
-          available: true,
-          version,
-        }
-      : { available: false };
-  }
-  catch {
-    return { available: false };
-  }
+  return version != null && version !== app.getVersion()
+    ? {
+        available: true,
+        version,
+      }
+    : { available: false };
 };
 
 ipcMain.handle('desktop:platform', () => {
