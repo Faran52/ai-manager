@@ -7,9 +7,11 @@ export interface MutationRunner {
   readonly error: string;
   // Resolves true when the action settled cleanly, so a dialog can close itself only then.
   readonly run: (action: () => Promise<void>) => Promise<boolean>;
+  // Drops a stale error, for a view that moves on before the next run.
+  readonly clear: () => void;
 }
 
-// One busy flag and one error line shared by rename, delete and delete-project.
+// One busy flag and one error line for any view that runs a mutation and reports how it went.
 export const useMutationRunner = (): MutationRunner => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -37,5 +39,8 @@ export const useMutationRunner = (): MutationRunner => {
     busy,
     error,
     run,
+    clear: () => {
+      setError('');
+    },
   };
 };

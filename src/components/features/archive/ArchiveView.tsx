@@ -10,7 +10,6 @@ import {
 
 import { createArchive, deleteArchive } from '@lib/apis/apiClient';
 import { projectKeyOf } from '@services/history/historyService';
-import { toErrorMessage } from '@utils/errorUtils';
 import { sizeLabel } from '@utils/formatUtils';
 
 import {
@@ -21,6 +20,7 @@ import {
   SectionHeader,
   Spinner,
   TextInput,
+  useMutationRunner,
 } from '@ui/index';
 
 import { ArchiveCard, RetentionCard } from './partials';
@@ -56,8 +56,7 @@ export const ArchiveView: FC<ArchiveViewProps> = ({
 }) => {
   const { t } = useTranslation('archive');
   const [note, setNote] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string>();
+  const mutation = useMutationRunner();
   const [pendingDelete, setPendingDelete] = useState<ArchiveSummary>();
   const projectKey = selectedProject == null
     ? undefined
@@ -69,38 +68,19 @@ export const ArchiveView: FC<ArchiveViewProps> = ({
   const reload = archives.reload;
 
   const runCreate = (): void => {
-    setBusy(true);
-    setError(undefined);
-    void (async (): Promise<void> => {
-      try {
-        await createArchive({ note });
-        setNote('');
-        reload();
-      }
-      catch (cause) {
-        setError(toErrorMessage(cause));
-      }
-      finally {
-        setBusy(false);
-      }
-    })();
+    void mutation.run(async () => {
+      await createArchive({ note });
+      setNote('');
+      reload();
+    });
   };
 
   const runDelete = (archive: ArchiveSummary): void => {
     setPendingDelete(undefined);
-    setBusy(true);
-    void (async (): Promise<void> => {
-      try {
-        await deleteArchive({ id: archive.id });
-        reload();
-      }
-      catch (cause) {
-        setError(toErrorMessage(cause));
-      }
-      finally {
-        setBusy(false);
-      }
-    })();
+    void mutation.run(async () => {
+      await deleteArchive({ id: archive.id });
+      reload();
+    });
   };
 
   return (
@@ -121,21 +101,21 @@ export const ArchiveView: FC<ArchiveViewProps> = ({
             onInput={setNote}
             label={t('noteLabel')}
             placeholder={t('notePlaceholder')}
-            disabled={busy}
+            disabled={mutation.busy}
             className="min-w-48 flex-1"
           />
-          <Button variant="primary" disabled={busy} onClick={runCreate}>
-            {busy
+          <Button variant="primary" disabled={mutation.busy} onClick={runCreate}>
+            {mutation.busy
               ? <Loader2 className="size-3.5 animate-spin" />
               : (
                   <Plus className="size-3.5" />
                 )}
-            {busy ? t('creating') : t('createArchive')}
+            {mutation.busy ? t('creating') : t('createArchive')}
           </Button>
         </div>
 
-        {error != null && (
-          <Notice>{error}</Notice>
+        {mutation.error.length > 0 && (
+          <Notice>{mutation.error}</Notice>
         )}
 
         {/* Three figures that read 0, 0 and 0B on an empty install were three

@@ -33,3 +33,19 @@ describe('useMutationRunner', () => {
     expect(result.current.busy).toBe(false);
   });
 });
+
+test('clears a stale error on request', async () => {
+  const { result } = renderHook(useMutationRunner);
+
+  await act(async () => {
+    await result.current.run(() => {
+      return Promise.reject(new Error('nope'));
+    });
+  });
+  expect(result.current.error).toBe('nope');
+
+  act(() => {
+    result.current.clear();
+  });
+  expect(result.current.error).toBe('');
+});

@@ -12,7 +12,6 @@ import {
 import { projectScopedSettingsAgents } from '@config/agents';
 
 import { writeSettings } from '@lib/apis/apiClient';
-import { toErrorMessage } from '@utils/errorUtils';
 
 import {
   Button,
@@ -21,6 +20,7 @@ import {
   Notice,
   Panel,
   Spinner,
+  useMutationRunner,
 } from '@ui/index';
 
 import {
@@ -81,9 +81,8 @@ export const SettingsView: FC<SettingsViewProps> = ({
    * it, and the scope then reads from the reloaded file again.
    */
   const [drafts, setDrafts] = useState<Readonly<Record<string, Draft>>>({});
-  const [saving, setSaving] = useState(false);
+  const mutation = useMutationRunner();
   const [savedPath, setSavedPath] = useState<string>();
-  const [error, setError] = useState<string>();
   const current = scopes.find((scope) => {
     return scope.scope === active;
   });
@@ -106,30 +105,20 @@ export const SettingsView: FC<SettingsViewProps> = ({
   };
 
   const save = (path: string, value: Draft): void => {
-    setSaving(true);
-    setError(undefined);
-    void (async (): Promise<void> => {
-      try {
-        await writeSettings({
-          projectPath: projectPath ?? '',
-          scope: active,
-          patch: value,
-          agent,
-          profile,
-        });
-        setDrafts(Object.fromEntries(Object.entries(drafts).filter(([key]) => {
-          return key !== path;
-        })));
-        setSavedPath(path);
-        reload();
-      }
-      catch (cause) {
-        setError(toErrorMessage(cause));
-      }
-      finally {
-        setSaving(false);
-      }
-    })();
+    void mutation.run(async () => {
+      await writeSettings({
+        projectPath: projectPath ?? '',
+        scope: active,
+        patch: value,
+        agent,
+        profile,
+      });
+      setDrafts(Object.fromEntries(Object.entries(drafts).filter(([key]) => {
+        return key !== path;
+      })));
+      setSavedPath(path);
+      reload();
+    });
   };
 
   return (
@@ -148,7 +137,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
           drafts={drafts}
           onSelect={(scope) => {
             setActive(scope);
-            setError(undefined);
+            mutation.clear();
           }}
         />
       </div>
@@ -282,8 +271,8 @@ export const SettingsView: FC<SettingsViewProps> = ({
                 </details>
               )}
 
-              {error != null && (
-                <Notice>{error}</Notice>
+              {mutation.error.length > 0 && (
+                <Notice>{mutation.error}</Notice>
               )}
 
               {/*
@@ -297,17 +286,17 @@ export const SettingsView: FC<SettingsViewProps> = ({
               >
                 <Button
                   variant="primary"
-                  disabled={saving || !current.readable}
+                  disabled={mutation.busy || !current.readable}
                   onClick={() => {
                     save(current.path, draft);
                   }}
                 >
-                  {saving && <Loader2 className="size-3.5 animate-spin" />}
-                  {!saving && saved && <Check className="size-3.5" />}
-                  {!saving && !saved && <Save className="size-3.5" />}
-                  {saved && !saving ? t('saved') : t('save')}
+                  {mutation.busy && <Loader2 className="size-3.5 animate-spin" />}
+                  {!mutation.busy && saved && <Check className="size-3.5" />}
+                  {!mutation.busy && !saved && <Save className="size-3.5" />}
+                  {saved && !mutation.busy ? t('saved') : t('save')}
                 </Button>
-                {dirty && !saving && (
+                {dirty && !mutation.busy && (
                   <span
                     className="flex items-center gap-1.5 text-xs text-warn"
                     data-unsaved

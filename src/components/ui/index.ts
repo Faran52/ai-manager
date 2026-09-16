@@ -11,6 +11,7 @@ export * from './divider-label/DividerLabel';
 export * from './empty-state/EmptyState';
 export * from './eyebrow/Eyebrow';
 export * from './hooks/useLastPresent';
+export * from './hooks/useMutationRunner';
 export * from './hooks/useReducedMotion';
 export * from './hooks/useSmoothScroll';
 export * from './icon-button/IconButton';

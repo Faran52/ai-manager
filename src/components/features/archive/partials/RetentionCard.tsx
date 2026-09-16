@@ -5,7 +5,6 @@ import { Loader2, ShieldCheck } from 'lucide-react';
 
 import { runRetention, writeRetention } from '@lib/apis/apiClient';
 import { sessionLabel } from '@services/history/historyService';
-import { toErrorMessage } from '@utils/errorUtils';
 import { formatTimeAgo } from '@utils/formatUtils';
 
 import {
@@ -15,6 +14,7 @@ import {
   Spinner,
   Switch,
   TextInput,
+  useMutationRunner,
 } from '@ui/index';
 
 import type { AsyncResource } from '@features/history-data';
@@ -33,8 +33,7 @@ const PREVIEW_ROWS = 8;
 export const RetentionCard: FC<RetentionCardProps> = ({ retention, nowMs }) => {
   const { t, i18n } = useTranslation('archive');
   const [draftDays, setDraftDays] = useState<string>();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string>();
+  const mutation = useMutationRunner();
   const [showDue, setShowDue] = useState(false);
   const status = retention.data;
   const reload = retention.reload;
@@ -53,44 +52,24 @@ export const RetentionCard: FC<RetentionCardProps> = ({ retention, nowMs }) => {
   }
 
   const save = (enabled: boolean, olderThanDays: number): void => {
-    setBusy(true);
-    setError(undefined);
-    void (async (): Promise<void> => {
-      try {
-        await writeRetention({
-          policy: {
-            enabled,
-            olderThanDays,
-            agents: status.policy.agents,
-          },
-        });
-        setDraftDays(undefined);
-        reload();
-      }
-      catch (cause) {
-        setError(toErrorMessage(cause));
-      }
-      finally {
-        setBusy(false);
-      }
-    })();
+    void mutation.run(async () => {
+      await writeRetention({
+        policy: {
+          enabled,
+          olderThanDays,
+          agents: status.policy.agents,
+        },
+      });
+      setDraftDays(undefined);
+      reload();
+    });
   };
 
   const archiveNow = (): void => {
-    setBusy(true);
-    setError(undefined);
-    void (async (): Promise<void> => {
-      try {
-        await runRetention();
-        reload();
-      }
-      catch (cause) {
-        setError(toErrorMessage(cause));
-      }
-      finally {
-        setBusy(false);
-      }
-    })();
+    void mutation.run(async () => {
+      await runRetention();
+      reload();
+    });
   };
 
   const due = status.due.sessions;
@@ -104,7 +83,7 @@ export const RetentionCard: FC<RetentionCardProps> = ({ retention, nowMs }) => {
         <h3 className="flex-1 text-ui font-semibold text-foreground">{t('retentionHeading')}</h3>
         <Switch
           checked={status.policy.enabled}
-          disabled={busy}
+          disabled={mutation.busy}
           label={t('retentionHeading')}
           onChange={(enabled) => {
             save(enabled, status.policy.olderThanDays);
@@ -120,7 +99,7 @@ export const RetentionCard: FC<RetentionCardProps> = ({ retention, nowMs }) => {
             onInput={setDraftDays}
             label={t('retentionDays')}
             className="w-20"
-            disabled={busy}
+            disabled={mutation.busy}
           />
           {t('retentionDaysUnit')}
         </label>
@@ -128,7 +107,7 @@ export const RetentionCard: FC<RetentionCardProps> = ({ retention, nowMs }) => {
         <Button
           size="sm"
           variant="ghost"
-          disabled={busy || !validDays || parsedDays === status.policy.olderThanDays}
+          disabled={mutation.busy || !validDays || parsedDays === status.policy.olderThanDays}
           onClick={() => {
             save(status.policy.enabled, parsedDays);
           }}
@@ -172,10 +151,10 @@ export const RetentionCard: FC<RetentionCardProps> = ({ retention, nowMs }) => {
         <Button
           size="sm"
           variant="primary"
-          disabled={busy || due.length === 0}
+          disabled={mutation.busy || due.length === 0}
           onClick={archiveNow}
         >
-          {busy && <Loader2 className="size-3.5 animate-spin" />}
+          {mutation.busy && <Loader2 className="size-3.5 animate-spin" />}
           {t('retentionRunNow')}
         </Button>
       </div>
@@ -206,8 +185,8 @@ export const RetentionCard: FC<RetentionCardProps> = ({ retention, nowMs }) => {
         </ul>
       )}
 
-      {error != null && (
-        <Notice>{error}</Notice>
+      {mutation.error.length > 0 && (
+        <Notice>{mutation.error}</Notice>
       )}
     </Panel>
   );

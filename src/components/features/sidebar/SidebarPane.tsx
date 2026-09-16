@@ -5,7 +5,8 @@ import { AnimatePresence } from 'motion/react';
 
 import { agentBadgeLabel } from '@config/agents';
 
-import { useMutationRunner } from './hooks/useMutationRunner';
+import { useMutationRunner } from '@ui/index';
+
 import {
   PROJECTS_WIDTH,
   SESSIONS_WIDTH,
