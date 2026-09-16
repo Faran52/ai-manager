@@ -110,23 +110,17 @@ export const dueForArchive = async (
   const selected = new Set(policy.agents);
   const archived = await archivedKeys(home);
   const projects = await listAgentProjects(roots);
-  const sessions: SessionSummary[] = [];
-
-  for (const project of projects) {
-    if (agentOption(project.agent).artifact === 'shared-db'
-      || (selected.size > 0 && !selected.has(project.agent))) {
-      continue;
-    }
-
-    const found = await listAgentSessions(roots, project.agent, project.id);
-
-    for (const session of found) {
-      if (session.lastTimestampMs < cutoff
-        && !archived.has(sessionKey(session.agent, session.actualSessionId))) {
-        sessions.push(session);
-      }
-    }
-  }
+  const scanned = projects.filter((project) => {
+    return agentOption(project.agent).artifact !== 'shared-db'
+      && (selected.size === 0 || selected.has(project.agent));
+  });
+  const found = await Promise.all(scanned.map(async (project) => {
+    return listAgentSessions(roots, project.agent, project.id);
+  }));
+  const sessions: SessionSummary[] = found.flat().filter((session) => {
+    return session.lastTimestampMs < cutoff
+      && !archived.has(sessionKey(session.agent, session.actualSessionId));
+  });
 
   return { sessions };
 };

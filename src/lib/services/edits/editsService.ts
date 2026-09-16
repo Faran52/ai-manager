@@ -154,13 +154,18 @@ export const listRecentEdits = async (
         })
         .slice(0, SESSION_SCAN_LIMIT);
   const files = new Map<string, FileAccumulator>();
+  const loaded = await Promise.all(sessions.map(async (session) => {
+    return {
+      session,
+      entries: await loadAgentEntries(
+        session.filePath,
+        session.agent,
+        pathsFor(roots, session.agent),
+      ) ?? [],
+    };
+  }));
 
-  for (const session of sessions) {
-    const entries = await loadAgentEntries(
-      session.filePath,
-      session.agent,
-      pathsFor(roots, session.agent),
-    ) ?? [];
+  for (const { session, entries } of loaded) {
     const title = sessionLabel(session);
 
     for (const entry of entries) {
