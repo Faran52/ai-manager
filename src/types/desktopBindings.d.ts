@@ -37,6 +37,8 @@ interface DesktopUpdate {
   readonly available: boolean;
   // The version waiting, once the updater has found one.
   readonly version?: string | undefined;
+  // No feed to read, because the release was never published. Not a failure.
+  readonly unpublished?: boolean | undefined;
 }
 
 /*
@@ -54,6 +56,12 @@ interface DesktopBindings {
     | undefined;
   // Present only where there is an installed build an updater can replace.
   readonly checkForUpdate?: (() => Promise<DesktopUpdate>)
+    | undefined;
+  /*
+   * Downloads what the last check found and quits into the swap, so it settles
+   * by the app going and coming back rather than by resolving.
+   */
+  readonly installUpdate?: (() => Promise<void>)
     | undefined;
 }
 

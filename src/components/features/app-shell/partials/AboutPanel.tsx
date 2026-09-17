@@ -18,9 +18,8 @@ export interface AboutPanelProps {
 }
 
 /*
- * What the app says about itself. It sits in a dialog where the app draws its
- * own chrome, and fills a window of its own where the platform draws it, so it
- * carries the content and neither the surface nor the padding around it.
+ * What the app says about itself: a dialog where the app draws its own chrome, a
+ * window where the platform does, so it carries neither surface nor padding.
  */
 export const AboutPanel: FC<AboutPanelProps> = ({
   stage,
@@ -35,6 +34,8 @@ export const AboutPanel: FC<AboutPanelProps> = ({
     checking: tUpdate('checking'),
     upToDate: tUpdate('upToDate'),
     available: tUpdate('available', { version }),
+    unpublished: tUpdate('noRelease'),
+    downloading: tUpdate('downloading'),
     failed: tUpdate('checkFailed'),
   };
 

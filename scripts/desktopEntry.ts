@@ -13,6 +13,7 @@
  */
 import { once } from 'node:events';
 import { createServer } from 'node:net';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
@@ -23,7 +24,15 @@ import {
 } from 'electron';
 import electronUpdater from 'electron-updater';
 
-import type { MenuItemConstructorOptions } from 'electron';
+import { installUpdate } from './desktopUpdate.ts';
+
+import type { BrowserWindowConstructorOptions, MenuItemConstructorOptions } from 'electron';
+import type { UpdateFile } from './desktopUpdate.ts';
+
+interface WaitingRelease {
+  readonly version: string;
+  readonly files: readonly UpdateFile[];
+}
 
 // electron-updater is CommonJS, so ESM sees the default export rather than the
 // named ones its types advertise.
@@ -117,8 +126,19 @@ const serve = async (): Promise<string> => {
 const origin = serve();
 
 let mainWindow: BrowserWindow | undefined;
-let aboutWindow: BrowserWindow | undefined;
-let settingsWindow: BrowserWindow | undefined;
+
+/* The windows that are not the main one, kept by the route each one shows. */
+const panels = new Map<string, BrowserWindow>();
+
+/*
+ * An unpainted window is a white rectangle, so a dark app opens with a flash of
+ * light. Held back until first paint, by which time the boot script has run.
+ */
+const shownOnFirstPaint = (window: BrowserWindow): void => {
+  window.once('ready-to-show', () => {
+    window.show();
+  });
+};
 
 /*
  * Electron's own menu description, built from the page's. The page holds the
@@ -160,28 +180,42 @@ const toMenuItem = (item: AppMenuItem): MenuItemConstructorOptions => {
 };
 
 /*
- * About is a window of its own rather than a sheet over the app, which is what
- * every other Mac app does with it. Choosing it twice raises the one already
- * open instead of stacking a second, and closing it leaves the app running.
+ * Opens one of those, or raises it if it is already up. Choosing About or
+ * Settings twice stacking a second copy is the bug this is guarding against,
+ * and closing either one leaves the app running.
  */
-const openAbout = async (): Promise<void> => {
-  if (aboutWindow != null && !aboutWindow.isDestroyed()) {
-    aboutWindow.focus();
+const openPanel = async (path: string, options: BrowserWindowConstructorOptions): Promise<void> => {
+  const already = panels.get(path);
+
+  if (already != null && !already.isDestroyed()) {
+    already.focus();
 
     return;
   }
 
   const opened = new BrowserWindow({
+    ...options,
+    show: false,
+    webPreferences: { preload },
+  });
+
+  shownOnFirstPaint(opened);
+  panels.set(path, opened);
+
+  await opened.loadURL(`${await origin}${path}`);
+};
+
+/*
+ * About is a window of its own rather than a sheet over the app, which is what
+ * every other Mac app does with it.
+ */
+const openAbout = async (): Promise<void> => {
+  await openPanel('/about', {
     title: 'About AI Manager',
     width: 360,
     height: 400,
     resizable: false,
-    webPreferences: { preload },
   });
-
-  aboutWindow = opened;
-
-  await opened.loadURL(`${await origin}/about`);
 };
 
 /*
@@ -190,41 +224,59 @@ const openAbout = async (): Promise<void> => {
  * the panes it will carry are lists.
  */
 const openSettings = async (): Promise<void> => {
-  if (settingsWindow != null && !settingsWindow.isDestroyed()) {
-    settingsWindow.focus();
-
-    return;
-  }
-
-  const opened = new BrowserWindow({
+  await openPanel('/settings', {
     title: 'Settings',
     width: 760,
     height: 520,
     minWidth: 620,
     minHeight: 420,
-    webPreferences: { preload },
   });
-
-  settingsWindow = opened;
-
-  await opened.loadURL(`${await origin}/settings`);
 };
 
+/* What the last check found, which is what installing it downloads. */
+let waiting: WaitingRelease | undefined;
+
 /*
- * electron-updater, against the feed electron-builder publishes. It answers
- * null where it has no feed to read, and a throw travels back to the page as a
- * rejection, which is what a failed check is: not the same as being current.
+ * Three answers, not two: a version is waiting, this build is current, or there
+ * is no feed at all. Only a throw is a failure.
  */
 const checkForUpdate = async (): Promise<DesktopUpdate> => {
-  const result = await autoUpdater.checkForUpdates();
-  const version = result?.updateInfo.version;
+  const unpublished: DesktopUpdate = {
+    available: false,
+    unpublished: true,
+  };
 
-  return version != null && version !== app.getVersion()
-    ? {
-        available: true,
-        version,
-      }
-    : { available: false };
+  try {
+    const result = await autoUpdater.checkForUpdates();
+
+    if (result == null) {
+      return unpublished;
+    }
+
+    const { files, version } = result.updateInfo;
+
+    if (version === app.getVersion()) {
+      return { available: false };
+    }
+
+    waiting = {
+      version,
+      files,
+    };
+
+    return {
+      available: true,
+      version,
+    };
+  }
+  catch (error) {
+    // No channel file, which is what `--publish never` looks like from here.
+    if ((error as NodeJS.ErrnoException).code === 'ERR_UPDATER_CHANNEL_FILE_NOT_FOUND') {
+      return unpublished;
+    }
+
+    throw error;
+  }
 };
 
 ipcMain.handle('desktop:platform', () => {
@@ -240,6 +292,25 @@ ipcMain.handle('desktop:about', openAbout);
 ipcMain.handle('desktop:settings', openSettings);
 
 ipcMain.handle('desktop:update', checkForUpdate);
+
+// The app has to go for its own bundle to be replaced, so this quits into it.
+ipcMain.handle('desktop:install', async () => {
+  if (waiting == null) {
+    throw new Error('no update has been found to install');
+  }
+
+  await installUpdate({
+    files: waiting.files,
+    version: waiting.version,
+    arm64: process.arch === 'arm64',
+    // .../AI Manager.app/Contents/MacOS/AI Manager, three up from the bundle.
+    bundlePath: resolve(app.getPath('exe'), '../../..'),
+    resourcesPath: process.resourcesPath,
+    pid: process.pid,
+  });
+
+  app.quit();
+});
 
 /*
  * hiddenInset keeps the traffic lights and drops the bar they sit in, so the
@@ -258,9 +329,11 @@ const openMain = async (): Promise<void> => {
       x: 13,
       y: 15,
     },
+    show: false,
     webPreferences: { preload },
   });
 
+  shownOnFirstPaint(window);
   mainWindow = window;
 
   // Only this window ends the app. A secondary window closing leaves it running.

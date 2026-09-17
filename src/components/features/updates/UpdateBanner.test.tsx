@@ -11,22 +11,9 @@ import {
   test,
 } from 'vitest';
 
-import { UpdateBanner } from './UpdateBanner';
+import { stubUpdater } from '@mocks/updaterFixtures';
 
-const stubUpdater = (checkForUpdate: () => Promise<DesktopUpdate>): void => {
-  Object.defineProperty(window, 'bindings', {
-    configurable: true,
-    value: {
-      desktopPlatform: () => {
-        return Promise.resolve('darwin');
-      },
-      setApplicationMenu: () => {
-        return Promise.resolve(undefined);
-      },
-      checkForUpdate,
-    },
-  });
-};
+import { UpdateBanner } from './UpdateBanner';
 
 afterEach(() => {
   Reflect.deleteProperty(window, 'bindings');
@@ -83,5 +70,50 @@ describe('UpdateBanner', () => {
     await waitFor(() => {
       expect(document.querySelector('[data-update-banner]')).toBeNull();
     });
+  });
+
+  test('offers the install where the shell can swap its own bundle, and says so while it runs', async () => {
+    let settle = (): void => {
+      return undefined;
+    };
+
+    stubUpdater(() => {
+      return Promise.resolve({
+        available: true,
+        version: '9.9.9',
+      });
+    }, () => {
+      return new Promise<void>((resolve) => {
+        settle = resolve;
+      });
+    });
+
+    render(<UpdateBanner />);
+
+    const install = await screen.findByRole('button', { name: 'Install and restart' });
+
+    await userEvent.click(install);
+
+    await waitFor(() => {
+      expect(screen.getByText('Downloading update…')).not.toBeNull();
+    });
+    // The row holds the download rather than offering the buttons again.
+    expect(screen.queryByRole('button', { name: 'Later' })).toBeNull();
+
+    settle();
+  });
+
+  test('offers no install button where the shell has no way to swap the bundle', async () => {
+    stubUpdater(() => {
+      return Promise.resolve({
+        available: true,
+        version: '9.9.9',
+      });
+    });
+
+    render(<UpdateBanner />);
+
+    await screen.findByRole('button', { name: 'Later' });
+    expect(screen.queryByRole('button', { name: 'Install and restart' })).toBeNull();
   });
 });

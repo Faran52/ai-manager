@@ -1,11 +1,7 @@
 /**
- * The page's side of the desktop shell.
- *
- * CommonJS, and plain JavaScript, which nothing else in this repo is: Electron
- * loads a sandboxed preload with `require` into an isolated world and supports
- * neither ES modules nor the type stripping the main process runs on. Keeping
- * the sandbox on is what keeps Node out of the page, so this holds the plumbing
- * and no logic at all.
+ * The page's side of the desktop shell. CommonJS and plain JavaScript, alone in
+ * this repo: Electron loads a sandboxed preload with `require`, and neither ES
+ * modules nor type stripping survive that. Sandbox on, so no logic lives here.
  */
 const { contextBridge, ipcRenderer } = require('electron');
 
@@ -30,6 +26,14 @@ contextBridge.exposeInMainWorld('bindings', {
   checkForUpdate: () => {
     return ipcRenderer.invoke('desktop:update');
   },
+  // Only macOS swaps its own bundle. Windows and Linux still have an installer.
+  ...process.platform === 'darwin'
+    ? {
+        installUpdate: () => {
+          return ipcRenderer.invoke('desktop:install');
+        },
+      }
+    : {},
 });
 
 // A menu click lands in the main process, so it is handed back to the page as
@@ -39,10 +43,9 @@ ipcRenderer.on('app-menu-command', (_event, id) => {
 });
 
 /*
- * Only macOS keeps the window's buttons over the app's own first row, and only
- * the stylesheet knows how much room that takes, so it is told which platform
- * it is on. Waited for, because a preload runs before there is an html element
- * to mark.
+ * Only macOS keeps the window's buttons over the app's own first row, and only the
+ * stylesheet knows how much room that takes, so it is told which platform it is on.
+ * Waited for: a preload runs before there is an html element to mark.
  */
 document.addEventListener('DOMContentLoaded', () => {
   document.documentElement.dataset.desktop = process.platform;

@@ -64,6 +64,12 @@ publishers who have not paid for a certificate.
 A build you compiled yourself never carries the quarantine flag, so it skips
 all of this.
 
+On macOS this is a one-time step. The app installs its own updates rather than
+handing them to Squirrel, which would refuse an unsigned bundle, so every later
+version arrives through a download the app made itself and carries no quarantine
+flag to clear. Each release is still checked against the sha512 its own
+`latest-mac.yml` publishes before it replaces anything.
+
 ## Develop
 
 ```bash

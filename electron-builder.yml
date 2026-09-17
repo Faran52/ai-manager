@@ -1,10 +1,14 @@
 # How the desktop app is packaged. `pnpm desktop:pack` builds one for this
 # machine; release.yml builds all three.
 #
-# Only `dist` and the two shell files ship. Every npm dependency is already
+# Only `dist` and the shell's own files ship. Every npm dependency is already
 # inlined into `dist/server` by astro.config's `ssr.noExternal`, which is why
 # electron-updater is the one runtime dependency left in package.json and the
 # only node_modules tree this carries.
+#
+# Named one by one, because `scripts/*.ts` would sweep the specs in too. A
+# module left off this list fails at launch, not at build: name anything
+# desktopEntry.ts imports.
 appId: com.faran52.ai-manager
 productName: AI Manager
 copyright: Copyright © 2026 Faran Ali
@@ -15,6 +19,7 @@ directories:
 files:
   - dist/**
   - scripts/desktopEntry.ts
+  - scripts/desktopUpdate.ts
   - scripts/desktopPreload.cjs
 
 # Where electron-updater looks, and where release.yml uploads. The metadata
@@ -32,7 +37,10 @@ mac:
   hardenedRuntime: true
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
-  notarize: true
+  # Off until there is a Developer ID to notarize with. Asking for it without
+  # one does not fail the build, it is skipped, which reads like it happened.
+  # The app installs its own updates instead, see scripts/desktopUpdate.ts.
+  notarize: false
   target:
     # The zip is not a second download: electron-updater cannot apply a dmg.
     - target: dmg

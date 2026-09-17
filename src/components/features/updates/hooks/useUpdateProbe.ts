@@ -1,12 +1,22 @@
 import { useCallback, useState } from 'react';
 
-export type ProbeStage = 'idle' | 'checking' | 'upToDate' | 'available' | 'failed';
+export type ProbeStage
+  = | 'idle'
+    | 'checking'
+    | 'upToDate'
+    | 'available'
+    | 'unpublished'
+    | 'downloading'
+    | 'failed';
 
 export interface UpdateProbe {
   readonly stage: ProbeStage;
   // The version waiting, once one has been found.
   readonly version: string | undefined;
   readonly check: () => void;
+  // Absent where the shell cannot replace its own build, so no button is drawn.
+  readonly install: (() => void)
+    | undefined;
 }
 
 /*
@@ -36,7 +46,35 @@ export const useUpdateProbe = (): UpdateProbe => {
         const update = await ask();
 
         setVersion(update.version);
+
+        if (update.unpublished === true) {
+          setStage('unpublished');
+
+          return;
+        }
+
         setStage(update.available ? 'available' : 'upToDate');
+      }
+      catch {
+        setStage('failed');
+      }
+    })();
+  }, []);
+
+  // The app quits into the swap, so only a failure ever comes back.
+  const install = useCallback((): void => {
+    const apply = window.bindings?.installUpdate;
+
+    /* v8 ignore next 3 -- the caller offers no button where there is no binding */
+    if (apply == null) {
+      return;
+    }
+
+    setStage('downloading');
+
+    void (async () => {
+      try {
+        await apply();
       }
       catch {
         setStage('failed');
@@ -48,5 +86,6 @@ export const useUpdateProbe = (): UpdateProbe => {
     stage,
     version,
     check,
+    install: window.bindings?.installUpdate == null ? undefined : install,
   };
 };

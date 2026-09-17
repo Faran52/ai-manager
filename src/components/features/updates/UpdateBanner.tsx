@@ -10,9 +10,8 @@ import { useUpdateProbe } from './hooks/useUpdateProbe';
 import type { FC } from 'react';
 
 /*
- * The launch check, the only one the reader never asks for. A failed check is
- * not worth interrupting anyone over, and nothing but an available version
- * puts a row on screen, so a browser with no updater to ask shows nothing.
+ * The launch check, the only one the reader never asks for. Nothing but an
+ * available version puts a row on screen, so a failure stays silent.
  */
 export const UpdateBanner: FC = () => {
   const { t } = useTranslation('update');
@@ -20,6 +19,7 @@ export const UpdateBanner: FC = () => {
     stage,
     version,
     check,
+    install,
   } = useUpdateProbe();
   const [dismissed, setDismissed] = useState(false);
 
@@ -27,7 +27,8 @@ export const UpdateBanner: FC = () => {
     check();
   }, [check]);
 
-  if (stage !== 'available' || dismissed) {
+  // The row stays while the download runs: it is what says the download is on.
+  if (dismissed || (stage !== 'available' && stage !== 'downloading')) {
     return null;
   }
 
@@ -40,16 +41,25 @@ export const UpdateBanner: FC = () => {
       data-update-banner
     >
       <Download className="size-3.5 text-primary" />
-      <span className="flex-1">{t('available', { version })}</span>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={() => {
-          setDismissed(true);
-        }}
-      >
-        {t('later')}
-      </Button>
+      <span className="flex-1">
+        {stage === 'downloading' ? t('downloading') : t('available', { version })}
+      </span>
+      {stage === 'available' && install != null && (
+        <Button size="sm" variant="ghost" onClick={install}>
+          {t('install')}
+        </Button>
+      )}
+      {stage === 'available' && (
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => {
+            setDismissed(true);
+          }}
+        >
+          {t('later')}
+        </Button>
+      )}
     </div>
   );
 };
