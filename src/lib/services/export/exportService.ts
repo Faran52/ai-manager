@@ -127,10 +127,10 @@ const pre = (text: string): string => {
 
 const DOCUMENT_STYLE = `
   :root { color-scheme: light dark; --fg: #1a1c20; --bg: #fbfbfa; --muted: #6b6862;
-    --line: #e6e4e0; --card: #fff; --accent: #1f7a6d; --warn: #b26a15; }
+    --line: #e6e4e0; --card: #fff; --accent: #17457c; --warn: #b26a15; }
   @media (prefers-color-scheme: dark) {
-    :root { --fg: #e8e6e3; --bg: #16181c; --muted: #9a9691;
-      --line: #2a2e35; --card: #1d2026; --accent: #2f9e8f; --warn: #d98a2b; }
+    :root { --fg: #e9edf2; --bg: #13171c; --muted: #949aa1;
+      --line: #373b40; --card: #1c2025; --accent: #34639f; --warn: #d98a2b; }
   }
   * { box-sizing: border-box; }
   body { margin: 0 auto; padding: 2rem 1.25rem 4rem; max-width: 52rem; background: var(--bg);

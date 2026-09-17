@@ -14,7 +14,7 @@ import type { AccentName } from './hooks/useAccent';
 
 // Keys, not text, the map lives outside the component where t is unavailable.
 const LABEL_KEYS: Record<AccentName, string> = {
-  teal: 'accentTeal',
+  cobalt: 'accentCobalt',
   iris: 'accentIris',
   amber: 'accentAmber',
   rose: 'accentRose',

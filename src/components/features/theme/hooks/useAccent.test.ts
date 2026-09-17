@@ -14,12 +14,12 @@ afterEach(() => {
 });
 
 describe('useAccent', () => {
-  test('defaults to teal when nothing is stored', () => {
+  test('defaults to cobalt when nothing is stored', () => {
     const { result } = renderHook(() => {
       return useAccent();
     });
 
-    expect(result.current.accent).toBe('teal');
+    expect(result.current.accent).toBe('cobalt');
   });
 
   test('reads a stored accent', () => {
@@ -32,14 +32,14 @@ describe('useAccent', () => {
     expect(result.current.accent).toBe('rose');
   });
 
-  test('falls back to teal for an unknown stored value', () => {
+  test('falls back to cobalt for an unknown stored value', () => {
     localStorage.setItem('acm-accent', 'chartreuse');
 
     const { result } = renderHook(() => {
       return useAccent();
     });
 
-    expect(result.current.accent).toBe('teal');
+    expect(result.current.accent).toBe('cobalt');
   });
 
   test('persists a change and marks the document', () => {
@@ -57,6 +57,6 @@ describe('useAccent', () => {
   });
 
   test('offers every accent the stylesheet defines', () => {
-    expect(accentNames).toEqual(['teal', 'iris', 'amber', 'rose', 'lime', 'sky']);
+    expect(accentNames).toEqual(['cobalt', 'iris', 'amber', 'rose', 'lime', 'sky']);
   });
 });

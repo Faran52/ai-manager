@@ -48,7 +48,7 @@ describe('SettingsSheet', () => {
 
     expect(screen.getByRole('radio', { name: 'Dark' })).toHaveProperty('checked', true);
     expect(screen.getByRole('radio', { name: 'Normal' })).toBeDefined();
-    expect(screen.getByRole('button', { name: 'Teal' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Cobalt' })).toBeDefined();
     expect(screen.getByRole('combobox')).toBeDefined();
   });
 

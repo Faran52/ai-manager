@@ -148,7 +148,7 @@
     background: var(--accent);
   }
 
-  /* The teal edge bar the project card and rail also carry: "where you are",
+  /* The accent edge bar the project card and rail also carry: "where you are",
      not a card wrapped in a ring. */
   .sidebar-row.is-active::before {
     position: absolute;
@@ -401,7 +401,7 @@
     border-color: var(--raised);
   }
 
-  /* The teal edge bar: "where you are", the same mark the session list and the
+  /* The accent edge bar: "where you are", the same mark the session list and the
      rail carry. A selected card is not a card in a ring. */
   .project-card[data-active="true"]::before {
     position: absolute;

@@ -22,12 +22,12 @@ test('offers every accent and marks the active one', () => {
   localStorage.setItem('acm-accent', 'iris');
   render(<AccentPicker />);
 
-  for (const label of ['Teal', 'Iris', 'Amber', 'Rose', 'Lime', 'Sky']) {
+  for (const label of ['Cobalt', 'Iris', 'Amber', 'Rose', 'Lime', 'Sky']) {
     expect(screen.getByRole('button', { name: label })).toBeDefined();
   }
 
   expect(screen.getByRole('button', { name: 'Iris' }).getAttribute('aria-pressed')).toBe('true');
-  expect(screen.getByRole('button', { name: 'Teal' }).getAttribute('aria-pressed')).toBe('false');
+  expect(screen.getByRole('button', { name: 'Cobalt' }).getAttribute('aria-pressed')).toBe('false');
 });
 
 test('applies and persists a chosen accent', async () => {

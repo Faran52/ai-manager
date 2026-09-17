@@ -4,7 +4,7 @@
 @property --primary {
   syntax: "<color>";
   inherits: true;
-  initial-value: #1f7a6d;
+  initial-value: #17457c;
 }
 
 :root {
@@ -54,7 +54,7 @@
   --input: #e6e4e0;
   --accent: #e8e4dd;
   --accent-foreground: #1a1c20;
-  --primary: #1f7a6d;
+  --primary: #17457c;
   --primary-foreground: #fff;
   --secondary: #f2f0ec;
   --secondary-foreground: #1a1c20;
@@ -70,13 +70,13 @@
    */
   --accent-wheel: conic-gradient(
     from 0deg,
-    #1f7a6d,
+    #17457c,
     #5457d6,
     #a96d0e,
     #c2404f,
     #5c8a20,
     #2a7fa6,
-    #1f7a6d
+    #17457c
   );
 
   /*
@@ -90,56 +90,60 @@
   --radius-xl: 11px; /* the window frame and the pill chip, off-scale by intent */
 }
 
+/*
+ * Sampled from the reference shot on the Notion backlog. The drawer is raised
+ * above the canvas there, rather than set back into it.
+ */
 .dark {
-  --background: #16181c;
-  --card: #1d2026;
-  --popover: #1d2026;
-  --foreground: #e8e6e3;
-  --muted: #22252b;
-  --muted-foreground: #9a9691;
-  --border: #2a2e35;
-  --hair: #23262c;
-  --foreground-2: #c6c3bf;
-  --faint: #6f6c67;
-  --dim: #55524e;
-  --recess: #0d0e11;
-  --code: #15171b;
-  --code-foreground: #c6c3bf;
-  --sidebar: #131519;
-  --chrome: #1a1d22;
-  --raised: #3a3f47;
-  --input: #2a2e35;
-  --accent: #2b2f37;
-  --accent-foreground: #e8e6e3;
-  --primary: #2f9e8f;
-  --primary-foreground: #10241f;
-  --secondary: #22252b;
-  --secondary-foreground: #e8e6e3;
+  --background: #13171c;
+  --card: #1c2025;
+  --popover: #23272c;
+  --foreground: #e9edf2;
+  --muted: #282c31;
+  --muted-foreground: #949aa1;
+  --border: #373b40;
+  --hair: #262a2f;
+  --foreground-2: #c5cbd2;
+  --faint: #757a80;
+  --dim: #585d63;
+  --recess: #0d1116;
+  --code: #0f1318;
+  --code-foreground: #c5cbd2;
+  --sidebar: #171b20;
+  --chrome: #13171c;
+  --raised: #484c51;
+  --input: #373b40;
+  --accent: #2f3338;
+  --accent-foreground: #e9edf2;
+  --primary: #34639f;
+  --primary-foreground: #e9edf2;
+  --secondary: #282c31;
+  --secondary-foreground: #e9edf2;
   --ok: #2f9e8f;
   --warn: #d98a2b;
   --destructive: #d2544b;
   --destructive-foreground: #1d0f0e;
   --accent-wheel: conic-gradient(
     from 0deg,
-    #2f9e8f,
+    #34639f,
     #7c7ff0,
     #e0a23c,
     #e4707c,
     #8fc44a,
     #4fb3de,
-    #2f9e8f
+    #34639f
   );
 }
 
-[data-accent="teal"] { --primary: #1f7a6d; }
+[data-accent="cobalt"] { --primary: #17457c; }
 [data-accent="iris"] { --primary: #5457d6; }
 [data-accent="amber"] { --primary: #a96d0e; }
 [data-accent="rose"] { --primary: #c2404f; }
 [data-accent="lime"] { --primary: #5c8a20; }
 [data-accent="sky"] { --primary: #2a7fa6; }
 
-.dark[data-accent="teal"],
-.dark [data-accent="teal"] { --primary: #2f9e8f; }
+.dark[data-accent="cobalt"],
+.dark [data-accent="cobalt"] { --primary: #34639f; }
 
 .dark[data-accent="iris"],
 .dark [data-accent="iris"] { --primary: #7c7ff0; }

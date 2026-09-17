@@ -4,7 +4,7 @@ import { accentStorageKey } from '@config/storageKeys';
 
 import { storedSetting } from '@utils/storedSettingUtils';
 
-export type AccentName = 'teal' | 'iris' | 'amber' | 'rose' | 'lime' | 'sky';
+export type AccentName = 'cobalt' | 'iris' | 'amber' | 'rose' | 'lime' | 'sky';
 
 /*
  * One of the six names that ship, or a hex picked from the OS. The type cannot
@@ -15,9 +15,9 @@ interface AccentState {
   readonly setAccent: (accent: string) => void;
 }
 
-export const accentNames: readonly AccentName[] = ['teal', 'iris', 'amber', 'rose', 'lime', 'sky'];
+export const accentNames: readonly AccentName[] = ['cobalt', 'iris', 'amber', 'rose', 'lime', 'sky'];
 
-export const DEFAULT_CUSTOM_ACCENT = '#2f9e8f';
+export const DEFAULT_CUSTOM_ACCENT = '#34639f';
 
 export const isAccentName = (value: string | null): value is AccentName => {
   return accentNames.some((name) => {
@@ -40,7 +40,7 @@ const readStoredAccent = (): string => {
     return stored;
   }
 
-  return 'teal';
+  return 'cobalt';
 };
 
 const applyDocumentAccent = (accent: string): void => {
