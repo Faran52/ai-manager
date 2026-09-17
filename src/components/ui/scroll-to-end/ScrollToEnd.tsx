@@ -225,7 +225,7 @@ export const ScrollToEnd: FC<ScrollToEndProps> = ({
       }}
       className={cn(`
         absolute z-20 flex size-9 touch-none items-center justify-center
-        rounded-[7px] border border-border bg-card/90 text-muted-foreground
+        rounded-md border border-border bg-card/90 text-muted-foreground
         shadow-sm backdrop-blur-sm
         hover:text-foreground
       `, dragging ? 'cursor-grabbing' : 'cursor-grab')}
