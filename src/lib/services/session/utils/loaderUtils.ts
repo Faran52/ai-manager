@@ -32,10 +32,42 @@ interface LoadedSession {
   readonly entries: readonly HistoryEntry[];
 }
 
+interface SessionView {
+  readonly entries: readonly HistoryEntry[];
+  readonly messageCount: number;
+}
+
 const loadedSessions = new LruCache<LoadedSession>(64);
 
 const isSidechained = (entry: HistoryEntry): boolean => {
   return entry.kind === 'summary' ? false : entry.sidechain;
+};
+
+// Keyed on the entries array, so a re-parse drops the derived values with it.
+const sessionViews = new WeakMap<readonly HistoryEntry[], Map<boolean, SessionView>>();
+
+const viewOf = (entries: readonly HistoryEntry[], includeSidechain: boolean): SessionView => {
+  const cached = sessionViews.get(entries) ?? new Map<boolean, SessionView>();
+  const hit = cached.get(includeSidechain);
+
+  if (hit != null) {
+    return hit;
+  }
+
+  const visible = includeSidechain
+    ? entries
+    : entries.filter((entry) => {
+        return !isSidechained(entry);
+      });
+  const view: SessionView = {
+    entries: visible,
+    messageCount: conversationMessageCount(visible),
+  };
+
+  cached.set(includeSidechain, view);
+  sessionViews.set(entries, cached);
+
+  return view;
 };
 
 const readEntries = async (
@@ -96,18 +128,14 @@ export const loadSessionPage = async (
     return undefined;
   }
 
-  const visible = request.includeSidechain
-    ? entries
-    : entries.filter((entry) => {
-        return !isSidechained(entry);
-      });
+  const { entries: visible, messageCount } = viewOf(entries, request.includeSidechain);
   const start = clamp(request.offset, 0, visible.length);
   const end = Math.min(start + Math.max(request.limit, 0), visible.length);
 
   return {
     entries: visible.slice(start, end),
     total: visible.length,
-    messageCount: conversationMessageCount(visible),
+    messageCount,
     hasMore: end < visible.length,
     nextOffset: end,
   };
