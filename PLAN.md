@@ -271,6 +271,15 @@ stays; configuration management is where the work is. Each phase gates the next.
 
 ## Structure follow-ups
 
+- [ ] Review every comment in the repo for weight. There are ~2,100 comment
+      lines across `src` and `scripts`, and the desktop and menu work added
+      ~185 of them in one stretch, several of them four and five line blocks
+      where a clause would do. The rule is that a comment carries intent the
+      code cannot: the reason a thing is the way it is, the ceiling on a
+      deliberate shortcut, the bug that shaped a guard. Anything restating the
+      statement below it should go. Worth handing to an agent as a single pass
+      over `src` and `scripts`, no behaviour changes, `pnpm check` green.
+
 - [x] Extract components that are actually reused out of feature `partials`
       folders. Nothing qualifies: 58 partials, and not one is imported outside
       the feature that owns it. Revisit the first time a second feature reaches
