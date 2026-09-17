@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { languageStorageKey } from '@config/storageKeys';
@@ -47,6 +47,28 @@ export const useSystemLanguage = (): SystemLanguageChoice => {
   const [following, setFollowing] = useState(() => {
     return stored() == null;
   });
+
+  /*
+   * Another window of this app choosing a language writes the same key. Its
+   * absence is the choice to follow the system, so a cleared key is followed
+   * back to detection rather than treated as a language named ''.
+   */
+  useEffect(() => {
+    const onStorage = (event: StorageEvent): void => {
+      if (event.key !== languageStorageKey) {
+        return;
+      }
+
+      setFollowing(event.newValue == null);
+      void i18n.changeLanguage(event.newValue ?? undefined);
+    };
+
+    window.addEventListener('storage', onStorage);
+
+    return () => {
+      window.removeEventListener('storage', onStorage);
+    };
+  }, [i18n]);
 
   return {
     following,

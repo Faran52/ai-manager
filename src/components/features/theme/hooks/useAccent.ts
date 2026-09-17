@@ -1,6 +1,8 @@
-import { useCallback, useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from 'react';
 
 import { accentStorageKey } from '@config/storageKeys';
+
+import { storedSetting } from '@utils/storedSettingUtils';
 
 export type AccentName = 'teal' | 'iris' | 'amber' | 'rose' | 'lime' | 'sky';
 
@@ -56,30 +58,13 @@ const applyDocumentAccent = (accent: string): void => {
   document.documentElement.style.setProperty('--primary', accent);
 };
 
-const listeners = new Set<() => void>();
-
-const subscribe = (notify: () => void): (() => void) => {
-  listeners.add(notify);
-
-  return () => {
-    listeners.delete(notify);
-  };
-};
+const store = storedSetting(accentStorageKey, readStoredAccent, applyDocumentAccent);
 
 export const useAccent = (): AccentState => {
-  const accent = useSyncExternalStore(subscribe, readStoredAccent);
-
-  const setAccent = useCallback((next: string) => {
-    localStorage.setItem(accentStorageKey, next);
-    applyDocumentAccent(next);
-
-    for (const notify of listeners) {
-      notify();
-    }
-  }, []);
+  const accent = useSyncExternalStore(store.subscribe, store.read);
 
   return {
     accent,
-    setAccent,
+    setAccent: store.write,
   };
 };
