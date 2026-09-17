@@ -97,6 +97,16 @@ export const ScrollToEnd: FC<ScrollToEndProps> = ({
     scrollElement.addEventListener('scroll', notify, { passive: true });
     observer.observe(scrollElement);
 
+    // The box keeps its size; the content inside it is what grows.
+    if (scrollElement.firstElementChild != null) {
+      observer.observe(scrollElement.firstElementChild);
+    }
+
+    // The box keeps its size; it is the content inside that grows.
+    if (scrollElement.firstElementChild != null) {
+      observer.observe(scrollElement.firstElementChild);
+    }
+
     return () => {
       scrollElement.removeEventListener('scroll', notify);
       observer.disconnect();
@@ -154,7 +164,8 @@ export const ScrollToEnd: FC<ScrollToEndProps> = ({
       return;
     }
 
-    // The move glides; the corrections behind it would judder if they animated.
+    // Never smooth: animating across a virtualized list mounts every row on
+    // the way and hangs the renderer.
     const pin = (): void => {
       scrollElement.scrollTo({
         top: scrollElement.scrollHeight,
@@ -164,10 +175,7 @@ export const ScrollToEnd: FC<ScrollToEndProps> = ({
 
     const observer = new ResizeObserver(pin);
 
-    scrollElement.scrollTo({
-      top: scrollElement.scrollHeight,
-      behavior: 'smooth',
-    });
+    pin();
     observer.observe(content);
     setTimeout(() => {
       observer.disconnect();

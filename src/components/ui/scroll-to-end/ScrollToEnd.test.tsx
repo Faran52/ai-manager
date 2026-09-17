@@ -300,7 +300,7 @@ test('holds the end again each time the content measures taller', async () => {
 
   await userEvent.click(screen.getByRole('button'));
 
-  expect(behaviours).toStrictEqual(['smooth']);
+  expect(behaviours).toStrictEqual(['auto']);
 
   act(() => {
     for (const callback of fired) {
@@ -308,7 +308,7 @@ test('holds the end again each time the content measures taller', async () => {
     }
   });
 
-  // The correction behind the glide, which does not animate.
+  // The corrections behind it, which never animate either.
   expect(behaviours).toContain('auto');
 
   vi.unstubAllGlobals();
