@@ -20,6 +20,7 @@ files:
   - dist/**
   - scripts/desktopEntry.ts
   - scripts/desktopUpdate.ts
+  - scripts/desktopServer.ts
   - scripts/desktopPreload.cjs
 
 # Where electron-updater looks, and where release.yml uploads. The metadata

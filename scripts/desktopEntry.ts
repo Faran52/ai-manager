@@ -7,11 +7,9 @@
  * webview backend, the ability to drag the window at all, because WKWebView
  * ignores `-webkit-app-region` (denoland/deno#35635).
  *
- * The Astro server runs in this process. It is the same `dist/server/entry.mjs`
- * a hosted deployment runs, so the window is a browser pointed at loopback and
- * every route, API and asset behaves as it does anywhere else.
+ * The Astro server runs in a utility process (`desktopServer.ts`), so the window
+ * is a browser pointed at loopback and every route behaves as it does anywhere.
  */
-import { once } from 'node:events';
 import { createServer } from 'node:net';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,6 +19,7 @@ import {
   BrowserWindow,
   ipcMain,
   Menu,
+  utilityProcess,
 } from 'electron';
 import electronUpdater from 'electron-updater';
 
@@ -32,6 +31,10 @@ import type { UpdateFile } from './desktopUpdate.ts';
 interface WaitingRelease {
   readonly version: string;
   readonly files: readonly UpdateFile[];
+}
+
+interface ServerReady {
+  readonly port: number;
 }
 
 // electron-updater is CommonJS, so ESM sees the default export rather than the
@@ -70,15 +73,7 @@ const preload = fileURLToPath(new URL('./desktopPreload.cjs', import.meta.url));
  */
 const platform = process.platform === 'win32' ? 'windows' : process.platform;
 
-/**
- * The server this process holds, and where it ended up listening.
- *
- * Loopback, and a port the OS picks: a fixed one collides with a second copy of
- * the app, and binding anywhere else would publish an API that deletes projects
- * and runs the CLI to the network. The server starts itself on import, which is
- * too early, so autostart is off and the port is settled before anything is
- * pointed at it.
- */
+// Settled in the main process so a second copy of the app cannot race it.
 const isFree = async (port: number): Promise<boolean> => {
   const probe = createServer();
 
@@ -98,24 +93,42 @@ const isFree = async (port: number): Promise<boolean> => {
   }
 };
 
+const isServerReady = (value: unknown): value is ServerReady => {
+  return typeof value === 'object'
+    && value !== null
+    && 'port' in value
+    && typeof value.port === 'number';
+};
+
+const serverScript = fileURLToPath(new URL('./desktopServer.ts', import.meta.url));
+
+let serverProcess: ReturnType<typeof utilityProcess.fork> | undefined;
+
 const serve = async (): Promise<string> => {
-  process.env.ASTRO_NODE_AUTOSTART = 'disabled';
-  process.env.HOST = HOST;
-  process.env.PORT = await isFree(PORT) ? String(PORT) : '0';
+  const child = utilityProcess.fork(serverScript, [], {
+    serviceName: 'AI Manager server',
+    env: {
+      ...process.env,
+      ASTRO_NODE_AUTOSTART: 'disabled',
+      HOST,
+      PORT: await isFree(PORT) ? String(PORT) : '0',
+    },
+  });
 
-  const { startServer } = await import('../dist/server/entry.mjs');
-  const listener = startServer().server.server;
+  serverProcess = child;
 
-  await once(listener, 'listening');
+  const port = await new Promise<number>((settle, fail) => {
+    child.once('message', (message: unknown) => {
+      if (isServerReady(message)) {
+        settle(message.port);
+      }
+      else {
+        fail(new Error('the app server is listening on no port'));
+      }
+    });
+  });
 
-  const address = listener.address();
-
-  // A string address is a unix socket, which this never is.
-  if (typeof address !== 'object' || address === null) {
-    throw new Error('the app server is listening on no port');
-  }
-
-  return `http://${HOST}:${String(address.port)}`;
+  return `http://${HOST}:${String(port)}`;
 };
 
 /*
@@ -124,6 +137,10 @@ const serve = async (): Promise<string> => {
  * `app.whenReady()` pending forever and no window is ever made.
  */
 const origin = serve();
+
+app.on('will-quit', () => {
+  serverProcess?.kill();
+});
 
 let mainWindow: BrowserWindow | undefined;
 
