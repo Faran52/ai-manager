@@ -105,13 +105,19 @@ const serverScript = fileURLToPath(new URL('./desktopServer.ts', import.meta.url
 let serverProcess: ReturnType<typeof utilityProcess.fork> | undefined;
 
 const serve = async (): Promise<string> => {
+  const requested = await isFree(PORT) ? String(PORT) : '0';
+
+  // utilityProcess refuses to fork before this, and awaiting it is only safe
+  // because serve() is called without being awaited.
+  await app.whenReady();
+
   const child = utilityProcess.fork(serverScript, [], {
     serviceName: 'AI Manager server',
     env: {
       ...process.env,
       ASTRO_NODE_AUTOSTART: 'disabled',
       HOST,
-      PORT: await isFree(PORT) ? String(PORT) : '0',
+      PORT: requested,
     },
   });
 
