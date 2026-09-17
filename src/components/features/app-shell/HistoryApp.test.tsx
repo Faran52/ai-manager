@@ -151,7 +151,7 @@ describe('HistoryApp menu commands', () => {
     await screen.findByText('alpha');
   };
 
-  test('raises the About window where the platform draws one', async () => {
+  test('raises the windows the platform draws, rather than its own dialogs', async () => {
     Object.defineProperty(window, 'bindings', {
       configurable: true,
       value: {
@@ -164,14 +164,20 @@ describe('HistoryApp menu commands', () => {
         openAbout: vi.fn(() => {
           return Promise.resolve(undefined);
         }),
+        openSettings: vi.fn(() => {
+          return Promise.resolve(undefined);
+        }),
       },
     });
 
     await renderShell();
     command('about');
+    command('settings');
 
     expect(window.bindings?.openAbout).toHaveBeenCalledTimes(1);
+    expect(window.bindings?.openSettings).toHaveBeenCalledTimes(1);
     expect(document.querySelector('[data-about-dialog]')).toBeNull();
+    expect(document.querySelector('[data-settings-rail]')).toBeNull();
 
     Reflect.deleteProperty(window, 'bindings');
   });

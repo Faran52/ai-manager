@@ -47,8 +47,10 @@ interface DesktopUpdate {
 interface DesktopBindings {
   readonly desktopPlatform: () => Promise<string>;
   readonly setApplicationMenu: (items: readonly AppMenuItem[]) => Promise<void>;
-  // Present only where About has a window of its own to be raised into.
+  // Present only where these have a window of their own to be raised into.
   readonly openAbout?: (() => Promise<void>)
+    | undefined;
+  readonly openSettings?: (() => Promise<void>)
     | undefined;
   // Present only where there is an installed build an updater can replace.
   readonly checkForUpdate?: (() => Promise<DesktopUpdate>)

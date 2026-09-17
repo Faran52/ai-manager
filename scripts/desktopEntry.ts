@@ -118,6 +118,7 @@ const origin = serve();
 
 let mainWindow: BrowserWindow | undefined;
 let aboutWindow: BrowserWindow | undefined;
+let settingsWindow: BrowserWindow | undefined;
 
 /*
  * Electron's own menu description, built from the page's. The page holds the
@@ -184,6 +185,32 @@ const openAbout = async (): Promise<void> => {
 };
 
 /*
+ * Settings is a window here for the same reason About is: it is where a Mac app
+ * keeps it. Wider than About because it carries a rail, and resizable because
+ * the panes it will carry are lists.
+ */
+const openSettings = async (): Promise<void> => {
+  if (settingsWindow != null && !settingsWindow.isDestroyed()) {
+    settingsWindow.focus();
+
+    return;
+  }
+
+  const opened = new BrowserWindow({
+    title: 'Settings',
+    width: 760,
+    height: 520,
+    minWidth: 620,
+    minHeight: 420,
+    webPreferences: { preload },
+  });
+
+  settingsWindow = opened;
+
+  await opened.loadURL(`${await origin}/settings`);
+};
+
+/*
  * electron-updater, against the feed electron-builder publishes. It answers
  * null where it has no feed to read, and a throw travels back to the page as a
  * rejection, which is what a failed check is: not the same as being current.
@@ -209,6 +236,8 @@ ipcMain.handle('desktop:menu', (_event, items: readonly AppMenuItem[]) => {
 });
 
 ipcMain.handle('desktop:about', openAbout);
+
+ipcMain.handle('desktop:settings', openSettings);
 
 ipcMain.handle('desktop:update', checkForUpdate);
 

@@ -110,8 +110,18 @@ export const HistoryAppView: FC = () => {
 
         void openAbout();
       },
+      /* A window where the platform draws one, the sheet everywhere else, the
+         same choice About makes. */
       settings: () => {
-        setSettingsOpen(true);
+        const openSettings = window.bindings?.openSettings;
+
+        if (openSettings == null) {
+          setSettingsOpen(true);
+
+          return;
+        }
+
+        void openSettings();
       },
       viewSessions: () => {
         setView('sessions');
@@ -412,7 +422,7 @@ export const HistoryAppView: FC = () => {
             onReload={projects.reload}
             showSettings={!nativeMenu}
             onOpenSettings={() => {
-              dialogs.setSettingsOpen(true);
+              runCommand('settings');
             }}
             onOpenAbout={() => {
               runCommand('about');
