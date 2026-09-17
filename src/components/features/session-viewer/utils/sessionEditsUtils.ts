@@ -6,6 +6,11 @@ import type {
   FileEdit,
 } from '@services/edits/editsService';
 
+export interface SplitPath {
+  readonly name: string;
+  readonly directory: string;
+}
+
 const changesOfKind = (edits: readonly FileEdit[], kind: EditKind): number => {
   return sumBy(edits, (edit) => {
     return edit.kind === kind ? edit.changes : 0;
@@ -48,10 +53,7 @@ export const editsInSession = (
  * The name carries the row and the directory sits under it: a full path per row is
  * forty copies of the same prefix hiding the one part that differs.
  */
-export const splitPath = (path: string, projectPath: string | undefined): {
-  readonly name: string;
-  readonly directory: string;
-} => {
+export const splitPath = (path: string, projectPath: string | undefined): SplitPath => {
   const relative = projectPath != null && path.startsWith(projectPath)
     ? path.slice(projectPath.length).replace(/^\//u, '')
     : path;

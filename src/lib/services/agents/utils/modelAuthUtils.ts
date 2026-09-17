@@ -11,43 +11,69 @@ import type { AgentId, AgentOption } from '@config/agents';
 
 // Each format carries its own shape: this is where agents diverge, so it is not
 // abstracted into a shared interface.
+export interface ClaudeModelAuth {
+  readonly format: 'claude';
+  readonly model: string | undefined;
+  readonly authMethod: 'api-key' | 'oauth' | 'env' | 'none';
+}
+
+export interface CodexModelAuth {
+  readonly format: 'codex';
+  readonly model: string | undefined;
+  readonly provider: string | undefined;
+  readonly authMethod: 'oauth' | 'api-key' | 'none';
+}
+
+export interface GeminiModelAuth {
+  readonly format: 'gemini';
+  readonly model: string | undefined;
+  readonly authMethod: 'api-key' | 'oauth' | 'env';
+}
+
+export interface OpenCodeModelAuth {
+  readonly format: 'opencode';
+  readonly model: string | undefined;
+}
+
+export interface CopilotModelAuth {
+  readonly format: 'copilot';
+  readonly model: string | undefined;
+}
+
+export interface AntigravityModelAuth {
+  readonly format: 'antigravity';
+  readonly model: string | undefined;
+}
+
+export interface GrokModelAuth {
+  readonly format: 'grok';
+  readonly model: string | undefined;
+  readonly authMethod: 'api-key' | 'env';
+}
+
+export interface FilesModelAuth {
+  readonly format: 'files';
+}
+
+export interface SqliteModelAuth {
+  readonly format: 'sqlite';
+}
+
+export interface OpenHandsModelAuth {
+  readonly format: 'openhands';
+}
+
 export type ModelAuthState
-  = | {
-    readonly format: 'claude';
-    readonly model: string | undefined;
-    readonly authMethod: 'api-key' | 'oauth' | 'env' | 'none';
-  }
-  | {
-    readonly format: 'codex';
-    readonly model: string | undefined;
-    readonly provider: string | undefined;
-    readonly authMethod: 'oauth' | 'api-key' | 'none';
-  }
-  | {
-    readonly format: 'gemini';
-    readonly model: string | undefined;
-    readonly authMethod: 'api-key' | 'oauth' | 'env';
-  }
-  | {
-    readonly format: 'opencode';
-    readonly model: string | undefined;
-  }
-  | {
-    readonly format: 'copilot';
-    readonly model: string | undefined;
-  }
-  | {
-    readonly format: 'antigravity';
-    readonly model: string | undefined;
-  }
-  | {
-    readonly format: 'grok';
-    readonly model: string | undefined;
-    readonly authMethod: 'api-key' | 'env';
-  }
-  | { readonly format: 'files' }
-  | { readonly format: 'sqlite' }
-  | { readonly format: 'openhands' };
+  = | AntigravityModelAuth
+    | ClaudeModelAuth
+    | CodexModelAuth
+    | CopilotModelAuth
+    | FilesModelAuth
+    | GeminiModelAuth
+    | GrokModelAuth
+    | OpenCodeModelAuth
+    | OpenHandsModelAuth
+    | SqliteModelAuth;
 
 const readClaudeModelAuth = async (claudeDir: string): Promise<ModelAuthState> => {
   const parsed = await readJsonFile(join(claudeDir, 'settings.json'));

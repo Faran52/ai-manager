@@ -1,8 +1,10 @@
 import { diffLines } from '@utils/diffUtils';
 
 import type {
+  FileEditInput,
+  FileWriteInput,
+  MultiEditInput,
   ToolCall,
-  ToolCallInput,
   ToolInputRow,
 } from '@services/history/historyService';
 
@@ -13,7 +15,7 @@ interface RowedInputDiscriminator {
 
 export type RowedInput = Extract<ToolCall['input'], RowedInputDiscriminator>;
 
-export type FileChange = Extract<ToolCallInput, { kind: 'file-write' | 'file-edit' | 'multi-edit' }>;
+export type FileChange = FileEditInput | FileWriteInput | MultiEditInput;
 
 export const inputRows = (input: RowedInput): readonly ToolInputRow[] => {
   switch (input.kind) {

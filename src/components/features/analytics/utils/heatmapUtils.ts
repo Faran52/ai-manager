@@ -25,6 +25,12 @@ export interface HeatmapWeek {
   readonly month?: string | undefined;
 }
 
+export interface HeatmapActivity {
+  readonly date: string;
+  readonly tokens: number;
+  readonly messages: number;
+}
+
 export const levelFor = (tokens: number, peak: number): 0 | 1 | 2 | 3 => {
   if (tokens <= 0 || peak === 0) {
     return 0;
@@ -48,9 +54,7 @@ const isoOf = (day: Date): string => {
 // Columns are weeks and rows are weekdays, so a habit shows up as a row and a
 // busy fortnight as neighbouring columns. A flat run of squares shows neither.
 export const weeksTo = (
-  activity: readonly { readonly date: string;
-    readonly tokens: number;
-    readonly messages: number; }[],
+  activity: readonly HeatmapActivity[],
   todayMs: number,
 ): readonly HeatmapWeek[] => {
   const byDate = new Map(activity.map((day) => {

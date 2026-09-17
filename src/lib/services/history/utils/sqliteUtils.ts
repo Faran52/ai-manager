@@ -26,16 +26,17 @@ import { parseStructuredHistory } from './structuredUtils';
 import { listTree } from './treeUtils';
 
 import type { AgentId } from '@config/agents';
-import type { JsonObject, JsonValue } from '@utils/jsonUtils';
-import type { SQLOutputValue } from 'node:sqlite';
 import type {
   AssistantBlock,
   HistoryEntry,
   ProjectSummary,
   SessionSummary,
+  SummaryTurnEntry,
   ToolOutcome,
   ToolStatus,
-} from '../types';
+} from '@services/history/types';
+import type { JsonObject, JsonValue } from '@utils/jsonUtils';
+import type { SQLOutputValue } from 'node:sqlite';
 import type { RawToolInput } from './claudeRawUtils';
 
 interface SqliteReference {
@@ -46,7 +47,7 @@ interface SqliteReference {
 }
 
 type SqliteDecoder = 'crush' | 'cursor' | 'goose' | 'llm' | 'table' | 'zed';
-type SqliteEntry = Exclude<HistoryEntry, { kind: 'summary' }>;
+type SqliteEntry = Exclude<HistoryEntry, SummaryTurnEntry>;
 
 interface DecodedSqliteSession {
   readonly actualSessionId: string;

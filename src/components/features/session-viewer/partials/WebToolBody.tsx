@@ -6,10 +6,10 @@ import {
 
 import { webUrl } from '../utils/webUtils';
 
-import type { ToolCallInput } from '@services/history/historyService';
+import type { WebFetchInput, WebSearchInput } from '@services/history/types';
 import type { FC } from 'react';
 
-type WebToolInput = Extract<ToolCallInput, { readonly kind: 'web-fetch' | 'web-search' }>;
+type WebToolInput = WebFetchInput | WebSearchInput;
 
 export interface WebToolBodyProps {
   readonly input: WebToolInput;

@@ -26,9 +26,10 @@ import type {
   HistoryEntry,
   ProjectSummary,
   SessionSummary,
+  SummaryTurnEntry,
 } from '../types';
 
-type StructuredEntry = Exclude<HistoryEntry, { kind: 'summary' }>;
+type StructuredEntry = Exclude<HistoryEntry, SummaryTurnEntry>;
 
 interface StructuredSessionSummary extends SessionSummary {
   readonly cwd: string;

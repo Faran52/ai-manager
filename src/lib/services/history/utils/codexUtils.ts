@@ -38,11 +38,12 @@ interface CodexMcpInvocation {
   readonly arguments?: RawToolInput | undefined;
 }
 
+interface CodexMcpOk {
+  readonly content?: readonly CodexContentPart[] | undefined;
+}
+
 interface CodexMcpResult {
-  readonly Ok?: {
-    readonly content?: readonly CodexContentPart[] | undefined;
-  }
-  | undefined;
+  readonly Ok?: CodexMcpOk | undefined;
   readonly Err?: string | undefined;
 }
 

@@ -1,4 +1,9 @@
-import type { HistoryEntry, ToolStatus } from '../history/types';
+import type {
+  AssistantTurnEntry,
+  HistoryEntry,
+  ToolStatus,
+  UserTurnEntry,
+} from '../history/types';
 
 export interface ExportMeta {
   readonly title: string;
@@ -16,7 +21,7 @@ const fence = (language: string, body: string): string => {
   return `${marker}${language}\n${body}\n${marker}`;
 };
 
-const userLines = (entry: Extract<HistoryEntry, { kind: 'user' }>): readonly string[] => {
+const userLines = (entry: UserTurnEntry): readonly string[] => {
   const lines: string[] = [];
 
   if (entry.command != null) {
@@ -46,7 +51,7 @@ const outcomeSuffix = (status: ToolStatus): string => {
   return status === 'ok' ? '' : ` (${status})`;
 };
 
-const assistantLines = (entry: Extract<HistoryEntry, { kind: 'assistant' }>): readonly string[] => {
+const assistantLines = (entry: AssistantTurnEntry): readonly string[] => {
   return entry.blocks.flatMap((block) => {
     if (block.blockType === 'text') {
       return ['', '### 🤖 Assistant', '', block.text];
@@ -149,7 +154,7 @@ const DOCUMENT_STYLE = `
   .summary-line { color: var(--muted); font-style: italic; }
 `;
 
-const userHtml = (entry: Extract<HistoryEntry, { kind: 'user' }>): readonly string[] => {
+const userHtml = (entry: UserTurnEntry): readonly string[] => {
   const parts: string[] = ['<h2>User</h2>'];
 
   if (entry.command != null) {
@@ -178,7 +183,7 @@ const userHtml = (entry: Extract<HistoryEntry, { kind: 'user' }>): readonly stri
 };
 
 const assistantHtml = (
-  entry: Extract<HistoryEntry, { kind: 'assistant' }>,
+  entry: AssistantTurnEntry,
 ): readonly string[] => {
   return entry.blocks.flatMap((entryBlock) => {
     if (entryBlock.blockType === 'text') {

@@ -31,6 +31,11 @@ interface ProjectPayload {
   readonly projects: readonly ProjectSummary[];
 }
 
+interface ToolTally {
+  tool: string;
+  count: number;
+}
+
 const toPath = (url: RequestInfo | URL): string => {
   if (typeof url === 'string') {
     return url;
@@ -639,8 +644,7 @@ describe('HistoryApp cross-view flows', () => {
   });
 
   test('scopes the global report to one agent, and clears it on toggle-off or a project pick', async () => {
-    const projectStats = (tools: readonly { tool: string;
-      count: number; }[] = []) => {
+    const projectStats = (tools: readonly ToolTally[] = []) => {
       return {
         projectId: 'global',
         totals: {

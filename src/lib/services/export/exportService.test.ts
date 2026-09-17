@@ -12,6 +12,10 @@ import {
 
 import type { HistoryEntry, ToolOutcome } from '../history/types';
 
+interface OutcomeId {
+  readonly toolUseId: string;
+}
+
 const user: HistoryEntry = {
   kind: 'user',
   uuid: 'u1',
@@ -41,7 +45,7 @@ const command: HistoryEntry = {
   outcomes: [],
 };
 
-const outcomeWith = (overrides: Partial<ToolOutcome> & { readonly toolUseId: string }): ToolOutcome => {
+const outcomeWith = (overrides: OutcomeId & Partial<ToolOutcome>): ToolOutcome => {
   return {
     status: 'ok',
     images: [],

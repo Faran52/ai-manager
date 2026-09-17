@@ -2,6 +2,7 @@ import { LruCache } from '@utils/lruCacheUtils';
 
 import type { AgentId } from '@config/agents';
 import type {
+  AssistantTurnEntry,
   HistoryEntry,
   SessionSummary,
   TokenUsage,
@@ -172,7 +173,7 @@ const createDraft = (): Draft => {
 
 const addAssistant = (
   draft: Draft,
-  entry: Extract<HistoryEntry, { kind: 'assistant' }>,
+  entry: AssistantTurnEntry,
   splitAvailable: boolean,
   pricing: PricingEntry[],
   tools: Record<string, number>,

@@ -10,6 +10,12 @@ import { useWorkspaceSelection } from './useWorkspaceSelection';
 
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
 
+interface ShowSession {
+  readonly showSession: ReturnType<typeof vi.fn>;
+}
+
+type Harness = ReturnType<typeof renderHook<ReturnType<typeof useWorkspaceSelection>, never>> & ShowSession;
+
 const PROJECT: ProjectSummary = {
   agent: 'claude',
   id: 'p',
@@ -34,9 +40,7 @@ const SESSION: SessionSummary = {
 
 const STAMP = Date.UTC(2026, 0, 2);
 
-const setup = (): ReturnType<typeof renderHook<ReturnType<typeof useWorkspaceSelection>, never>> & {
-  readonly showSession: ReturnType<typeof vi.fn>;
-} => {
+const setup = (): Harness => {
   const showSession = vi.fn();
   const hook = renderHook(() => {
     return useWorkspaceSelection([PROJECT], showSession);

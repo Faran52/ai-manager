@@ -27,11 +27,23 @@ interface AppMenuSubmenu {
 /* A menu as the page describes it: a clickable entry, a nested menu, a divider,
    or a role. The app owns the shape so the page can say what belongs in a menu
    without naming whatever is drawing it. */
+interface AppMenuItemEntry {
+  readonly item: AppMenuEntry;
+}
+
+interface AppMenuItemRole {
+  readonly role: AppMenuRole;
+}
+
+interface AppMenuItemSubmenu {
+  readonly submenu: AppMenuSubmenu;
+}
+
 type AppMenuItem
   = | 'separator'
-    | { readonly item: AppMenuEntry }
-    | { readonly role: AppMenuRole }
-    | { readonly submenu: AppMenuSubmenu };
+    | AppMenuItemEntry
+    | AppMenuItemRole
+    | AppMenuItemSubmenu;
 
 interface DesktopUpdate {
   readonly available: boolean;

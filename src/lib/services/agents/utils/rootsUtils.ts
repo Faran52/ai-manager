@@ -8,10 +8,13 @@ import {
 
 import type { AgentId } from '@config/agents';
 
-export type AgentPathMap = Readonly<Record<AgentId, readonly string[]>> & {
+// The two that always resolve, so a caller reading either never checks for empty.
+export interface RequiredAgentPaths {
   readonly claude: readonly [string, ...string[]];
   readonly codex: readonly [string, ...string[]];
-};
+}
+
+export type AgentPathMap = Readonly<Record<AgentId, readonly string[]>> & RequiredAgentPaths;
 
 export interface RootResolutionOptions {
   readonly env: Readonly<Record<string, string | undefined>>;

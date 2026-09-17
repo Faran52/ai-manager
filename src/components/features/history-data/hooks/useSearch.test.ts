@@ -13,7 +13,11 @@ import {
 
 import { useSearch } from './useSearch';
 
-const isBodyWithQuery = (value: unknown): value is { query: string } => {
+interface BodyWithQuery {
+  query: string;
+}
+
+const isBodyWithQuery = (value: unknown): value is BodyWithQuery => {
   return typeof value === 'object' && value !== null && 'query' in value;
 };
 

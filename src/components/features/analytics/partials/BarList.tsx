@@ -12,10 +12,14 @@ import {
 
 import type { FC } from 'react';
 
+export interface BarListItem {
+  readonly label: string;
+  readonly value: number;
+}
+
 export interface BarListProps {
   readonly title: string;
-  readonly items: readonly { readonly label: string;
-    readonly value: number; }[];
+  readonly items: readonly BarListItem[];
 }
 
 export const BarList: FC<BarListProps> = ({ title, items }) => {

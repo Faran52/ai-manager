@@ -21,18 +21,19 @@ import { conversationMessageCount, firstUserMessageText } from './outcomeUtils';
 import { namedByFolder, projectsFromSessions } from './projectSummaryUtils';
 
 import type { AgentId } from '@config/agents';
-import type { JsonObject, JsonValue } from '@utils/jsonUtils';
 import type {
   AssistantBlock,
   HistoryEntry,
   ProjectSummary,
   SessionSummary,
+  SummaryTurnEntry,
   ToolOutcome,
   ToolParts,
-} from '../types';
+} from '@services/history/types';
+import type { JsonObject, JsonValue } from '@utils/jsonUtils';
 import type { RawToolInput } from './claudeRawUtils';
 
-type GeminiEntry = Exclude<HistoryEntry, { kind: 'summary' }>;
+type GeminiEntry = Exclude<HistoryEntry, SummaryTurnEntry>;
 
 interface ParsedGeminiHistory {
   readonly entries: readonly GeminiEntry[];

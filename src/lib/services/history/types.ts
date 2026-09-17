@@ -24,70 +24,94 @@ export interface SingleEdit {
   readonly replaceAll: boolean;
 }
 
+export interface BashInput {
+  readonly kind: 'bash';
+  command: string;
+  description?: string | undefined;
+}
+
+export interface FileWriteInput {
+  readonly kind: 'file-write';
+  path: string;
+  content: string;
+}
+
+export interface FileEditInput {
+  readonly kind: 'file-edit';
+  path: string;
+  oldString: string;
+  newString: string;
+  replaceAll: boolean;
+}
+
+export interface MultiEditInput {
+  readonly kind: 'multi-edit';
+  path: string;
+  edits: readonly SingleEdit[];
+}
+
+export interface FileReadInput {
+  readonly kind: 'file-read';
+  path: string;
+  offset?: number | undefined;
+  limit?: number | undefined;
+}
+
+export interface SearchFilesInput {
+  readonly kind: 'search-files';
+  tool: 'glob' | 'grep';
+  pattern: string;
+  searchPath?: string | undefined;
+}
+
+export interface WebSearchInput {
+  readonly kind: 'web-search';
+  query: string;
+}
+
+export interface WebFetchInput {
+  readonly kind: 'web-fetch';
+  url: string;
+  prompt?: string | undefined;
+}
+
+export interface TodoWriteInput {
+  readonly kind: 'todo-write';
+  todos: readonly TodoItem[];
+}
+
+export interface TaskInput {
+  readonly kind: 'task';
+  agentType?: string | undefined;
+  description?: string | undefined;
+  prompt?: string | undefined;
+}
+
+export interface SkillInput {
+  readonly kind: 'skill';
+  skill?: string | undefined;
+  prompt?: string | undefined;
+}
+
+export interface GenericInput {
+  readonly kind: 'generic';
+  title: string;
+  rows: readonly ToolInputRow[];
+}
+
 export type ToolCallInput
-  = | {
-    readonly kind: 'bash';
-    command: string;
-    description?: string | undefined;
-  }
-  | {
-    readonly kind: 'file-write';
-    path: string;
-    content: string;
-  }
-  | {
-    readonly kind: 'file-edit';
-    path: string;
-    oldString: string;
-    newString: string;
-    replaceAll: boolean;
-  }
-  | {
-    readonly kind: 'multi-edit';
-    path: string;
-    edits: readonly SingleEdit[];
-  }
-  | {
-    readonly kind: 'file-read';
-    path: string;
-    offset?: number | undefined;
-    limit?: number | undefined;
-  }
-  | {
-    readonly kind: 'search-files';
-    tool: 'glob' | 'grep';
-    pattern: string;
-    searchPath?: string | undefined;
-  }
-  | {
-    readonly kind: 'web-search';
-    query: string;
-  }
-  | {
-    readonly kind: 'web-fetch';
-    url: string;
-    prompt?: string | undefined;
-  }
-  | {
-    readonly kind: 'todo-write';
-    todos: readonly TodoItem[];
-  }
-  | {
-    readonly kind: 'task';
-    agentType?: string | undefined;
-    description?: string | undefined;
-    prompt?: string | undefined;
-  }
-  | {
-    readonly kind: 'skill';
-    skill?: string | undefined;
-    prompt?: string | undefined;
-  }
-  | {
-    readonly kind: 'generic';
-    title: string;
-    rows: readonly ToolInputRow[];
-  };
+  = | BashInput
+    | FileEditInput
+    | FileReadInput
+    | FileWriteInput
+    | GenericInput
+    | MultiEditInput
+    | SearchFilesInput
+    | SkillInput
+    | TaskInput
+    | TodoWriteInput
+    | WebFetchInput
+    | WebSearchInput;
 
 export interface ToolCall {
   readonly id: string;

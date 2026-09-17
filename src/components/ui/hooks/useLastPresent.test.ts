@@ -7,6 +7,10 @@ import {
 
 import { useLastPresent } from './useLastPresent';
 
+interface ValueProps {
+  value: string | null;
+}
+
 describe('useLastPresent', () => {
   it('is undefined until a value arrives', () => {
     const { result } = renderHook(() => {
@@ -17,7 +21,7 @@ describe('useLastPresent', () => {
   });
 
   it('returns the present value and keeps it once it clears', () => {
-    const { result, rerender } = renderHook<string | undefined, { value: string | null }>(
+    const { result, rerender } = renderHook<string | undefined, ValueProps>(
       ({ value }) => {
         return useLastPresent(value);
       },
@@ -31,7 +35,7 @@ describe('useLastPresent', () => {
   });
 
   it('replaces the retained value when a new one arrives', () => {
-    const { result, rerender } = renderHook<string | undefined, { value: string | null }>(
+    const { result, rerender } = renderHook<string | undefined, ValueProps>(
       ({ value }) => {
         return useLastPresent(value);
       },
@@ -46,7 +50,7 @@ describe('useLastPresent', () => {
   });
 
   it('holds steady when the same value repeats', () => {
-    const { result, rerender } = renderHook<string | undefined, { value: string | null }>(
+    const { result, rerender } = renderHook<string | undefined, ValueProps>(
       ({ value }) => {
         return useLastPresent(value);
       },

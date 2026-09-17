@@ -37,9 +37,10 @@ import type {
   HistoryEntry,
   ProjectSummary,
   SessionSummary,
+  SummaryTurnEntry,
 } from '../types';
 
-type AntigravityEntry = Exclude<HistoryEntry, { kind: 'summary' }>;
+type AntigravityEntry = Exclude<HistoryEntry, SummaryTurnEntry>;
 
 interface ConversationIndexEntry {
   readonly display: string | undefined;

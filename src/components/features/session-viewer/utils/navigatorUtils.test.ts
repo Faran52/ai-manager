@@ -2,9 +2,9 @@ import { expect, test } from 'vitest';
 
 import { previewOf } from './navigatorUtils';
 
-import type { HistoryEntry } from '@services/history/historyService';
+import type { HistoryEntry, UserTurnEntry } from '@services/history/historyService';
 
-const user = (overrides: Partial<Extract<HistoryEntry, { kind: 'user' }>>): HistoryEntry => {
+const user = (overrides: Partial<UserTurnEntry>): HistoryEntry => {
   return {
     kind: 'user',
     uuid: 'u',

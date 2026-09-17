@@ -10,6 +10,10 @@ import {
 
 import { useSmoothScroll } from './useSmoothScroll';
 
+interface WheelModifier {
+  readonly modifier?: 'ctrl' | 'meta';
+}
+
 let frames: FrameRequestCallback[] = [];
 let cancelled: number[] = [];
 
@@ -23,7 +27,7 @@ const scrollable = (scrollHeight = 2_000, clientHeight = 500): HTMLDivElement =>
   return element;
 };
 
-const wheel = (element: HTMLElement, init: WheelEventInit & { readonly modifier?: 'ctrl' | 'meta' }): void => {
+const wheel = (element: HTMLElement, init: WheelEventInit & WheelModifier): void => {
   const {
     modifier,
     ...rest

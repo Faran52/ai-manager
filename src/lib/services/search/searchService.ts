@@ -10,7 +10,11 @@ import { loadSessionEntriesOrEmpty } from '../session/utils/loaderUtils';
 
 import type { AgentId } from '@config/agents';
 import type { AgentRoots } from '../agents/agentsService';
-import type { HistoryEntry, SessionSummary } from '../history/types';
+import type {
+  AssistantTurnEntry,
+  HistoryEntry,
+  SessionSummary,
+} from '../history/types';
 
 export interface SearchHit {
   readonly agent: AgentId;
@@ -50,7 +54,7 @@ interface SessionHitOutcome {
 
 type SearchSession = Pick<SessionSummary, 'filePath' | 'id' | 'profile'>;
 
-const assistantText = (entry: Extract<HistoryEntry, { kind: 'assistant' }>): string => {
+const assistantText = (entry: AssistantTurnEntry): string => {
   return entry.blocks
     .map((block) => {
       if (block.blockType === 'text') {

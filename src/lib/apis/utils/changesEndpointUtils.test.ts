@@ -23,6 +23,11 @@ interface Session {
   readonly filePath: string;
 }
 
+interface Stream {
+  readonly next: () => Promise<string>;
+  readonly cancel: () => Promise<void>;
+}
+
 const streamFor = async (filePath: string, home: string, controller: AbortController): Promise<Response> => {
   return handleChangeStream(new Request(
     `https://local/api/changes?file=${encodeURIComponent(filePath)}`,
@@ -30,8 +35,7 @@ const streamFor = async (filePath: string, home: string, controller: AbortContro
   ), { home });
 };
 
-const reading = (response: Response): { next: () => Promise<string>;
-  cancel: () => Promise<void>; } => {
+const reading = (response: Response): Stream => {
   const reader = response.body?.getReader();
 
   if (reader == null) {

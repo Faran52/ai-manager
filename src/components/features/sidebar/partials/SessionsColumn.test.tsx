@@ -20,9 +20,11 @@ import type { SessionSummary } from '@services/history/historyService';
 import type { FC } from 'react';
 import type { SessionsColumnProps } from './SessionsColumn';
 
-type HarnessProps = Partial<Omit<SessionsColumnProps, 'filters' | 'selection'>> & {
+interface HarnessSessions {
   readonly sessions?: readonly SessionSummary[];
-};
+}
+
+type HarnessProps = Partial<Omit<SessionsColumnProps, 'filters' | 'selection'>> & HarnessSessions;
 
 const noop = (): void => {
   return undefined;

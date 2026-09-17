@@ -13,6 +13,10 @@ import { useSessionSelection } from './useSessionSelection';
 
 import type { SessionSummary } from '@services/history/historyService';
 
+interface PausedProps {
+  readonly paused: boolean;
+}
+
 const session = (id: string, agent: SessionSummary['agent'] = 'claude'): SessionSummary => {
   return {
     agent,
@@ -61,7 +65,7 @@ describe('useSessionSelection', () => {
   });
 
   test('leaves on Escape unless a dialog above it holds the key', () => {
-    const { result, rerender } = renderHook(({ paused }: { paused: boolean }) => {
+    const { result, rerender } = renderHook(({ paused }: PausedProps) => {
       return useSessionSelection(ALL, ALL, paused);
     }, { initialProps: { paused: true } });
 

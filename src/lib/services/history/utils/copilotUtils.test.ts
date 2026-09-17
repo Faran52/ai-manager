@@ -28,17 +28,29 @@ interface FixturePart {
   readonly value?: string | number;
 }
 
+interface FixtureMetadata {
+  readonly resolvedModel?: string;
+}
+
+interface FixtureResult {
+  readonly metadata?: FixtureMetadata;
+}
+
+interface FixtureCommandLine {
+  readonly forDisplay?: string;
+  readonly original?: string;
+  readonly toolEdited?: string;
+}
+
 interface FixtureToolData {
-  readonly commandLine?: {
-    readonly forDisplay?: string;
-    readonly original?: string;
-    readonly toolEdited?: string;
-  };
-  readonly todoList?: readonly {
-    readonly id?: string;
-    readonly status?: string;
-    readonly title?: string;
-  }[];
+  readonly commandLine?: FixtureCommandLine;
+  readonly todoList?: readonly FixtureTodo[];
+}
+
+interface FixtureTodo {
+  readonly id?: string;
+  readonly status?: string;
+  readonly title?: string;
 }
 
 interface FixtureResultDetail {
@@ -78,11 +90,7 @@ interface FixtureRequest {
   readonly requestId?: string;
   readonly response?: readonly FixtureItem[];
   readonly responseTimestamp?: number;
-  readonly result?: {
-    readonly metadata?: {
-      readonly resolvedModel?: string;
-    };
-  };
+  readonly result?: FixtureResult;
   readonly timestamp?: number;
 }
 

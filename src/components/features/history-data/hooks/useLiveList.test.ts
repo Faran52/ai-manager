@@ -13,6 +13,10 @@ import {
 
 import { useLiveList } from './useLiveList';
 
+interface KeyProps {
+  readonly key: string;
+}
+
 afterEach(() => {
   vi.useRealTimers();
   vi.restoreAllMocks();
@@ -50,7 +54,7 @@ describe('useLiveList', () => {
 
   test('returns to loading the moment the key changes', async () => {
     const loads = new Map([['one', ready('first')], ['two', ready('second')]]);
-    const { result, rerender } = renderHook(({ key }: { key: string }) => {
+    const { result, rerender } = renderHook(({ key }: KeyProps) => {
       return useLiveList(key, loads.get(key) ?? ready(''));
     }, { initialProps: { key: 'one' } });
 

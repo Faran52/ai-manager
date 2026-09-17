@@ -12,12 +12,15 @@ import { useRetentionOnLaunch } from './useRetentionOnLaunch';
 
 import type { RunRetentionResponse } from '@lib/apis/contracts';
 
+interface RetentionError {
+  readonly error: string;
+}
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const respondWith = (body: RunRetentionResponse
-  | { readonly error: string }, ok = true): void => {
+const respondWith = (body: RetentionError | RunRetentionResponse, ok = true): void => {
   vi.stubGlobal('fetch', vi.fn(() => {
     return Promise.resolve(new Response(JSON.stringify(body), {
       status: ok ? 200 : 500,
