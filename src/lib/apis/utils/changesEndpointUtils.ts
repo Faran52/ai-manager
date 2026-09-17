@@ -1,63 +1,63 @@
 import { watch } from 'node:fs';
 
-import { CHANGE_DEBOUNCE_MS, HEARTBEAT_MS } from '../constants';
+import { decodeReference } from '@services/history/utils/sqliteUtils';
+import { containedIn } from '@utils/pathUtils';
+
+import {
+  BAD_REQUEST,
+  CHANGE_DEBOUNCE_MS,
+  HEARTBEAT_MS,
+} from '../constants';
 
 import { resolveEndpointRoots } from './endpointDepsUtils';
 
 import type { FSWatcher } from 'node:fs';
 import type { EndpointDeps } from './endpointDepsUtils';
 
-export interface ChangeStreamOptions {
-  // Injected by the test, which has no agent directories to watch.
-  readonly roots?: readonly string[] | undefined;
-  readonly debounceMs?: number | undefined;
-  readonly heartbeatMs?: number | undefined;
-}
-
 const agentRoots = (deps: EndpointDeps | undefined): readonly string[] => {
-  const resolved = resolveEndpointRoots(deps);
-
-  return [...new Set(Object.values(resolved).flat() as readonly string[])];
+  return [...new Set(Object.values(resolveEndpointRoots(deps)).flat() as readonly string[])];
 };
 
-/*
- * One watcher per root, recursive. A root that is not there yet is skipped
- * rather than fatal: an agent the reader has never run has no directory.
- */
-const watchRoots = (roots: readonly string[], onChange: () => void): readonly FSWatcher[] => {
-  return roots.flatMap((root) => {
-    try {
-      return [watch(root, { recursive: true }, onChange)];
-    }
-    catch {
-      return [];
-    }
-  });
+// A transcript is its own file. A session in a database is that database plus
+// the WAL sidecar, which is where a write lands until a checkpoint.
+const watchTargets = (filePath: string): readonly [string, ...string[]] => {
+  const reference = decodeReference(filePath);
+
+  return reference == null
+    ? [filePath]
+    : [reference.databasePath, `${reference.databasePath}-wal`];
 };
 
 /**
- * Tells the page when the history on disk moved, so it can reload instead of
- * asking every few seconds whether anything happened.
+ * Tells the page when the conversation it has open grew, and nothing else.
  *
- * The event carries no payload. What changed is not worth describing when the
- * page already knows how to fetch what it shows, and a path would leak the
- * reader's directory layout into a stream anything on the origin can open.
+ * Watching the agent roots instead would be thousands of directories, one
+ * inotify entry each on Linux, and a main process callback for every write by
+ * every agent. Lists are read once and refreshed by hand.
  */
-export const handleChangeStream = (
+export const handleChangeStream = async (
   request: Request,
   deps?: EndpointDeps,
-  options: ChangeStreamOptions = {},
-): Response => {
-  const roots = options.roots ?? agentRoots(deps);
-  const debounceMs = options.debounceMs ?? CHANGE_DEBOUNCE_MS;
-  const heartbeatMs = options.heartbeatMs ?? HEARTBEAT_MS;
+): Promise<Response> => {
+  const filePath = new URL(request.url).searchParams.get('file');
+
+  if (filePath == null || filePath.length === 0) {
+    return new Response(null, { status: BAD_REQUEST });
+  }
+
+  const targets = watchTargets(filePath);
+
+  // The page names the file, so the name is checked: unchecked, this watches
+  // any path on the machine and reports back what it finds.
+  if (!await containedIn(agentRoots(deps), targets[0])) {
+    return new Response(null, { status: BAD_REQUEST });
+  }
 
   let watchers: readonly FSWatcher[] = [];
   let debounce: NodeJS.Timeout | undefined;
   let heartbeat: NodeJS.Timeout | undefined;
   let live = true;
 
-  // Shared by the abort and the reader going away, either of which can be first.
   const release = (): void => {
     live = false;
 
@@ -85,24 +85,31 @@ export const handleChangeStream = (
         }
       };
 
-      /*
-       * Writing one session fires a burst of events, and the page reloads the
-       * same list for all of them, so the burst is collapsed into one.
-       */
-      const onChange = (): void => {
+      // An agent writes a turn in pieces, and each one refetches the same tail.
+      const announce = (): void => {
         clearTimeout(debounce);
         debounce = setTimeout(() => {
           send('event: changed\ndata: 1\n\n');
-        }, debounceMs);
+        }, CHANGE_DEBOUNCE_MS);
+        debounce.unref();
       };
 
-      watchers = watchRoots(roots, onChange);
+      watchers = targets.flatMap((target) => {
+        try {
+          return [watch(target, announce)];
+        }
+        catch {
+          // A sidecar that is not there, which is the usual case.
+          return [];
+        }
+      });
 
-      // A comment line, which EventSource ignores. Without it an idle stream
-      // looks dead to anything between the page and the server.
+      // A comment line, which EventSource ignores. An idle stream otherwise
+      // looks dead to whatever sits between page and server.
       heartbeat = setInterval(() => {
         send(': ping\n\n');
-      }, heartbeatMs);
+      }, HEARTBEAT_MS);
+      heartbeat.unref();
 
       send('event: ready\ndata: 1\n\n');
 

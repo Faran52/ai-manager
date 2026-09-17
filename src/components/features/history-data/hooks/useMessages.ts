@@ -9,6 +9,8 @@ import { appConfig } from '@config/appConfig';
 import { fetchMessages } from '@lib/apis/apiClient';
 import { toErrorMessage } from '@utils/errorUtils';
 
+import { subscribeToSessionChanges } from '../utils/changeStreamUtils';
+
 import type { AgentId } from '@config/agents';
 import type { HistoryEntry } from '@services/history/historyService';
 import type { SessionPage } from '@services/session/sessionService';
@@ -190,6 +192,25 @@ export const useMessages = (
       active = false;
     };
   }, [feed]);
+
+  // The one thing that follows the disk. A change refetches the tail through the
+  // same path a stale timestamp does, so nothing new merges entries.
+  useEffect(() => {
+    if (filePath == null) {
+      return undefined;
+    }
+
+    return subscribeToSessionChanges(filePath, () => {
+      setFeed((current) => {
+        return current.phase === 'loading'
+          ? current
+          : {
+              ...current,
+              phase: 'refreshing',
+            };
+      });
+    });
+  }, [filePath]);
 
   const loadMore = useCallback((): void => {
     setFeed((current) => {

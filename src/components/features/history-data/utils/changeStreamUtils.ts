@@ -1,38 +1,19 @@
 /**
- * One connection for the whole page, shared by every list watching the history.
+ * Says when the open conversation grew, for as long as it is open.
  *
- * A browser allows six per origin, and a list per pane would spend them all, so
- * the stream is opened on the first subscriber and closed after the last one
- * leaves. EventSource rather than a socket: the server has news, the page never
- * answers, and reconnection is the browser's problem rather than ours.
+ * One connection, for the one file being read. Everything else the page shows
+ * is read once and refreshed by hand, so nothing here outlives the session it
+ * was opened for.
  */
-const listeners = new Set<() => void>();
+export const subscribeToSessionChanges = (
+  filePath: string,
+  onChange: () => void,
+): (() => void) => {
+  const source = new EventSource(`/api/changes?file=${encodeURIComponent(filePath)}`);
 
-let source: EventSource | undefined;
-
-const open = (): void => {
-  source = new EventSource('/api/changes');
-
-  source.addEventListener('changed', () => {
-    for (const listener of [...listeners]) {
-      listener();
-    }
-  });
-};
-
-export const subscribeToChanges = (listener: () => void): (() => void) => {
-  listeners.add(listener);
-
-  if (source == null) {
-    open();
-  }
+  source.addEventListener('changed', onChange);
 
   return () => {
-    listeners.delete(listener);
-
-    if (listeners.size === 0) {
-      source?.close();
-      source = undefined;
-    }
+    source.close();
   };
 };

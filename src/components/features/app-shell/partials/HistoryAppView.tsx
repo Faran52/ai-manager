@@ -180,8 +180,8 @@ export const HistoryAppView: FC = () => {
    * Only the one the pane is about reads. Both are live and the agent list fans
    * out a request per project, so the idle one polled for an answer nobody read.
    */
-  const projectSessions = useSessions(reportScope == null ? selectedProject : null, view === 'sessions');
-  const agentSessions = useAgentSessions(reportScope, visibleProjects, view === 'sessions');
+  const projectSessions = useSessions(reportScope == null ? selectedProject : null);
+  const agentSessions = useAgentSessions(reportScope, visibleProjects);
   const sessions = reportScope != null ? agentSessions : projectSessions;
   const stats = useProjectStats(view === 'analytics' ? selectedProject : null);
   const projectPath = selectedProject?.actualPath ?? '';

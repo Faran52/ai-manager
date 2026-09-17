@@ -5,7 +5,7 @@ import {
   vi,
 } from 'vitest';
 
-import { subscribeToChanges } from './changeStreamUtils';
+import { subscribeToSessionChanges } from './changeStreamUtils';
 
 interface FakeSource {
   readonly url: string;
@@ -16,11 +16,11 @@ interface FakeSource {
 const opened: FakeSource[] = [];
 
 class StubEventSource {
+  public readonly url: string;
+
   private readonly handlers = new Set<() => void>();
 
   private isClosed = false;
-
-  public readonly url: string;
 
   public constructor(url: string) {
     this.url = url;
@@ -55,52 +55,34 @@ afterEach(() => {
   opened.length = 0;
 });
 
-test('opens one stream however many lists are watching', () => {
-  const first = vi.fn();
-  const second = vi.fn();
-  const stopFirst = subscribeToChanges(first);
-  const stopSecond = subscribeToChanges(second);
+test('watches the one conversation it was given, name and all', () => {
+  const stop = subscribeToSessionChanges('/history/a project/session one.jsonl', vi.fn());
 
   expect(opened).toHaveLength(1);
-  expect(opened[0]?.url).toBe('/api/changes');
+  expect(opened[0]?.url).toBe(
+    '/api/changes?file=%2Fhistory%2Fa%20project%2Fsession%20one.jsonl',
+  );
+
+  stop();
+});
+
+test('reports a change to the reader', () => {
+  const onChange = vi.fn();
+  const stop = subscribeToSessionChanges('/history/session.jsonl', onChange);
 
   opened[0]?.emit();
 
-  expect(first).toHaveBeenCalledTimes(1);
-  expect(second).toHaveBeenCalledTimes(1);
+  expect(onChange).toHaveBeenCalledTimes(1);
 
-  stopFirst();
-  stopSecond();
+  stop();
 });
 
-test('closes the stream once the last list stops watching, and opens a new one after', () => {
-  const stop = subscribeToChanges(vi.fn());
+test('stops watching when the conversation is closed', () => {
+  const stop = subscribeToSessionChanges('/history/session.jsonl', vi.fn());
 
   expect(opened[0]?.closed()).toBe(false);
 
   stop();
 
   expect(opened[0]?.closed()).toBe(true);
-
-  const stopAgain = subscribeToChanges(vi.fn());
-
-  expect(opened).toHaveLength(2);
-
-  stopAgain();
-});
-
-test('holds the stream open while another list is still watching', () => {
-  const stayed = vi.fn();
-  const stopFirst = subscribeToChanges(vi.fn());
-  const stopSecond = subscribeToChanges(stayed);
-
-  stopFirst();
-
-  expect(opened[0]?.closed()).toBe(false);
-
-  opened[0]?.emit();
-
-  expect(stayed).toHaveBeenCalledTimes(1);
-
-  stopSecond();
 });

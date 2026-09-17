@@ -11,7 +11,6 @@ const EMPTY: readonly SessionSummary[] = [];
 
 export const useSessions = (
   project: ProjectSummary | null,
-  live = false,
 ): AsyncResource<readonly SessionSummary[]> => {
   const key = project == null ? '' : `${project.agent}:${project.id}:${project.profile ?? ''}`;
   const load = useCallback(async () => {
@@ -31,5 +30,5 @@ export const useSessions = (
     });
   }, [project]);
 
-  return useLiveList(key, load, live);
+  return useLiveList(key, load);
 };

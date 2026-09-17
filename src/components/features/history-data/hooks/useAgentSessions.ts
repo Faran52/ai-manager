@@ -24,7 +24,6 @@ const EMPTY: readonly SessionSummary[] = [];
 export const useAgentSessions = (
   scope: ReportScope | null,
   projects: readonly ProjectSummary[],
-  live = false,
 ): AsyncResource<readonly SessionSummary[]> => {
   // Split out so a caller passing a fresh scope object each render (an inline
   // literal) does not retrigger the load; only the values matter.
@@ -59,5 +58,5 @@ export const useAgentSessions = (
       });
   }, [agent, agentProjects, profile]);
 
-  return useLiveList(key, load, live);
+  return useLiveList(key, load);
 };

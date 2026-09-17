@@ -11,6 +11,8 @@ import {
   vi,
 } from 'vitest';
 
+import { emitChange } from '@mocks/eventSource';
+
 import { useMessages } from './useMessages';
 
 import type { HistoryEntry } from '@services/history/historyService';
@@ -408,5 +410,95 @@ describe('useMessages live refresh', () => {
       expect(result.current.entries).toHaveLength(1);
     });
     expect(fetchCalls()).toBe(1);
+  });
+
+  test('refetches the tail when the open conversation grows on disk', async () => {
+    page = () => {
+      return {
+        entries: [entry('a')],
+        total: 1,
+        messageCount: 1,
+        hasMore: false,
+        nextOffset: 1,
+      };
+    };
+
+    stubFetch();
+
+    const { result } = renderHook(() => {
+      return useMessages('/f.jsonl', 'claude', false);
+    });
+
+    await waitFor(() => {
+      expect(result.current.phase).toBe('ready');
+    });
+
+    const before = fetchCalls();
+
+    await act(async () => {
+      emitChange();
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(fetchCalls()).toBeGreaterThan(before);
+    });
+  });
+
+  test('watches nothing when no conversation is open', async () => {
+    stubFetch();
+
+    const { result } = renderHook(() => {
+      return useMessages(null, 'claude', false);
+    });
+
+    await waitFor(() => {
+      expect(result.current.phase).toBe('ready');
+    });
+
+    await act(async () => {
+      emitChange();
+      await Promise.resolve();
+    });
+
+    expect(fetchCalls()).toBe(0);
+  });
+
+  test('leaves a change alone while the first page is still loading', async () => {
+    page = () => {
+      return {
+        entries: [entry('a')],
+        total: 1,
+        messageCount: 1,
+        hasMore: false,
+        nextOffset: 1,
+      };
+    };
+
+    let calls = 0;
+
+    vi.stubGlobal('fetch', vi.fn(() => {
+      calls += 1;
+
+      // Never settles, so the feed stays on its first load.
+      return new Promise<Response>(() => {
+        return undefined;
+      });
+    }));
+
+    const { result } = renderHook(() => {
+      return useMessages('/f.jsonl', 'claude', false);
+    });
+
+    await waitFor(() => {
+      expect(result.current.phase).toBe('loading');
+    });
+
+    await act(async () => {
+      emitChange();
+      await Promise.resolve();
+    });
+
+    expect(calls).toBe(1);
   });
 });
