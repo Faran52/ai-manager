@@ -12,6 +12,7 @@
  * every route, API and asset behaves as it does anywhere else.
  */
 import { once } from 'node:events';
+import { createServer } from 'node:net';
 import { fileURLToPath } from 'node:url';
 
 import {
@@ -37,6 +38,18 @@ app.setName('AI Manager');
 
 const HOST = '127.0.0.1';
 
+/*
+ * A fixed port, because everything the page remembers is keyed by its origin.
+ * On an ephemeral port that origin changes every launch, so the theme, the
+ * language, the sidebar width and every other stored preference come back
+ * empty and the app looks freshly installed each time.
+ *
+ * If something else already holds it the app still starts, on whatever port it
+ * is given, and that session remembers nothing. The lock below is what keeps
+ * the usual cause of that, a second copy of this app, from happening.
+ */
+const PORT = 41_780;
+
 // The event the page listens for, declared in src/types/desktopBindings.d.ts.
 const MENU_COMMAND = 'app-menu-command';
 
@@ -57,10 +70,29 @@ const platform = process.platform === 'win32' ? 'windows' : process.platform;
  * too early, so autostart is off and the port is settled before anything is
  * pointed at it.
  */
+const isFree = async (port: number): Promise<boolean> => {
+  const probe = createServer();
+
+  try {
+    await new Promise<void>((resolve, reject) => {
+      probe.once('error', reject);
+      probe.listen(port, HOST, resolve);
+    });
+
+    return true;
+  }
+  catch {
+    return false;
+  }
+  finally {
+    probe.close();
+  }
+};
+
 const serve = async (): Promise<string> => {
   process.env.ASTRO_NODE_AUTOSTART = 'disabled';
   process.env.HOST = HOST;
-  process.env.PORT = '0';
+  process.env.PORT = await isFree(PORT) ? String(PORT) : '0';
 
   const { startServer } = await import('../dist/server/entry.mjs');
   const listener = startServer().server.server;
@@ -210,4 +242,22 @@ const openMain = async (): Promise<void> => {
   await window.loadURL(await origin);
 };
 
-void app.whenReady().then(openMain);
+/*
+ * A second copy would start a second server, take a different port and keep
+ * its settings somewhere else. The one already running is raised instead.
+ */
+if (app.requestSingleInstanceLock()) {
+  app.on('second-instance', () => {
+    mainWindow?.focus();
+  });
+
+  /* Not a top-level await: `ready` only comes once this module has finished
+     evaluating, so waiting for it out here would wait forever. */
+  void (async () => {
+    await app.whenReady();
+    await openMain();
+  })();
+}
+else {
+  app.quit();
+}
