@@ -60,6 +60,29 @@ that reason.
 **Depth is `--recess`, not black.** An inset shadow in `#000` reads as a hole punched in a warm
 grey interface.
 
+## The window
+
+Settled by the desktop shell, and the reason each one exists is the thing it replaced.
+
+**The title bar is the app's first row, not a strip above it.** `hiddenInset` runs the page to the
+top of the window and leaves the traffic lights where macOS puts them, so the scope chip and the
+search sit level with the buttons instead of below a band. The header reserves `80px` on the
+physical left for them: physical because they stay left in Arabic, and `px` because they do not
+scale with `[data-font-size]`. Both are deliberate exceptions to the logical-properties and rem
+rules above.
+
+**The header is the handle.** `.titlebar` is an `app-region: drag` surface and everything inside it
+that answers a click is `no-drag`. A window with no bar and no drag region cannot be moved at all,
+which is what the first attempt at this shipped.
+
+**Where the platform draws a menu, the app does not.** macOS, and the Linux desktops that lift a
+window menu into their panel, get a real menu bar holding About, Settings, the views and the editing
+roles. Windows has no global bar, so the rail keeps its gear and the same entries hang off it. The
+menu is described once by the page, in the reader's language; only the surface differs.
+
+**About is a window where the platform has one to give, a dialog where it does not.** One panel,
+two frames, so nothing the app says about itself is written twice.
+
 ## Colour
 
 Tokens live in `src/styles/tokens.css` and are role-named, deliberately compatible with shadcn
