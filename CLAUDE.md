@@ -2,7 +2,6 @@
 
 - Follow `plugins/linteljs/skills/linteljs/SKILL.md` for project structure, types, state, and tests.
 - Read `docs/DESIGN.md` before adding a screen, a component, or any styling.
-- Read `docs/testing.md` before deciding a file needs no test.
 - Read `package.json` for exact scripts and dependency versions.
 - Run `pnpm check` before declaring implementation work complete.
 - Run `pnpm lint:fix`, not lint without fixes.
