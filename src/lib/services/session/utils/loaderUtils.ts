@@ -8,6 +8,7 @@ import { LruCache } from '@utils/lruCacheUtils';
 
 import { loadAgentEntries } from '../../agents/agentsService';
 import { conversationMessageCount } from '../../history/utils/outcomeUtils';
+import { SESSION_CACHE_BYTES } from '../constants';
 
 import type { AgentId } from '@config/agents';
 import type { HistoryEntry } from '../../history/types';
@@ -37,7 +38,9 @@ interface SessionView {
   readonly messageCount: number;
 }
 
-const loadedSessions = new LruCache<LoadedSession>(64);
+const loadedSessions = new LruCache<LoadedSession>(SESSION_CACHE_BYTES, (session) => {
+  return session.sizeBytes;
+});
 
 const isSidechained = (entry: HistoryEntry): boolean => {
   return entry.kind === 'summary' ? false : entry.sidechain;

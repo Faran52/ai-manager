@@ -62,3 +62,44 @@ describe('LruCache edge cases', () => {
     expect(cache.size).toBe(1);
   });
 });
+
+describe('LruCache weighed by value', () => {
+  const weigh = (value: number): number => {
+    return value;
+  };
+
+  test('evicts until the incoming weight fits', () => {
+    const cache = new LruCache<number>(10, weigh);
+
+    cache.set('a', 4);
+    cache.set('b', 4);
+    cache.set('c', 4);
+
+    expect(cache.has('a')).toBe(false);
+    expect(cache.get('b')).toBe(4);
+    expect(cache.get('c')).toBe(4);
+  });
+
+  test('releases the weight of a key it replaces', () => {
+    const cache = new LruCache<number>(10, weigh);
+
+    for (const weight of [9, 1]) {
+      cache.set('a', weight);
+    }
+    cache.set('b', 9);
+
+    expect(cache.get('a')).toBe(1);
+    expect(cache.get('b')).toBe(9);
+  });
+
+  test('admits a value heavier than the whole cache, alone', () => {
+    const cache = new LruCache<number>(10, weigh);
+
+    cache.set('small', 2);
+    cache.set('huge', 50);
+
+    expect(cache.has('small')).toBe(false);
+    expect(cache.get('huge')).toBe(50);
+    expect(cache.size).toBe(1);
+  });
+});

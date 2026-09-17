@@ -31,3 +31,6 @@ export const WRAPPED_BLOCK = /^<([a-z][a-z\d_-]*)>/u;
  * content is the message, not context. Hiding it titled the session by a tool result.
  */
 export const AUTHORED_BLOCK = 'task';
+
+// Source bytes, not parsed bytes, which cost several times more.
+export const SESSION_CACHE_BYTES = 128 * 1024 * 1024;

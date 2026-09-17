@@ -1,14 +1,22 @@
+// Capacity is total weight; the default weight of one makes it a count.
 export class LruCache<V> {
   private readonly store = new Map<string, V>();
 
   private readonly capacity: number;
 
-  constructor(capacity: number) {
+  private readonly weigh: (value: V) => number;
+
+  private carried = 0;
+
+  constructor(capacity: number, weigh?: (value: V) => number) {
     if (capacity < 1) {
       throw new Error('LruCache capacity must be at least 1');
     }
 
     this.capacity = capacity;
+    this.weigh = weigh ?? ((): number => {
+      return 1;
+    });
   }
 
   get size(): number {
@@ -27,21 +35,35 @@ export class LruCache<V> {
   }
 
   set(key: string, value: V): void {
-    this.store.delete(key);
+    this.drop(key);
 
-    if (this.store.size >= this.capacity) {
+    const added = this.weigh(value);
+
+    while (this.store.size > 0 && this.carried + added > this.capacity) {
       const oldest = this.store.keys().next();
 
       // v8 ignore next -- unreachable by construction
-      if (oldest.done !== true) {
-        this.store.delete(oldest.value);
+      if (oldest.done === true) {
+        break;
       }
+
+      this.drop(oldest.value);
     }
 
     this.store.set(key, value);
+    this.carried += added;
   }
 
   has(key: string): boolean {
     return this.store.has(key);
+  }
+
+  private drop(key: string): void {
+    const held = this.store.get(key);
+
+    if (held !== undefined) {
+      this.carried -= this.weigh(held);
+      this.store.delete(key);
+    }
   }
 }
