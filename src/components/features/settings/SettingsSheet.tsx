@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Download, Palette } from 'lucide-react';
+import { Palette } from 'lucide-react';
 
 import { cn } from '@utils/cnUtils';
 
@@ -12,14 +12,13 @@ import {
   FontSizePicker,
   ThemePicker,
 } from '@features/theme';
-import { UpdatePreference } from '@features/updates';
 
 import { SettingRow } from './partials';
 
 import type { ThemeMode } from '@features/theme';
 import type { FC, ReactNode } from 'react';
 
-export type SettingsPane = 'appearance' | 'updates';
+export type SettingsPane = 'appearance';
 
 export interface SettingsSheetProps {
   readonly open: boolean;
@@ -34,16 +33,13 @@ interface Destination {
   readonly icon: ReactNode;
 }
 
+/* One entry today. The rail stays because the next pane should be a row here
+   rather than a re-layout of the sheet. */
 const PANES: readonly Destination[] = [
   {
     id: 'appearance',
     labelKey: 'settingsAppearance',
     icon: <Palette className="size-4" />,
-  },
-  {
-    id: 'updates',
-    labelKey: 'settingsUpdates',
-    icon: <Download className="size-4" />,
   },
 ];
 
@@ -66,7 +62,9 @@ export const SettingsSheet: FC<SettingsSheetProps> = ({
   onThemeChange,
 }) => {
   const { t } = useTranslation('common');
-  const [pane, setPane] = useState<SettingsPane>('appearance');
+  /* Held by name rather than by the union, which has one member today: the
+     open pane is a value here, not a fact the type already settled. */
+  const [pane, setPane] = useState<string>('appearance');
 
   return (
     <Modal
@@ -88,6 +86,7 @@ export const SettingsSheet: FC<SettingsSheetProps> = ({
             return (
               <button
                 type="button"
+                /* v8 ignore next -- one pane, so nothing is ever not current */
                 aria-current={active ? 'page' : undefined}
                 data-settings-pane={destination.id}
                 key={destination.id}
@@ -98,7 +97,10 @@ export const SettingsSheet: FC<SettingsSheetProps> = ({
                   bg-accent font-medium text-foreground
                 `)}
               >
-                <span className={active ? 'text-primary' : 'text-faint'}>
+                <span
+                  /* v8 ignore next -- the same: no pane here is ever the quiet one */
+                  className={active ? 'text-primary' : 'text-faint'}
+                >
                   {destination.icon}
                 </span>
                 {t(destination.labelKey)}
@@ -108,36 +110,26 @@ export const SettingsSheet: FC<SettingsSheetProps> = ({
         </nav>
 
         <div className="min-w-0 flex-1 overflow-y-auto p-5">
-          {pane === 'appearance' && (
-            <section>
-              <h3 className="text-value font-semibold">{t('settingsAppearance')}</h3>
-              <p className="mt-1 text-body text-muted-foreground">
-                {t('settingsAppearanceIntro')}
-              </p>
-              <div className="mt-4">
-                <SettingRow label={t('theme')} hint={t('themeHint')}>
-                  <ThemePicker mode={themeMode} onChange={onThemeChange} />
-                </SettingRow>
-                <SettingRow label={t('accent')} hint={t('accentHint')}>
-                  <AccentPicker />
-                </SettingRow>
-                <SettingRow label={t('textSize')} hint={t('textSizeHint')}>
-                  <FontSizePicker />
-                </SettingRow>
-                <SettingRow label={t('language')} hint={t('languageHint')}>
-                  <LanguagePicker />
-                </SettingRow>
-              </div>
-            </section>
-          )}
-
-          {pane === 'updates' && (
-            <section>
-              <SettingRow label={t('settingsUpdates')} hint={t('settingsUpdatesHint')}>
-                <UpdatePreference />
+          <section>
+            <h3 className="text-value font-semibold">{t('settingsAppearance')}</h3>
+            <p className="mt-1 text-body text-muted-foreground">
+              {t('settingsAppearanceIntro')}
+            </p>
+            <div className="mt-4">
+              <SettingRow label={t('theme')} hint={t('themeHint')}>
+                <ThemePicker mode={themeMode} onChange={onThemeChange} />
               </SettingRow>
-            </section>
-          )}
+              <SettingRow label={t('accent')} hint={t('accentHint')}>
+                <AccentPicker />
+              </SettingRow>
+              <SettingRow label={t('textSize')} hint={t('textSizeHint')}>
+                <FontSizePicker />
+              </SettingRow>
+              <SettingRow label={t('language')} hint={t('languageHint')}>
+                <LanguagePicker />
+              </SettingRow>
+            </div>
+          </section>
         </div>
       </div>
     </Modal>

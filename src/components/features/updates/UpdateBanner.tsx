@@ -5,19 +5,17 @@ import { Download } from 'lucide-react';
 
 import { Button } from '@ui/index';
 
-import { useUpdateCheck } from './hooks/useUpdateCheck';
 import { useUpdateProbe } from './hooks/useUpdateProbe';
 
 import type { FC } from 'react';
 
 /*
- * The launch check, which is the only one the reader never asks for, so it is
- * the one the preference governs. A failed check is not worth interrupting
- * anyone over: nothing but an available version puts a row on screen.
+ * The launch check, the only one the reader never asks for. A failed check is
+ * not worth interrupting anyone over, and nothing but an available version
+ * puts a row on screen, so a browser with no updater to ask shows nothing.
  */
 export const UpdateBanner: FC = () => {
   const { t } = useTranslation('update');
-  const { updateCheck } = useUpdateCheck();
   const {
     stage,
     version,
@@ -26,10 +24,8 @@ export const UpdateBanner: FC = () => {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    if (updateCheck === 'launch') {
-      check();
-    }
-  }, [check, updateCheck]);
+    check();
+  }, [check]);
 
   if (stage !== 'available' || dismissed) {
     return null;

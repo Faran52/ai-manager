@@ -29,11 +29,17 @@ describe('SettingsSheet', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  test('opens on Appearance, which is what most visits are for', () => {
+  test('opens on Appearance, which is what every visit is for today', async () => {
     sheet();
 
-    expect(screen.getByRole('button', { name: 'Appearance' }).getAttribute('aria-current'))
-      .toBe('page');
+    const entry = screen.getByRole('button', { name: 'Appearance' });
+
+    expect(entry.getAttribute('aria-current')).toBe('page');
+    expect(screen.getByRole('heading', { name: 'Appearance' })).toBeDefined();
+
+    // The rail stays for the panes to come, and choosing the open one is a no-op.
+    await user.click(entry);
+
     expect(screen.getByRole('heading', { name: 'Appearance' })).toBeDefined();
   });
 
@@ -46,20 +52,12 @@ describe('SettingsSheet', () => {
     expect(screen.getByRole('combobox')).toBeDefined();
   });
 
-  test('moves between panes', async () => {
+  test('leaves the build and its updates to the about window that carries them', () => {
     sheet();
-    await user.click(screen.getByRole('button', { name: 'Updates' }));
-
-    expect(screen.queryByRole('heading', { name: 'Appearance' })).toBeNull();
-    expect(screen.getByText(/does not match its signature/)).toBeDefined();
-  });
-
-  test('leaves what the build is to the about window that carries it', async () => {
-    sheet();
-    await user.click(screen.getByRole('button', { name: 'Updates' }));
 
     expect(screen.queryByText('Version')).toBeNull();
     expect(screen.queryByRole('heading', { name: 'About' })).toBeNull();
+    expect(screen.queryByRole('radio', { name: 'On launch' })).toBeNull();
   });
 
   test('closes on Escape, like every other sheet', async () => {

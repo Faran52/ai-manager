@@ -11,8 +11,6 @@ import {
   test,
 } from 'vitest';
 
-import { updateCheckStorageKey } from '@config/storageKeys';
-
 import { UpdateBanner } from './UpdateBanner';
 
 const stubUpdater = (checkForUpdate: () => Promise<DesktopUpdate>): void => {
@@ -77,24 +75,13 @@ describe('UpdateBanner', () => {
     });
   });
 
-  test('asks nothing of a reader who turned the launch check off', async () => {
-    let asked = false;
-
-    localStorage.setItem(updateCheckStorageKey, 'never');
-    stubUpdater(() => {
-      asked = true;
-
-      return Promise.resolve({
-        available: true,
-        version: '2.1.0',
-      });
-    });
+  test('asks nothing in a browser, which has no build of its own to replace', async () => {
+    Reflect.deleteProperty(window, 'bindings');
 
     render(<UpdateBanner />);
 
     await waitFor(() => {
       expect(document.querySelector('[data-update-banner]')).toBeNull();
     });
-    expect(asked).toBe(false);
   });
 });
