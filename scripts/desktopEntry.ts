@@ -103,6 +103,7 @@ const isServerReady = (value: unknown): value is ServerReady => {
 const serverScript = fileURLToPath(new URL('./desktopServer.ts', import.meta.url));
 
 let serverProcess: ReturnType<typeof utilityProcess.fork> | undefined;
+let quitting = false;
 
 const serve = async (): Promise<string> => {
   const requested = await isFree(PORT) ? String(PORT) : '0';
@@ -122,6 +123,13 @@ const serve = async (): Promise<string> => {
   });
 
   serverProcess = child;
+
+  // A window with no server behind it is worse than no window.
+  child.once('exit', () => {
+    if (!quitting) {
+      app.quit();
+    }
+  });
 
   const port = await new Promise<number>((settle, fail) => {
     child.once('message', (message: unknown) => {
@@ -145,6 +153,7 @@ const serve = async (): Promise<string> => {
 const origin = serve();
 
 app.on('will-quit', () => {
+  quitting = true;
   serverProcess?.kill();
 });
 
