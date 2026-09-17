@@ -321,11 +321,12 @@ pointing toward it on screen. The primitives handle this; a hand-rolled one woul
 
 ## Components
 
-### Exist (31, in `src/components/ui`)
+### Exist (38, in `src/components/ui`)
 
 AgentMark, Badge, BarRow, Button, CodeBlock, CodeLine, ConfirmDialog, Disclosure, DividerLabel,
-EmptyState, Eyebrow, IconButton, MarkdownText, MenuCheckboxItem, MenuItem, MetricCard, Modal,
-Notice, OutputBlock, PaneDivider, Panel, PatchView, PopupMenu, SectionHeader, Spinner, Switch,
+EmptyState, Eyebrow, IconButton, Loader, MarkdownText, MarkdownView, Menu, MenuCheckboxItem,
+MenuItem, MenuLabel, MenuRadioGroup, MenuSeparator, MenuSub, MetricCard, Modal, Notice,
+OutputBlock, PaneDivider, Panel, PatchView, SectionHeader, SegmentedControl, Spinner, Switch,
 Tabs, TabsPanel, TextInput, Toast, Tooltip.
 
 `Eyebrow` is the tracked uppercase label: report sections, health groups and card headings all
@@ -344,7 +345,7 @@ reduced-motion aware. Thinking, the injected-context row and the tool card all o
 with a Parsed / Raw switch when the body reads as Markdown. It replaced `TruncatedText`.
 
 Check this list before building anything: the mock's tiles are `MetricCard`, its ranked rows are
-`BarRow`, its switches are `Switch`, its funnel is `PopupMenu` plus `MenuCheckboxItem`.
+`BarRow`, its switches are `Switch`, its funnel is `Menu` plus `MenuCheckboxItem`.
 
 `Switch`, `Tabs`, `Tooltip` and `Modal` are built on Radix primitives, which own the keyboard
 contract, the focus trap and the portal. Everything visible is ours: Radix ships no styles.
@@ -380,7 +381,8 @@ What the headless kit was taken for, and what it has already closed:
 
 - `Modal` declared `role="dialog"` and `aria-modal="true"` and handled Escape, but had **no focus
   trap**: Tab walked out into the page behind the settings sheet. Radix owns it now.
-- `PopupMenu` declares `role="menu"` with **no arrow-key navigation**. Still open, see above.
+- `PopupMenu` declared `role="menu"` with **no arrow-key navigation**. Radix owns them now, see
+  above.
 - One `role="switch"` was hand-rolled inside `PluginInventory.tsx`. There is a `Switch` now.
 - There was no `role="tab"` anywhere, though the app already switches Transcript, Navigator and
   File edits. There is a `Tabs` now.
@@ -388,7 +390,7 @@ What the headless kit was taken for, and what it has already closed:
   roughly a second of delay, unstyleable, and invisible to a keyboard user. There is a `Tooltip`
   now, and those ten call sites still need moving onto it.
 
-### Bespoke, and no kit ships them (14)
+### Bespoke, and no kit ships them (15)
 
 Icon rail, collapsible drawer and its collapsed strip, project card with agent branches, session
 row, tool-call card, transcript turn, ranked-row card, activity heatmap, by-hour chart, agent health
