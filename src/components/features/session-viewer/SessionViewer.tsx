@@ -115,7 +115,7 @@ export const SessionViewer: FC<SessionViewerProps> = ({
     return decodeMessageFilters(localStorage.getItem(messageFiltersStorageKey));
   });
   const [panel, setPanel] = useState<CompanionPanel>(() => {
-    return localStorage.getItem(messageNavigatorOpenStorageKey) === 'false' ? 'none' : 'navigator';
+    return localStorage.getItem(messageNavigatorOpenStorageKey) === 'true' ? 'navigator' : 'none';
   });
   const [navigatorWidth, setNavigatorWidth] = useState(() => {
     return storedWidth(messageNavigatorWidthStorageKey, COMPANION_WIDTH);
@@ -129,11 +129,8 @@ export const SessionViewer: FC<SessionViewerProps> = ({
     sourceModifiedMs,
   );
   const waiting = useMinLoad(feed.phase === 'loading' && feed.entries.length === 0);
-  /**
-   * A callback ref, not useRef: the timeline's virtualizer has to attach its
-   * scroll listener to this element, and a ref object is still null when the
-   * child mounts, so nothing would ever re-render to hand it over.
-   */
+  // A callback ref, not useRef: a ref object is still null when the child mounts,
+  // so nothing would re-render to hand the virtualizer its scroll element.
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
   // The foot of the loaded rows, watched so the next page arrives before it does.
   const [endMarker, setEndMarker] = useState<HTMLDivElement | null>(null);
@@ -150,9 +147,8 @@ export const SessionViewer: FC<SessionViewerProps> = ({
   useSmoothScroll(scrollElement);
 
   /*
-   * Scrolling toward the end loads the next page, so the button below it is a
-   * fallback rather than the only way on. A null root means the viewport, which
-   * is the right answer for the render before the scroll element is handed over.
+   * Scrolling toward the end loads the next page; the button below is a fallback.
+   * A null root means the viewport, right for the render before the ref lands.
    */
   useEffect(() => {
     if (endMarker == null || !feed.hasMore) {

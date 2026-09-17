@@ -11,6 +11,7 @@ export const sidebarWidthStorageKey = 'acm-sidebar-width';
 export const projectsDrawerStorageKey = 'acm-projects-drawer';
 export const sessionsListStorageKey = 'acm-sessions-list';
 export const messageFiltersStorageKey = 'acm-message-filters';
+// Unlike the columns above, absent means closed: the navigator is asked for.
 export const messageNavigatorOpenStorageKey = 'acm-message-navigator-open';
 export const messageNavigatorWidthStorageKey = 'acm-message-navigator-width';
 // Whether the app looks for a release on launch. Absent means it does.
