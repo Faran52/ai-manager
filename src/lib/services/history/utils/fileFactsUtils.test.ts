@@ -92,4 +92,15 @@ describe('fileFactsStore', () => {
       return { length: content.length };
     })).toBeUndefined();
   });
+
+  // A directory stats like a file and refuses to be read, which is the shape of
+  // a session file replaced between the scan and the read.
+  test('reports nothing when the read fails after the stat succeeded', async () => {
+    const store = fileFactsStore<Measured>(8);
+    const directory = await mkdtemp(join(tmpdir(), 'file-facts-dir-'));
+
+    expect(await store(directory, (content) => {
+      return { length: content.length };
+    })).toBeUndefined();
+  });
 });

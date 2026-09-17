@@ -14,6 +14,7 @@ import {
   describe,
   expect,
   test,
+  vi,
 } from 'vitest';
 
 import { resolveAgentPaths } from '@services/agents/agentsService';
@@ -36,6 +37,12 @@ interface MutationFixtures {
   readonly claudeFile: string;
   readonly codexFile: string;
 }
+
+/*
+ * Every case builds a real temp tree and a real SQLite file, so on a busy machine
+ * one can pass the 5s default on IO alone. Raised for this file only.
+ */
+vi.setConfig({ testTimeout: 30_000 });
 
 const rootsWithFiles = async (): Promise<MutationFixtures> => {
   const claude = await mkdtemp(join(tmpdir(), 'mutations-claude-'));

@@ -12,9 +12,8 @@ interface Cached<T> extends FileFacts {
 }
 
 /*
- * Parsing is the expensive part of both listing and reporting, so a conclusion
- * is kept against the size and mtime it came from and only a changed file is
- * read again. Each caller gets its own store: what is worth keeping differs.
+ * Parsing is the expensive part, so a conclusion is kept against the size and mtime
+ * it came from. Each caller gets its own store: what is worth keeping differs.
  */
 export const fileFactsStore = <T>(capacity: number): (
   filePath: string,
@@ -33,7 +32,6 @@ export const fileFactsStore = <T>(capacity: number): (
         sizeBytes: info.size,
       };
     }
-    /* v8 ignore next -- the file can disappear between directory scan and read */
     catch {
       return undefined;
     }
@@ -52,7 +50,6 @@ export const fileFactsStore = <T>(capacity: number): (
     try {
       value = derive(await readFile(filePath, 'utf8'));
     }
-    /* v8 ignore next -- the file can disappear between the stat and the read */
     catch {
       return undefined;
     }
