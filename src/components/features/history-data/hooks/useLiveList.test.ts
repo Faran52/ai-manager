@@ -11,6 +11,8 @@ import {
   vi,
 } from 'vitest';
 
+import { emitChange } from '@mocks/eventSource';
+
 import { useLiveList } from './useLiveList';
 
 afterEach(() => {
@@ -101,10 +103,8 @@ describe('useLiveList', () => {
     expect(result.current.data).toBeUndefined();
   });
 
-  test('polls on an interval and on becoming visible, only while visible', async () => {
+  test('reloads when the history changes, and holds a change until the window is looked at', async () => {
     const load = vi.fn(ready('tick'));
-
-    vi.useFakeTimers({ shouldAdvanceTime: true });
 
     const { result, unmount } = renderHook(() => {
       return useLiveList('one', load, true);
@@ -117,29 +117,60 @@ describe('useLiveList', () => {
     const afterFirstLoad = load.mock.calls.length;
 
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(3_000);
+      emitChange();
+      await Promise.resolve();
     });
     await waitFor(() => {
       expect(load.mock.calls.length).toBeGreaterThan(afterFirstLoad);
     });
 
-    const afterTick = load.mock.calls.length;
+    const afterChange = load.mock.calls.length;
+    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
 
-    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    // A change nobody is looking at waits rather than reloading behind their back.
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(3_000);
-      document.dispatchEvent(new Event('visibilitychange'));
+      emitChange();
+      await Promise.resolve();
     });
 
-    expect(load.mock.calls).toHaveLength(afterTick);
+    expect(load.mock.calls).toHaveLength(afterChange);
+
+    visibility.mockReturnValue('visible');
+
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'));
+      await Promise.resolve();
+    });
+    await waitFor(() => {
+      expect(load.mock.calls.length).toBeGreaterThan(afterChange);
+    });
 
     unmount();
   });
 
-  test('does not poll when live watching is off, or when there is nothing to watch', async () => {
-    const load = vi.fn(ready('still'));
+  test('does nothing when the window is looked at with no change waiting', async () => {
+    const load = vi.fn(ready('quiet'));
 
-    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const { result } = renderHook(() => {
+      return useLiveList('one', load, true);
+    });
+
+    await waitFor(() => {
+      expect(result.current.status).toBe('ready');
+    });
+
+    const afterFirstLoad = load.mock.calls.length;
+
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'));
+      await Promise.resolve();
+    });
+
+    expect(load.mock.calls).toHaveLength(afterFirstLoad);
+  });
+
+  test('never listens when live watching is off, or when there is nothing to watch', async () => {
+    const load = vi.fn(ready('still'));
 
     const { result } = renderHook(() => {
       return useLiveList('one', load, false);
@@ -155,7 +186,10 @@ describe('useLiveList', () => {
 
     const afterFirstLoads = load.mock.calls.length;
 
-    await vi.advanceTimersByTimeAsync(9_000);
+    await act(async () => {
+      emitChange();
+      await Promise.resolve();
+    });
 
     expect(load.mock.calls).toHaveLength(afterFirstLoads);
   });

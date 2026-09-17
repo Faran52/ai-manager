@@ -5,14 +5,13 @@ import {
 } from 'react';
 
 import { runLoad } from '../utils/asyncResourceUtils';
+import { subscribeToChanges } from '../utils/changeStreamUtils';
 
 import type { AsyncResource, AsyncSnapshot } from '../utils/asyncResourceUtils';
 
-const LIVE_REFRESH_MS = 3_000;
-
 /*
- * key names what is loaded, and the empty string never polls. load must be stable
- * per key: a new load for the same key refetches without the loading flash.
+ * key names what is loaded, and the empty string never listens. load must be
+ * stable per key: a new load for the same key refetches without the loading flash.
  */
 export const useLiveList = <T>(
   key: string,
@@ -53,18 +52,36 @@ export const useLiveList = <T>(
       return undefined;
     }
 
+    /*
+     * A hidden window reloads once it is looked at again rather than on every
+     * event, so a background window costs nothing while the reader is elsewhere.
+     */
+    let missed = false;
+
     const refresh = (): void => {
       if (document.visibilityState === 'visible') {
+        missed = false;
         reload();
+
+        return;
+      }
+
+      missed = true;
+    };
+
+    const onVisible = (): void => {
+      if (document.visibilityState === 'visible' && missed) {
+        refresh();
       }
     };
-    const interval = window.setInterval(refresh, LIVE_REFRESH_MS);
 
-    document.addEventListener('visibilitychange', refresh);
+    const unsubscribe = subscribeToChanges(refresh);
+
+    document.addEventListener('visibilitychange', onVisible);
 
     return () => {
-      window.clearInterval(interval);
-      document.removeEventListener('visibilitychange', refresh);
+      unsubscribe();
+      document.removeEventListener('visibilitychange', onVisible);
     };
   }, [key, live, reload]);
 

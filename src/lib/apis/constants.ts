@@ -251,3 +251,10 @@ export const RETENTION_RUN: EndpointDefinition<RunRetentionResponse> = {
 // The two statuses every handler answers with when it refuses a request.
 export const BAD_REQUEST = 400;
 export const NOT_FOUND = 404;
+
+// A write to a session file fires a burst of watch events; the page reloads the
+// same list for all of them.
+export const CHANGE_DEBOUNCE_MS = 300;
+
+// An idle event stream looks dead to anything sitting between page and server.
+export const HEARTBEAT_MS = 30_000;

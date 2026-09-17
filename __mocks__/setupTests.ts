@@ -3,6 +3,7 @@
 import { initI18n } from '@i18n/index';
 import { MotionGlobalConfig } from 'motion/react';
 
+import { installEventSource } from './eventSource';
 import { installIntersectionObserver } from './intersectionObserver';
 
 interface AnimationCancel {
@@ -22,6 +23,7 @@ MotionGlobalConfig.skipAnimations = true;
 initI18n();
 
 installIntersectionObserver();
+installEventSource();
 
 /**
  * happy-dom builds `Animation.finished` eagerly and rejects it from `cancel()`.

@@ -4,6 +4,7 @@
  */
 export * from './utils/agentEndpointUtils';
 export * from './utils/archiveEndpointUtils';
+export * from './utils/changesEndpointUtils';
 export * from './utils/endpointDepsUtils';
 export * from './utils/sessionEndpointUtils';
 export * from './utils/settingsEndpointUtils';
