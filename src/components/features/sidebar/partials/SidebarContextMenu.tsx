@@ -14,9 +14,10 @@ import { agentBadgeLabel, agentOption } from '@config/agents';
 
 import { sessionLabel } from '@services/history/historyService';
 import { copyTextToClipboard } from '@utils/browserFilesUtils';
-import { shellQuote } from '@utils/shellQuoteUtils';
 
 import { Menu, MenuItem } from '@ui/index';
+
+import { shellQuote } from '../utils/shellQuoteUtils';
 
 import type { ProjectSummary, SessionSummary } from '@services/history/historyService';
 import type { PopupPosition } from '@ui/index';

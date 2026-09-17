@@ -14,9 +14,10 @@ import {
   entriesToMarkdown,
 } from '@services/export/exportService';
 import { saveTextFile } from '@utils/browserFilesUtils';
-import { slugOf } from '@utils/slugUtils';
 
 import { Menu, MenuItem } from '@ui/index';
+
+import { slugOf } from '../utils/slugUtils';
 
 import type { ExportMeta } from '@services/export/exportService';
 import type { HistoryEntry } from '@services/history/historyService';
