@@ -48,9 +48,8 @@ const ROW = `
 `;
 
 /*
- * What Settings is, without the surface around it. It is a sheet over the app
- * where the platform draws no window for it, and a window of its own where it
- * does, so it carries the rail and the panes and neither frame.
+ * Settings without the surface around it: a sheet where the platform draws no
+ * window and a window where it does, so it carries the rail, the panes, no frame.
  */
 export const SettingsPanes: FC<SettingsPanesProps> = ({ themeMode, onThemeChange }) => {
   const { t } = useTranslation('common');

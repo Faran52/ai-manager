@@ -2,9 +2,8 @@ import { clsx } from 'clsx';
 import { extendTailwindMerge } from 'tailwind-merge';
 
 /*
- * tailwind-merge cannot tell a custom text-* size from a text-* colour, so
- * without this it files text-ui in the same slot as text-dim, drops one, and
- * the element falls back to its inherited size.
+ * tailwind-merge cannot tell a custom text-* size from a text-* colour, so without
+ * this it files text-ui in text-dim's slot, drops one, and the size is inherited.
  */
 const twMerge = extendTailwindMerge({
   extend: {

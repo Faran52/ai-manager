@@ -45,9 +45,8 @@ export const editsInSession = (
 };
 
 /*
- * The name carries the row and the directory sits under it. A full path per row
- * means reading forty copies of the same prefix to find the one part that
- * differs, which is the filename.
+ * The name carries the row and the directory sits under it: a full path per row is
+ * forty copies of the same prefix hiding the one part that differs.
  */
 export const splitPath = (path: string, projectPath: string | undefined): {
   readonly name: string;

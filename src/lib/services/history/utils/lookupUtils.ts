@@ -12,9 +12,8 @@ export const projectKeyOf = (agent: ProjectSummary['agent'], projectId: string):
 };
 
 /*
- * Profile is part of the identity: the same directory opened under .claude and
- * .claude-personal is two projects with one id, and a session knows which of
- * the two it came from.
+ * Profile is part of the identity: the same directory under .claude and
+ * .claude-personal is two projects with one id.
  */
 export const findAgentProject = (
   projects: readonly ProjectSummary[] | undefined,

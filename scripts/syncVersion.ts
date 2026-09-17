@@ -1,7 +1,6 @@
 /**
- * The version lives in two places and the updater compares releases against the
- * one baked into the app. If they drift, a build either never sees itself as
- * outdated or offers an update it already is, and nothing fails loudly.
+ * The version lives in two places and the updater compares releases against the one
+ * baked into the app. Drift silently breaks the update offer, either direction.
  *
  *   node scripts/syncVersion.ts           verify both agree
  *   node scripts/syncVersion.ts 1.2.0     set both

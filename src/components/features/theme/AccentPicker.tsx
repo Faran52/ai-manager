@@ -23,9 +23,8 @@ const LABEL_KEYS: Record<AccentName, string> = {
 };
 
 /*
- * A swatch is already a colour, so selection cannot be a fill and it cannot be
- * a border either without changing the colour being shown. It takes a ring,
- * the same mark the selected session circle uses.
+ * A swatch is already a colour, so selection can be neither a fill nor a border
+ * without changing what is shown. It takes a ring, same as a selected session.
  */
 const SWATCH = `
   size-5 rounded-full border border-border transition-[box-shadow]
@@ -57,9 +56,8 @@ export const AccentPicker: FC = () => {
         );
       })}
       {/*
-        * The seventh swatch is the OS colour picker. It is a native control, so
-        * it costs nothing and it inherits whatever the system does about recent
-        * colours and accessibility.
+        * The seventh swatch is the OS colour picker: a native control, so recent
+        * colours and accessibility come from the system.
         */}
       <label
         className={cn(SWATCH, 'relative cursor-pointer', !isAccentName(accent) && SELECTED)}

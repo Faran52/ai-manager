@@ -33,9 +33,8 @@ export interface AgentStorage {
   readonly label: string;
   readonly bytes: number;
   /*
-   * The largest things inside, so a total has somewhere to point, together with
-   * everything rebuildable however small. Anything offered for removal has to
-   * appear here, or the offer would name a figure it could not deliver.
+   * The largest things inside, plus everything rebuildable however small. Anything
+   * offered for removal has to appear here, or the offer overstates what it frees.
    */
   readonly entries: readonly StorageEntry[];
   readonly reclaimableBytes: number;
@@ -66,9 +65,8 @@ interface RootMeasurement {
 }
 
 /*
- * Walking every file would block the request for seconds, and the answer only
- * has to point at what is large. Depth stops deep trees, the entry budget stops
- * one enormous directory from starving the rest.
+ * Walking every file would block the request for seconds and the answer only has to
+ * point at what is large. Depth stops deep trees, the budget stops one huge directory.
  */
 const MAX_DEPTH = 6;
 const MAX_ENTRIES = 40_000;
@@ -105,9 +103,8 @@ const sizeOf = async (path: string, depth: number, budget: Budget): Promise<numb
   }
 
   /*
-   * A link holds nothing. Codex leaves directories of links to its own binary,
-   * and following them reported four gigabytes that do not exist, one 229 MB file
-   * counted once per link.
+   * A link holds nothing. Codex leaves directories of links to its own binary, and
+   * following them reported four gigabytes that do not exist.
    */
   if (facts.isSymbolicLink()) {
     return 0;
@@ -137,11 +134,8 @@ const sizeOf = async (path: string, depth: number, budget: Budget): Promise<numb
   return sum(sizes);
 };
 
-/**
- * One walk per root, not two: the children are sized individually and the total
- * is their sum, so a root is never traversed once for its size and again for
- * its contents.
- */
+// One walk per root, not two: the children are sized individually and the total is
+// their sum.
 const measureRoot = async (root: string, budget: Budget): Promise<RootMeasurement> => {
   let facts;
 
@@ -300,9 +294,8 @@ export const readStorageReport = async (
 };
 
 /*
- * Every path is checked again here: it has to sit directly inside a resolved
- * root and its name has to be disposable. A path failing either is refused and
- * reported, never quietly skipped, because the difference matters to the caller.
+ * Every path is checked again here: directly inside a resolved root, and a
+ * disposable name. A failure is refused and reported, never quietly skipped.
  */
 export const reclaimStorage = async (
   paths: readonly string[],

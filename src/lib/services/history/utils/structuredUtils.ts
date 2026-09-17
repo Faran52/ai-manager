@@ -390,11 +390,8 @@ const projectIdFor = (root: string, filePath: string): string => {
   return folder.length === 0 ? basename(root) : folder;
 };
 
-/**
- * For Cline the task folder is the session and the extension folder above
- * `tasks/` is the project, which keeps Cline, Roo and Kilo apart instead of
- * turning every task id into its own single-session project.
- */
+// For Cline the task folder is the session and the extension folder above `tasks/`
+// is the project, which keeps Cline, Roo and Kilo apart.
 const identityFor = (agent: AgentId, root: string, filePath: string): SessionIdentity => {
   if (agent === 'cline') {
     return {

@@ -36,9 +36,8 @@ export interface AgentSettingsSurface {
   readonly path: string;
   readonly format: SettingsFormat;
   /*
-   * Claude settings.json is the only shape this editor understands. Every other
-   * agent keeps its own schema, so writing Claude keys into one would invent
-   * configuration that agent never asked for.
+   * Claude settings.json is the only shape this editor understands: writing Claude
+   * keys into another agent's schema invents configuration it never asked for.
    */
   readonly editable: boolean;
 }
@@ -112,11 +111,8 @@ export const hasAgentSettings = (agent: AgentId): boolean => {
   return SURFACES[agent] != null;
 };
 
-/**
- * The files an agent merges, in the order it merges them. A project path is
- * required for every scope but the user's, so without one only that scope
- * resolves and the rest are left out.
- */
+// The files an agent merges, in the order it merges them. Every scope but the
+// user's needs a project path, so without one only that scope resolves.
 export const settingsSurfacesFor = (
   agent: AgentId,
   projectPath: string,
@@ -245,9 +241,8 @@ const tomlKeys = (text: string): readonly string[] => {
 
       if (named.length > 0) {
         /*
-         * Only the outermost name. Codex writes a table per project and per
-         * plugin, so keeping the full path listed hundreds of keys where the
-         * question is which areas the file configures.
+         * Only the outermost name: Codex writes a table per project and per plugin,
+         * so full paths listed hundreds of keys for a question about areas.
          */
         keys.push(named.split('.', 1).join(''));
       }
@@ -257,8 +252,7 @@ const tomlKeys = (text: string): readonly string[] => {
 
     /*
      * A key under a table belongs to the table its header already named. Collecting
-     * these too listed sixty keys, mostly env vars nested four deep, for a file
-     * configuring thirteen areas.
+     * these too listed sixty keys for a file configuring thirteen areas.
      */
     if (inTable) {
       continue;
@@ -360,11 +354,8 @@ const cleanEnv = (entries: readonly EnvEntry[]): JsonObject => {
   return result;
 };
 
-/**
- * Reads, replaces only the two blocks this editor owns, and writes the rest
- * back untouched. A settings file usually also holds hooks and a status line,
- * and losing those to a permissions edit would be the worst kind of bug.
- */
+// Replaces only the two blocks this editor owns and writes the rest back untouched:
+// a settings file also holds hooks and a status line, and losing those is the bug.
 export const writeScopeSettings = async (
   scope: SettingsScope,
   projectPath: string,

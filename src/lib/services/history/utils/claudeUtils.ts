@@ -165,11 +165,8 @@ const absorbLine = (scan: MetaScan, rawLine: string): void => {
   updateStamps(scan, rawLine);
   scan.cwd ??= quotedValue(rawLine, CWD_PREFIX);
   scan.rootUuid ??= quotedValue(rawLine, UUID_PREFIX);
-  /**
-   * The last branch named is the one the session ended on, which is the one
-   * worth showing: a session that started on main and moved onto a feature
-   * branch belongs to the feature branch.
-   */
+  // The last branch named is the one the session ended on: a session that started
+  // on main and moved onto a feature branch belongs to the feature branch.
   scan.gitBranch = nonEmpty(quotedValue(rawLine, BRANCH_PREFIX)) ?? scan.gitBranch;
 
   if (rawLine.includes(SUMMARY_MARKER)) {

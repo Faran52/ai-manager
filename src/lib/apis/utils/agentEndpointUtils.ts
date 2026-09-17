@@ -90,9 +90,8 @@ export const handleAgentSetup = async (request: Request, deps?: EndpointDeps): P
     }
 
     /*
-     * One Claude card per config dir (~/.claude, ~/.claude-personal, ...):
-     * each keeps its own rules, MCP servers and settings. Plugins, usage
-     * and trust stay facts about the default root.
+     * One Claude card per config dir: each keeps its own rules, MCP servers and
+     * settings. Plugins, usage and trust stay facts about the default root.
      */
     const perDir = (agent: AgentId): readonly (string | undefined)[] => {
       return agent === 'claude' ? pathsFor(resolveEndpointRoots(deps), agent) : [undefined];
@@ -171,20 +170,16 @@ export const handlePluginCosts = async (request: Request, deps?: EndpointDeps): 
 };
 
 /*
- * Whether a CLI is on PATH is a fact about this machine, not about whichever
- * project happens to be selected, so this checks every installable agent at
- * once rather than taking a projectPath the way the setup endpoints do.
+ * Whether a CLI is on PATH is a fact about the machine, not the selected project,
+ * so this checks every installable agent at once and takes no projectPath.
  */
 export const handleAgentInstallCheck = (deps?: EndpointDeps): Promise<Response> => {
   return withJsonErrors(async () => {
     const entries = await Promise.all(installableAgents.map(async (agent) => {
       return [agent, {
         installed: await checkAgentInstalled(agent, deps?.agentInstallCheck),
-        /**
-         * installableAgents is built from AGENT_INSTALLS' own keys, so every
-         * entry here always has a command; the fallback exists only because
-         * installCommandText's signature admits any AgentId, not just these.
-         */
+        // installableAgents is built from AGENT_INSTALLS' own keys, so every entry
+        // has a command; the fallback is only for installCommandText's signature.
         /* v8 ignore next */
         command: installCommandText(agent) ?? '',
       }] as const;

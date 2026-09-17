@@ -25,11 +25,8 @@ export interface DisclosureProps {
   readonly className?: string | undefined;
 }
 
-/**
- * A reduced-motion reader gets the end state with no travel. Motion drives the
- * height through rAF, so the global prefers-reduced-motion CSS rule cannot reach
- * it: the duration has to be zeroed here.
- */
+// Motion drives the height through rAF, so the global prefers-reduced-motion CSS
+// rule cannot reach it: a reduced-motion reader needs the duration zeroed here.
 const INSTANT = { duration: 0 };
 
 // Height is the one layout property the motion rules allow. Zero bounce so the

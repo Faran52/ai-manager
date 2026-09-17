@@ -98,9 +98,8 @@ export const entriesToJson = (entries: readonly HistoryEntry[]): string => {
 };
 
 /*
- * Transcript text carries the HTML and quotes discussed inside the session, so
- * every value goes through here. The ampersand is replaced first, or it would
- * re-encode the entities the later passes introduce.
+ * Transcript text carries HTML discussed inside the session, so every value goes
+ * through here. The ampersand goes first, or it re-encodes the later entities.
  */
 const escapeHtml = (value: string): string => {
   return value

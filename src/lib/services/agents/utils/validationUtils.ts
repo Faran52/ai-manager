@@ -278,9 +278,8 @@ const codexMcpServers = async (file: string): Promise<readonly CodexMcpServer[]>
 };
 
 /*
- * Only an absolute command names a file this can look for. A bare name resolves
- * through PATH and a relative one against a working directory Codex picks, and
- * reporting either as missing would be a finding the reader cannot act on.
+ * Only an absolute command names a file this can look for: a bare name resolves
+ * through PATH, and reporting either as missing is a finding nobody can act on.
  */
 const brokenCodexMcp = async (file: string): Promise<readonly SetupFinding[]> => {
   const servers = await codexMcpServers(file);

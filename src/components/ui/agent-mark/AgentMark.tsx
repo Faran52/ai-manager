@@ -13,11 +13,8 @@ export interface AgentMarkProps {
   readonly className?: string;
 }
 
-/**
- * The circle a session carries wherever it appears: its agent's initials on the
- * agent's own hue, keyed on `[data-agent]` in AgentTag.css. The session list, its
- * folded strip and the transcript all draw it, so it lives in one place.
- */
+// The circle a session carries wherever it appears: its agent's initials on the
+// agent's own hue, keyed on `[data-agent]` in AgentTag.css.
 export const AgentMark: FC<AgentMarkProps> = ({ agent, className }) => {
   return (
     <span

@@ -29,20 +29,14 @@ export interface CollapsedStripProps {
   readonly onExpand: () => void;
 }
 
-/**
- * A session folds to the agent circle its open row carries; a project with no
- * agent folds to a square of the first letters of its folder name (there are no
- * capitals to read).
- */
+// A session folds to the agent circle its open row carries; a project with no
+// agent folds to a square of the first letters of its folder name.
 const projectMark = (item: StripItem): ReactNode => {
   return item.mark ?? initialsOf(item.label);
 };
 
-/**
- * A column collapsed to its marks rather than hidden: a column that vanishes is
- * a lie about what is there. The selection bar stays on the mark, so you can
- * still see where you are and move without unfolding anything first.
- */
+// A column collapsed to its marks rather than hidden: one that vanishes lies about
+// what is there. The selection bar stays on the mark, so you can still move.
 export const CollapsedStrip: FC<CollapsedStripProps> = ({
   expandLabel,
   listLabel,

@@ -24,8 +24,7 @@ export interface BarRowProps {
 
 /*
  * The columns every ranked list shares. Label and figure size to their widest
- * entry so neither holds a dead strip, and the bar takes the rest, which keeps
- * the track identical on every row. Bars are only comparable if it is.
+ * entry and the bar takes the rest, so the track is identical on every row.
  */
 export const BAR_LIST_GRID = `
   grid items-center gap-x-3 gap-y-2
@@ -33,9 +32,8 @@ export const BAR_LIST_GRID = `
 `;
 
 /*
- * display: contents makes the three parts cells of the list own grid. That is
- * what keeps every bar in a card the same length, which is the only thing that
- * makes two bars comparable, while label and figure take the width they need.
+ * display: contents makes the three parts cells of the list's own grid, which is
+ * what keeps every bar in a card the same length.
  */
 export const BarRow: FC<BarRowProps> = ({
   label,
@@ -61,9 +59,8 @@ export const BarRow: FC<BarRowProps> = ({
         {qualifier}
       </span>
       {/*
-        * The fill scales rather than widening. Width is a layout property, so
-        * animating it reflows every row below on each frame, and an analytics
-        * pane holds dozens of these. A transform stays on the compositor.
+        * The fill scales rather than widening: animating width reflows every row
+        * below on each frame, and a transform stays on the compositor.
         */}
       <Tooltip content={`${label}: ${formatValue(value)}`}>
         <span className="block h-1.5 overflow-hidden rounded-full bg-recess">

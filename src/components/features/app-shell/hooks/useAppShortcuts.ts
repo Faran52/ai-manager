@@ -17,9 +17,8 @@ export interface AppShortcuts {
 }
 
 /*
- * The global keys and the three dialogs they open. One listener for every
- * binding, so a shortcut is added by adding a row here and to `appShortcuts`
- * rather than by growing another effect.
+ * The global keys and the three dialogs they open. One listener for every binding,
+ * so a shortcut is a row here and in `appShortcuts`, not another effect.
  */
 export const useAppShortcuts = (
   setView: (view: AppView) => void,

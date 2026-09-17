@@ -13,9 +13,8 @@ export const UUID_PREFIX = '"uuid":"';
 export const JSONL_SUFFIX = '.jsonl';
 
 /*
- * Dependency and build directories cannot hold agent history and hold most of
- * the files, so pruning them is the difference between a scan that takes a
- * second and one that does not.
+ * Dependency and build directories cannot hold agent history and hold most of the
+ * files, so pruning them is the difference between a one-second scan and not.
  */
 export const SKIPPED_SCAN_DIRS: ReadonlySet<string> = new Set([
   '.astro',
@@ -94,9 +93,8 @@ export const ANTIGRAVITY_UNPLACED = 'unplaced';
 export const ANTIGRAVITY_ARTIFACTS = ['task.md', 'implementation_plan.md', 'walkthrough.md'];
 
 /*
- * The tool phrases Antigravity writes into a conversation's protobuf as plain
- * text. The phrase is the handle: the enum around it has no published schema,
- * so there is nothing to decode it against.
+ * The tool phrases Antigravity writes into a conversation's protobuf as plain text.
+ * The phrase is the handle: the enum around it has no published schema.
  */
 export const ANTIGRAVITY_TOOL_PHRASES: readonly (readonly [string, string])[] = [
   ['opening url', 'BrowserOpenUrl'],
@@ -159,11 +157,8 @@ export const CODEX_HELPER = /\btools\.([A-Za-z_$][\w$]*)\s*\(/u;
 
 export const CODEX_SHELL_FIELD = /[{,]\s*["']?(?:cmd|command)["']?\s*:\s*/gu;
 
-/**
- * A "key": "value" pair, as it appears in a JSON argument blob or an embedded
- * object literal. Values holding an escaped quote are cut at it, which is fine
- * for a display row.
- */
+// A "key": "value" pair from a JSON argument blob or an embedded object literal.
+// A value holding an escaped quote is cut at it, fine for a display row.
 export const CODEX_JSON_PAIR = /"([A-Za-z_$][\w$]*)"\s*:\s*"([^"]*)"/gu;
 
 export const CODEX_ROW_LIMIT = 300;
@@ -175,9 +170,8 @@ export const CODEX_ESCAPES = new Map([
 ]);
 
 /*
- * Cline drives tools with XML inside the assistant own text, so calls render as
- * raw markup unless read back out. A name list rather than any tag, because
- * prose and code samples carry angle brackets too.
+ * Cline drives tools with XML inside the assistant's own text, so calls render as
+ * raw markup unless read back out. A name list, since prose carries brackets too.
  */
 export const CLINE_TOOLS = new Set([
   'access_mcp_resource',

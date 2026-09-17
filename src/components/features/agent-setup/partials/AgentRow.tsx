@@ -51,9 +51,8 @@ export interface AgentRowProps {
 }
 
 /*
- * A figure only appears if the agent records it. Nine agents against four
- * numeric columns left five of them printing three dashes each, and a dash
- * cannot tell "records nothing" from "recorded zero".
+ * A figure only appears if the agent records it: a dash cannot tell "records
+ * nothing" from "recorded zero", and five of nine agents printed three each.
  */
 const CHIP = `
   inline-flex items-baseline gap-1 rounded-sm bg-muted px-1.5 py-0.5
@@ -61,9 +60,8 @@ const CHIP = `
 `;
 
 /*
- * Only a credential that exists is worth naming. Claude reports none whenever
- * settings.json carries no key, which is the ordinary subscription case, so
- * printing "no credentials" against it stated something alarming and untrue.
+ * Only a credential that exists is worth naming. Claude reports none on the
+ * ordinary subscription, where "no credentials" is alarming and untrue.
  */
 const AUTH_LABELS: Readonly<Record<string, string>> = {
   'api-key': 'authApiKey',

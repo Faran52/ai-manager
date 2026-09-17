@@ -170,9 +170,8 @@ const textContent = (payload: CodexPayload): string => {
 };
 
 /*
- * Codex reports a failed run in its runner banner rather than a status field. A
- * success ends the banner with an Output: line, a failure often stops at
- * Script error: with nothing after it, so both forms are stripped.
+ * Codex reports a failed run in its runner banner, not a status field: success ends
+ * with an Output: line, failure often stops at Script error:. Both are stripped.
  */
 const CODEX_RUNNER_BANNER = /^Script (?:completed|failed|error)[\s\S]*?\nOutput:[ \t]*\n?/u;
 const CODEX_ERROR_BANNER = /^Script (?:failed|error):?[ \t]*\n?/u;
@@ -258,11 +257,8 @@ const absorbPatchApply = (scan: CodexScan, payload: CodexPayload): void => {
   scan.pendingChanged = changed.length > 0 ? changed : undefined;
 };
 
-/**
- * Codex reports an MCP call only once it has finished, as a single event
- * carrying the invocation and its result together, so the call and its outcome
- * are built from the same payload rather than paired up later.
- */
+// Codex reports an MCP call only once it has finished, one event carrying both, so
+// the call and its outcome are built from the same payload rather than paired later.
 const absorbMcpCall = (scan: CodexScan, payload: CodexPayload, timestamp: string): void => {
   const invocation = payload.invocation;
 

@@ -4,9 +4,8 @@ interface CellSpan {
 }
 
 /*
- * Line-anchored patterns rather than a full parse: this only gates whether the
- * Parsed / Raw card appears, so a borderline hit costs a toggle, not
- * correctness. GFM tables are absent so a pipe grid in output is not a table.
+ * Line-anchored patterns rather than a full parse: this only gates the Parsed / Raw
+ * toggle. GFM tables are absent, so a pipe grid in output is not a table.
  */
 const HEADING = /^ {0,3}#{1,6}[ \t]/mu;
 const BLOCKQUOTE = /^ {0,3}> /mu;
@@ -33,9 +32,8 @@ const LINE_GUTTER = /^ *\d+:[ \t]?/gmu;
 const MARKDOWN_FILE = /\.(?:markdown|mdx?)$/iu;
 
 /*
- * The pieces of a box-drawing grid, split by the job each does when the grid is
- * rewritten as a GFM table: the vertical rule, the connector a rule crosses a
- * border at, and a full border line (dashes and connectors, nothing else).
+ * The pieces of a box-drawing grid, by the job each does when it is rewritten as a
+ * GFM table: the vertical rule, the connector it crosses a border at, the border.
  */
 const V_RULE = /[│┃║╎╏]/u;
 const CONNECTOR = /[┌┬┐├┼┤└┴┘╔╦╗╠╬╣╚╩╝┏┳┓┣╋┫┗┻┛╤╧╪╞╡╭╮╰╯]/u;
@@ -72,11 +70,8 @@ export const unwrapFileRefs = (text: string): string => {
   });
 };
 
-/**
- * A block whose alignment depends on a monospace grid: a box-drawing table, a
- * file tree. The renderer keeps it out of the syntax highlighter and lets it
- * scroll rather than wrap.
- */
+// A block whose alignment depends on a monospace grid. The renderer keeps it out
+// of the syntax highlighter and lets it scroll rather than wrap.
 export const isBoxArt = (text: string): boolean => {
   return BOX_ART.test(text);
 };
@@ -218,9 +213,8 @@ const boxTableToGfm = (lines: readonly string[]): string | null => {
 };
 
 /*
- * Box-drawing lines up only in a monospace font and remark has no construct for
- * it. A grid becomes a GFM table; a file tree or loose box art is fenced so the
- * code path keeps its alignment. A run already inside a fence is left be.
+ * Box-drawing lines up only in a monospace font and remark has no construct for it.
+ * A grid becomes a GFM table; anything else is fenced, and a fenced run is left be.
  */
 export const normalizeBoxDrawing = (text: string): string => {
   const out: string[] = [];

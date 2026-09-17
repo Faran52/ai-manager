@@ -20,9 +20,8 @@ export interface EditedFileListProps {
   readonly projectPath: string | undefined;
   readonly nowMs: number;
   /*
-   * Absent inside a session's own edits panel: the row would jump to the
-   * session already on screen, so it is a plain row there rather than a
-   * control that does nothing.
+   * Absent inside a session's own edits panel: the row would jump to the session
+   * already on screen, so it is plain there rather than a control that does nothing.
    */
   readonly onOpenEdit?: ((edit: FileEdit) => void)
     | undefined;

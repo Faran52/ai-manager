@@ -22,9 +22,8 @@ export interface FoldingColumnProps {
 }
 
 /*
- * A column is never swapped for its strip. The width springs between the two
- * and the content cross-fades, so folding reads as the column handing its
- * width back rather than two states cutting.
+ * A column is never swapped for its strip: the width springs and the content
+ * cross-fades, so folding reads as one column rather than two states cutting.
  */
 export const FoldingColumn: FC<FoldingColumnProps> = ({
   open,

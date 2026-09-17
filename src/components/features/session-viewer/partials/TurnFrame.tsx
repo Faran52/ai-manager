@@ -7,11 +7,8 @@ import type { FC, ReactNode } from 'react';
 
 export interface TurnFrameProps {
   readonly speaker: 'user' | 'assistant';
-  /**
-   * Whose reply this is, so the assistant mark carries that agent's hue, the
-   * same circle the session list draws. Ignored on the user side, but kept on
-   * both so the frame has one prop set.
-   */
+  // Whose reply this is, so the assistant mark carries that agent's hue. Ignored
+  // on the user side, kept on both so the frame has one prop set.
   readonly agent: AgentId;
   // A turn that continues the same speaker keeps the body column but drops the
   // mark, so one run of turns reads as one block under a single avatar.

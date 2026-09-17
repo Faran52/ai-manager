@@ -18,9 +18,8 @@ export interface ModelDistributionProps {
 }
 
 /*
- * Every row states its own basis, because a cost read off a price sheet and a
- * cost inferred from what a provider billed are not the same claim. Keys, not
- * text: the map lives outside the component where t is unavailable.
+ * Every row states its own basis: a price-sheet cost and a billed cost are not the
+ * same claim. Keys, not text, since the map lives outside the component.
  */
 const BASIS_KEYS: Record<PricingBasis, string> = {
   exact: 'pricingBasisExact',
@@ -29,9 +28,8 @@ const BASIS_KEYS: Record<PricingBasis, string> = {
 };
 
 /*
- * Four columns rather than three: the tokens and the cost are two figures, and
- * a middot between them lines up only the second. Each gets a column of its
- * own, sized to its widest entry.
+ * Four columns rather than three: tokens and cost are two figures, and a middot
+ * between them lines up only the second.
  */
 const GRID = `
   mt-3 grid items-center gap-x-3 gap-y-2

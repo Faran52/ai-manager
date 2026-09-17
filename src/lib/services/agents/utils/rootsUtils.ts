@@ -35,8 +35,8 @@ const withoutNested = (roots: readonly string[]): readonly string[] => {
 
 /*
  * CLAUDE_CONFIG_DIR only reaches this process when whatever launched it set the
- * variable, which a shell alias never does. A second profile is found by name
- * instead. Case-insensitive, because NTFS does not distinguish them.
+ * variable, which a shell alias never does. Found by name instead, case-insensitive
+ * because NTFS does not distinguish them.
  */
 const siblingRoots = (home: string, defaultName: string): readonly string[] => {
   const needle = defaultName.toLowerCase();
@@ -70,9 +70,8 @@ export const CLAUDE_HOME_NAME = '.claude';
 export const CODEX_HOME_NAME = '.codex';
 
 /*
- * Undefined for the plain default name and for a root that follows no naming
- * convention, so this can be called on every root uniformly rather than only
- * the ones already known to be siblings.
+ * Undefined for the plain default name and for a root following no convention, so
+ * this can be called on every root rather than only the known siblings.
  */
 export const rootProfileLabel = (root: string, defaultName: string): string | undefined => {
   const name = basename(root);
@@ -122,9 +121,8 @@ const appData = (home: string, platform: NodeJS.Platform): string => {
 };
 
 /*
- * A packaged app is launched by the OS, so its working directory is the
- * filesystem root, and scanning from there walks the whole disk. It is only a
- * plausible project parent when it sits inside the home directory.
+ * A packaged app is launched by the OS, so its working directory is the filesystem
+ * root and scanning walks the whole disk. Only plausible when it sits inside home.
  */
 const workingRoot = (home: string): readonly string[] => {
   const cwd = process.cwd();
@@ -187,27 +185,20 @@ export const resolveAgentPaths = ({
     'llm': [join(apps, 'io.datasette.llm', 'logs.db')],
     'ompi': [join(home, '.omp', 'agent', 'sessions')],
     'opencode': [join(data, 'opencode'), join(apps, 'ai.opencode.desktop', 'opencode')],
-    /**
-     * Root, not .../sessions: V0 nests conversations/<id>/events under
-     * "sessions", V1 renamed that segment to "conversations". The base dir
-     * ($OPENHANDS_PERSISTENCE_DIR, default ~/.openhands) covers either.
-     */
+    // Root, not .../sessions: V0 nests under "sessions", V1 renamed that segment
+    // "conversations". The base dir ($OPENHANDS_PERSISTENCE_DIR) covers either.
     'openhands': [envPath(env, 'OPENHANDS_PERSISTENCE_DIR', join(home, '.openhands'))],
     'openinterpreter': [envPath(env, 'INTERPRETER_HOME', join(home, '.openinterpreter'))],
     /*
      * PearAI is a VS Code fork whose chat is a Continue fork, so its data is most
-     * likely the VS Code globalStorage layout. Neither guess is confirmed against
-     * a real install, so both are kept.
+     * likely the globalStorage layout. Unconfirmed against a real install, so both stay.
      */
     'pearai': [join(home, '.pearai', 'sessions'), join(pearai, 'globalStorage')],
     'pi': [join(home, '.pi', 'agent', 'sessions')],
     'qwen': [envPath(env, 'QWEN_CODE_HOME', join(home, '.qwen', 'projects'))],
     'trae': [join(apps, 'Trae', 'User', 'workspaceStorage'), join(config, 'Trae', 'User', 'workspaceStorage')],
-    /**
-     * logs/session was the config doc's example for a project-local override
-     * (a ./.vibe under a project directory), not the global default; the
-     * global default session_logging.save_dir is plain <VIBE_HOME>/sessions.
-     */
+    // logs/session was the config doc's example for a project-local override, not
+    // the global default: session_logging.save_dir is <VIBE_HOME>/sessions.
     'vibe': [join(envPath(env, 'VIBE_HOME', join(home, '.vibe')), 'sessions')],
     'zed': [join(apps, 'Zed', 'threads', 'threads.db'), join(data, 'zed', 'threads', 'threads.db')],
   };

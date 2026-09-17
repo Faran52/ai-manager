@@ -16,10 +16,8 @@ import type {
 import type { ListSessionsBody } from '../contracts';
 
 /*
- * What every handler needs before it can answer: the overrides a test passes
- * in, the roots they resolve to, and the two guards more than one resource
- * reads. Kept apart from the handlers so a resource file imports the contract
- * rather than redeclaring it.
+ * What every handler needs before it can answer. Kept apart from the handlers so
+ * a resource file imports the contract rather than redeclaring it.
  */
 export interface EndpointDeps {
   readonly claudeDir?: string;
@@ -39,11 +37,8 @@ export const isAgent = (value: unknown): value is AgentId => {
   return typeof value === 'string' && isAgentId(value);
 };
 
-/**
- * The config dir behind a profile-scoped request: the one Claude root whose
- * profile label matches. No profile means the default root, which every
- * reader and the CLI already assume, so nothing is passed down.
- */
+// The config dir behind a profile-scoped request: the one Claude root whose label
+// matches. No profile means the default root, which readers already assume.
 export const claudeDirFor = (
   body: ProfileScoped,
   deps: EndpointDeps | undefined,

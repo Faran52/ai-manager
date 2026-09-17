@@ -1,8 +1,7 @@
 @layer components {
   /*
-   * The funnel beside a filter field. It holds what a text field cannot say:
-   * which agents a list reads, which end of the history it is read from. A
-   * narrowed list marks the control, so a filtered view is never silent.
+   * The funnel beside a filter field: which agents a list reads, which end of the
+   * history from. A narrowed list marks the control, so a filter is never silent.
    */
   .sidebar-funnel-trigger {
     display: flex;
@@ -353,10 +352,8 @@
   }
 
   /*
-   * Icon-only once the sidebar column narrows: with all four actions carrying
-   * their own label, the selected-count text had nowhere left to shrink to
-   * and truncated to an ellipsis. The tooltip on each button already carries
-   * the label these used to print.
+   * Icon-only once the sidebar column narrows: four labelled actions left the
+   * selected-count text truncating. The tooltips already carry those labels.
    */
   .session-selection-icon {
     padding: 0.3125rem;

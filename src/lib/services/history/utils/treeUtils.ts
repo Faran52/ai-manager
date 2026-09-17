@@ -13,11 +13,8 @@ const childrenOf = async (dir: string): Promise<readonly Dirent[]> => {
   }
 };
 
-/**
- * Siblings are read together because these roots are ordinary source trees:
- * walking thousands of directories one await at a time is what made the scan
- * slow, not the work done at any single one of them.
- */
+// Siblings are read together: walking thousands of directories one await at a time
+// is what made the scan slow, not the work at any one of them.
 const walkDir = async (dir: string, depth: number): Promise<readonly string[]> => {
   const found = await Promise.all((await childrenOf(dir)).map(async (dirent) => {
     if (SKIPPED_SCAN_DIRS.has(dirent.name)) {

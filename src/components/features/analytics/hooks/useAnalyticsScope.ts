@@ -7,9 +7,8 @@ const scopeFor = (projectKey: string): Scope => {
 };
 
 /*
- * A chosen project is a request to see it, on arrival and on every later
- * change; otherwise only the scope button label moved. The scope lives outside
- * the view because the whole machine and one project are different requests.
+ * A chosen project is a request to see it, on arrival and on every later change.
+ * The scope lives outside the view: the machine and one project differ.
  */
 export const useAnalyticsScope = (projectKey: string): {
   readonly scope: Scope;

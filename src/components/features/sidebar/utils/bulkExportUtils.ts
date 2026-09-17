@@ -10,11 +10,8 @@ export interface BulkExport {
   readonly failed: number;
 }
 
-/**
- * A transcript arrives a page at a time and an export wants all of it, so this
- * walks the pages. The ceiling stops one runaway session from hanging an export
- * of twenty: past it the session is written out truncated rather than dropped.
- */
+// A transcript arrives a page at a time, so this walks them. The ceiling stops one
+// runaway session hanging an export of twenty: past it the session is truncated.
 const MAX_PAGES = 20;
 const PAGE_SIZE = 400;
 

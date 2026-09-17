@@ -15,9 +15,8 @@ import type { FC } from 'react';
 import type { MessageFilters } from '../utils/messageFilterUtils';
 
 /*
- * One companion panel at a time. Both belong to the session on screen and both
- * want the same strip of width, so opening one closes the other rather than
- * squeezing the transcript down to a gutter.
+ * One companion panel at a time: both want the same strip of width, so opening
+ * one closes the other rather than squeezing the transcript to a gutter.
  */
 export type CompanionPanel = 'none' | 'navigator' | 'edits';
 

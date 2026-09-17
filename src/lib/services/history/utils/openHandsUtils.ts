@@ -33,8 +33,7 @@ interface OpenHandsSession {
 
 /*
  * OpenHands persists one JSON file per event, so a session is the whole events/
- * folder read back in filename order. A MessageEvent row already suits the
- * generic reader. No project concept exists, so all of it groups under unknown.
+ * folder in filename order. No project concept exists, so it groups under unknown.
  */
 const EVENTS_DIR = 'events';
 const EVENT_FILE = /^event-\d+-.+\.json$/u;

@@ -60,11 +60,8 @@ const dayNumber = (date: string): number => {
   return Math.round(Date.parse(`${date}T00:00:00Z`) / MS_PER_DAY);
 };
 
-/**
- * A streak is consecutive calendar days with any activity. The current one only
- * counts if it reaches today or yesterday: a run that ended last month is
- * history, not a streak the reader is still on.
- */
+// A streak is consecutive calendar days with any activity. The current one counts
+// only if it reaches today or yesterday.
 const streaksOf = (days: readonly number[], todayNumber: number): Streaks => {
   let longest = 0;
   let run = 0;
@@ -115,11 +112,8 @@ export const rhythmFrom = (
   };
 };
 
-/**
- * Every agent names its tools differently, so the buckets match on the words
- * they have in common. A tool that matches nothing is still counted in the tool
- * histogram; it simply has no activity bucket of its own.
- */
+// Every agent names its tools differently, so the buckets match on shared words. A
+// tool matching nothing still counts in the histogram, just in no bucket.
 const BUCKET_MARKERS: readonly (readonly [Bucket, readonly string[]])[] = [
   ['codeEdits', ['edit', 'write', 'patch', 'replace', 'create_file', 'apply']],
   ['commandsRun', ['bash', 'shell', 'exec', 'terminal', 'command', 'run']],

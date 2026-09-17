@@ -31,9 +31,8 @@ export interface StoragePanelProps {
   // Naming an agent narrows the report to what that agent alone is holding.
   readonly agent?: AgentId | undefined;
   /*
-   * A project's own transcripts, which is the only part of an agent's storage
-   * that belongs to one project. Everything else an agent holds, its plugins,
-   * caches and logs, is shared by every project it has ever touched.
+   * A project's own transcripts, the only part of an agent's storage that belongs
+   * to one project. Plugins, caches and logs are shared by every project.
    */
   readonly projectSessions?: readonly SessionSummary[] | undefined;
 }

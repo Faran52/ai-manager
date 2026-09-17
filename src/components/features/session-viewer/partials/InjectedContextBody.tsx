@@ -15,9 +15,8 @@ export interface InjectedContextBodyProps {
 const LABEL_CLASS = 'text-eyebrow font-medium tracking-wide text-dim uppercase';
 
 /*
- * A known context shape splits into parts: an instruction body renders parsed,
- * the environment is a row list, plugins sit behind their count. Anything
- * unrecognised goes to MarkdownView, which parses only if it reads as Markdown.
+ * A known context shape splits into parts. Anything unrecognised goes to
+ * MarkdownView, which parses only if it reads as Markdown.
  */
 export const InjectedContextBody: FC<InjectedContextBodyProps> = ({ text }) => {
   const { t } = useTranslation('session');

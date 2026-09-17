@@ -28,11 +28,8 @@ export interface MenuProps {
   readonly label: string;
   readonly children: ReactNode;
   readonly align?: 'start' | 'end';
-  /**
-   * A cursor point rather than a trigger. Radix anchors to its trigger, so a
-   * right-click menu gets a zero-sized one parked at the point: the positioning,
-   * the collision flipping and the focus handling all stay Radix's.
-   */
+  // Radix anchors to its trigger, so a right-click menu gets a zero-sized one
+  // parked at the cursor: positioning, collision flipping and focus stay Radix's.
   readonly position?: PopupPosition;
   readonly open?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
@@ -86,9 +83,8 @@ export const Menu: FC<MenuProps> = ({
               sideOffset={position == null ? 6 : 0}
               aria-label={label}
               /*
-               * Radix names the menu after its trigger, and a right-click menu's
-               * trigger is an invisible point with no text at all. An explicit
-               * label only wins once the pointer to that trigger is cleared.
+               * Radix names the menu after its trigger, which here is an invisible
+               * point. An explicit label only wins once that pointer is cleared.
                */
               aria-labelledby={undefined}
             >

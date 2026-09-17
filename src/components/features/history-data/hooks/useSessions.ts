@@ -19,11 +19,8 @@ export const useSessions = (
       return EMPTY;
     }
 
-    /**
-     * The route answers for every sibling root sharing this project id
-     * (the same directory opened under .claude and .claude-personal),
-     * each session tagged with its own profile; keep only this branch's.
-     */
+    // The route answers for every sibling root sharing this project id, each
+    // session tagged with its own profile; keep only this branch's.
     const { sessions } = await fetchSessions({
       projectId: project.id,
       agent: project.agent,

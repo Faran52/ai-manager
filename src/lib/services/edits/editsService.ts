@@ -82,9 +82,8 @@ const targetOf = (input: ToolCallInput): EditTarget | undefined => {
 };
 
 /*
- * A change is described either by the call that asked for it or by the report
- * that followed it, depending on the agent. Both are read here so that no agent
- * looks as though it changed nothing.
+ * A change is described by the call that asked for it or the report that followed,
+ * depending on the agent. Both are read so no agent looks as though it did nothing.
  */
 const editsInEntry = (entry: HistoryEntry): readonly EditTarget[] => {
   if (entry.kind === 'user') {
@@ -137,9 +136,8 @@ const record = (
 };
 
 /*
- * Without a project this answers for the whole machine, from the same newest
- * few sessions the board draws, so the two views never disagree about what has
- * been happening lately.
+ * Without a project this answers for the whole machine, from the same newest few
+ * sessions the board draws, so the two views never disagree.
  */
 export const listRecentEdits = async (
   roots: AgentRoots,

@@ -4,8 +4,7 @@ import type { MiddlewareHandler } from 'astro';
 
 /*
  * A prerendered page is built, not requested, so there is no origin to refuse
- * and reading the headers there only warns. The guard is for the API routes,
- * which are all server rendered.
+ * and reading the headers there only warns. The guard is for the API routes.
  */
 export const onRequest: MiddlewareHandler = ({
   isPrerendered,

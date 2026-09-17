@@ -11,9 +11,8 @@ import type { AsyncResource, AsyncSnapshot } from '../utils/asyncResourceUtils';
 const LIVE_REFRESH_MS = 3_000;
 
 /*
- * key names what is loaded, and the empty string never polls. load must be
- * stable per key, so a new load for the same key refetches without the loading
- * flash that a key change brings.
+ * key names what is loaded, and the empty string never polls. load must be stable
+ * per key: a new load for the same key refetches without the loading flash.
  */
 export const useLiveList = <T>(
   key: string,

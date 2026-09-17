@@ -39,9 +39,8 @@ export const Modal: FC<ModalProps> = ({
     // No trigger lives inside, so the only state Radix ever requests is closed.
     <DialogRoot open={open} onOpenChange={onClose}>
       {/*
-        * forceMount hands presence to AnimatePresence, so the surface survives
-        * long enough to play its exit. Radix owns the focus trap, the scroll
-        * lock, Escape, the click outside, and returning focus to the trigger.
+        * forceMount hands presence to AnimatePresence, so the surface survives to
+        * play its exit. Radix owns the focus trap, scroll lock, Escape and return.
         */}
       <AnimatePresence>
         {open && (
@@ -94,8 +93,7 @@ export const Modal: FC<ModalProps> = ({
               >
                 {/*
                   * A span, not the heading Radix renders by default: consumers
-                  * draw their own visible heading, and two headings with the
-                  * same text is one too many when navigating by heading.
+                  * draw their own, and two with the same text is one too many.
                   */}
                 <DialogTitle asChild>
                   <span className="sr-only">{title}</span>

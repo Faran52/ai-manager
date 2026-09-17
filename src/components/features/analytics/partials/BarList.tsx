@@ -27,9 +27,8 @@ export const BarList: FC<BarListProps> = ({ title, items }) => {
   return (
     <Panel title={title} className="flex h-full flex-col">
       {/*
-        * The list is the grid, not the row: columns have to be shared for the
-        * bars to line up, and for the label and figure columns to size to the
-        * widest entry in the card rather than to a number picked in advance.
+        * The list is the grid, not the row: the columns have to be shared for the
+        * bars to line up and for label and figure to size to the widest entry.
         */}
       <ul className={cn('mt-3', BAR_LIST_GRID)} data-bar-list>
         {items.map((item, index) => {

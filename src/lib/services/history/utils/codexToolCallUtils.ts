@@ -22,9 +22,8 @@ import type {
 export interface DecodedCodexTool {
   readonly call: ToolCall;
   /*
-   * Codex desktop records an apply_patch inside the call's own JS source, and
-   * its patch_apply_end events arrive after the output that would pair with
-   * them, so the diff is read here and handed to the paired outcome directly.
+   * Codex desktop records an apply_patch inside the call's own JS source, and its
+   * patch_apply_end arrives after the output, so the diff is handed over here.
    */
   readonly patch?: readonly PatchHunk[] | undefined;
   readonly changed?: readonly ChangedFile[] | undefined;
@@ -308,11 +307,8 @@ const planTodos = (source: string): readonly TodoItem[] => {
   });
 };
 
-/**
- * Every `"key": "value"` pair we can read, whether the source is a JSON argument
- * blob or JS with an embedded object literal. Enough to fill a card that would
- * otherwise be blank.
- */
+// Every `"key": "value"` pair we can read, from a JSON argument blob or JS with an
+// embedded object literal. Enough to fill a card that would otherwise be blank.
 const fieldRows = (source: string): readonly ToolInputRow[] => {
   const seen = new Set<string>();
 
@@ -367,11 +363,8 @@ const genericDecoded = (id: string, name: string, source: string): DecodedCodexT
   };
 };
 
-/**
- * Codex records a tool call as JS source that calls a `tools.*` helper (newer
- * `exec`) or as a JSON argument blob (older `function_call`). This reads either
- * into the shared `ToolCall` shape so no Codex call renders as a blank card.
- */
+// Codex records a tool call as JS source calling a `tools.*` helper (newer `exec`)
+// or as a JSON argument blob (older `function_call`). Either reads into `ToolCall`.
 export const decodeCodexTool = (
   name: string | undefined,
   source: string | undefined,

@@ -5,9 +5,8 @@ export interface DividerLabelProps {
 }
 
 /*
- * A rule broken by its own text, naming what the break is for. The label is
- * clamped because a summary runs long and would squeeze both rules out; a day
- * label is short enough that the clamp never reaches it.
+ * A rule broken by its own text, naming what the break is for. Clamped because a
+ * summary runs long and would squeeze both rules out.
  */
 export const DividerLabel: FC<DividerLabelProps> = ({ label }) => {
   return (

@@ -67,11 +67,8 @@ export const ToolExecutionCard: FC<ToolExecutionCardProps> = ({ call, outcome })
     <div
       className={cn(
         'overflow-hidden rounded-md border',
-        /**
-         * A failed call keeps the card shape but takes the destructive colour, so
-         * one failure in a run of twenty reads at a glance and never reads as the
-         * amber a pending call wears.
-         */
+        // A failed call keeps the card shape but takes the destructive colour, so
+        // one failure in a run of twenty is never the amber a pending call wears.
         failed
           ? 'border-destructive/40 bg-destructive/[0.07]'
           : 'border-border bg-muted',

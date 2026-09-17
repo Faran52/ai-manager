@@ -38,9 +38,8 @@
   }
 
   /*
-   * The input carries the state and the keyboard; only the label is drawn. It
-   * stays in the layout rather than display:none, which would take it out of
-   * the tab order and off the accessibility tree.
+   * The input carries the state and the keyboard; only the label is drawn. Not
+   * display:none, which takes it out of the tab order and off the a11y tree.
    */
   .segmented-option input {
     position: absolute;

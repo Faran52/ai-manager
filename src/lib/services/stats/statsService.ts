@@ -88,11 +88,8 @@ export interface AgentStatsUsage {
   readonly projects: number;
 }
 
-/**
- * One agent's report, further narrowed to one of its profiles (a same-agent
- * sibling root like ".claude-personal") when it has more than one. `profile`
- * is undefined for the plain default root, matching `ProjectSummary.profile`.
- */
+// One agent's report, narrowed to one of its profiles when it has more than one.
+// `profile` is undefined for the default root, matching `ProjectSummary.profile`.
 export interface AgentProfileStats extends ProjectStats {
   readonly agent: AgentId;
   readonly profile?: string | undefined;
@@ -102,9 +99,8 @@ export interface GlobalStats extends ProjectStats {
   readonly totals: CompleteStatsTotals;
   readonly agents: readonly AgentStatsUsage[];
   /*
-   * The full per-agent report, keyed for a single agent and profile across every
-   * project. agents above stays every profile combined, which is what a provider
-   * distribution wants; this is what a report scoped to one tally chip wants.
+   * The full per-agent report, keyed for one agent and profile across every project.
+   * `agents` above stays every profile combined, which a provider distribution wants.
    */
   readonly perAgentProfile: readonly AgentProfileStats[];
 }
@@ -219,9 +215,8 @@ const addSession = async (
 };
 
 /*
- * Projects are read together because each waits mostly on the disk; their
- * sessions are read one after another so a large history cannot open every
- * transcript it owns at once.
+ * Projects are read together because each waits mostly on the disk; their sessions
+ * go one after another so a large history cannot open every transcript at once.
  */
 const countProject = async (
   project: ProjectSummary,

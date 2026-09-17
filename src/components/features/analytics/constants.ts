@@ -8,9 +8,8 @@ export const WASH_SCALE = ['bg-recess', 'bg-primary/40', 'bg-primary/70', 'bg-pr
 export const IDLE_CLASS = WASH_SCALE[0];
 
 /*
- * About two months. The grid stretches to whatever card it is given, in both
- * directions, so the span decides how coarse the picture is rather than how
- * much of the card goes unused.
+ * About two months. The grid stretches to whatever card it is given, so the span
+ * decides how coarse the picture is, not how much of the card goes unused.
  */
 export const WEEKS_SHOWN = 9;
 

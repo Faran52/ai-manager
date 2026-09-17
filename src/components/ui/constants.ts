@@ -8,8 +8,7 @@ export interface ArrivalProps {
 
 /*
  * Springs, not eased durations, for anything interruptible: a tween restarts
- * from its curve mid-flight, which is the stutter that reads as cheap.
- * visualDuration is how long the movement looks, bounce is overshoot.
+ * from its curve mid-flight. visualDuration is how it looks, bounce is overshoot.
  */
 export const MOTION_DURATION_FAST = 0.16;
 export const MOTION_DURATION_BASE = 0.3;
@@ -72,9 +71,8 @@ export const collapseTransition: Transition = {
 };
 
 /*
- * The argued exception to not animating width: one bounded region, the carve-out
- * a height disclosure gets. A spring so an interrupting click carries velocity
- * through. Zero bounce: an overshoot would shove the pane past its rest and back.
+ * The one exception to not animating width: the bounded carve-out a height
+ * disclosure gets. Spring for an interrupting click, zero bounce so nothing overshoots.
  */
 export const foldTransition: Transition = {
   type: 'spring',
@@ -83,9 +81,8 @@ export const foldTransition: Transition = {
 };
 
 /*
- * A control answering a direct gesture: a switch thumb, a tab marker. Fastest
- * of the set with a little life in it, because the reader's finger or key is
- * the cause and the response has to feel immediate.
+ * A control answering a direct gesture: a switch thumb, a tab marker. Fastest of
+ * the set, because the reader's own finger or key is the cause.
  */
 export const controlTransition: Transition = {
   type: 'spring',
@@ -95,8 +92,7 @@ export const controlTransition: Transition = {
 
 /*
  * A surface being revealed rather than a column snapping to its marks, so it
- * takes longer and eases harder into place. Zero bounce for the same reason a
- * fold has none.
+ * takes longer and eases harder into place. Zero bounce, same as a fold.
  */
 export const drawerTransition: Transition = {
   type: 'spring',

@@ -56,11 +56,8 @@ const components = {
 
     const code = raw.replace(/\n$/u, '');
 
-    /**
-     * A fenced file tree or loose box art (a box table is already a GFM table
-     * by here) lines up only in a monospace grid, so it skips the syntax
-     * highlighter and renders on a plain scrolling line.
-     */
+    // A fenced file tree or loose box art lines up only in a monospace grid, so
+    // it skips the syntax highlighter and renders on a plain scrolling line.
     return isBoxArt(code)
       ? <CodeLine text={code} />
       : <CodeBlock code={code} language={languageOf(className)} />;

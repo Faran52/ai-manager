@@ -6,9 +6,8 @@ import { runRetention } from '@lib/apis/apiClient';
 import { useToast } from '@ui/index';
 
 /*
- * Agents prune on their own schedule and this app runs only some of the time,
- * so launch is the one moment it can get ahead of them. Safe unasked because
- * retention copies and never deletes, and a failure stays silent.
+ * Agents prune on their own schedule, so launch is the one moment this app can get
+ * ahead of them. Safe unasked: retention copies and never deletes.
  */
 export const useRetentionOnLaunch = (): void => {
   const { t } = useTranslation('archive');

@@ -38,11 +38,8 @@ interface DayCount {
   tokens: number;
 }
 
-/**
- * Everything one transcript contributes to a report, folded down to counters.
- * Two things depend on this staying small: it is held for every session at
- * once, and it is what lets a re-run skip transcripts that have not changed.
- */
+// Everything one transcript contributes, folded to counters. It stays small because
+// it is held for every session at once and cached against unchanged files.
 export interface SessionAggregate {
   readonly usageRecorded: boolean;
   readonly messages: number;
@@ -58,9 +55,8 @@ export interface SessionAggregate {
   readonly pricing: readonly PricingEntry[];
   readonly tools: Readonly<Record<string, number>>;
   /*
-   * Skill and Task are one bucket each in `tools`, which says a skill ran but
-   * never which one. Both carry the name in their own input, so they are
-   * counted by it as well.
+   * Skill and Task are one bucket each in `tools`, which never says which one. Both
+   * carry the name in their own input, so they are counted by it as well.
    */
   readonly skills: Readonly<Record<string, number>>;
   readonly subagents: Readonly<Record<string, number>>;

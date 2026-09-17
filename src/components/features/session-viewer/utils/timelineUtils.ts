@@ -54,11 +54,8 @@ const dayOf = (entry: HistoryEntry): EntryDay | undefined => {
       };
 };
 
-/**
- * A run of tool calls arrives as one assistant entry each, and repeating the
- * speaker, clock and model above every one of them buries the conversation.
- * Only the first of a run introduces itself.
- */
+// A run of tool calls arrives as one assistant entry each, and a speaker, clock
+// and model above every one buries the conversation. Only the first introduces itself.
 const speaksAgain = (previous: HistoryEntry | undefined, entry: HistoryEntry): boolean => {
   if (previous?.kind !== entry.kind) {
     return false;
@@ -91,9 +88,8 @@ const orphansOf = (
 };
 
 /*
- * A virtualized list indexes by position, so anything the model does not count
- * is a gap it reserves no space for. That is why filtered entries are dropped
- * here rather than returning null mid-render, and separators are rows.
+ * A virtualized list indexes by position, so anything it does not count is an
+ * unreserved gap: filtered entries are dropped here and separators are rows.
  */
 export const buildTimelineModel = (
   entries: readonly HistoryEntry[],

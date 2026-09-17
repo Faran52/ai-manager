@@ -36,9 +36,8 @@ export interface BuildProjectTreeOptions {
 }
 
 /*
- * The on-disk path is what makes one folder in three agents one project; the
- * name alone would merge unrelated folders sharing a basename. A linked
- * worktree keys on its repository, so a branch joins the main tree.
+ * The on-disk path is what makes one folder in three agents one project: a name
+ * alone merges unrelated ones. A worktree keys on its repo, so a branch joins.
  */
 const groupKeyOf = (project: ProjectSummary): string => {
   return project.repoPath ?? project.actualPath ?? `name:${project.name}`;

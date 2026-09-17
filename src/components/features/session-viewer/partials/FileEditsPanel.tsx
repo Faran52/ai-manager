@@ -23,11 +23,8 @@ export interface FileEditsPanelProps {
   readonly error?: string | undefined;
 }
 
-/**
- * The edits belong to the session being read, so they sit beside the
- * conversation that made them. Swapping the transcript out for them, which is
- * what the tab strip did, breaks the one relationship worth showing.
- */
+// The edits sit beside the conversation that made them. Swapping the transcript
+// out for them, which the tab strip did, breaks the one relationship worth showing.
 export const FileEditsPanel: FC<FileEditsPanelProps> = ({
   files,
   projectPath,

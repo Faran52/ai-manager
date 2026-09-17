@@ -90,9 +90,8 @@ export const PluginInventory: FC<PluginInventoryProps> = ({
   return (
     <section>
       {/*
-        * The cost figures are columns of this table rather than a second one.
-        * A separate table repeated every plugin name to say three more numbers
-        * about it, so the reader matched rows across two grids by eye.
+        * The cost figures are columns of this table rather than a second one,
+        * which repeated every plugin name and made the reader match rows by eye.
         */}
       <p className="pb-2 text-body text-muted-foreground">
         {costs?.length === 0 ? t('costsNone') : t('costsExplainer')}

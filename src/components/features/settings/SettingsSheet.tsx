@@ -14,14 +14,8 @@ export interface SettingsSheetProps {
   readonly onThemeChange: (mode: ThemeMode) => void;
 }
 
-/**
- * Settings is a sheet over what you were doing rather than a fifth
- * destination: you come here to change one thing and leave, and the rail is
- * for the places you work.
- *
- * Where the platform gives Settings a window, it opens there instead, and this
- * is what Windows and a browser get.
- */
+// A sheet over what you were doing rather than a fifth destination on the rail.
+// Where the platform gives Settings a window, it opens there instead.
 export const SettingsSheet: FC<SettingsSheetProps> = ({
   open,
   onClose,

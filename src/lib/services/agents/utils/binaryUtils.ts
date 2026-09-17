@@ -16,9 +16,8 @@ export interface BinaryRunOptions {
 }
 
 /*
- * A binary lands wherever its installer put it, so its directory cannot be
- * hardcoded. Walking PATH keeps the spawned path absolute, which an empty PATH
- * entry would otherwise make relative to the working directory.
+ * A binary lands wherever its installer put it. Walking PATH keeps the spawned path
+ * absolute, which an empty PATH entry would make relative to the working directory.
  */
 export const resolveBinary = async (name: string): Promise<string | undefined> => {
   for (const directory of (process.env.PATH ?? '').split(delimiter)) {

@@ -23,8 +23,7 @@ const INSTANT = { duration: 0 };
 
 /*
  * Native radios in a fieldset, so the browser owns the arrow keys, roving focus
- * and the single tab stop. Generic in its value so a caller gets its own union
- * back from onChange, rather than a type guard for a case that cannot arise.
+ * and the single tab stop. Generic in its value, so onChange returns that union.
  */
 export const SegmentedControl = <TValue extends string>({
   options,

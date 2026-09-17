@@ -33,9 +33,8 @@ const MARK_SWAP = {
 };
 
 /*
- * Selection mode borrows a row's leading gutter for a checkbox; otherwise it
- * carries the agent circle. The gutter is a fixed size-7 either way, so the
- * two cross-fade in place and nothing beside them shifts.
+ * Selection mode borrows a row's leading gutter for a checkbox, otherwise it
+ * carries the agent circle. A fixed size-7 either way, so the two cross-fade in place.
  */
 export const LeadMark: FC<LeadMarkProps> = ({
   agent,

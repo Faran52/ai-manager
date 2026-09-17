@@ -75,11 +75,8 @@ export const SettingsView: FC<SettingsViewProps> = ({
   const { t } = useTranslation('settings');
   const scopes = settings.data ?? [];
   const [active, setActive] = useState<SettingsScope>('user');
-  /**
-   * Keyed by path, so switching scope parks an edit rather than discarding it.
-   * A key present is the definition of unsaved: it is dropped once the file has
-   * it, and the scope then reads from the reloaded file again.
-   */
+  // Keyed by path, so switching scope parks an edit rather than discarding it. A
+  // key present is the definition of unsaved, dropped once the file has it.
   const [drafts, setDrafts] = useState<Readonly<Record<string, Draft>>>({});
   const mutation = useMutationRunner();
   const [savedPath, setSavedPath] = useState<string>();

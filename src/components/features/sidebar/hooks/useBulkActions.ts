@@ -16,9 +16,8 @@ export interface BulkActions {
 }
 
 /*
- * Both actions add rather than remove, so neither asks for confirmation the
- * way deleting does. Archiving names the exact sessions instead of sweeping
- * everything the agents hold; an export is named for the scope it came from.
+ * Both actions add rather than remove, so neither confirms the way deleting does.
+ * Archiving names the exact sessions rather than sweeping everything.
  */
 export const useBulkActions = (
   selectedSessions: readonly SessionSummary[],

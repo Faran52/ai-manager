@@ -1,10 +1,7 @@
 /**
- * Feeds every source file to the banned-pattern checker.
- *
- * The checker takes explicit paths because lint-staged and the editor hook pass
- * the files they touched. Globbing here keeps that contract while leaving
- * `lint:types` a single command, and leaves the generated checker untouched so
- * `lintel sync` can still replace it.
+ * Feeds every source file to the banned-pattern checker, which takes explicit paths
+ * because lint-staged and the editor hook pass the files they touched. Globbing here
+ * leaves the generated checker untouched so `lintel sync` can still replace it.
  */
 import { execFileSync } from 'node:child_process';
 import { globSync } from 'node:fs';

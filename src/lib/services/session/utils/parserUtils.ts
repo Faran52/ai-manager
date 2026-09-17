@@ -57,9 +57,8 @@ const injectionBoundary = (text: string): number | undefined => {
 };
 
 /*
- * Context injectors append, so the first marker is the safe boundary. An
- * authored block is read first because Cline appends environment_details to the
- * very task holding the typed prompt.
+ * Context injectors append, so the first marker is the safe boundary. An authored
+ * block is read first: Cline appends environment_details to the task itself.
  */
 export const splitUserText = (text: string): SplitUserText => {
   const tag = WRAPPED_BLOCK.exec(text)?.[1];
@@ -235,9 +234,8 @@ const genericRows = (input: RawToolInput): readonly ToolInputRow[] => {
 };
 
 /*
- * Agents disagree about casing for the same field: Claude writes file_path and
- * OpenCode writes filePath. Reading both here keeps one shape for everything
- * downstream, and stops an edit arriving with no file attached to it.
+ * Agents disagree about casing: Claude writes file_path, OpenCode filePath. Reading
+ * both keeps one shape downstream and stops an edit arriving with no file.
  */
 const pathOf = (input: RawToolInput): string => {
   return input.file_path ?? input.filePath ?? '';
@@ -638,11 +636,8 @@ const systemText = (raw: RawHistoryLine): string => {
 const parseSystemTurn = (raw: RawHistoryLine): SystemTurnEntry | undefined => {
   const text = systemText(raw);
 
-  /**
-   * A system line with no content of its own is agent telemetry rather than
-   * conversation: turn_duration, stop_hook_summary, the empty command echo. A
-   * subtype label alone is not worth a row.
-   */
+  // A system line with no content of its own is telemetry, not conversation:
+  // turn_duration, stop_hook_summary, the empty command echo.
   if (text.length === 0) {
     return undefined;
   }

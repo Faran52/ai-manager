@@ -31,11 +31,8 @@ export interface PluginDetailsInput {
 
 const TOKEN_PATTERN = /~\s*[\d,.]+k?/gu;
 
-/**
- * Details reports estimates as "~449 tok" or "~1.1k", where the suffix scales
- * by 1000. The digit class also admits shapes like "1.2.3" that Number reads
- * as NaN, so a token that does not parse is skipped rather than trusted.
- */
+// Details reports estimates as "~449 tok" or "~1.1k", the suffix scaling by 1000.
+// The digit class also admits "1.2.3", so anything Number reads as NaN is skipped.
 const peakTokensIn = (text: string): number => {
   let peak = 0;
 
@@ -98,11 +95,8 @@ export const readPluginCosts = (
   }));
 };
 
-/**
- * A blended input-token price turns always-on context into dollars. The
- * project's own last session is the sharper number when it has one; an open or
- * free session leaves it at zero, and the pooled rate stands in.
- */
+// A blended input-token price turns always-on context into dollars. The project's
+// own last session is sharper; at zero, the pooled rate stands in.
 export const attributePluginCosts = (
   usage: ProjectUsage | undefined,
   estimates: readonly PluginCostEstimate[],

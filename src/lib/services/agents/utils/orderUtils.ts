@@ -1,9 +1,8 @@
 import type { ProjectSummary } from '../../history/types';
 
 /*
- * Ties are ordinary: one folder opened in two agents appears twice under the
- * same name. Without the tie-breaks that order falls to directory enumeration,
- * so rows swap places between refreshes and between machines.
+ * Ties are ordinary: one folder opened in two agents appears twice. Without the
+ * tie-breaks the order falls to directory enumeration and rows swap on refresh.
  */
 export const compareProjects = (left: ProjectSummary, right: ProjectSummary): number => {
   return right.lastActivityMs - left.lastActivityMs

@@ -157,9 +157,8 @@ const pluginNames = (block: string): readonly string[] => {
 };
 
 /*
- * Splits the run of pseudo-XML blocks so each reads as what it is rather than
- * as one wall of tags. Undefined when no marker is present, so every other
- * agent injected context falls through unchanged.
+ * Splits the run of pseudo-XML blocks so each reads as what it is. Undefined when
+ * no marker is present, so other agents' injected context falls through.
  */
 export const parseInjectedContext = (text: string): ParsedInjectedContext | undefined => {
   const env = carve(text, '<environment_context>', '</environment_context>');

@@ -3,9 +3,8 @@ import type { PatchHunk } from '@services/history/historyService';
 const CONTEXT_LINES = 3;
 
 /*
- * A line-by-line comparison costs one cell per pair of lines. Agent edits are
- * almost always local, so trimming the matching head and tail leaves a window
- * small enough to compare exactly; a larger one is reported as one replacement.
+ * A line-by-line comparison costs one cell per pair of lines. Trimming the matching
+ * head and tail leaves a small window; a larger one is reported as one replacement.
  */
 const MAX_CELLS = 1_000_000;
 
@@ -160,9 +159,8 @@ const countOf = (value: string | undefined): number | undefined => {
 };
 
 /*
- * Some agents record the diff they applied rather than the file, so reading
- * their own account back is cheaper and more faithful than reconstructing one.
- * Anything outside a hunk is ignored: the tool call already named the file.
+ * Some agents record the diff they applied, so reading their own account back beats
+ * reconstructing one. Anything outside a hunk is ignored: the call named the file.
  */
 export const parseUnifiedDiff = (text: string): readonly PatchHunk[] => {
   const hunks: PatchHunk[] = [];

@@ -12,11 +12,8 @@ interface RawPrompt {
   readonly sessionId: string;
 }
 
-/**
- * Claude Code appends every prompt here and never prunes it, so it outlives the
- * transcripts themselves. Reading it is Search's job now, over the transcripts;
- * what is left here is keeping the record honest when one is deleted.
- */
+// Claude Code appends every prompt here and never prunes it, so it outlives the
+// transcripts. All that is left here is keeping the record honest on a delete.
 const HISTORY_FILE = 'history.jsonl';
 
 const claudeHome = (home: string = homedir()): string => {
@@ -38,9 +35,8 @@ const promptFrom = (line: string): RawPrompt | undefined => {
 };
 
 /*
- * A record outliving its transcript is the point where an agent pruned it, and
- * an orphan where someone deleted it on purpose. The rewrite goes through a
- * neighbouring file and a rename: a half-written record is worse than a stale one.
+ * A record outliving its transcript is an agent's pruning, an orphan a deliberate
+ * delete. Rewritten via a neighbour and a rename: half-written is worse than stale.
  */
 export const forgetSessionPrompts = async (
   sessionId: string,

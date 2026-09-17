@@ -49,9 +49,8 @@ export const useSystemLanguage = (): SystemLanguageChoice => {
   });
 
   /*
-   * Another window of this app choosing a language writes the same key. Its
-   * absence is the choice to follow the system, so a cleared key is followed
-   * back to detection rather than treated as a language named ''.
+   * Another window of this app writes the same key. Its absence is the choice to
+   * follow the system, so a cleared key falls back to detection, not a '' language.
    */
   useEffect(() => {
     const onStorage = (event: StorageEvent): void => {

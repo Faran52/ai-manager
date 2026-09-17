@@ -186,11 +186,8 @@ const withSessionAgent = (agent: AgentId, session: SessionSummary, profile?: str
   };
 };
 
-/**
- * Claude and Codex keep one root per profile (.claude, .claude-personal), so
- * whatever a root lists is tagged with that root's profile label before the
- * roots are merged. Every other format has one root and no profile.
- */
+// Claude and Codex keep one root per profile, so a root's listings are tagged with
+// its profile label before the merge. Every other format has one root and none.
 const perRootWithProfile = async <T>(
   agent: AgentId,
   paths: readonly string[],
@@ -388,9 +385,8 @@ export const listAgentProjects = async (roots: AgentRoots): Promise<readonly Pro
 };
 
 /*
- * The newest sessions across every project on the machine. A cap is applied
- * because this answers "what has been happening lately" rather than "list
- * everything", and the answer is drawn as one square per session.
+ * The newest sessions across every project on the machine. Capped because this
+ * answers "what has been happening lately", drawn as one square per session.
  */
 export const listNewestSessions = async (
   roots: AgentRoots,

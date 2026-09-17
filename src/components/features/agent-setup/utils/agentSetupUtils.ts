@@ -35,9 +35,8 @@ export const agentIsConfigured = (setup: AgentSetup): boolean => {
 };
 
 /*
- * ModelAuthState is a union per agent format, and the file and sqlite readers
- * carry no model or credentials at all. Reading it by key presence keeps the
- * table free of a per-format switch it would have to grow for every new agent.
+ * ModelAuthState is a union per agent format, and the file and sqlite readers carry
+ * neither. Key presence keeps the table free of a switch every new agent grows.
  */
 export const modelSummaryOf = (state: AgentSetup['modelAuth']): ModelSummary => {
   return {

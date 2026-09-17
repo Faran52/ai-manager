@@ -6,9 +6,8 @@ export interface ClineResults {
 }
 
 /*
- * The quoted argument is matched greedily rather than to the first quote,
- * because a shell command quotes its own arguments and Cline does not escape
- * them. The for clause is optional: attempt_completion reports without one.
+ * Greedy rather than to the first quote: a shell command quotes its own arguments
+ * and Cline does not escape them. The for clause is optional.
  */
 const RESULT_MARKER = /^\[[^\s\]]+(?: for '.*')?\] Result:/gmu;
 
@@ -26,11 +25,8 @@ const statusOf = (body: string): ToolStatus => {
     : 'ok';
 };
 
-/**
- * Splits a Cline user message into the words the person typed and the tool
- * results the extension appended, pairing the results with the calls of the
- * assistant turn above in order, because Cline carries no id back from a call.
- */
+// Splits a Cline user message into what the person typed and the tool results the
+// extension appended, paired in order because Cline carries no id back.
 export const clineOutcomes = (text: string, callIds: readonly string[]): ClineResults => {
   const markers = [...text.matchAll(RESULT_MARKER)];
 

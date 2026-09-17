@@ -29,9 +29,8 @@ export interface RhythmStripProps {
 const SWEEP = 0.4;
 
 /*
- * A bar with nothing written under it says only that something happened, not
- * when. The labels were in the hover text alone, which is no use on a touch
- * screen and no use at a glance.
+ * A bar with nothing under it says something happened, not when. The labels were
+ * in hover text alone, which is no use on a touch screen or at a glance.
  */
 export const RhythmStrip: FC<RhythmStripProps> = ({ slots, caption }) => {
   const peak = maxOf(slots, (slot) => {
@@ -55,9 +54,8 @@ export const RhythmStrip: FC<RhythmStripProps> = ({ slots, caption }) => {
             <div key={slot.key} className="grid min-w-0 flex-1 gap-1">
               <div className="flex h-16 items-end">
                 {/*
-                  * The column is given its height once and grown with a scale.
-                  * Animating the height itself relaid out the row on every
-                  * frame, and there are 24 of these beside a second chart.
+                  * Height once, then grown with a scale: animating the height
+                  * relaid out the row every frame, and there are 24 of these.
                   */}
                 <Tooltip content={`${slot.label}: ${formatTokens(slot.count)}`}>
                   <motion.div
@@ -71,8 +69,7 @@ export const RhythmStrip: FC<RhythmStripProps> = ({ slots, caption }) => {
                     )}
                     /*
                      * An hour that recorded nothing keeps a hairline rather than
-                     * vanishing, so quiet and nothing stop looking alike and
-                     * the row does not appear to close its gap.
+                     * vanishing, so quiet and nothing stop looking alike.
                      */
                     style={{ height: percent === 0 ? '2px' : `${String(percent)}%` }}
                     initial={{ scaleY: 0 }}

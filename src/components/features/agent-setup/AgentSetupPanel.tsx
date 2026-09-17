@@ -73,9 +73,8 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
   // itself. null is a row the reader shut, and has to outrank that default.
   const [picked, setPicked] = useState<string | null | undefined>(undefined);
   /*
-   * Which card's plugin table or configuration sheet is open, by key rather
-   * than by the setup object: a toggle reloads the setups, and a held object
-   * would keep showing the plugins as they were before the toggle.
+   * Which card's table or sheet is open, by key rather than by the setup object: a
+   * toggle reloads the setups and a held object would show the pre-toggle plugins.
    */
   const [pluginsKey, setPluginsKey] = useState<string | null>(null);
   const [settingsKey, setSettingsKey] = useState<string | null>(null);
@@ -127,9 +126,8 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
     return hasFinding(setup);
   });
   /*
-   * A flagged row leads and its warning marker says why, which is what the
-   * separate "needs attention" heading used to do. One header row cannot
-   * introduce three separately headed groups.
+   * A flagged row leads and its warning marker says why, replacing the separate
+   * "needs attention" heading: one header row cannot introduce three groups.
    */
   const listed = [...configured].sort((left, right) => {
     return Number(hasFinding(right)) - Number(hasFinding(left));

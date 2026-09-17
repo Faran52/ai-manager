@@ -20,9 +20,8 @@ import type { FC, MouseEvent } from 'react';
 import type { SessionRow } from '../utils/sessionThreadUtils';
 
 /*
- * What every row in the list reads from the pane: which row is open, whether
- * the list is in selection mode, and where a click goes. One object rather
- * than a dozen props, since a thread group forwards it to each of its parts.
+ * What every row reads from the pane. One object rather than a dozen props, since
+ * a thread group forwards it to each of its parts.
  */
 export interface SessionRowContext {
   readonly selectedFilePath: string | null;

@@ -1,7 +1,6 @@
 /*
- * What the native menu can ask the app to do. The menu is built from this list
- * in the reader's own language and handed to the desktop entry, which sends the
- * id of whatever was clicked back as `appMenuEvent`.
+ * What the native menu can ask the app to do. The desktop entry builds the menu
+ * from this list and sends the clicked id back as `appMenuEvent`.
  */
 export type AppCommand
   = | 'about'

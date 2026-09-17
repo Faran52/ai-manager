@@ -1,0 +1,53 @@
+---
+import '../styles/global.css';
+import { accentStorageKey, fontSizeStorageKey, themeStorageKey } from '@config/storageKeys';
+
+/*
+ * Every window is its own document and has to settle the stored appearance
+ * before first paint, or it flashes the default theme. Only the main window is
+ * ever an icon or a tab, so those are opt-in.
+ */
+interface Props {
+  title: string;
+  icons?: boolean;
+}
+
+const { title, icons = false } = Astro.props;
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		{icons && (
+			<Fragment>
+				<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+				<link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png" />
+				<link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png" />
+				<meta name="theme-color" content="#1f7a6d" />
+			</Fragment>
+		)}
+		<meta name="viewport" content="width=device-width" />
+		<title>{title}</title>
+		<script is:inline define:vars={{ themeStorageKey, accentStorageKey, fontSizeStorageKey }}>
+	const stored = localStorage.getItem(themeStorageKey);
+	const dark = stored === 'dark' || (stored !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+	if (dark) {
+	  document.documentElement.classList.add('dark');
+	}
+	// A custom accent is a hex the token file knows nothing about, so it
+	// rides an inline --primary rather than a [data-accent] selector.
+	const accent = localStorage.getItem(accentStorageKey) || 'teal';
+	if (accent.startsWith('#')) {
+	  document.documentElement.dataset.accent = 'custom';
+	  document.documentElement.style.setProperty('--primary', accent);
+	}
+ else {
+	  document.documentElement.dataset.accent = accent;
+	}
+	document.documentElement.dataset.fontSize = localStorage.getItem(fontSizeStorageKey) || 'normal';
+	</script>
+	</head>
+	<body>
+		<slot />
+	</body>
+</html>

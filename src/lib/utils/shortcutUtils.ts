@@ -2,11 +2,8 @@ import type { ShortcutSpec } from '@config/shortcuts';
 
 const TYPING_SELECTOR = 'input, textarea, select, [contenteditable]';
 
-/**
- * A bare-key shortcut must not fire while the user is composing text, and the
- * check is on the event target rather than document.activeElement because a
- * keydown inside a portal can arrive before focus has settled.
- */
+// A bare-key shortcut must not fire while composing text. On the event target, not
+// document.activeElement: a keydown in a portal arrives before focus settles.
 export const isTypingTarget = (target: EventTarget | null): boolean => {
   return target instanceof Element && target.closest(TYPING_SELECTOR) != null;
 };

@@ -22,9 +22,8 @@ export type AgentBinaryResolver = (bin: string) => Promise<boolean>;
 export type AgentBinaryRunner = (bin: string, args: readonly string[]) => Promise<BinaryRunResult>;
 
 /*
- * Only agents with one verified, official, single-command install, checked
- * against their own docs. Guessing wrong means running the wrong command on a
- * real machine, so the other 13 stay uncovered until named explicitly.
+ * Only agents with one verified, official, single-command install. Guessing wrong
+ * runs the wrong command on a real machine, so the other 13 stay uncovered.
  */
 export const AGENT_INSTALLS: Partial<Record<AgentId, AgentInstallInfo>> = {
   codebuddy: {

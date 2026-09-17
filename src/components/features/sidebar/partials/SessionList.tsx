@@ -116,8 +116,7 @@ export const SessionList: FC<SessionListProps> = ({
                     {groupThreadRuns(group.rows).map(({ head, parts }, index) => {
                       /*
                        * partCount, not parts.length: a collapsed thread has no
-                       * parts to render yet but still needs the stable,
-                       * animatable wrapper so expanding it can transition in.
+                       * parts yet but still needs the wrapper to transition in.
                        */
                       return head.partCount > 1
                         ? (

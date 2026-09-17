@@ -42,10 +42,8 @@ const role = (name: AppMenuRole): AppMenuItem => {
 };
 
 /*
- * The standard arrangement: the app's own menu first, then the editing roles,
- * the views, and the window. Cut, copy, paste and select all are roles rather
- * than items because a webview takes those from the menu, and an app without
- * one loses the shortcuts altogether.
+ * The standard arrangement. Cut, copy, paste and select all are roles, not items:
+ * a webview takes those from the menu, and without one the shortcuts are gone.
  */
 export const applicationMenu = (label: Label): readonly AppMenuItem[] => {
   return [

@@ -10,8 +10,7 @@ export interface SectionHeaderProps {
   readonly count?: number | undefined;
   /*
    * "eyebrow" is the tracked uppercase label a report section wears. "plain" is
-   * the sentence-case name a sidebar column wears, where the label is the thing
-   * itself rather than a heading over it.
+   * the sentence-case name a sidebar column wears.
    */
   readonly casing?: 'eyebrow' | 'plain';
 }

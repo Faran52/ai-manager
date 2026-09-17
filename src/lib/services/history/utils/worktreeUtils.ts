@@ -30,9 +30,8 @@ export const repoRootOf = async (projectPath: string): Promise<string | undefine
     const cut = gitDir.lastIndexOf(WORKTREE_SEGMENT);
 
     /*
-     * What follows the segment is the worktree's own name, so a further slash
-     * after it means this is some other path that merely contains the word.
-     * What precedes it is the repository's git directory.
+     * What follows the segment is the worktree's own name, so a further slash means
+     * some other path containing the word. What precedes it is the repo's git dir.
      */
     return cut === -1 || gitDir.includes('/', cut + WORKTREE_SEGMENT.length)
       ? undefined
@@ -45,8 +44,7 @@ export const repoRootOf = async (projectPath: string): Promise<string | undefine
 
 /*
  * A branch checked out beside the main tree is its own folder, so every agent
- * records it as a separate project. They are one piece of work. One read per
- * distinct folder, deduplicated, since agents commonly report the same one.
+ * records it separately. One read per distinct folder, since agents repeat them.
  */
 export const withRepoRoots = async (
   projects: readonly ProjectSummary[],

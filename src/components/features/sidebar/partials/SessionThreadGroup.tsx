@@ -18,9 +18,8 @@ export interface SessionThreadGroupProps {
 }
 
 /*
- * The ul and its head row stay mounted whether or not the group is open, so it
- * animates into a stable parent. One motion element gated by that boolean, not
- * one per part: AnimatePresence skips the first enter on a list that starts empty.
+ * The ul and head row stay mounted so parts animate into a stable parent. One
+ * motion element, not one per part: AnimatePresence skips the first enter.
  */
 export const SessionThreadGroup: FC<SessionThreadGroupProps> = ({
   head,

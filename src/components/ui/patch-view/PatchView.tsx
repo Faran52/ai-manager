@@ -30,8 +30,7 @@ export const PatchView: FC<PatchViewProps> = ({ hunks }) => {
       {hunks.map((hunk, index) => {
         /*
          * Coordinates alone do not identify a hunk: a multi-edit call diffs each edit
-         * against its own fragment, so every one starts at line 1 and two collided.
-         * React drops or duplicates children when keys collide.
+         * against its own fragment, so every one starts at line 1 and the keys collide.
          */
         const hunkKey = [
           hunk.file ?? '',

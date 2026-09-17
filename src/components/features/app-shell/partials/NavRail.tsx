@@ -45,9 +45,8 @@ interface Destination {
 }
 
 /*
- * Health sits last because it is where you go when something is wrong, not
- * where you work. Refresh and Settings sit apart at the foot of the rail: they
- * act on the app rather than take you somewhere in it.
+ * Health sits last: it is where you go when something is wrong, not where you
+ * work. Refresh and Settings sit apart, acting on the app rather than moving in it.
  */
 const DESTINATIONS: readonly Destination[] = [
   {

@@ -18,9 +18,8 @@ export interface ReportScope {
 const EMPTY: readonly SessionSummary[] = [];
 
 /*
- * No server route exists for one agent across every project, so this fans out
- * the per-project fetch useSessions already makes. The per-project fetch takes
- * no profile, so the merged result is filtered afterward rather than trusted.
+ * No server route exists for one agent across every project, so this fans out the
+ * per-project fetch. That takes no profile, so the merged result is filtered after.
  */
 export const useAgentSessions = (
   scope: ReportScope | null,

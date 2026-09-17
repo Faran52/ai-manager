@@ -19,9 +19,8 @@ const TONES: Record<NonNullable<EyebrowProps['tone']>, string> = {
 };
 
 /*
- * The tracked uppercase label the report sections, the health groups and the
- * settings groups all wear: one place for the size and the tracking, so a
- * new screen cannot drift from it.
+ * The tracked uppercase label report sections, health groups and settings groups
+ * all wear: one place for the size and the tracking, so no new screen drifts.
  */
 export const Eyebrow: FC<EyebrowProps> = ({
   children,

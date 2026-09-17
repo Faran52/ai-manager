@@ -11,9 +11,8 @@ export interface PluginCostsResource {
 }
 
 /*
- * The figures are the reason the table is worth opening, so they are read with
- * it rather than waiting behind a press. Every write lands after the await, so
- * the effect body never sets state on the render that scheduled it.
+ * The figures are why the table is worth opening, so they load with it. Every
+ * write lands after the await, so the effect never sets state on its own render.
  */
 export const usePluginCosts = (projectPath: string, profile?: string): PluginCostsResource => {
   const [costs, setCosts] = useState<readonly PluginCostAttribution[] | null>(null);

@@ -62,9 +62,8 @@ export const Tooltip: FC<TooltipProps> = ({
       };
 
   /*
-   * The provider is per tooltip rather than at a root because Astro islands are
-   * separate React trees, so there is no single root to hang one from. The cost
-   * is that tooltips do not share a skip-delay window.
+   * Per tooltip rather than at a root: Astro islands are separate React trees, so
+   * there is none to hang one from. The cost is no shared skip-delay window.
    */
   return (
     <TooltipProvider delayDuration={DELAY_MS}>

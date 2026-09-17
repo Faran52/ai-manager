@@ -437,9 +437,8 @@ const titleFor = (stored: string | null, built: SessionBuild): string | undefine
 };
 
 /*
- * One database holds every session, so its file size says nothing about any one
- * of them: reporting it made every OpenCode session look identical and enormous.
- * The stored length of a session's own parts is the honest per-session figure.
+ * One database holds every session, so its file size made every OpenCode session
+ * look identical and enormous. The stored length of its own parts is honest.
  */
 const sizesBySession = (database: DatabaseSync): ReadonlyMap<string, number> => {
   const rows = database.prepare(

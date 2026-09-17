@@ -113,9 +113,8 @@ export const initI18n = (): typeof i18next => {
         detection: {
           order: ['localStorage', 'navigator'],
           /*
-           * Nothing is written here. Storing what was merely detected would
-           * make every first visit look like a decision, and the reader could
-           * never get back to following their own system.
+           * Nothing is written here: storing what was merely detected would make
+           * every first visit look like a decision there is no way back from.
            */
           caches: [],
           lookupLocalStorage: languageStorageKey,

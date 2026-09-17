@@ -8,11 +8,8 @@ import type { FC } from 'react';
 
 const SYSTEM = 'system';
 
-/**
- * A native `<select>`: one of seven values, no icons, no submenu. The OS draws
- * its own list, which is already keyboard-navigable and typeahead-searchable in
- * every locale this app ships.
- */
+// A native `<select>`: one of seven values, no icons, no submenu. The OS list is
+// already keyboard-navigable and typeahead-searchable in every locale.
 export const LanguagePicker: FC = () => {
   const { t, i18n } = useTranslation('common');
   const {

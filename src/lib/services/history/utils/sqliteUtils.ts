@@ -530,8 +530,7 @@ const gooseSessions = (
 
 /*
  * llm logs one row per exchange with no role column (verified against
- * llm/migrations.py). Synthesised into the generic role/content/timestamp shape.
- * The reply is timestamped after its duration, so sorting keeps prompt first.
+ * llm/migrations.py). The reply is timestamped after its duration, so prompt sorts first.
  */
 const llmEntries = (
   database: DatabaseSync,
@@ -580,9 +579,8 @@ const llmEntries = (
 };
 
 /*
- * Crush messages.parts is a discriminated union, not the flat text shape the
- * generic reader checks for. Only text parts are read: the others are real but
- * their field shapes are unverified, and rendering them wrong is worse.
+ * Crush messages.parts is a discriminated union, not the flat text shape the generic
+ * reader checks. Only text parts: the others' field shapes are unverified.
  */
 const crushText = (parts: JsonValue): string => {
   if (!isJsonArray(parts)) {

@@ -17,11 +17,9 @@ export interface AboutDialogProps {
 }
 
 /*
- * About where the platform draws no window for it: Windows, Linux, and a
- * browser. macOS opens the same panel in a window of its own instead.
- *
- * The Modal draws no padding and hides its title, so the surface inside it is
- * this component's to set and the app name is the heading a reader sees.
+ * About where the platform draws no window for it: Windows, Linux, a browser.
+ * macOS opens the same panel in a window instead. The Modal draws no padding and
+ * hides its title, so the surface and the heading are this component's.
  */
 export const AboutDialog: FC<AboutDialogProps> = ({
   open,

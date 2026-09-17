@@ -16,8 +16,7 @@ export interface CopyTranscriptButtonProps {
 }
 
 /*
- * The transcript's most-used export, promoted out of the overflow to a single
- * click. The rest of the formats live behind the menu beside it. Keyed on the
+ * The most-used export, promoted out of the overflow to one click. Keyed on the
  * open file by the caller, so the confirmed state resets with the transcript.
  */
 export const CopyTranscriptButton: FC<CopyTranscriptButtonProps> = ({

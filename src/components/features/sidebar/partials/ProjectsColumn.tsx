@@ -92,9 +92,8 @@ export const ProjectsColumn: FC<ProjectsColumnProps> = ({
   }, [projects]);
 
   /*
-   * Empty means every agent, so the first pick narrows to just that one and
-   * clearing the last pick widens back out. The all-projects tallies and the
-   * funnel's Agents submenu both drive this.
+   * Empty means every agent, so the first pick narrows and clearing the last widens
+   * back out. The all-projects tallies and the Agents submenu both drive it.
    */
   const toggleAgent = (agent: AgentId): void => {
     setActiveAgents((current) => {

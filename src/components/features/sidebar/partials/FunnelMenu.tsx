@@ -49,11 +49,8 @@ export interface FunnelMenuProps {
   readonly onOrderChange: (order: FunnelOrder) => void;
 }
 
-/**
- * The one funnel both sidebar columns hang off: an agent set and a date window
- * to narrow by, and which end of the history to read from. The projects column
- * passes `agents` and gets the Agents submenu; the session list does not.
- */
+// The one funnel both sidebar columns hang off. The projects column passes
+// `agents` and gets the Agents submenu; the session list does not.
 export const FunnelMenu: FC<FunnelMenuProps> = ({
   label,
   align = 'end',
@@ -71,8 +68,7 @@ export const FunnelMenu: FC<FunnelMenuProps> = ({
 
   /*
    * The whole supported set, so the menu reads as what the app knows about. An
-   * agent with no project in this column is offered disabled rather than hidden,
-   * and the ones that can be filtered to sort ahead of the ones that cannot.
+   * agent with no project here is disabled rather than hidden, and sorts last.
    */
   const offered = agents == null
     ? []

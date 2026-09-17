@@ -204,9 +204,8 @@ const toolPartsOf = (record: JsonObject, fallbackId: string): ToolParts => {
 };
 
 /*
- * Gemini CLI moved from one .json object carrying a messages array to an
- * append-only .jsonl log whose first line is metadata, with $set lines updating
- * it. Both shapes still exist on disk.
+ * Gemini CLI moved from one .json object with a messages array to an append-only
+ * .jsonl whose first line is metadata, updated by $set. Both exist on disk.
  */
 const readRecords = (content: string): ChatRecords => {
   const whole = parseJsonContainer(content);

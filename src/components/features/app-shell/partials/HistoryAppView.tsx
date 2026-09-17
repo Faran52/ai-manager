@@ -177,9 +177,8 @@ export const HistoryAppView: FC = () => {
   // export menu can sit beside Archive rather than inside the viewer's header.
   const [openEntries, setOpenEntries] = useState<readonly HistoryEntry[]>([]);
   /*
-   * Only the one the pane is about reads. Both are live, and the agent list
-   * fans out a request per project, so the idle one polling in the background
-   * every few seconds was work whose answer was thrown away on arrival.
+   * Only the one the pane is about reads. Both are live and the agent list fans
+   * out a request per project, so the idle one polled for an answer nobody read.
    */
   const projectSessions = useSessions(reportScope == null ? selectedProject : null, view === 'sessions');
   const agentSessions = useAgentSessions(reportScope, visibleProjects, view === 'sessions');

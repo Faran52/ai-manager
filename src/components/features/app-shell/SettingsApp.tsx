@@ -8,9 +8,8 @@ import type { FC } from 'react';
 initI18n();
 
 /*
- * The whole of the Settings window. It shares no memory with the window that
- * opened it, so it reads the preferences for itself; what it writes reaches
- * the other window through storage, which is why they stay in step.
+ * The whole of the Settings window. It shares no memory with the window that opened
+ * it, so it reads preferences itself and its writes reach that one through storage.
  */
 export const SettingsApp: FC = () => {
   const theme = useTheme();

@@ -8,9 +8,8 @@ import { applicationMenu } from '../utils/appMenuUtils';
 import type { AppCommand } from '@config/appCommands';
 
 /*
- * Windows draws no global menu bar, so the app keeps the gear in its own
- * titlebar there, which is where Claude Desktop and WebStorm put it. macOS and
- * the Linux desktops that lift a window menu into their panel get the real one.
+ * Windows draws no global menu bar, so the gear stays in the app's own titlebar
+ * there. macOS and the Linux desktops that lift a window menu get the real one.
  */
 const WINDOWED_PLATFORM = 'windows';
 
@@ -34,10 +33,8 @@ const install = async (
 };
 
 /*
- * Hands the running window a menu in the reader's language and runs whatever it
- * reports back. Returns whether that menu is up, so the rail can drop the
- * control it now duplicates. Always false in a browser, where there is no
- * window to hand anything to.
+ * Hands the running window a menu in the reader's language and runs what it
+ * reports back. Returns whether it is up, so the rail drops what it duplicates.
  */
 export const useNativeMenu = (run: (command: AppCommand) => void): boolean => {
   const { t } = useTranslation('common');

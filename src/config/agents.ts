@@ -185,8 +185,7 @@ export const isAgentId = (value: string): value is AgentId => {
 
 /*
  * A project or session found under a sibling root (".claude-personal") carries
- * that root's profile name, so its badge says which one instead of reading the
- * same as the default root's "Claude Code".
+ * that root's profile name, so its badge says which one, not "Claude Code".
  */
 export const agentBadgeLabel = (agent: AgentId, profile?: string): string => {
   const label = agentOption(agent).label;
@@ -195,9 +194,8 @@ export const agentBadgeLabel = (agent: AgentId, profile?: string): string => {
 };
 
 /*
- * Here rather than in settingsService because the picker is client code and
- * that module reads the filesystem, which would pull node builtins into the
- * browser bundle. A settings test asserts the two lists match.
+ * Here rather than settingsService: the picker is client code and that module
+ * reads the filesystem. A settings test asserts the two lists match.
  */
 const SETTINGS_AGENTS = new Set<AgentId>(['claude', 'codex', 'gemini', 'opencode', 'grok']);
 

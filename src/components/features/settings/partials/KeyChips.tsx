@@ -8,11 +8,8 @@ export interface KeyChipsProps {
   readonly label?: string | undefined;
 }
 
-/**
- * The keys a surface reports, as chips rather than one comma-joined string: a
- * real Codex config names thirteen areas and the Claude user file sixteen
- * keys, which ran as an eleven-line paragraph of mono text.
- */
+// The keys a surface reports, as chips rather than one comma-joined string: a real
+// Codex config names thirteen areas, which ran as an eleven-line mono paragraph.
 export const KeyChips: FC<KeyChipsProps> = ({ keys, label }) => {
   const chips = (
     <div className="flex flex-wrap gap-1">

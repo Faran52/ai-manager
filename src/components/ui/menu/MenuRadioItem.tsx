@@ -18,11 +18,8 @@ export interface MenuRadioGroupProps<T extends string> {
   readonly onChange: (value: T) => void;
 }
 
-/**
- * The trailing check is what the value is set to, so it sits on the trailing
- * edge. A leading mark on the same row would mean "where you are" instead.
- * Typed by its options, so a caller gets its own union back rather than a string.
- */
+// The check sits on the trailing edge: a leading mark on the same row would mean
+// "where you are" instead. Typed by its options, so a caller keeps its union.
 export const MenuRadioGroup = <T extends string>({
   options,
   value,

@@ -38,11 +38,8 @@ export interface ArchiveViewProps {
   readonly retention: AsyncResource<RetentionStatusResponse>;
   readonly nowMs: number;
   readonly onOpenSession: (session: ArchivedSession) => void;
-  /**
-   * The sidebar's selected project, if any: the list narrows to archives
-   * holding one of its sessions, and each card to those sessions. Retention
-   * and Create archive stay machine-wide either way.
-   */
+  // The sidebar's selected project narrows the list to archives holding its
+  // sessions. Retention and Create archive stay machine-wide either way.
   readonly selectedProject?: ProjectSummary | null;
   readonly onShowAll?: () => void;
 }

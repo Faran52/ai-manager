@@ -24,14 +24,12 @@ export interface MarkdownViewProps {
   readonly text: string;
   /*
    * Prose, reasoning and instruction bodies are Markdown by nature; tool output
-   * and a typed message stay raw when they carry none. Either way the toggle
-   * appears only when a real Markdown block is present.
+   * and a typed message stay raw when they carry none.
    */
   readonly trusted?: boolean;
   /*
-   * Drop the card's own border and fill. Set it when a parent already frames
-   * this (a Disclosure around thinking or injected context), where the card's
-   * border would otherwise sit a few pixels inside the parent's as a second rule.
+   * Drop the card's own border and fill. Set it when a parent already frames this,
+   * where the card's border would sit inside the parent's as a second rule.
    */
   readonly bare?: boolean;
 }

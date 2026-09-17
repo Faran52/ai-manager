@@ -30,9 +30,8 @@ export interface WorkspaceSelection {
 }
 
 /*
- * What the app is pointed at: a project, a transcript inside it, and how it
- * got there. Every way of opening a transcript lands on the Sessions view,
- * which `showSession` does.
+ * What the app is pointed at. Every way of opening a transcript lands on the
+ * Sessions view, which `showSession` does.
  */
 export const useWorkspaceSelection = (
   projects: readonly ProjectSummary[] | undefined,
@@ -58,11 +57,8 @@ export const useWorkspaceSelection = (
     setReportScope(null);
   }, [clearOpenSession]);
 
-  /**
-   * The All Projects card is a sibling of the project list, so picking it has
-   * to clear the previous pick the same way selectProject does, not just flip
-   * the Analytics scope and leave the old project marked selected.
-   */
+  // The All Projects card is a sibling of the project list, so picking it clears
+  // the previous pick rather than leaving it marked selected.
   const selectAllProjects = useCallback(() => {
     setSelectedProject(null);
     clearOpenSession();
@@ -70,9 +66,8 @@ export const useWorkspaceSelection = (
   }, [clearOpenSession]);
 
   /*
-   * Picking an agent always means the whole machine: there is no per-project,
-   * per-agent report, so a project picked earlier has to clear. profile is part
-   * of the toggle identity, so a sibling profile switches rather than closes.
+   * Picking an agent means the whole machine: there is no per-project, per-agent
+   * report. profile is part of the toggle identity, so a sibling switches.
    */
   const selectReportAgent = useCallback((agent: AgentId, profile?: string) => {
     setSelectedProject(null);

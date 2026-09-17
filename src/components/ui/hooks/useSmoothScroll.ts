@@ -31,8 +31,7 @@ const wheelDelta = (event: WheelEvent, viewportHeight: number): number => {
 
 /*
  * The step scales by elapsed time rather than frame count, so the same gesture
- * travels the same distance at 60Hz and 120Hz. Reduced motion keeps the
- * platform own scrolling.
+ * travels the same distance at 60Hz and 120Hz. Reduced motion keeps native scroll.
  */
 export const useSmoothScroll = (element: HTMLElement | null): void => {
   useEffect(() => {

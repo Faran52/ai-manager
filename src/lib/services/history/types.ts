@@ -104,11 +104,8 @@ export interface PatchHunk {
   readonly newStart: number;
   readonly newLines: number;
   readonly lines: readonly string[];
-  /**
-   * Set only when a single patch spans more than one file (a Codex apply_patch),
-   * so the diff can be split under a header per file. A single-file patch names
-   * its file on the card and leaves this unset.
-   */
+  // Set only when a single patch spans more than one file (a Codex apply_patch), so
+  // the diff splits under a header per file. A single-file patch leaves it unset.
   readonly file?: string | undefined;
 }
 
@@ -134,9 +131,8 @@ export interface ToolOutcome {
   readonly stderr?: string | undefined;
   readonly filePath?: string | undefined;
   /*
-   * Some agents apply a patch and report afterwards which files it touched,
-   * rather than naming a file in the call itself. Without this, everything that
-   * counts edits would see those agents as having changed nothing.
+   * Some agents report which files a patch touched afterwards rather than naming
+   * one in the call. Without this they would look as though they changed nothing.
    */
   readonly changed?: readonly ChangedFile[] | undefined;
 }
@@ -257,9 +253,8 @@ export interface SessionSummary {
   readonly cwd?: string | undefined;
   readonly gitBranch?: string | undefined;
   /*
-   * The uuid of the transcript's first message. Rewinding a session records the
-   * messages up to that point again in a fresh file, so two transcripts sharing
-   * a root are two recordings of one conversation rather than two conversations.
+   * The uuid of the transcript's first message. Rewinding records the messages so
+   * far into a fresh file, so a shared root means one conversation, not two.
    */
   readonly rootUuid?: string | undefined;
 }

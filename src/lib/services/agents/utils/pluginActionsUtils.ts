@@ -24,9 +24,8 @@ const BASE_ARGS: Record<PluginActionName, readonly string[]> = {
 };
 
 /*
- * The registry files belong to the CLI, so every mutation goes through it.
- * -y is mandatory here: the desktop shell is never a TTY, and an install that
- * would prompt for a marketplace command must fail loudly instead of hanging.
+ * The registry files belong to the CLI, so every mutation goes through it. -y is
+ * mandatory: the shell is never a TTY, and a prompt would hang instead of failing.
  */
 export const pluginActionArgs = (request: PluginActionRequest): readonly string[] => {
   const base = [...BASE_ARGS[request.action], request.plugin, '-s', request.scope];

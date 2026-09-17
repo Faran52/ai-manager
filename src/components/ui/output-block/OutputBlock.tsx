@@ -18,8 +18,7 @@ const MAX_BODY_CHARS = 20_000;
 
 /*
  * The tool card is the only thing that collapses, so output never hides behind a
- * second disclosure. The body is height-bounded and scrolls, so a wall of
- * output cannot stretch the card.
+ * second disclosure. The body is height-bounded and scrolls instead.
  */
 export const OutputBlock: FC<OutputBlockProps> = ({ label, text }) => {
   const { t } = useTranslation('common');

@@ -89,9 +89,8 @@ const projectEntry = async (projectPath: string, home: string): Promise<JsonObje
 };
 
 /*
- * Only the ratio is wanted: lastModelUsage holds one session running total per
- * project, so these sample the history and a cost per token divides the scale
- * back out. Model keys arrive with the context tier, as claude-opus-5[1m].
+ * Only the ratio is wanted: lastModelUsage holds one session's running total, so a
+ * cost per token divides the scale out. Model keys carry the tier: opus-5[1m].
  */
 export const readModelCosts = async (
   home = homedir(),

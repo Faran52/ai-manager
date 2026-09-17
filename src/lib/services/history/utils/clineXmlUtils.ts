@@ -111,11 +111,8 @@ const textBlock = (text: string): readonly AssistantBlock[] => {
       }];
 };
 
-/**
- * One assistant message split into the prose it reads as and the calls it
- * actually made. A progress checklist becomes todos whether it arrives on its
- * own or nested inside another call, because Cline writes it both ways.
- */
+// One assistant message split into prose and the calls it made. A progress
+// checklist becomes todos nested or not, because Cline writes it both ways.
 export const parseClineBlocks = (text: string, uuid: string): readonly AssistantBlock[] => {
   const blocks: AssistantBlock[] = [];
   let cursor = 0;

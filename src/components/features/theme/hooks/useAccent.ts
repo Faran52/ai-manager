@@ -7,9 +7,8 @@ import { storedSetting } from '@utils/storedSettingUtils';
 export type AccentName = 'teal' | 'iris' | 'amber' | 'rose' | 'lime' | 'sky';
 
 /*
- * One of the six names that ship, or a hex the reader picked from the OS. The
- * two are not distinguishable in the type, so isAccentName is what tells them
- * apart at the point it matters.
+ * One of the six names that ship, or a hex picked from the OS. The type cannot
+ * tell them apart, so isAccentName does it where it matters.
  */
 interface AccentState {
   readonly accent: string;
@@ -27,9 +26,8 @@ export const isAccentName = (value: string | null): value is AccentName => {
 };
 
 /*
- * Only the six-digit form. `<input type="color">` emits nothing else, and a
- * looser test would let a stored value through that the boot script then writes
- * straight into --primary.
+ * Only the six-digit form: `<input type="color">` emits nothing else, and a looser
+ * test lets a stored value through to --primary via the boot script.
  */
 const isCustomAccent = (value: string | null): value is string => {
   return value != null && /^#[0-9a-f]{6}$/i.test(value);

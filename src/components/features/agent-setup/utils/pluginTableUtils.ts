@@ -20,9 +20,8 @@ export const tokensIn = (value: number): string => {
 };
 
 /*
- * Always-on context is re-sent on every turn, so a plugin costs a fraction of a
- * cent each time and four decimals rounded most of them to $0.0000. A thousand
- * turns is a scale worth acting on, and the per-turn figure stays in the title.
+ * Always-on context is re-sent every turn, and four decimals rounded most plugins
+ * to $0.0000. A thousand turns is a scale worth acting on.
  */
 export const costIn = (perTurnUsd: number): string => {
   return perTurnUsd <= 0 ? '·' : `$${(perTurnUsd * PER_TURNS).toFixed(2)}`;

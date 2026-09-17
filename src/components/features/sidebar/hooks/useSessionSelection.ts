@@ -24,9 +24,8 @@ export interface SessionSelection {
 }
 
 /*
- * Selection mode over the session list: which rows are picked for a bulk
- * action, and Escape to leave it. `paused` holds Escape back while a dialog
- * above the list owns that key.
+ * Selection mode over the session list, with Escape to leave it. `paused` holds
+ * Escape back while a dialog above the list owns that key.
  */
 export const useSessionSelection = (
   sessions: readonly SessionSummary[],

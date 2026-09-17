@@ -84,11 +84,8 @@ export const sessionKey = (agent: AgentId, actualSessionId: string): string => {
   return `${agent}:${actualSessionId}`;
 };
 
-/**
- * False rather than a throw: an agent may delete the very transcript being
- * copied, which is the race this feature exists to survive, so one lost file
- * must not abandon the rest of the archive.
- */
+// False rather than a throw: an agent may delete the very transcript being copied,
+// and one lost file must not abandon the rest of the archive.
 export const copySession = async (source: string, destination: string): Promise<boolean> => {
   try {
     await mkdir(join(destination, '..'), { recursive: true });
@@ -279,11 +276,8 @@ export const listArchives = async (home?: string): Promise<readonly ArchiveSumma
   });
 };
 
-/**
- * Reports whether there was an archive to remove. An id naming nothing is an
- * ordinary answer rather than a failure, so the caller can say "no such
- * archive" instead of raising a thrown error into an unexpected server error.
- */
+// Reports whether there was an archive to remove. An id naming nothing is an
+// ordinary answer, so the caller says "no such archive" rather than 500.
 export const deleteArchive = async (id: string, home?: string): Promise<boolean> => {
   if (!ID_PATTERN.test(id)) {
     throw new Error('Unknown archive.');

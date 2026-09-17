@@ -54,11 +54,8 @@ export interface SidebarPaneProps {
   readonly onDeleteProject: (project: ProjectSummary) => Promise<void>;
   readonly onRenameSession: (session: SessionSummary, title: string) => Promise<void>;
   readonly onDeleteSession: (session: SessionSummary) => Promise<void>;
-  /**
-   * The session list belongs to the transcript beside it, so it rides along
-   * with the Sessions view only. Health and Archive read the projects column
-   * alone; folding this away keeps the pane about what it reports.
-   */
+  // The session list belongs to the transcript beside it, so it rides along with
+  // the Sessions view only. Health and Archive read the projects column alone.
   readonly showSessions?: boolean;
   // The scope card is pinned above the list where a report can be global.
   readonly showAllProjects?: boolean;
@@ -67,9 +64,7 @@ export interface SidebarPaneProps {
 }
 
 /*
- * The two folding columns, and everything that floats above them: the
- * context menu, the rename and delete dialogs, and the live-region lines
- * that read out what those did.
+ * The two folding columns, and the menus, dialogs and live regions above them.
  */
 export const SidebarPane: FC<SidebarPaneProps> = ({
   projects,
@@ -113,11 +108,8 @@ export const SidebarPane: FC<SidebarPaneProps> = ({
   // a single project does; only picking neither leaves it unscoped.
   const sessionsScoped = selectedProject != null || reportScope != null;
 
-  /**
-   * A project names the export same as always; with none selected, a report
-   * agent's own sessions are named for that agent rather than the generic
-   * fallback both call sites otherwise use.
-   */
+  // A project names the export as always; with none selected, a report agent's
+  // sessions are named for that agent rather than the generic fallback.
   const scopeName = selectedProject?.name
     ?? (reportScope != null ? agentBadgeLabel(reportScope.agent, reportScope.profile) : undefined);
 

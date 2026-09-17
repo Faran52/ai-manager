@@ -35,11 +35,8 @@ export interface ProjectTreeProps {
   readonly nowMs: number;
   readonly onSelectProject: (project: ProjectSummary) => void;
   readonly onOpenMenu: (event: MouseEvent, project: ProjectSummary) => void;
-  /**
-   * The per-agent tally chips under a card. Sessions and Analytics pick a
-   * branch with them; Health reads the project as one folder, so there the
-   * chips only add noise and are left off.
-   */
+  // The per-agent tally chips under a card. Health reads the project as one
+  // folder, so it leaves them off.
   readonly showAgentChips?: boolean;
 }
 

@@ -9,9 +9,8 @@ import type { FC } from 'react';
 initI18n();
 
 /*
- * The whole of the About window. It shares nothing with the main window, which
- * is the point: a second window is a second JavaScript context, so this reads
- * the version out of the build and asks the feed itself.
+ * The whole of the About window. A second window is a second JavaScript context,
+ * so this reads the version out of the build and asks the feed itself.
  */
 export const AboutApp: FC = () => {
   const probe = useUpdateProbe();

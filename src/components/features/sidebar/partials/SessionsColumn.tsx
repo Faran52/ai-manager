@@ -95,11 +95,8 @@ export const SessionsColumn: FC<SessionsColumnProps> = ({
   const [collapsedGroups, setCollapsedGroups] = useState<readonly RecencyBucket[]>([]);
   const bulk = useBulkActions(selection.selectedSessions, scopeName);
 
-  /**
-   * Resuming or compacting a session writes a fresh transcript, so one piece of
-   * work arrives as several files. They are shown as one row that opens to its
-   * parts rather than as unrelated neighbours in the list.
-   */
+  // Resuming or compacting a session writes a fresh transcript, so one piece of
+  // work arrives as several files, shown as one row that opens to its parts.
   const rows = useMemo((): readonly SessionRow[] => {
     return buildSessionThreads(filters.visibleSessions, filters.order).flatMap((thread) => {
       const head = {
