@@ -18,7 +18,12 @@ export const FloatingDate: FC<FloatingDateProps> = ({ timestampMs, nowMs }) => {
   }
 
   return (
-    <div className="pointer-events-none sticky top-0 z-10 flex justify-center">
+    /* Zero height: the pill floats over the transcript rather than sitting in
+       it, so the rows below keep their offset whether or not it is showing. */
+    <div className="
+      pointer-events-none sticky top-0 z-10 flex h-0 items-start justify-center
+    "
+    >
       <span
         className="
           rounded-full border border-border bg-card/90 px-2.5 py-0.5 text-figure

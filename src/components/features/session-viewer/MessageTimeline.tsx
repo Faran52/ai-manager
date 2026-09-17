@@ -1,6 +1,6 @@
 import {
+  useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -54,9 +54,7 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
   navigation,
   nowMs: nowMsProp,
 }) => {
-  const listRef = useRef<HTMLDivElement>(null);
   const ownScrollRef = useRef<HTMLDivElement>(null);
-  const scrollMarginRef = useRef(0);
   const scrolledForRef = useRef<string | null>(null);
   const reduceMotion = useReducedMotion();
 
@@ -71,14 +69,18 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
   }, [entries, filters]);
 
   /*
-   * The virtualizer measures against the scroll box, so it needs the offset of
-   * whatever the viewer draws above. A ref, because state would re-render on
-   * mount for a value the next render reads anyway.
+   * The offset of whatever the viewer draws above the list. State, not a ref:
+   * the virtualizer reads it during render, and a ref written after layout
+   * notifies nobody, so rows sat short by the header until some later render
+   * picked it up, mid-scroll. Measured once, since nothing above the list moves.
    */
-  useLayoutEffect(() => {
-    /* v8 ignore next -- the ref is attached before layout effects run */
-    scrollMarginRef.current = listRef.current?.offsetTop ?? 0;
-  }, [model.rows.length]);
+  const [scrollMargin, setScrollMargin] = useState(0);
+
+  const attachList = useCallback((node: HTMLDivElement | null): void => {
+    if (node != null) {
+      setScrollMargin(node.offsetTop);
+    }
+  }, []);
 
   /*
    * React Compiler cannot memoize a component holding a virtualizer: the hook
@@ -98,7 +100,7 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
       return model.rows[index]?.key ?? index;
     },
     overscan: OVERSCAN,
-    scrollMargin: scrollMarginRef.current,
+    scrollMargin,
   });
 
   // Search hands us a timestamp, not a position, and the target row may not be
@@ -141,7 +143,7 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
   return (
     <motion.div
       ref={ownScrollRef}
-      className="relative space-y-4"
+      className="relative"
       data-message-timeline
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -149,7 +151,7 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
     >
       <FloatingDate timestampMs={floatingDay} nowMs={nowMs} />
       <div
-        ref={listRef}
+        ref={attachList}
         className="relative w-full"
         style={{ height: `${String(virtualizer.getTotalSize())}px` }}
       >
@@ -188,7 +190,7 @@ export const MessageTimeline: FC<MessageTimelineProps> = ({
                 dividedFromPrevious && 'border-t border-hair',
                 row.kind === 'entry' && row.dimmed && 'opacity-60',
               )}
-              style={{ transform: `translateY(${String(item.start - scrollMarginRef.current)}px)` }}
+              style={{ transform: `translateY(${String(item.start - scrollMargin)}px)` }}
             >
               <TimelineRowBody
                 row={row}

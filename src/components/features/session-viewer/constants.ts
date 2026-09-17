@@ -1,34 +1,35 @@
-/**
- * How tall each row is before it is measured. One number for every row made the
- * total height wrong by a wide margin on a mixed transcript, and the scrollbar
- * jumped as rows mounted and corrected it, so each kind estimates its own.
- */
+// Row heights the virtualizer starts from. rowEstimateUtils.ts explains them.
 export const DATE_ROW_PX = 32;
 
 export const SUMMARY_ROW_PX = 56;
 
 export const SYSTEM_ROW_PX = 72;
 
-export const USER_ROW_PX = 104;
+// Everything a turn draws around its prose: the speaker line, and the padding.
+export const USER_ROW_PX = 56;
 
-export const ASSISTANT_BASE_PX = 64;
+export const ASSISTANT_BASE_PX = 40;
 
-export const ASSISTANT_BLOCK_PX = 120;
+// A block whose height owes nothing to text: redacted thinking, and a tool call
+// summarised to its one-line header.
+export const ASSISTANT_BLOCK_PX = 48;
+
+export const TOOL_USE_BLOCK_PX = 72;
+
+export const PROSE_CHARS_PER_LINE = 90;
+
+export const PROSE_LINE_PX = 22;
 
 export const OVERSCAN = 6;
 
 /*
  * How far below the viewport the next page starts loading. A screen's worth, so
- * the rows are there by the time the reader scrolls onto them and the button
- * below them is never the only way down.
+ * the rows are there by the time the reader scrolls onto them.
  */
 export const LOAD_AHEAD_MARGIN = '800px';
 
-/**
- * An attribute-free lowercase tag name: every framing wrapper the agents emit
- * (<environment_details>, <system-reminder>, <path>/<type>/<content>) and almost
- * no real prose.
- */
+// An attribute-free lowercase tag name: every framing wrapper the agents emit
+// (<environment_details>, <system-reminder>, <path>/<type>) and almost no prose.
 export const WRAPPER_NAME = /^[a-z][a-z\d_-]*$/u;
 
 // A line that is nothing but one such tag: an unclosed opener, or a stray closer.
@@ -50,9 +51,8 @@ export const ENV_FIELDS: readonly (readonly [string, string])[] = [
 ];
 
 /*
- * Catalog prose that is the same every session and describes none of it. A
- * carve per tag rather than one regex: a lazy match to a backreferenced close
- * backtracks super-linearly on a long turn.
+ * Catalog prose that is the same every session. A carve per tag rather than one
+ * regex: a lazy match to a backreferenced close backtracks super-linearly.
  */
 export const NOISE_BLOCKS = ['apps_instructions', 'plugins_instructions', 'skills_instructions'];
 
