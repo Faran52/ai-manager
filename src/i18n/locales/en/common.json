@@ -92,5 +92,6 @@
   "menuEdit": "Edit",
   "menuView": "View",
   "menuWindow": "Window",
-  "menuHelp": "Help"
+  "menuHelp": "Help",
+  "scrollToEnd": "Scroll to newest"
 }

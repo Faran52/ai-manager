@@ -15,3 +15,5 @@ export const messageFiltersStorageKey = 'acm-message-filters';
 export const messageNavigatorOpenStorageKey = 'acm-message-navigator-open';
 export const messageNavigatorWidthStorageKey = 'acm-message-navigator-width';
 // Whether the app looks for a release on launch. Absent means it does.
+// Where the reader parked the scroll-to-end button.
+export const scrollDockStorageKey = 'acm-scroll-dock';

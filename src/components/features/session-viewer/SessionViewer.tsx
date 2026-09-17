@@ -27,6 +27,7 @@ import {
   EmptyState,
   IconButton,
   Loader,
+  ScrollToEnd,
   storedWidth,
   useMinLoad,
   useSmoothScroll,
@@ -384,16 +385,24 @@ export const SessionViewer: FC<SessionViewerProps> = ({
       </header>
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
-        <div
-          ref={setScrollElement}
-          className="
-            min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-4.5
-            pt-1.5
-          "
-        >
-          <div className="mx-auto max-w-5xl">
-            {body}
+        <div className="relative flex min-h-0 min-w-0 flex-1">
+          <div
+            ref={setScrollElement}
+            className="
+              min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-4.5
+              pt-1.5
+            "
+          >
+            <div className="mx-auto max-w-5xl">
+              {body}
+            </div>
           </div>
+          <ScrollToEnd
+            scrollElement={scrollElement}
+            hasMore={feed.hasMore}
+            loading={feed.seeking}
+            onLoadRest={feed.seekEnd}
+          />
         </div>
         <CompanionPane
           panel={panel}

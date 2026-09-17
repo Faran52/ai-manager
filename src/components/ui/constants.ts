@@ -120,3 +120,13 @@ export const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 // Under testing-library's 1000ms default timeout, or every wait behind a
 // loader becomes a race.
 export const LOADER_MIN_MS = 400;
+
+/**
+ * How close to the end of a scrolling box counts as being at it, how far a
+ * press may travel before it is a drag, how wide the docked button is, and how
+ * long to hold the end while content finishes measuring.
+ */
+export const SCROLL_END_MARGIN_PX = 64;
+export const DRAG_SLOP_PX = 4;
+export const DOCK_SIZE_PX = 56;
+export const SETTLE_MS = 1_000;

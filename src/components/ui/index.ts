@@ -33,6 +33,7 @@ export * from './output-block/OutputBlock';
 export * from './pane-divider/PaneDivider';
 export * from './panel/Panel';
 export * from './patch-view/PatchView';
+export * from './scroll-to-end/ScrollToEnd';
 export * from './section-header/SectionHeader';
 export * from './segmented-control/SegmentedControl';
 export * from './spinner/Spinner';

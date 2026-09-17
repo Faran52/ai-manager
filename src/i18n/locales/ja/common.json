@@ -92,5 +92,6 @@
   "menuEdit": "編集",
   "menuView": "表示",
   "menuWindow": "ウインドウ",
-  "menuHelp": "ヘルプ"
+  "menuHelp": "ヘルプ",
+  "scrollToEnd": "最新へスクロール"
 }

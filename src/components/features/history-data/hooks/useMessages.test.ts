@@ -501,4 +501,75 @@ describe('useMessages live refresh', () => {
 
     expect(calls).toBe(1);
   });
+
+  test('seeks the end by paging in everything that is left', async () => {
+    const total = 7;
+
+    page = (offset) => {
+      const slice = Array.from({ length: Math.min(3, total - offset) }, (_, index) => {
+        return entry(`e${String(offset + index)}`);
+      });
+
+      return {
+        entries: slice,
+        total,
+        messageCount: total,
+        hasMore: offset + slice.length < total,
+        nextOffset: offset + slice.length,
+      };
+    };
+
+    stubFetch();
+
+    const { result } = renderHook(() => {
+      return useMessages('/f.jsonl', 'claude', false);
+    });
+
+    await waitFor(() => {
+      expect(result.current.entries).toHaveLength(3);
+    });
+    expect(result.current.hasMore).toBe(true);
+
+    act(() => {
+      result.current.seekEnd();
+    });
+
+    await waitFor(() => {
+      expect(result.current.seeking).toBe(false);
+    });
+
+    expect(result.current.entries).toHaveLength(total);
+    expect(result.current.hasMore).toBe(false);
+  });
+
+  test('ignores a seek when the whole session is already in hand', async () => {
+    page = () => {
+      return {
+        entries: [entry('only')],
+        total: 1,
+        messageCount: 1,
+        hasMore: false,
+        nextOffset: 1,
+      };
+    };
+
+    stubFetch();
+
+    const { result } = renderHook(() => {
+      return useMessages('/f.jsonl', 'claude', false);
+    });
+
+    await waitFor(() => {
+      expect(result.current.phase).toBe('ready');
+    });
+
+    const before = fetchCalls();
+
+    act(() => {
+      result.current.seekEnd();
+    });
+
+    expect(result.current.seeking).toBe(false);
+    expect(fetchCalls()).toBe(before);
+  });
 });

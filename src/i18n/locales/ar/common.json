@@ -92,5 +92,6 @@
   "menuEdit": "تحرير",
   "menuView": "عرض",
   "menuWindow": "نافذة",
-  "menuHelp": "مساعدة"
+  "menuHelp": "مساعدة",
+  "scrollToEnd": "التمرير إلى الأحدث"
 }

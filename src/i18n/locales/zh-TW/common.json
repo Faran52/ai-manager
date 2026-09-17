@@ -92,5 +92,6 @@
   "menuEdit": "編輯",
   "menuView": "檢視",
   "menuWindow": "視窗",
-  "menuHelp": "說明"
+  "menuHelp": "說明",
+  "scrollToEnd": "捲動到最新"
 }

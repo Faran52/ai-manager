@@ -92,5 +92,6 @@
   "menuEdit": "编辑",
   "menuView": "视图",
   "menuWindow": "窗口",
-  "menuHelp": "帮助"
+  "menuHelp": "帮助",
+  "scrollToEnd": "滚动到最新"
 }

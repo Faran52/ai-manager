@@ -28,6 +28,7 @@ interface Feed {
   total: number;
   messageCount: number;
   hasMore: boolean;
+  seeking: boolean;
   error?: string | undefined;
 }
 
@@ -39,7 +40,10 @@ export interface MessageFeed {
   readonly hasMore: boolean;
   readonly error: string | undefined;
   readonly syncing: boolean;
+  // True while it is paging toward the end of the session.
+  readonly seeking: boolean;
   readonly loadMore: () => void;
+  readonly seekEnd: () => void;
 }
 
 const freshFeed = (filePath: string | null, agent: AgentId, includeSidechain: boolean): Feed => {
@@ -53,15 +57,18 @@ const freshFeed = (filePath: string | null, agent: AgentId, includeSidechain: bo
     total: 0,
     messageCount: 0,
     hasMore: false,
+    seeking: false,
   };
 };
 
 const mergePage = (current: Feed, page: SessionPage): Feed => {
   const entries = current.offset === 0 ? page.entries : [...current.entries, ...page.entries];
+  const seeking = current.seeking && page.hasMore;
 
   return {
     ...current,
-    phase: 'ready',
+    phase: seeking ? 'loading' : 'ready',
+    seeking,
     entries,
     total: page.total,
     messageCount: page.messageCount,
@@ -193,8 +200,8 @@ export const useMessages = (
     };
   }, [feed]);
 
-  // The one thing that follows the disk. A change refetches the tail through the
-  // same path a stale timestamp does, so nothing new merges entries.
+  // Appends from where the feed got to. Replacing the transcript would hand every
+  // row a new object, remeasure the list and slide it under the reader.
   useEffect(() => {
     if (filePath == null) {
       return undefined;
@@ -206,11 +213,24 @@ export const useMessages = (
           ? current
           : {
               ...current,
-              phase: 'refreshing',
+              phase: 'loading',
             };
       });
     });
   }, [filePath]);
+
+  // The end of the session, not the end of what happens to be loaded.
+  const seekEnd = useCallback((): void => {
+    setFeed((current) => {
+      return current.hasMore && current.phase === 'ready'
+        ? {
+            ...current,
+            phase: 'loading',
+            seeking: true,
+          }
+        : current;
+    });
+  }, []);
 
   const loadMore = useCallback((): void => {
     setFeed((current) => {
@@ -233,6 +253,8 @@ export const useMessages = (
     hasMore: feed.hasMore,
     error: feed.error,
     syncing: feed.phase === 'refreshing',
+    seeking: feed.seeking,
     loadMore,
+    seekEnd,
   };
 };

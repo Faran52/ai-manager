@@ -92,5 +92,6 @@
   "menuEdit": "편집",
   "menuView": "보기",
   "menuWindow": "윈도우",
-  "menuHelp": "도움말"
+  "menuHelp": "도움말",
+  "scrollToEnd": "최신으로 스크롤"
 }
