@@ -1,6 +1,5 @@
 ---
-import '../styles/global.css';
-import { accentStorageKey, fontSizeStorageKey, languageStorageKey, themeStorageKey } from '@config/storageKeys';
+import { languageStorageKey } from '@config/storageKeys';
 import { HistoryApp } from '@features/app-shell';
 import ar from '../i18n/locales/ar/common.json';
 import en from '../i18n/locales/en/common.json';
@@ -8,16 +7,12 @@ import ja from '../i18n/locales/ja/common.json';
 import ko from '../i18n/locales/ko/common.json';
 import zhCN from '../i18n/locales/zh-CN/common.json';
 import zhTW from '../i18n/locales/zh-TW/common.json';
+import AppDocument from '../layouts/AppDocument.astro';
 
 /*
- * The island is client:only, so nothing at all is painted until the bundle has
- * downloaded, parsed and hydrated. On a cold start that is a blank window for
- * as long as it takes. The fallback fills it with the same mark the panes use,
- * and Astro drops it the moment the app takes over.
- *
- * The label is read from the locale files rather than written again here, so
- * the one this page can pick without JavaScript is English and the inline
- * script below swaps it for the reader's own.
+ * The island is client:only, so nothing is painted until the bundle hydrates: on a
+ * cold start, a blank window. The fallback fills it and Astro drops it on takeover.
+ * The label comes from the locale files, English until the inline script swaps it.
  */
 const startingUp = {
   ar: ar.startingUp,
@@ -29,49 +24,20 @@ const startingUp = {
 };
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png" />
-		<link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png" />
-		<meta name="theme-color" content="#1f7a6d" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>AI Manager</title>
-		<script is:inline define:vars={{ themeStorageKey, accentStorageKey, fontSizeStorageKey }}>
-	const stored = localStorage.getItem(themeStorageKey);
-	const dark = stored === 'dark' || (stored !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
-	if (dark) {
-	  document.documentElement.classList.add('dark');
-	}
-	// A custom accent is a hex the token file knows nothing about, so it
-	// rides an inline --primary rather than a [data-accent] selector.
-	const accent = localStorage.getItem(accentStorageKey) || 'teal';
-	if (accent.startsWith('#')) {
-	  document.documentElement.dataset.accent = 'custom';
-	  document.documentElement.style.setProperty('--primary', accent);
-	}
- else {
-	  document.documentElement.dataset.accent = accent;
-	}
-	document.documentElement.dataset.fontSize = localStorage.getItem(fontSizeStorageKey) || 'normal';
-	</script>
-	</head>
-	<body>
-		<HistoryApp client:only="react">
-			<div
-				slot="fallback"
-				class="flex h-dvh items-center justify-center bg-recess text-foreground"
-				data-booting
-			>
-				<div class="loader">
-					<div class="loader-mark"></div>
-					<p class="loader-stage" data-booting-stage>{startingUp.en}</p>
-				</div>
+<AppDocument title="AI Manager" icons>
+	<HistoryApp client:only="react">
+		<div
+			slot="fallback"
+			class="flex h-dvh items-center justify-center bg-recess text-foreground"
+			data-booting
+		>
+			<div class="loader">
+				<div class="loader-mark"></div>
+				<p class="loader-stage" data-booting-stage>{startingUp.en}</p>
 			</div>
-		</HistoryApp>
-		<script is:inline define:vars={{ languageStorageKey, startingUp }}>
+		</div>
+	</HistoryApp>
+	<script is:inline define:vars={{ languageStorageKey, startingUp }}>
 	const stage = document.querySelector('[data-booting-stage]');
 	const tag = localStorage.getItem(languageStorageKey) || navigator.language || 'en';
 	const label = startingUp[tag] || startingUp[tag.split('-')[0]];
@@ -79,5 +45,4 @@ const startingUp = {
 	  stage.textContent = label;
 	}
 	</script>
-	</body>
-</html>
+</AppDocument>

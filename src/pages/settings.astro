@@ -1,39 +1,14 @@
 ---
-import '../styles/global.css';
-import { accentStorageKey, fontSizeStorageKey, themeStorageKey } from '@config/storageKeys';
 import { SettingsApp } from '@features/app-shell';
+import AppDocument from '../layouts/AppDocument.astro';
 
 /*
- * The Settings window's own document. It is a second window, so it boots its
- * own app and reads the same stored appearance the main one does, which is why
- * the inline script below is the same one index.astro runs.
+ * The Settings window's own document: a second window, so it boots its own app
+ * on top of the shared shell, where the stored appearance is settled.
  */
 export const prerender = false;
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<title>AI Manager Settings</title>
-		<script is:inline define:vars={{ themeStorageKey, accentStorageKey, fontSizeStorageKey }}>
-	const stored = localStorage.getItem(themeStorageKey);
-	const dark = stored === 'dark' || (stored !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
-	if (dark) {
-	  document.documentElement.classList.add('dark');
-	}
-	const accent = localStorage.getItem(accentStorageKey) || 'teal';
-	if (accent.startsWith('#')) {
-	  document.documentElement.dataset.accent = 'custom';
-	  document.documentElement.style.setProperty('--primary', accent);
-	}
- else {
-	  document.documentElement.dataset.accent = accent;
-	}
-	document.documentElement.dataset.fontSize = localStorage.getItem(fontSizeStorageKey) || 'normal';
-	</script>
-	</head>
-	<body>
-		<SettingsApp client:only="react" />
-	</body>
-</html>
+<AppDocument title="AI Manager Settings">
+	<SettingsApp client:only="react" />
+</AppDocument>
