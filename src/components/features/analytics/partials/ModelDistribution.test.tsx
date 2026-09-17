@@ -63,6 +63,8 @@ test('never displays an invented cost for unpriced models', () => {
     />,
   );
 
-  expect(screen.getAllByText('No cost recorded')).toHaveLength(2);
+  expect(screen.getAllByText('unknown')).toHaveLength(2);
+  // The badge is the only thing saying so, and no figure is invented beside it.
+  expect(screen.queryByText(/\$/)).toBeNull();
   expect(screen.queryByText('<synthetic>')).toBeNull();
 });

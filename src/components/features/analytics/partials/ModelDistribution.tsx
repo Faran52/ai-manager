@@ -73,7 +73,7 @@ export const ModelDistribution: FC<ModelDistributionProps> = ({ models }) => {
                   font-mono text-figure text-muted-foreground tabular-nums
                 "
                 >
-                  {model.costUsd == null ? t('costUnavailable') : formatCost(model.costUsd)}
+                  {model.costUsd == null ? null : formatCost(model.costUsd)}
                 </span>
               )}
             />
