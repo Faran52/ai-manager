@@ -18,8 +18,6 @@ export const EmptyState: FC<EmptyStateProps> = ({
       "
       data-empty-state
     >
-      {/* A 24-grid glyph drawn at 32px carries a 2.7px stroke, which reads as
-          blunt rather than drawn. Thinned here so every empty state gets it. */}
       <div className="
         text-muted-foreground/50
         [&_svg]:stroke-[1.5]
