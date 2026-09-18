@@ -1,10 +1,13 @@
+import { readdirSync, readFileSync } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import {
   basename,
   dirname,
   extname,
+  join,
 } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
+import { fileURLToPath } from 'node:url';
 import { zstdDecompressSync } from 'node:zlib';
 
 import { appConfig } from '@config/appConfig';
@@ -371,11 +374,90 @@ const cursorEntry = (
   }];
 };
 
-const cursorWorkspace = (metadata: JsonObject, databasePath: string): string => {
+const folderOf = (directory: string): string | undefined => {
+  try {
+    const parsed = parseJsonContainer(readFileSync(join(directory, 'workspace.json'), 'utf8'));
+    const folder = isJsonObject(parsed) ? jsonString(parsed.folder) : undefined;
+
+    return folder == null ? undefined : fileURLToPath(folder);
+  }
+  catch {
+    return undefined;
+  }
+};
+
+const composerIdsOf = (directory: string): readonly string[] => {
+  try {
+    const database = new DatabaseSync(join(directory, 'state.vscdb'), { readOnly: true });
+
+    try {
+      const row = database.prepare(
+        "SELECT value FROM ItemTable WHERE key = 'composer.composerData'",
+      ).get();
+      const parsed = parseJsonContainer(sqliteText(row?.value));
+      const ids = isJsonObject(parsed) ? parsed.selectedComposerIds : undefined;
+
+      return isJsonArray(ids)
+        ? ids.flatMap((id) => {
+            const text = jsonString(id);
+
+            return text == null ? [] : [text];
+          })
+        : [];
+    }
+    finally {
+      database.close();
+    }
+  }
+  catch {
+    return [];
+  }
+};
+
+/*
+ * Cursor keeps every composer in the one global store and the folder it belongs
+ * to in the workspace store beside it, joined by composer id. Without this every
+ * session files itself under globalStorage, which is not a project anyone has.
+ */
+const cursorWorkspaceFolders = (databasePath: string): ReadonlyMap<string, string> => {
+  const root = join(dirname(dirname(databasePath)), 'workspaceStorage');
+  const folders = new Map<string, string>();
+
+  let directories: readonly string[] = [];
+
+  try {
+    directories = readdirSync(root);
+  }
+  catch {
+    return folders;
+  }
+
+  for (const entry of directories) {
+    const directory = join(root, entry);
+    const folder = folderOf(directory);
+
+    if (folder != null) {
+      for (const id of composerIdsOf(directory)) {
+        folders.set(id, folder);
+      }
+    }
+  }
+
+  return folders;
+};
+
+const cursorWorkspace = (
+  metadata: JsonObject,
+  databasePath: string,
+  composerId: string,
+  folders: ReadonlyMap<string, string>,
+): string => {
   const identifier = objectAt(metadata, 'workspaceIdentifier');
   const uri = identifier == null ? undefined : objectAt(identifier, 'uri');
 
-  return (uri == null ? undefined : jsonString(uri.fsPath)) ?? dirname(databasePath);
+  return (uri == null ? undefined : jsonString(uri.fsPath))
+    ?? folders.get(composerId)
+    ?? dirname(databasePath);
 };
 
 const cursorMetadataHeaders = (
@@ -422,6 +504,7 @@ const cursorSessions = (
     "SELECT key, value FROM cursorDiskKV WHERE key LIKE 'composerData:%' OR key LIKE 'bubbleId:%'",
   ).all();
   const headersById = cursorMetadataHeaders(database, tables);
+  const folders = cursorWorkspaceFolders(databasePath);
   const metadataById = new Map<string, JsonObject>();
   const bubbleByKey = new Map<string, JsonObject>();
 
@@ -463,7 +546,7 @@ const cursorSessions = (
 
     return [{
       actualSessionId: sessionId,
-      cwd: cursorWorkspace(merged, databasePath),
+      cwd: cursorWorkspace(merged, databasePath, sessionId, folders),
       entries,
       ...timestampRange(entries),
       title: jsonString(merged.name),

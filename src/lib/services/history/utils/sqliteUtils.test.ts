@@ -178,6 +178,144 @@ describe('SQLite history discovery', () => {
     expect(entries).toMatchObject(EXPECTED_ENTRIES_5);
   });
 
+  test('files a composer under the workspace folder that claims it', async () => {
+    // The real layout: chat in the one global store, the folder beside it in the
+    // workspace store, joined by composer id.
+    const user = await mkdtemp(join(tmpdir(), 'cursor-user-'));
+    const globalDir = join(user, 'globalStorage');
+    const workspace = join(user, 'workspaceStorage', 'f6b8d10f');
+
+    await mkdir(globalDir, { recursive: true });
+    await mkdir(workspace, { recursive: true });
+    await writeFile(
+      join(workspace, 'workspace.json'),
+      JSON.stringify({ folder: 'file:///repo/linteljs' }),
+      'utf8',
+    );
+
+    const workspaceDatabase = new DatabaseSync(join(workspace, 'state.vscdb'));
+
+    workspaceDatabase.exec('CREATE TABLE ItemTable (key TEXT UNIQUE, value BLOB)');
+    workspaceDatabase.prepare('INSERT INTO ItemTable VALUES (?, ?)').run(
+      'composer.composerData',
+      JSON.stringify({ selectedComposerIds: ['owned', 42] }),
+    );
+    workspaceDatabase.close();
+
+    const filePath = join(globalDir, 'state.vscdb');
+    const database = new DatabaseSync(filePath);
+
+    database.exec(`
+      CREATE TABLE cursorDiskKV (key TEXT UNIQUE, value BLOB);
+      CREATE TABLE ItemTable (key TEXT UNIQUE, value BLOB);
+    `);
+
+    for (const id of ['owned', 'orphan']) {
+      database.prepare('INSERT INTO cursorDiskKV VALUES (?, ?)').run(
+        `composerData:${id}`,
+        Buffer.from(JSON.stringify({
+          composerId: id,
+          createdAt: 1_767_225_600_000,
+          fullConversationHeadersOnly: [{
+            bubbleId: 'q1',
+            type: 1,
+          }],
+        })),
+      );
+      database.prepare('INSERT INTO cursorDiskKV VALUES (?, ?)').run(
+        `bubbleId:${id}:q1`,
+        Buffer.from(JSON.stringify({
+          type: 1,
+          text: 'Question',
+          createdAt: 1_767_225_600_000,
+        })),
+      );
+    }
+
+    database.close();
+
+    const sessions = await listSqliteSessions('cursor', [filePath]);
+    const owned = sessions.find((session) => {
+      return session.actualSessionId === 'owned';
+    });
+    const orphan = sessions.find((session) => {
+      return session.actualSessionId === 'orphan';
+    });
+
+    expect(owned?.projectId).toBe('/repo/linteljs');
+    // No workspace claims it, so it falls back to the store it was found in.
+    expect(orphan?.projectId).toBe(globalDir);
+  });
+
+  test('ignores a workspace store it cannot read', async () => {
+    const user = await mkdtemp(join(tmpdir(), 'cursor-broken-'));
+    const globalDir = join(user, 'globalStorage');
+    const workspace = join(user, 'workspaceStorage', 'broken');
+
+    await mkdir(globalDir, { recursive: true });
+    await mkdir(workspace, { recursive: true });
+    // A folder with no workspace.json, and one whose json is not a folder record.
+    await mkdir(join(user, 'workspaceStorage', 'bare'), { recursive: true });
+    await writeFile(join(workspace, 'workspace.json'), '{ not json', 'utf8');
+
+    // A real folder whose store is missing: the name is known, the composers are not.
+    const storeless = join(user, 'workspaceStorage', 'storeless');
+
+    await mkdir(storeless, { recursive: true });
+    await writeFile(
+      join(storeless, 'workspace.json'),
+      JSON.stringify({ folder: 'file:///repo/storeless' }),
+      'utf8',
+    );
+
+    // A workspace that has a store but has never opened a composer in it.
+    const empty = join(user, 'workspaceStorage', 'empty');
+
+    await mkdir(empty, { recursive: true });
+    await writeFile(
+      join(empty, 'workspace.json'),
+      JSON.stringify({ folder: 'file:///repo/empty' }),
+      'utf8',
+    );
+
+    const emptyDatabase = new DatabaseSync(join(empty, 'state.vscdb'));
+
+    emptyDatabase.exec('CREATE TABLE ItemTable (key TEXT UNIQUE, value BLOB)');
+    emptyDatabase.close();
+
+    const filePath = join(globalDir, 'state.vscdb');
+    const database = new DatabaseSync(filePath);
+
+    database.exec(`
+      CREATE TABLE cursorDiskKV (key TEXT UNIQUE, value BLOB);
+      CREATE TABLE ItemTable (key TEXT UNIQUE, value BLOB);
+    `);
+    database.prepare('INSERT INTO cursorDiskKV VALUES (?, ?)').run(
+      'composerData:lonely',
+      Buffer.from(JSON.stringify({
+        composerId: 'lonely',
+        createdAt: 1_767_225_600_000,
+        fullConversationHeadersOnly: [{
+          bubbleId: 'q1',
+          type: 1,
+        }],
+      })),
+    );
+    database.prepare('INSERT INTO cursorDiskKV VALUES (?, ?)').run(
+      'bubbleId:lonely:q1',
+      Buffer.from(JSON.stringify({
+        type: 1,
+        text: 'Question',
+        createdAt: 1_767_225_600_000,
+      })),
+    );
+    database.close();
+
+    const sessions = await listSqliteSessions('cursor', [filePath]);
+
+    expect(sessions[0]?.projectId).toBe(globalDir);
+  });
+
   const EXPECTED_SQLITE_ENTRIES = [
     {
       kind: 'user',
