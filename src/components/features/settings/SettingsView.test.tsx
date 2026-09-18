@@ -138,7 +138,10 @@ test('names a file that does not exist yet and the keys it will keep', () => {
       agent="claude"
       settings={resource('ready', [scope('user', {
         exists: false,
-        preservedKeys: ['hooks', 'statusLine'],
+        preservedKeys: [{
+          name: 'hooks',
+          value: 'PreToolUse',
+        }, { name: 'statusLine' }],
       })])}
       projectPath="/repo"
     />,
@@ -275,7 +278,7 @@ test('reads a surface it may not write instead of offering the editors', () => {
         path: '/home/.codex/config.toml',
         format: 'toml',
         editable: false,
-        preservedKeys: ['model', 'mcp_servers.webstorm'],
+        preservedKeys: [{ name: 'model' }, { name: 'mcp_servers.webstorm' }],
       })])}
       projectPath="/repo"
       agent="codex"

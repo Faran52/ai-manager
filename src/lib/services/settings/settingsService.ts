@@ -49,6 +49,12 @@ export interface SettingsPermissions {
   readonly additionalDirectories: readonly string[];
 }
 
+export interface PreservedKey {
+  readonly name: string;
+  // Absent for TOML, which is read for key names without parsing values.
+  readonly value?: string | undefined;
+}
+
 export interface ScopeSettings {
   readonly scope: SettingsScope;
   readonly path: string;
@@ -57,7 +63,7 @@ export interface ScopeSettings {
   readonly permissions: SettingsPermissions;
   readonly env: readonly EnvEntry[];
   // Keys this editor does not understand, kept so a write cannot drop them.
-  readonly preservedKeys: readonly string[];
+  readonly preservedKeys: readonly PreservedKey[];
   readonly format?: SettingsFormat | undefined;
   readonly editable?: boolean | undefined;
 }
@@ -190,6 +196,26 @@ const readRoot = async (path: string): Promise<SettingsFileRoot> => {
   };
 };
 
+const HELD_MAX = 60;
+
+const heldScalar = (value: JsonValue | undefined): string => {
+  return isJsonObject(value) || isJsonArray(value) ? '…' : String(value);
+};
+
+// One level deep and capped: a scalar reads as itself, a container as what it names inside.
+const heldValue = (value: JsonValue | undefined): string => {
+  let text = heldScalar(value);
+
+  if (isJsonObject(value)) {
+    text = Object.keys(value).join(', ');
+  }
+  else if (isJsonArray(value)) {
+    text = value.map(heldScalar).join(', ');
+  }
+
+  return text.length > HELD_MAX ? `${text.slice(0, HELD_MAX - 1)}…` : text;
+};
+
 const readJsonSurface = async (surface: AgentSettingsSurface): Promise<ScopeSettings> => {
   const { scope, path } = surface;
   const { root, exists } = await readRoot(path);
@@ -215,6 +241,11 @@ const readJsonSurface = async (surface: AgentSettingsSurface): Promise<ScopeSett
     env: envEntries(root.env),
     preservedKeys: Object.keys(root).filter((key) => {
       return !EDITED_KEYS.has(key);
+    }).map((name) => {
+      return {
+        name,
+        value: heldValue(root[name]),
+      };
     }),
   };
 };
@@ -297,7 +328,9 @@ const readTomlSurface = async (
     readable: true,
     permissions: EMPTY_PERMISSIONS,
     env: [],
-    preservedKeys: tomlKeys(text),
+    preservedKeys: tomlKeys(text).map((name) => {
+      return { name };
+    }),
     format: surface.format,
     editable: surface.editable,
   };

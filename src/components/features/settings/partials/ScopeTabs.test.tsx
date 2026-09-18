@@ -42,7 +42,7 @@ test('counts what each file holds, marks a parked edit and switches on a click',
       scope: 'local',
       path: '/repo/.claude/settings.local.json',
       editable: false,
-      preservedKeys: ['hooks'],
+      preservedKeys: [{ name: 'hooks' }],
     }),
   ];
 

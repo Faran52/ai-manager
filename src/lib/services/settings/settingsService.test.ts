@@ -174,7 +174,72 @@ describe('readAgentSettings', () => {
       name: 'ANTHROPIC_MODEL',
       value: 'opus',
     }]);
-    expect(scope.preservedKeys).toEqual(['hooks', 'statusLine']);
+    expect(scope.preservedKeys).toEqual([
+      {
+        name: 'hooks',
+        value: 'Stop',
+      },
+      {
+        name: 'statusLine',
+        value: 'type',
+      },
+    ]);
+  });
+
+  test('a kept key reports what it holds, capped for a long one', async () => {
+    const { home, project } = await newProject();
+
+    await mkdir(join(home, '.claude'), { recursive: true });
+    await writeFile(join(home, '.claude', 'settings.json'), JSON.stringify({
+      model: 'opus',
+      retries: 3,
+      verbose: true,
+      missing: null,
+      hooks: {
+        PreToolUse: [],
+        Stop: [],
+      },
+      marketplaces: ['one', 'two'],
+      nested: [{ deep: true }],
+      long: 'x'.repeat(90),
+    }), 'utf8');
+
+    const scope = await claudeUser(project, home);
+
+    expect(scope.preservedKeys).toEqual([
+      {
+        name: 'model',
+        value: 'opus',
+      },
+      {
+        name: 'retries',
+        value: '3',
+      },
+      {
+        name: 'verbose',
+        value: 'true',
+      },
+      {
+        name: 'missing',
+        value: 'null',
+      },
+      {
+        name: 'hooks',
+        value: 'PreToolUse, Stop',
+      },
+      {
+        name: 'marketplaces',
+        value: 'one, two',
+      },
+      {
+        name: 'nested',
+        value: '…',
+      },
+      {
+        name: 'long',
+        value: `${'x'.repeat(59)}…`,
+      },
+    ]);
   });
 
   test('marks a file that is not valid JSON as unreadable', async () => {
@@ -240,9 +305,9 @@ describe('readAgentSettings across agents', () => {
     expect(scope?.format).toBe('toml');
     expect(scope?.editable).toBe(false);
     expect(scope?.preservedKeys).toEqual([
-      'model',
-      'model_providers',
-      'mcp_servers',
+      { name: 'model' },
+      { name: 'model_providers' },
+      { name: 'mcp_servers' },
     ]);
   });
 
@@ -259,7 +324,7 @@ describe('readAgentSettings across agents', () => {
 
     const [scope] = await readAgentSettings('codex', project, home);
 
-    expect(scope?.preservedKeys).toEqual(['profiles']);
+    expect(scope?.preservedKeys).toEqual([{ name: 'profiles' }]);
   });
 
   test('reports a toml config that has never been written', async () => {
@@ -284,7 +349,16 @@ describe('readAgentSettings across agents', () => {
 
     expect(scope?.exists).toBe(true);
     expect(scope?.editable).toBe(false);
-    expect(scope?.preservedKeys).toEqual(['theme', 'selectedAuthType']);
+    expect(scope?.preservedKeys).toEqual([
+      {
+        name: 'theme',
+        value: 'dark',
+      },
+      {
+        name: 'selectedAuthType',
+        value: 'oauth',
+      },
+    ]);
   });
 
   test('refuses to write a surface whose schema is not Claude\'s', async () => {
@@ -367,7 +441,10 @@ describe('writeScopeSettings', () => {
 
     expect(written.permissions.allow).toEqual([]);
     expect(written.env).toEqual([]);
-    expect(written.preservedKeys).toEqual(['model']);
+    expect(written.preservedKeys).toEqual([{
+      name: 'model',
+      value: 'opus',
+    }]);
   });
 
   test('refuses a project scope with no project and a file it cannot parse', async () => {

@@ -20,7 +20,10 @@ const SCOPE: ScopeSettings = {
     name: 'A',
     value: '1',
   }],
-  preservedKeys: ['hooks'],
+  preservedKeys: [{
+    name: 'hooks',
+    value: 'PreToolUse',
+  }],
 };
 
 test('a draft is the editable part of the file, and its count is every managed entry', () => {
