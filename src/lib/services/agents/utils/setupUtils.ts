@@ -472,6 +472,20 @@ const serversAt = async (
   });
 };
 
+// No project open means no project half: every location already declares its scope.
+const inScope = <T extends SetupLocation>(
+  locations: readonly T[],
+  projectPath: string,
+): readonly T[] => {
+  if (projectPath.length > 0) {
+    return locations;
+  }
+
+  return locations.filter((location) => {
+    return location.scope === 'user';
+  });
+};
+
 // A config surface is readable exactly when SPECS names where its files live.
 export const hasAgentSetup = (agent: AgentId): boolean => {
   return SPECS[agent] != null;
@@ -490,7 +504,7 @@ export const readAgentMcp = async (
     return [];
   }
 
-  const servers = await Promise.all(spec.mcp.map((location) => {
+  const servers = await Promise.all(inScope(spec.mcp, projectPath).map((location) => {
     return serversAt(location, home, projectPath, claudeDir);
   }));
 
@@ -509,7 +523,7 @@ export const readAgentRules = async (
     return [];
   }
 
-  const files = await Promise.all(spec.rules.map((location) => {
+  const files = await Promise.all(inScope(spec.rules, projectPath).map((location) => {
     return rulesPresent(location, home, projectPath, claudeDir);
   }));
 

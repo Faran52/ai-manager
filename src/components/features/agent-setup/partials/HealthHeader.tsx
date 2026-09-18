@@ -18,7 +18,8 @@ export interface HealthHeaderProps {
   readonly total: number;
   readonly flagged: number;
   readonly findingCount: number;
-  readonly trust: ProjectTrust;
+  // Absent with no project in scope: trust and spend are facts about one project.
+  readonly trust?: ProjectTrust | undefined;
   readonly usage: ProjectUsage | null;
 }
 
@@ -33,12 +34,26 @@ export const HealthHeader: FC<HealthHeaderProps> = ({
   usage,
 }) => {
   const { t } = useTranslation('setup');
-  const trusted = trust.known && trust.trusted;
+  const trusted = trust?.known === true && trust.trusted;
 
   let trustLabel = t('trustUnknown');
 
-  if (trust.known) {
+  if (trust?.known === true) {
     trustLabel = trust.trusted ? t('trustTrusted') : t('trustRestricted');
+  }
+
+  const setUp = t('setUpCount', {
+    configured,
+    total,
+  });
+  let summary = setUp;
+
+  if (trust != null) {
+    const spend = usage == null
+      ? t('spendNotRecorded')
+      : t('spendRecorded', { cost: formatCost(usage.costUsd) });
+
+    summary = `${setUp} · ${spend}`;
   }
 
   return (
@@ -51,21 +66,18 @@ export const HealthHeader: FC<HealthHeaderProps> = ({
           {flagged === 0 ? t('healthy') : t('needsAttentionCount', { count: flagged })}
         </h2>
         <p className="mt-0.5 font-mono text-xs text-muted-foreground">
-          {`${t('setUpCount', {
-            configured,
-            total,
-          })} · ${usage == null
-            ? t('spendNotRecorded')
-            : t('spendRecorded', { cost: formatCost(usage.costUsd) })}`}
+          {summary}
         </p>
       </div>
       <span className="flex shrink-0 items-center gap-1.5">
-        <Badge tone={trusted ? 'neutral' : 'warn'}>
-          {trusted
-            ? <ShieldCheck className="size-3" />
-            : <ShieldAlert className="size-3" />}
-          {trustLabel}
-        </Badge>
+        {trust != null && (
+          <Badge tone={trusted ? 'neutral' : 'warn'}>
+            {trusted
+              ? <ShieldCheck className="size-3" />
+              : <ShieldAlert className="size-3" />}
+            {trustLabel}
+          </Badge>
+        )}
         {findingCount > 0 && (
           <Badge tone="warn">
             <TriangleAlert className="size-3" />

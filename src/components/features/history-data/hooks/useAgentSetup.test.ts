@@ -55,8 +55,10 @@ describe('useAgentSetup', () => {
     },
   };
 
-  test('skips fetching without a project path', async () => {
-    const fetchSpy = vi.fn();
+  test('reads every project when given no project path', async () => {
+    const fetchSpy = vi.fn(() => {
+      return Promise.resolve(new Response(JSON.stringify(EXPECTED_DATA)));
+    });
     vi.stubGlobal('fetch', fetchSpy);
 
     const { result } = renderHook(() => {
@@ -67,7 +69,8 @@ describe('useAgentSetup', () => {
       expect(result.current.status).toBe('ready');
     });
     expect(result.current.data).toEqual(EXPECTED_DATA);
-    expect(fetchSpy).not.toHaveBeenCalled();
+    // The empty path is the scope, so it goes to the server like any other.
+    expect(fetchSpy).toHaveBeenCalled();
   });
 
   test('loads setup for a project', async () => {

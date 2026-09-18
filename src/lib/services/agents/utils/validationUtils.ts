@@ -316,10 +316,12 @@ const validateClaudeSetup = async (
     : join(claudeDir, '.claude.json');
   const [userSettings, projectSettings, known, userConfig, projectMcp] = await Promise.all([
     readJsonFile(join(claudeDir, 'settings.json')),
-    readJsonFile(join(projectPath, '.claude', 'settings.json')),
+    projectPath.length === 0
+      ? null
+      : readJsonFile(join(projectPath, '.claude', 'settings.json')),
     readJsonFile(join(claudeDir, 'plugins', 'known_marketplaces.json')),
     readJsonFile(userConfigPath),
-    readJsonFile(join(projectPath, '.mcp.json')),
+    projectPath.length === 0 ? null : readJsonFile(join(projectPath, '.mcp.json')),
   ]);
 
   const [userHooks, projectHooks, userDirs, projectDirs] = await Promise.all([

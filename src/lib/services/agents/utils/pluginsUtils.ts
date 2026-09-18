@@ -46,7 +46,9 @@ export const readClaudePlugins = async (
     readJsonFile(join(claudeDir, 'plugins', 'installed_plugins.json')),
     readJsonFile(join(claudeDir, 'plugins', 'known_marketplaces.json')),
     readJsonFile(join(claudeDir, 'settings.json')),
-    readJsonFile(join(projectPath, '.claude', 'settings.json')),
+    projectPath.length === 0
+      ? null
+      : readJsonFile(join(projectPath, '.claude', 'settings.json')),
   ]);
 
   const enabled = {

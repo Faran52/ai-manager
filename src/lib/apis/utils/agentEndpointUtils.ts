@@ -43,8 +43,17 @@ import type { EndpointDeps, ProfileScoped } from './endpointDepsUtils';
 // The request plus the profile it names, resolved to a config dir by the handler.
 type PluginActionInput = PluginActionRequest & ProfileScoped;
 
+// Trust is a fact about one project, so the whole-machine read reports none.
+const UNSCOPED_TRUST = {
+  known: false,
+  trusted: false,
+  onboarded: false,
+};
+
+// An empty path is the whole machine to the setup read, and nothing to anything
+// else: a cost is attributed against one project's usage or not at all.
 const isAgentSetupBody = (body: object): body is AgentSetupBody => {
-  return 'projectPath' in body && typeof body.projectPath === 'string' && body.projectPath.length > 0;
+  return 'projectPath' in body && typeof body.projectPath === 'string';
 };
 
 const isPluginActionName = (value: unknown): value is PluginActionName => {
@@ -96,6 +105,7 @@ export const handleAgentSetup = async (request: Request, deps?: EndpointDeps): P
     const perDir = (agent: AgentId): readonly (string | undefined)[] => {
       return agent === 'claude' ? pathsFor(resolveEndpointRoots(deps), agent) : [undefined];
     };
+    const scoped = body.projectPath.length > 0;
     const [setups, findings, usage, plugins, trust] = await Promise.all([
       Promise.all(managedAgents.flatMap((agent) => {
         return perDir(agent).map((claudeDir) => {
@@ -107,9 +117,9 @@ export const handleAgentSetup = async (request: Request, deps?: EndpointDeps): P
           return validateAgentSetup(agent, body.projectPath, deps?.home, claudeDir);
         });
       })),
-      readProjectUsage(body.projectPath, deps?.home),
+      scoped ? readProjectUsage(body.projectPath, deps?.home) : undefined,
       readClaudePlugins(body.projectPath, deps?.home),
-      readProjectTrust(body.projectPath, deps?.home),
+      scoped ? readProjectTrust(body.projectPath, deps?.home) : UNSCOPED_TRUST,
     ]);
 
     return jsonOk({
@@ -149,7 +159,7 @@ export const handlePluginCosts = async (request: Request, deps?: EndpointDeps): 
   return withJsonErrors(async () => {
     const body = await readJsonObject(request);
 
-    if (body == null || !isAgentSetupBody(body)) {
+    if (body == null || !isAgentSetupBody(body) || body.projectPath.length === 0) {
       return jsonError(BAD_REQUEST, 'A non-empty projectPath is required.');
     }
 

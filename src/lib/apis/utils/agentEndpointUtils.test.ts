@@ -117,9 +117,32 @@ describe('handleAgentSetup', () => {
     });
   });
 
-  test('rejects a request without a project path', async () => {
+  test('rejects a body with no project path at all', async () => {
     expect((await handleAgentSetup(post({}))).status).toBe(400);
-    expect((await handleAgentSetup(post({ projectPath: '' }))).status).toBe(400);
+  });
+
+  test('reads the machine-level half of every setup for an empty path', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'setup-global-'));
+
+    await mkdir(join(home, '.codex'), { recursive: true });
+    await writeFile(join(home, '.codex', 'AGENTS.md'), 'user rules');
+
+    const response = await handleAgentSetup(post({ projectPath: '' }), { home });
+    const body = await jsonOf(response);
+
+    expect(response.status).toBe(200);
+    // Trust and spend belong to one project, so the whole-machine read has neither.
+    expect(body).toMatchObject({
+      trust: {
+        known: false,
+        trusted: false,
+        onboarded: false,
+      },
+      usage: null,
+    });
+    // The user half is read and not one project-scoped location is looked for.
+    expect(JSON.stringify(body)).toContain('"scope":"user"');
+    expect(JSON.stringify(body)).not.toContain('"scope":"project"');
   });
 });
 

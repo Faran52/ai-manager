@@ -87,17 +87,7 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
   );
   const waiting = useMinLoad(status === 'loading');
 
-  if (!projectSelected) {
-    return (
-      <EmptyState
-        icon={<HeartPulse />}
-        title={t('noProjectSelected', { ns: 'sidebar' })}
-        hint={t('chooseProject')}
-      />
-    );
-  }
-
-  if (projectPath.length === 0) {
+  if (projectSelected && projectPath.length === 0) {
     return (
       <EmptyState
         icon={<HeartPulse />}
@@ -152,10 +142,10 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
         total={setups.length}
         flagged={flagged.length}
         findingCount={findings.length}
-        trust={trust}
+        trust={projectSelected ? trust : undefined}
         usage={usage}
       />
-      <ProjectTrustCard trust={trust} />
+      {projectSelected && <ProjectTrustCard trust={trust} />}
       {/* A card per agent, because most of the table was dashes. Cards let a
           bare agent be two lines and a configured one be twelve, which is the
           information a fixed row shape threw away. */}

@@ -356,15 +356,36 @@ describe('HistoryApp', () => {
     expect(await screen.findByText(/No analytics for/)).toBeDefined();
   });
 
-  test('asks for a project before reading health', async () => {
-    const fetchMock = vi.fn((url: RequestInfo | URL) => {
-      return toPath(url).endsWith('/projects')
-        ? Response.json(projectPayload)
-        : Response.json({
-            sessions: [],
-            hits: [],
-            truncated: false,
-          });
+  test('reads health for every project when none is selected', async () => {
+    const bodies: string[] = [];
+    const fetchMock = vi.fn((url: RequestInfo | URL, init?: RequestInit) => {
+      const path = toPath(url);
+
+      if (path.endsWith('/projects')) {
+        return Response.json(projectPayload);
+      }
+      if (path.endsWith('/agent-setup')) {
+        bodies.push(typeof init?.body === 'string' ? init.body : '');
+
+        return Response.json({
+          setups: [{
+            agent: 'claude',
+            mcpServers: [],
+            rules: [],
+            modelAuth: {
+              format: 'claude',
+              model: 'claude-opus-5',
+              authMethod: 'oauth',
+            },
+          }],
+        });
+      }
+
+      return Response.json({
+        sessions: [],
+        hits: [],
+        truncated: false,
+      });
     });
 
     vi.stubGlobal('fetch', fetchMock);
@@ -373,10 +394,11 @@ describe('HistoryApp', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /Health/ }));
 
-    expect(await screen.findByText('No project selected')).toBeDefined();
-    expect(fetchMock.mock.calls.some(([url]) => {
-      return toPath(url).endsWith('/agent-setup');
-    })).toBe(false);
+    expect(await screen.findByText('Claude Code')).toBeDefined();
+    expect(screen.queryByText('No project selected')).toBeNull();
+    // The empty path is the scope, and trust belongs to a project so none is claimed.
+    expect(bodies).toContain(JSON.stringify({ projectPath: '' }));
+    expect(screen.queryByText('Trust unknown')).toBeNull();
   });
 
   test('shows agent health for the selected project', async () => {
@@ -491,8 +513,11 @@ describe('HistoryApp', () => {
     await userEvent.click(await screen.findByRole('switch', { name: 'review' }));
 
     await waitFor(() => {
-      expect(fetchMock.mock.calls.filter(([url]) => {
-        return toPath(url).endsWith('/agent-setup');
+      expect(fetchMock.mock.calls.filter(([url], index) => {
+        const body = fetchMock.mock.calls[index]?.[1]?.body;
+
+        return toPath(url).endsWith('/agent-setup')
+          && typeof body === 'string' && body.includes('/repo/alpha');
       })).toHaveLength(2);
     });
 
@@ -1030,9 +1055,9 @@ describe('HistoryApp project and session mutations', () => {
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).toBeNull();
     });
-    await userEvent.click(screen.getByRole('button', { name: /Health/u }));
-
-    expect(await screen.findByText('No project selected')).toBeDefined();
+    await waitFor(() => {
+      expect(document.querySelector('[data-selected="true"]')).toBeNull();
+    });
   });
 
   test('deletes project history and handles session rename and deletion', async () => {

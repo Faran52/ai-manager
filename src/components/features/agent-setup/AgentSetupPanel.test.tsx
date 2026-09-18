@@ -153,7 +153,7 @@ test.each(SETUP_COUNTS)(
   },
 );
 
-test('asks for a project before anything else', () => {
+test('reports every project with none selected, and claims no trust for them', () => {
   render(
     <AgentSetupPanel
       projectSelected={false}
@@ -165,7 +165,7 @@ test('asks for a project before anything else', () => {
       }}
       sessionCounts={{}}
       projectPath=""
-      setups={[]}
+      setups={[setup('claude', { rules: [rule('/Users/dev/.claude/CLAUDE.md')] })]}
       findings={[]}
       usage={null}
       nowMs={0}
@@ -173,8 +173,11 @@ test('asks for a project before anything else', () => {
     />,
   );
 
-  expect(screen.getByText('No project selected')).toBeDefined();
+  expect(screen.queryByText('No project selected')).toBeNull();
   expect(screen.queryByText('Project location unknown')).toBeNull();
+  // Trust and spend are facts about one project, so neither is claimed here.
+  expect(screen.queryByText('Trust unknown')).toBeNull();
+  expect(screen.queryByText(/No spend recorded/u)).toBeNull();
 });
 
 test('says the location is unknown when the project has no folder', () => {
