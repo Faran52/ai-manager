@@ -1,18 +1,11 @@
-/*
- * Stores write an epoch in whatever unit their language reached for: seconds,
- * milliseconds, microseconds or nanoseconds. Magnitude is the only thing that
- * separates them, and getting it wrong is silent: a microsecond epoch reads as
- * the year 57971, and a nanosecond one is outside Date's range, so toISOString
- * throws and the decoders above catch that as an empty session rather than as
- * one turn with no timestamp.
- */
+// Magnitude is the only thing separating a seconds epoch from a nanosecond one,
+// and guessing wrong is silent: year 57971, or a throw a caller reads as no session.
 const SECONDS_CEILING = 10_000_000_000;
 const MILLIS_CEILING = 10_000_000_000_000;
 const MICROS_CEILING = 10_000_000_000_000_000;
 const MAX_DATE_MS = 8_640_000_000_000_000;
 
-// 1973. Below it the number is a count that happened to sit in a column the
-// generic table reader looks at for a date, not a date.
+// 1973. Below it the value is a count sitting in a column named date, not a date.
 const MIN_PLAUSIBLE_MS = 100_000_000_000;
 
 const scaled = (value: number): number => {

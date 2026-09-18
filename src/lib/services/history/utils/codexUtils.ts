@@ -108,12 +108,8 @@ interface ParsedCodexSession {
   readonly title: string | undefined;
 }
 
-/*
- * `callId` is the call this patch belongs to, and is absent for a
- * `patch_apply_end` event, whose own `call_id` is an execution id from a
- * different namespace than the tool call's (`exec-1` against `call-1`), so
- * there is nothing to match it on and the next outcome takes it.
- */
+// A patch_apply_end event ids itself from a different namespace than the call
+// it belongs to (exec-1 against call-1), so it has no callId to match on.
 interface PendingPatch {
   readonly callId: string | undefined;
   readonly patch: readonly PatchHunk[] | undefined;
@@ -160,11 +156,7 @@ const isCodexLine = (value: unknown): value is CodexLine => {
   return typeof value === 'object' && value !== null;
 };
 
-/**
- * Only a JSON object actually carrying `output` as text. Every other shape,
- * including an array, keeps the raw string: a tool answering `{"stdout": ...}`
- * or `[1,2]` has its text there, and reading `.output` off it loses the lot.
- */
+// Any other JSON shape keeps its raw string: reading .output off it loses the lot.
 const isCommandOutput = (value: unknown): value is CodexCommandOutput => {
   return typeof value === 'object'
     && value !== null
@@ -217,12 +209,8 @@ const outputFailed = (payload: CodexPayload): boolean => {
   return /^Script (?:failed|error)\b/u.test(rawOutput(payload).trimStart());
 };
 
-/*
- * The waiting patch, and only if it is this call's: one that named a call goes
- * to that call alone, so a second tool finishing first is not credited with an
- * edit it never made. A patch that named none is positional and the next
- * outcome takes it.
- */
+// A patch that named a call goes to that call alone; one that named none is
+// positional and the next outcome takes it.
 const takePatch = (scan: CodexScan, payload: CodexPayload): PendingPatch | undefined => {
   const pending = scan.pending;
 

@@ -327,11 +327,8 @@ const invocationOf = (item: JsonObject, fallbackId: string): ToolInvocationParts
     },
     outcome: {
       toolUseId: plainString(item.toolCallId) ?? fallbackId,
-      /**
-       * `isComplete` is the only signal Copilot records, so its absence means
-       * unfinished, not failed. Reporting an error the reader never saw is worse
-       * than reporting the call as interrupted, which is what it was.
-       */
+      // isComplete is the only signal Copilot records, so its absence is
+      // unfinished rather than failed.
       status: item.isComplete === true ? 'ok' : 'interrupted',
       ...(summary == null ? {} : { text: summary }),
       images: [],

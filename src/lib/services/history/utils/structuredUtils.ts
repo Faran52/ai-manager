@@ -106,11 +106,8 @@ const textFrom = (value: JsonValue | undefined): string => {
     ?? textFrom(value.parts);
 };
 
-/*
- * First source that yields text, not first that is non-nullish. A store writing
- * `content: ''` or `content: []` beside the real text in `message` is answering
- * the question, and `??` would stop at the empty one and drop the turn whole.
- */
+// First source that yields text, not first that is non-nullish: ?? stops at an
+// empty string and drops the turn whole.
 const firstTextOf = (...values: readonly (JsonValue | undefined)[]): string => {
   for (const value of values) {
     const text = textFrom(value);

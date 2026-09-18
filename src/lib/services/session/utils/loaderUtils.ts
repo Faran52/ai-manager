@@ -73,12 +73,8 @@ const viewOf = (entries: readonly HistoryEntry[], includeSidechain: boolean): Se
   return view;
 };
 
-/*
- * `retain` is false for a whole-history sweep. Search and stats read every
- * session once, and 599MB of history through a 128MB cache evicts all of it,
- * so a sweep would cost the reader a re-parse of whatever they have open.
- * A sweep still reads the cache; it just does not fill it.
- */
+// A whole-history sweep passes retain false: it reads the cache but does not
+// fill it, so it cannot evict the session the reader has open.
 const readEntries = async (
   filePath: string,
   agent: AgentId,

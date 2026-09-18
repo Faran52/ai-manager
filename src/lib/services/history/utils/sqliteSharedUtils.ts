@@ -4,11 +4,8 @@ import type { HistoryEntry, SummaryTurnEntry } from '@services/history/types';
 import type { JsonValue } from '@utils/jsonUtils';
 import type { DatabaseSync, SQLOutputValue } from 'node:sqlite';
 
-/*
- * What every SQLite-backed decoder needs and none of them owns. It sits apart
- * from `sqliteUtils` so a decoder in its own file can reach it without importing
- * the dispatcher that imports the decoder back.
- */
+// Apart from sqliteUtils so a decoder in its own file reaches these without
+// importing the dispatcher that imports it back.
 export type SqliteEntry = Exclude<HistoryEntry, SummaryTurnEntry>;
 
 export interface TimestampRange {
@@ -54,8 +51,7 @@ export const tableSet = (database: DatabaseSync): ReadonlySet<string> => {
   return new Set(tableNames(database));
 };
 
-// A Cursor composer runs to thousands of bubbles, which is more than a spread
-// into Math.min takes.
+// A Cursor composer runs to more bubbles than a spread into Math.min takes.
 export const timestampRange = (entries: readonly SqliteEntry[]): TimestampRange => {
   const stamps = entries.map((entry) => {
     return Date.parse(entry.timestamp);

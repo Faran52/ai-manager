@@ -96,11 +96,8 @@ const conversationEntries = async (files: readonly string[], fallbackMs: number)
 
   return {
     entries: parseStructuredHistory(JSON.stringify(events), '.json', fallbackMs),
-    /*
-     * The newest event's mtime, not the time of this scan: the aggregate cache is
-     * keyed on mtime, size and count, so `Date.now()` here gave every scan a fresh
-     * key and the cache never once answered for an OpenHands session.
-     */
+    // The newest event mtime, not the scan time: the aggregate cache keys on it,
+    // and Date.now() gave every scan a fresh key.
     modifiedMs: maxOf(read, (file) => {
       return file.modifiedMs;
     }),
@@ -148,8 +145,6 @@ const openHandsSession = async (
       projectId: UNKNOWN_PROJECT,
       preview: preview == null ? undefined : humanPreview(preview, appConfig.previewLength),
       messageCount: conversationMessageCount(entries),
-      // A conversation is one file per event, so these lists run long enough to
-      // overflow a spread into Math.min.
       firstTimestampMs: minOf(stamps, (stamp) => {
         return stamp;
       }),

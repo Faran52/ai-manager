@@ -29,12 +29,6 @@ import type { JsonObject } from '@utils/jsonUtils';
 import type { RawToolInput } from './claudeRawUtils';
 import type { DecodedSqliteSession, SqliteEntry } from './sqliteSharedUtils';
 
-/*
- * Cursor keeps every composer in the one global `state.vscdb` under
- * `cursorDiskKV`, and which workspace claims which composer is a directory
- * over, so filing a session under its own folder means reading both stores.
- */
-
 interface CursorBubbleHeader {
   readonly bubbleId: string;
   readonly type: number;
