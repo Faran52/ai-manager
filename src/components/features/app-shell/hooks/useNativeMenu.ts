@@ -7,11 +7,8 @@ import { applicationMenu } from '../utils/appMenuUtils';
 
 import type { AppCommand } from '@config/appCommands';
 
-/*
- * macOS only for now. Windows draws no global menu bar at all, and the menu the
- * Linux desktops lift into their panel has a fix outstanding that needs a Linux
- * machine to find, so both keep the gear in the app's own titlebar meanwhile.
- */
+// macOS is the one platform whose menu bar is the system's to draw. Everywhere
+// else the app carries its own gear.
 const MENU_PLATFORM = 'darwin';
 
 const install = async (
