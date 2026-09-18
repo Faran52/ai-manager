@@ -67,12 +67,18 @@ dmg:
     width: 660
     height: 420
   iconSize: 104
-  # These have to agree with the artwork: the arrow is drawn between them.
+  # These have to agree with the artwork: the arrow is drawn between them. The
+  # window is light because Finder draws the icon labels in dark text whatever
+  # sits behind them, and the strip above this row is left empty because that is
+  # where Finder drops the two hidden files it shows some people. Those cannot be
+  # placed: contents is positional, so naming an entry renames whatever is at
+  # that index, which is how an earlier attempt copied the app over the
+  # background and failed the build.
   contents:
     - x: 180
-      y: 232
+      y: 226
     - x: 480
-      y: 232
+      y: 226
       type: link
       path: /Applications
 
