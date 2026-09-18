@@ -2,7 +2,7 @@
   "name": "ai-manager",
   "type": "module",
   "main": "scripts/desktopEntry.ts",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A fast, local-first viewer for AI coding-session history.",
   "author": "Faran Ali",
   "license": "MIT",
