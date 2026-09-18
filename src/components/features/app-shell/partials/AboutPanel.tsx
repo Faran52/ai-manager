@@ -36,7 +36,7 @@ export const AboutPanel: FC<AboutPanelProps> = ({
     checking: tUpdate('checking'),
     upToDate: tUpdate('upToDate'),
     available: tUpdate('available', { version }),
-    unpublished: tUpdate('noRelease'),
+    unpublished: tUpdate('upToDate'),
     downloading: tUpdate('downloading'),
     failed: tUpdate('checkFailed'),
   };

@@ -5,7 +5,6 @@
   "downloading": "업데이트 다운로드 중…",
   "upToDate": "최신 상태입니다",
   "checking": "확인하는 중…",
-  "noRelease": "업데이트할 릴리스가 게시되지 않았습니다",
   "checkFailed": "업데이트를 확인할 수 없습니다",
   "installed": "버전 {{version}} 설치됨",
   "downloadingPercent": "업데이트 다운로드 중… {{percent}}%"

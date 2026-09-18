@@ -5,7 +5,6 @@
   "downloading": "正在下载更新…",
   "upToDate": "已是最新版本",
   "checking": "正在检查…",
-  "noRelease": "尚未发布可供更新的版本",
   "checkFailed": "无法检查更新",
   "installed": "已安装版本 {{version}}",
   "downloadingPercent": "正在下载更新… {{percent}}%"

@@ -5,7 +5,6 @@
   "downloading": "アップデートをダウンロード中…",
   "upToDate": "最新の状態です",
   "checking": "確認しています…",
-  "noRelease": "更新元となるリリースが公開されていません",
   "checkFailed": "アップデートを確認できませんでした",
   "installed": "バージョン {{version}} をインストール済み",
   "downloadingPercent": "アップデートをダウンロード中… {{percent}}%"
