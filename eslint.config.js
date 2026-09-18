@@ -75,6 +75,19 @@ const virtualizedTimeline = {
 };
 
 /*
+ * The forked server. Its only import is the Astro build output, which does not
+ * exist on a fresh checkout, and `check` lints before it builds, so the rule can
+ * never see the file it is asked to resolve.
+ */
+const desktopServer = {
+  name: 'ai-manager/desktop-server',
+  files: ['scripts/desktopServer.ts'],
+  rules: {
+    'import-x/no-unresolved': 'off',
+  },
+};
+
+/*
  * The preload. Electron loads a sandboxed preload with `require` into an
  * isolated world: no ES modules there, and keeping the sandbox on is what
  * keeps Node out of the page.
@@ -87,6 +100,6 @@ const desktopPreload = {
   },
 };
 
-const rules = [...config, placement, virtualizedTimeline, desktopPreload];
+const rules = [...config, placement, virtualizedTimeline, desktopServer, desktopPreload];
 
 export default rules;
