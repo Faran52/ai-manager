@@ -15,7 +15,7 @@ AI コーディングセッション履歴を、ローカル優先で高速に�
 [Electron](https://www.electronjs.org/) で
 デスクトップアプリとして配布します。
 
-![展開可能なツールカードを備えたセッション表示](../screenshots/sessions.jpg)
+![展開可能なツールカードを備えたセッション表示](../screenshots/ja/sessions.jpg)
 
 ## 対応エージェント
 
@@ -36,11 +36,9 @@ AI コーディングセッション履歴を、ローカル優先で高速に�
 
 ## スクリーンショット
 
-| 分析 | エージェントの状態 |
-|---|---|
-| ![トークンとツールの分析](../screenshots/analytics.jpg) | ![エージェントごとの設定とコスト](../screenshots/health.jpg) |
-
-![アラビア語の右から左のインターフェース](../screenshots/rtl-arabic.jpg)
+| 分析 | エージェントの状態 | アーカイブ |
+|---|---|---|
+| ![トークンとツールの分析](../screenshots/ja/analytics.jpg) | ![エージェントごとの設定とコスト](../screenshots/ja/health.jpg) | ![アーカイブマネージャーと保持](../screenshots/ja/archive.jpg) |
 
 ## インストール
 

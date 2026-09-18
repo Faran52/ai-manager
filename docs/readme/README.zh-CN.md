@@ -13,7 +13,7 @@
 基于 [Astro](https://astro.build) 岛屿架构，并通过
 [Electron](https://www.electronjs.org/)发布为桌面应用。
 
-![带可展开工具卡片的会话记录](../screenshots/sessions.jpg)
+![带可展开工具卡片的会话记录](../screenshots/zh-CN/sessions.jpg)
 
 ## 支持的智能体
 
@@ -34,11 +34,9 @@
 
 ## 截图
 
-| 分析 | 智能体健康度 |
-|---|---|
-| ![令牌与工具分析](../screenshots/analytics.jpg) | ![各智能体的配置与花费](../screenshots/health.jpg) |
-
-![阿拉伯语从右到左界面](../screenshots/rtl-arabic.jpg)
+| 分析 | 智能体健康度 | 归档 |
+|---|---|---|
+| ![令牌与工具分析](../screenshots/zh-CN/analytics.jpg) | ![各智能体的配置与花费](../screenshots/zh-CN/health.jpg) | ![归档管理器与保留](../screenshots/zh-CN/archive.jpg) |
 
 ## 安装
 

@@ -13,7 +13,7 @@ straight off disk: no daemon, no account, no telemetry.
 An [Astro](https://astro.build) island app, shipped to the desktop with
 [Electron](https://www.electronjs.org/).
 
-![Session transcript with expandable tool cards](docs/screenshots/sessions.jpg)
+![Session transcript with expandable tool cards](docs/screenshots/en/sessions.jpg)
 
 ## Supported agents
 
@@ -34,11 +34,9 @@ whichever tool produced the session.
 
 ## Screenshots
 
-| Analytics | Agent health |
-|---|---|
-| ![Token and tool analytics](docs/screenshots/analytics.jpg) | ![Per-agent setup and spend](docs/screenshots/health.jpg) |
-
-![Arabic right-to-left interface](docs/screenshots/rtl-arabic.jpg)
+| Analytics | Agent health | Archive |
+|---|---|---|
+| ![Token and tool analytics](docs/screenshots/en/analytics.jpg) | ![Per-agent setup and spend](docs/screenshots/en/health.jpg) | ![Archive manager and retention](docs/screenshots/en/archive.jpg) |
 
 ## Install
 

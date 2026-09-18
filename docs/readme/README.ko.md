@@ -14,7 +14,7 @@ AI 코딩 세션 기록을 로컬 우선으로 빠르게 보는 뷰어입니다.
 [Electron](https://www.electronjs.org/)으로
 데스크톱에 배포합니다.
 
-![펼칠 수 있는 도구 카드가 있는 세션 기록](../screenshots/sessions.jpg)
+![펼칠 수 있는 도구 카드가 있는 세션 기록](../screenshots/ko/sessions.jpg)
 
 ## 지원 에이전트
 
@@ -35,11 +35,9 @@ AI 코딩 세션 기록을 로컬 우선으로 빠르게 보는 뷰어입니다.
 
 ## 스크린샷
 
-| 분석 | 에이전트 상태 |
-|---|---|
-| ![토큰 및 도구 분석](../screenshots/analytics.jpg) | ![에이전트별 설정과 비용](../screenshots/health.jpg) |
-
-![아랍어 오른쪽에서 왼쪽 인터페이스](../screenshots/rtl-arabic.jpg)
+| 분석 | 에이전트 상태 | 아카이브 |
+|---|---|---|
+| ![토큰 및 도구 분석](../screenshots/ko/analytics.jpg) | ![에이전트별 설정과 비용](../screenshots/ko/health.jpg) | ![아카이브 관리자와 보존](../screenshots/ko/archive.jpg) |
 
 ## 설치
 

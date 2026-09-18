@@ -13,7 +13,7 @@
 以 [Astro](https://astro.build) 島嶼架構建構，並透過
 [Electron](https://www.electronjs.org/)發佈為桌面應用程式。
 
-![具有可展開工具卡片的工作階段紀錄](../screenshots/sessions.jpg)
+![具有可展開工具卡片的工作階段紀錄](../screenshots/zh-TW/sessions.jpg)
 
 ## 支援的代理
 
@@ -34,11 +34,9 @@
 
 ## 螢幕擷圖
 
-| 分析 | 代理健康度 |
-|---|---|
-| ![權杖與工具分析](../screenshots/analytics.jpg) | ![各代理的設定與花費](../screenshots/health.jpg) |
-
-![阿拉伯文由右至左介面](../screenshots/rtl-arabic.jpg)
+| 分析 | 代理健康度 | 封存 |
+|---|---|---|
+| ![權杖與工具分析](../screenshots/zh-TW/analytics.jpg) | ![各代理的設定與花費](../screenshots/zh-TW/health.jpg) | ![封存管理器與保留](../screenshots/zh-TW/archive.jpg) |
 
 ## 安裝
 

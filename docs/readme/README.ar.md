@@ -13,7 +13,7 @@
 تطبيق جزيرة [Astro](https://astro.build)، يُشحن إلى سطح المكتب عبر
 [Electron](https://www.electronjs.org/).
 
-![سجل الجلسة مع بطاقات أدوات قابلة للتوسيع](../screenshots/sessions.jpg)
+![سجل الجلسة مع بطاقات أدوات قابلة للتوسيع](../screenshots/ar/sessions.jpg)
 
 ## الوكلاء المدعومون
 
@@ -34,11 +34,9 @@
 
 ## لقطات الشاشة
 
-| التحليلات | حالة الوكلاء |
-|---|---|
-| ![تحليلات الرموز والأدوات](../screenshots/analytics.jpg) | ![الإعداد والتكلفة لكل وكيل](../screenshots/health.jpg) |
-
-![الواجهة العربية من اليمين إلى اليسار](../screenshots/rtl-arabic.jpg)
+| التحليلات | حالة الوكلاء | الأرشيف |
+|---|---|---|
+| ![تحليلات الرموز والأدوات](../screenshots/ar/analytics.jpg) | ![الإعداد والتكلفة لكل وكيل](../screenshots/ar/health.jpg) | ![مدير الأرشيف والاحتفاظ](../screenshots/ar/archive.jpg) |
 
 ## التثبيت
 
