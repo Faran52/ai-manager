@@ -27,6 +27,31 @@ version is missing here rather than shipping empty notes.
   roughly twenty seconds to three: the build no longer embeds `node_modules`,
   and the unused Sharp image pipeline is gone
 
+### Health reads the whole machine
+
+- Health answers for every project, not only the open one. With no project
+  selected it reports the machine-level half of each agent's setup: user MCP
+  servers, user rules, model auth and installed plugins. Trust and spend belong
+  to one project, so neither is claimed there rather than guessed at
+
+### Reveal in the file manager
+
+- A project's right-click menu opens its folder where the OS opens things,
+  named for the reader's own file manager: Reveal in Finder, Show in File
+  Explorer, Show in File Manager
+
+### Settings and empty states
+
+- A preserved settings key shows what it holds, not just its name. A scalar
+  reads as itself, an object as the names inside it, capped so a chip stays a
+  chip. TOML surfaces still report a name alone, because their keys are read
+  out of the text rather than parsed
+- Empty states draw their icon on a tinted plate that follows the chosen
+  accent, and a view that failed to load takes the error tone. The thirteen
+  empty states no longer each pick their own icon size
+- The Health lists of agents that are not installed, or not set up here, are
+  the same card as the agents above them, with the same provider dot
+
 ### Fixes
 
 - The storage panel no longer nests a list item inside another, which React
