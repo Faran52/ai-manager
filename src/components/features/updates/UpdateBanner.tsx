@@ -18,6 +18,7 @@ export const UpdateBanner: FC = () => {
   const {
     stage,
     version,
+    progress,
     check,
     install,
   } = useUpdateProbe();
@@ -32,17 +33,25 @@ export const UpdateBanner: FC = () => {
     return null;
   }
 
+  const percent = progress == null ? undefined : Math.round(progress * 100);
+
+  let line = t('available', { version });
+
+  if (stage === 'downloading') {
+    line = percent == null ? t('downloading') : t('downloadingPercent', { percent });
+  }
+
   return (
     <div
       className="
-        flex items-center gap-2 border-b border-border bg-primary/10 px-3 py-1.5
-        text-xs text-foreground-2
+        relative flex items-center gap-2 overflow-hidden border-b border-border
+        bg-primary/10 px-3 py-1.5 text-xs text-foreground-2
       "
       data-update-banner
     >
       <Download className="size-3.5 shrink-0 text-primary" />
       <span className="min-w-0 flex-1 truncate">
-        {stage === 'downloading' ? t('downloading') : t('available', { version })}
+        {line}
       </span>
       {stage === 'available' && install != null && (
         <Button size="sm" variant="primary" onClick={install}>
@@ -59,6 +68,18 @@ export const UpdateBanner: FC = () => {
         >
           {t('later')}
         </Button>
+      )}
+      {percent != null && stage === 'downloading' && (
+        <span
+          className="
+            absolute inset-x-0 bottom-0 h-0.5 bg-primary transition-[width]
+          "
+          role="progressbar"
+          aria-valuenow={percent}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          style={{ width: `${String(percent)}%` }}
+        />
       )}
     </div>
   );

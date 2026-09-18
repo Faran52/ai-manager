@@ -22,7 +22,7 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Readable } from 'node:stream';
+import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 
 export interface UpdateFile {
@@ -45,6 +45,8 @@ export interface InstallOptions {
   // Where the shell reads the feed the build was packed against.
   readonly resourcesPath: string;
   readonly pid: number;
+  readonly onProgress?: ((fraction: number) => void)
+    | undefined;
 }
 
 // Read rather than restated, so the feed stays whatever the build config said.
@@ -127,7 +129,11 @@ rm -rf "$(dirname "$3")"
 /usr/bin/open "$2"
 `;
 
-const download = async (url: string, destination: string): Promise<void> => {
+const download = async (
+  url: string,
+  destination: string,
+  onProgress?: (fraction: number) => void,
+): Promise<void> => {
   const response = await fetch(url);
 
   if (!response.ok || response.body == null) {
@@ -136,8 +142,23 @@ const download = async (url: string, destination: string): Promise<void> => {
 
   // `fetch` answers with the DOM's ReadableStream, `fromWeb` wants node's.
   const body = response.body as Parameters<typeof Readable.fromWeb>[0];
+  const total = Number(response.headers.get('content-length') ?? 0);
+  let taken = 0;
 
-  await pipeline(Readable.fromWeb(body), createWriteStream(destination));
+  // A release with no content-length reports nothing rather than a wrong figure.
+  const count = new Transform({
+    transform: (chunk: Buffer, _encoding, next) => {
+      taken += chunk.length;
+
+      if (total > 0) {
+        onProgress?.(taken / total);
+      }
+
+      next(null, chunk);
+    },
+  });
+
+  await pipeline(Readable.fromWeb(body), count, createWriteStream(destination));
 };
 
 const unpack = async (zip: string, into: string): Promise<string> => {
@@ -181,7 +202,7 @@ export const installUpdate = async (options: InstallOptions): Promise<void> => {
   const staging = await mkdtemp(`${options.bundlePath}.update-`);
   const zip = join(staging, 'update.zip');
 
-  await download(releaseUrl(feed, options.version, file.url), zip);
+  await download(releaseUrl(feed, options.version, file.url), zip, options.onProgress);
 
   const digest = await sha512Base64(zip);
 

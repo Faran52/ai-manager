@@ -45,6 +45,10 @@ ipcRenderer.on('app-menu-command', (_event, id) => {
   window.dispatchEvent(new CustomEvent('app-menu-command', { detail: id }));
 });
 
+ipcRenderer.on('app-update-progress', (_event, fraction) => {
+  window.dispatchEvent(new CustomEvent('app-update-progress', { detail: fraction }));
+});
+
 /*
  * Only macOS keeps the window's buttons over the app's own first row, and only the
  * stylesheet knows how much room that takes, so it is told which platform it is on.

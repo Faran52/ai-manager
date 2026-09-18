@@ -7,5 +7,7 @@
   "upToDate": "You are up to date",
   "checking": "Checking…",
   "noRelease": "No release published to update from",
-  "checkFailed": "Could not check for updates"
+  "checkFailed": "Could not check for updates",
+  "installed": "Version {{version}} installed",
+  "downloadingPercent": "Downloading update… {{percent}}%"
 }

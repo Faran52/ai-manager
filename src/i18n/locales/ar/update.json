@@ -7,5 +7,7 @@
   "upToDate": "أنت تستخدم أحدث إصدار",
   "checking": "جارٍ التحقق…",
   "noRelease": "لا يوجد إصدار منشور للتحديث منه",
-  "checkFailed": "تعذر التحقق من التحديثات"
+  "checkFailed": "تعذر التحقق من التحديثات",
+  "installed": "الإصدار {{version}} مثبت",
+  "downloadingPercent": "جارٍ تنزيل التحديث… {{percent}}%"
 }

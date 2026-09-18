@@ -88,4 +88,6 @@ interface Window {
    is sent, not what must have arrived across a process boundary. */
 interface WindowEventMap {
   'app-menu-command': CustomEvent<string>;
+  // How much of the update has been taken, nought to one.
+  'app-update-progress': CustomEvent<number>;
 }

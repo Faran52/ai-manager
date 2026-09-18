@@ -1,4 +1,8 @@
-import { useCallback, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
 
 export type ProbeStage
   = | 'idle'
@@ -13,6 +17,8 @@ export interface UpdateProbe {
   readonly stage: ProbeStage;
   // The version waiting, once one has been found.
   readonly version: string | undefined;
+  // Nought to one while downloading, absent where the release names no size.
+  readonly progress: number | undefined;
   readonly check: () => void;
   // Absent where the shell cannot replace its own build, so no button is drawn.
   readonly install: (() => void)
@@ -28,6 +34,20 @@ export interface UpdateProbe {
 export const useUpdateProbe = (): UpdateProbe => {
   const [stage, setStage] = useState<ProbeStage>('idle');
   const [version, setVersion] = useState<string | undefined>(undefined);
+  const [progress, setProgress] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    const onProgress = (event: WindowEventMap['app-update-progress']): void => {
+      setProgress(event.detail);
+      setStage('downloading');
+    };
+
+    window.addEventListener('app-update-progress', onProgress);
+
+    return () => {
+      window.removeEventListener('app-update-progress', onProgress);
+    };
+  }, []);
 
   const check = useCallback((): void => {
     const ask = window.bindings?.checkForUpdate;
@@ -85,6 +105,7 @@ export const useUpdateProbe = (): UpdateProbe => {
   return {
     stage,
     version,
+    progress,
     check,
     install: window.bindings?.installUpdate == null ? undefined : install,
   };

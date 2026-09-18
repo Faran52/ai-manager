@@ -1,4 +1,5 @@
 import {
+  act,
   render,
   screen,
   waitFor,
@@ -99,6 +100,17 @@ describe('UpdateBanner', () => {
     });
     // The row holds the download rather than offering the buttons again.
     expect(screen.queryByRole('button', { name: 'Later' })).toBeNull();
+    // Nothing to show until the shell reports a figure.
+    expect(screen.queryByRole('progressbar')).toBeNull();
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('app-update-progress', { detail: 0.42 }));
+    });
+
+    const bar = await screen.findByRole('progressbar');
+
+    expect(bar.getAttribute('aria-valuenow')).toBe('42');
+    expect(screen.getByText('Downloading update… 42%')).not.toBeNull();
 
     settle();
   });

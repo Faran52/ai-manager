@@ -66,6 +66,8 @@ const PORT = 41_780;
 // The event the page listens for, declared in src/types/desktopBindings.d.ts.
 const MENU_COMMAND = 'app-menu-command';
 
+const UPDATE_PROGRESS = 'app-update-progress';
+
 const preload = fileURLToPath(new URL('./desktopPreload.cjs', import.meta.url));
 
 /*
@@ -339,6 +341,9 @@ ipcMain.handle('desktop:install', async () => {
   await installUpdate({
     files: waiting.files,
     version: waiting.version,
+    onProgress: (fraction) => {
+      mainWindow?.webContents.send(UPDATE_PROGRESS, fraction);
+    },
     arm64: process.arch === 'arm64',
     // .../AI Manager.app/Contents/MacOS/AI Manager, three up from the bundle.
     bundlePath: resolve(app.getPath('exe'), '../../..'),

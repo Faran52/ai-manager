@@ -36,6 +36,7 @@ export interface NavRailProps {
   readonly onOpenAbout: () => void;
   // False where a native menu carries these, so the rail does not repeat them.
   readonly showSettings?: boolean | undefined;
+  readonly versionMark?: ReactNode | undefined;
 }
 
 interface Destination {
@@ -90,6 +91,7 @@ export const NavRail: FC<NavRailProps> = ({
   onOpenSettings,
   onOpenAbout,
   showSettings = true,
+  versionMark,
 }) => {
   const { t } = useTranslation('common');
   const { push } = useToast();
@@ -177,6 +179,9 @@ export const NavRail: FC<NavRailProps> = ({
           <RefreshCw className={cn('size-4', refreshing && 'animate-spin')} />
         </button>
       </Tooltip>
+      {versionMark != null && (
+        <span className="flex h-6 items-center justify-center">{versionMark}</span>
+      )}
       {showSettings && (
         <Menu
           align="end"

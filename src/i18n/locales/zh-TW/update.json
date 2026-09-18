@@ -7,5 +7,7 @@
   "upToDate": "已是最新版本",
   "checking": "正在檢查…",
   "noRelease": "尚未發布可供更新的版本",
-  "checkFailed": "無法檢查更新"
+  "checkFailed": "無法檢查更新",
+  "installed": "已安裝版本 {{version}}",
+  "downloadingPercent": "正在下載更新… {{percent}}%"
 }

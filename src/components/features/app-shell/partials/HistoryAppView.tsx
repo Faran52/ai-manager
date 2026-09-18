@@ -47,7 +47,11 @@ import {
 import { SettingsSheet } from '@features/settings';
 import { SidebarPane } from '@features/sidebar';
 import { useTheme } from '@features/theme';
-import { UpdateBanner, useUpdateProbe } from '@features/updates';
+import {
+  UpdateBanner,
+  UpdateMark,
+  useUpdateProbe,
+} from '@features/updates';
 
 import { useAppShortcuts } from '../hooks/useAppShortcuts';
 import { useDesktop } from '../hooks/useDesktop';
@@ -422,6 +426,9 @@ export const HistoryAppView: FC = () => {
             onViewChange={setView}
             onReload={projects.reload}
             showSettings={!nativeMenu}
+            versionMark={desktop
+              ? <UpdateMark stage={updateProbe.stage} progress={updateProbe.progress} />
+              : null}
             onOpenSettings={() => {
               runCommand('settings');
             }}
