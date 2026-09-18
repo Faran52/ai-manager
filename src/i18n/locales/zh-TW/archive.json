@@ -3,8 +3,6 @@
   "intro": "各個代理會按自己的節奏清理歷史紀錄。封存是把它們目前仍保留的全部紀錄完整複製一份，放到它們碰不到的地方。",
   "retentionHeading": "保留",
   "retentionIntro": "依規則封存舊工作階段，使其在代理自行清理後仍然存在。只複製，絕不刪除。",
-  "retentionOn": "已開啟",
-  "retentionOff": "已關閉",
   "retentionOlderThan": "封存早於以下天數的工作階段",
   "retentionDays": "保留天數",
   "retentionDaysUnit": "天",

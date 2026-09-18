@@ -17,7 +17,7 @@ import { SettingRow } from './partials';
 import type { ThemeMode } from '@features/theme';
 import type { FC, ReactNode } from 'react';
 
-export type SettingsPane = 'appearance';
+type SettingsPane = 'appearance';
 
 export interface SettingsPanesProps {
   readonly themeMode: ThemeMode;

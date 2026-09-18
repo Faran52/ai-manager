@@ -81,7 +81,7 @@ interface CursorToolParts {
   readonly outcome: ToolOutcome;
 }
 
-export const databaseExtensions = new Set(['.db', '.sqlite', '.sqlite3', '.vscdb']);
+const databaseExtensions = new Set(['.db', '.sqlite', '.sqlite3', '.vscdb']);
 const SQLITE_PREFIX = 'sqlite:';
 const ROW_LIMIT = 10_000;
 

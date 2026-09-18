@@ -258,7 +258,3 @@ export const CHANGE_DEBOUNCE_MS = 300;
 
 // An idle event stream looks dead to anything sitting between page and server.
 export const HEARTBEAT_MS = 30_000;
-
-// How often an unwatched root is tried again. A root can be missing because the
-// agent has not run yet, or refused because the kernel is out of inotify slots.
-export const WATCH_RETRY_MS = 30_000;

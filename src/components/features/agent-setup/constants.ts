@@ -16,7 +16,7 @@ export const CELL = 'truncate py-2 pe-4 text-start align-middle';
  */
 export const SWITCH_CELL = 'py-2 pe-4 text-start align-middle whitespace-nowrap';
 
-export const HEAD = cn(CELL, `
+const HEAD = cn(CELL, `
   sticky top-0 z-10 bg-popover text-figure font-medium tracking-wider
   text-muted-foreground uppercase
 `);

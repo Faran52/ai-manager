@@ -10,9 +10,9 @@ export interface ArrivalProps {
  * Springs, not eased durations, for anything interruptible: a tween restarts
  * from its curve mid-flight. visualDuration is how it looks, bounce is overshoot.
  */
-export const MOTION_DURATION_FAST = 0.16;
+const MOTION_DURATION_FAST = 0.16;
 export const MOTION_DURATION_BASE = 0.3;
-export const MOTION_DURATION_SLOW = 0.7;
+const MOTION_DURATION_SLOW = 0.7;
 
 // Marks in one list fill in sequence, so the eye reads an order rather than a flash.
 export const MOTION_STAGGER = 0.05;

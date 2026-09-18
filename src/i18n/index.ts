@@ -131,6 +131,5 @@ export const initI18n = (): typeof i18next => {
 export {
   directionOf,
   fallbackLanguage,
-  labelOf,
   languages,
 } from './config';

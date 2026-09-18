@@ -1,11 +1,5 @@
-export type {
-  PageRequest,
-  SessionPage,
-} from './utils/loaderUtils';
-export {
-  loadSessionEntriesOrEmpty,
-  loadSessionPage,
-} from './utils/loaderUtils';
+export type { SessionPage } from './utils/loaderUtils';
+export { loadSessionPage } from './utils/loaderUtils';
 export {
   deleteProject,
   deleteSession,

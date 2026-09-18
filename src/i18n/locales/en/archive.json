@@ -3,8 +3,6 @@
   "intro": "Agents prune their own history on their own schedule. An archive is a full copy of every transcript they still hold, kept outside their reach.",
   "retentionHeading": "Retention",
   "retentionIntro": "Archive old sessions on a rule, so they survive the agent's own cleanup. This only ever copies; it never deletes.",
-  "retentionOn": "On",
-  "retentionOff": "Off",
   "retentionOlderThan": "Archive sessions older than",
   "retentionDays": "Retention age in days",
   "retentionDaysUnit": "days",

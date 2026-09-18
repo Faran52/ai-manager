@@ -109,7 +109,7 @@ export const sha512Base64 = async (path: string): Promise<string> => {
  * the one this process runs from. The old one is moved aside, not deleted, so a
  * failed move in puts it back.
  */
-export const swapScript = `
+const swapScript = `
 set -e
 waited=0
 while kill -0 "$1" 2>/dev/null; do

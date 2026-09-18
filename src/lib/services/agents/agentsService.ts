@@ -85,26 +85,19 @@ export { managedAgents } from './constants';
 export type {
   AgentBinaryResolver,
   AgentBinaryRunner,
-  AgentInstallCommand,
-  AgentInstallInfo,
 } from './utils/installUtils';
 export {
-  AGENT_INSTALLS,
   checkAgentInstalled,
   installableAgents,
   installCommandText,
   runAgentInstall,
 } from './utils/installUtils';
-export type { ModelAuthState } from './utils/modelAuthUtils';
 export type {
   PluginActionName,
   PluginActionRequest,
 } from './utils/pluginActionsUtils';
 export { runPluginAction } from './utils/pluginActionsUtils';
-export type {
-  PluginCostAttribution,
-  PluginCostEstimate,
-} from './utils/pluginCostUtils';
+export type { PluginCostAttribution } from './utils/pluginCostUtils';
 export {
   attributePluginCosts,
   readPluginCosts,
@@ -118,17 +111,11 @@ export type {
 export { resolveAgentPaths } from './utils/rootsUtils';
 export type {
   AgentSetup,
-  McpServerSummary,
-  RulesFileSummary,
   SetupScope,
 } from './utils/setupUtils';
-export {
-  hasAgentSetup,
-  readAgentSetup,
-} from './utils/setupUtils';
+export { readAgentSetup } from './utils/setupUtils';
 export type {
   ModelCost,
-  ModelUsage,
   ProjectTrust,
   ProjectUsage,
 } from './utils/usageUtils';

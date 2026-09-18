@@ -129,7 +129,7 @@ const asBlocks = (payload: RawMessagePayload): readonly RawContentBlock[] => {
   return typeof payload.content === 'string' ? [] : (payload.content ?? []);
 };
 
-export const parseToolCall = (block: RawToolUseBlock): ToolCall | undefined => {
+const parseToolCall = (block: RawToolUseBlock): ToolCall | undefined => {
   const {
     id,
     name,

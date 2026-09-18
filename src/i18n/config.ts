@@ -39,17 +39,6 @@ export const languages: readonly LanguageOption[] = [
 
 export const fallbackLanguage = 'en';
 
-// Not a language, but the absence of a chosen one. Stored as nothing at all, so
-// that a reader who never chooses keeps following their system when it changes.
-export const systemLanguage = 'system';
-
-// A browser reporting a regional tag like en-GB matches no entry.
-export const labelOf = (language: string): string => {
-  return languages.find((option) => {
-    return option.id === language;
-  })?.label ?? '';
-};
-
 export const directionOf = (language: string): 'ltr' | 'rtl' => {
   return languages.find((option) => {
     return option.id === language;

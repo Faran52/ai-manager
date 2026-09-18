@@ -7,7 +7,6 @@ import {
 import {
   directionOf,
   fallbackLanguage,
-  labelOf,
   languages,
 } from './config';
 
@@ -20,11 +19,6 @@ describe('language config', () => {
 
   test('treats an unknown language as left to right', () => {
     expect(directionOf('xx')).toBe('ltr');
-  });
-
-  test('resolves a label only for an exact language tag', () => {
-    expect(labelOf('en')).toBe('English');
-    expect(labelOf('en-GB')).toBe('');
   });
 
   test('ships every locale with a label and includes the fallback', () => {

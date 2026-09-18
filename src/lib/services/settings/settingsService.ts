@@ -83,7 +83,7 @@ interface SettingsFileRoot {
   readonly exists: boolean;
 }
 
-export const settingsScopes: readonly SettingsScope[] = ['user', 'project', 'local'];
+const settingsScopes: readonly SettingsScope[] = ['user', 'project', 'local'];
 
 const isScope = (value: string): value is SettingsScope => {
   return settingsScopes.some((scope) => {

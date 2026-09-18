@@ -9,7 +9,7 @@ export const COMMAND_OUTPUT
   = /^\s*<local-command-(?:stdout|stderr)>[\s\S]*<\/local-command-(?:stdout|stderr)>\s*$/u;
 export const COMMAND_OUTPUT_TAGS
   = /^\s*<local-command-(?:stdout|stderr)>|<\/local-command-(?:stdout|stderr)>\s*$/gu;
-export const META_PREFIXES = ['<local-command-', '<system-reminder>'];
+const META_PREFIXES = ['<local-command-', '<system-reminder>'];
 export const INJECTED_CONTEXT_PREFIXES = [
   ...META_PREFIXES,
   '<recommended_plugins>',

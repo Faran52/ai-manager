@@ -3,8 +3,6 @@
   "intro": "에이전트는 자체 일정에 따라 기록을 삭제합니다. 아카이브는 아직 남아 있는 모든 기록을 에이전트가 닿지 않는 곳에 통째로 복사해 둔 것입니다.",
   "retentionHeading": "보존",
   "retentionIntro": "규칙에 따라 오래된 세션을 보관하여 에이전트의 자체 정리에도 남도록 합니다. 복사만 하며 삭제하지 않습니다.",
-  "retentionOn": "켜짐",
-  "retentionOff": "꺼짐",
   "retentionOlderThan": "다음 일수보다 오래된 세션 보관",
   "retentionDays": "보존 기간(일)",
   "retentionDaysUnit": "일",

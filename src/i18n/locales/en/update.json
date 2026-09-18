@@ -3,7 +3,6 @@
   "install": "Install and restart",
   "later": "Later",
   "downloading": "Downloading update…",
-  "restartRequired": "Restart to finish updating",
   "upToDate": "You are up to date",
   "checking": "Checking…",
   "noRelease": "No release published to update from",
