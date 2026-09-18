@@ -6,12 +6,24 @@ version is missing here rather than shipping empty notes.
 
 ## 0.3.0
 
+### Renamed to AI Manager
+
+- The scope is moving from reading history to managing agent setup, and the name
+  now matches. The repository, the bundle identifier (`com.faran52.ai-manager`),
+  the release artifacts and the on-disk state directory (`~/.ai-manager`) all
+  moved. An existing 0.1.0 install is a separate app and does not upgrade in
+  place.
+
 ### Health reads the whole machine
 
 - Health answers for every project, not only the open one. With no project
   selected it reports the machine-level half of each agent's setup: user MCP
   servers, user rules, model auth and installed plugins. Trust and spend belong
   to one project, so neither is claimed there rather than guessed at
+- The Health tab reports hook scripts that are missing or not executable,
+  plugins enabled from a marketplace this machine does not know, project MCP
+  servers that were never approved, and marketplace directories that no longer
+  resolve
 
 ### Reveal in the file manager
 
@@ -31,22 +43,14 @@ version is missing here rather than shipping empty notes.
 - The Health lists of agents that are not installed, or not set up here, are
   the same card as the agents above them, with the same provider dot
 
-## 0.2.0
+### Updating
 
-### Renamed to AI Manager
-
-- The scope is moving from reading history to managing agent setup, and the name
-  now matches. The repository, the bundle identifier (`com.faran52.ai-manager`),
-  the release artifacts and the on-disk state directory (`~/.ai-manager`) all
-  moved. An existing 0.1.0 install is a separate app and does not upgrade in
-  place.
-
-### Setup validation
-
-- The Health tab reports hook scripts that are missing or not executable,
-  plugins enabled from a marketplace this machine does not know, project MCP
-  servers that were never approved, and marketplace directories that no longer
-  resolve
+- An update download says how far it has got. The rail carries the installed
+  version under the refresh button and that mark becomes a ring that fills as
+  the download runs, while the banner folds the figure into its line and uses
+  its own bottom edge as the track
+- The install window is drawn rather than left as the packager's default, and
+  says what to do when macOS refuses an unsigned build
 
 ### Faster, smaller desktop build
 
@@ -56,6 +60,15 @@ version is missing here rather than shipping empty notes.
 
 ### Fixes
 
+- The updater can reach the file it is told about. Every artifact carried a
+  space, and a space is mangled twice and differently: the update feed replaced
+  it with a hyphen, GitHub stored the asset with a dot, so the URL the app built
+  from the feed was one nobody had uploaded and every update answered 404.
+  Artifacts are named from the package name now, which has no space in it
+- Cursor sessions are filed under the folder they were typed in, rather than all
+  landing under Cursor's own storage directory
+- The native menu installs on macOS only. Linux was being given the menu that
+  has an outstanding fault, and keeps the in-app rail until that is found
 - The storage panel no longer nests a list item inside another, which React
   flagged as a hydration error
 - A tool call that made several edits at once shows all of them. Each edit is
