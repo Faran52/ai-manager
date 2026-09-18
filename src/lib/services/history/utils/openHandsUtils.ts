@@ -1,11 +1,11 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import { basename, dirname } from 'node:path';
 
 import { sumBy } from 'es-toolkit';
 
 import { appConfig } from '@config/appConfig';
 
-import { maxOf } from '@utils/arrayUtils';
+import { maxOf, minOf } from '@utils/arrayUtils';
 import { parseJsonContainer } from '@utils/jsonUtils';
 import { containedIn } from '@utils/pathUtils';
 import { humanPreview } from '@utils/titleUtils';
@@ -29,6 +29,17 @@ interface EventGroup {
 interface OpenHandsSession {
   readonly summary: SessionSummary;
   readonly entries: readonly HistoryEntry[];
+}
+
+interface EventFile {
+  readonly content: string;
+  readonly modifiedMs: number;
+}
+
+interface ConversationRead {
+  readonly entries: readonly HistoryEntry[];
+  readonly modifiedMs: number;
+  readonly sizeBytes: number;
 }
 
 /*
@@ -61,19 +72,42 @@ const eventGroups = async (root: string): Promise<readonly EventGroup[]> => {
   });
 };
 
-const conversationEntries = async (files: readonly string[], fallbackMs: number): Promise<readonly HistoryEntry[]> => {
-  const events = (await Promise.all(files.map(async (filePath) => {
+const conversationEntries = async (files: readonly string[], fallbackMs: number): Promise<ConversationRead> => {
+  const read = (await Promise.all(files.map(async (filePath): Promise<EventFile | null> => {
     try {
-      return parseJsonContainer(await readFile(filePath, 'utf8'));
+      const [content, info] = await Promise.all([readFile(filePath, 'utf8'), stat(filePath)]);
+
+      return {
+        content,
+        modifiedMs: info.mtimeMs,
+      };
     }
     catch {
       return null;
     }
-  }))).filter((event) => {
+  }))).filter((file) => {
+    return file != null;
+  });
+  const events = read.map((file) => {
+    return parseJsonContainer(file.content);
+  }).filter((event) => {
     return event != null;
   });
 
-  return parseStructuredHistory(JSON.stringify(events), '.json', fallbackMs);
+  return {
+    entries: parseStructuredHistory(JSON.stringify(events), '.json', fallbackMs),
+    /*
+     * The newest event's mtime, not the time of this scan: the aggregate cache is
+     * keyed on mtime, size and count, so `Date.now()` here gave every scan a fresh
+     * key and the cache never once answered for an OpenHands session.
+     */
+    modifiedMs: maxOf(read, (file) => {
+      return file.modifiedMs;
+    }),
+    sizeBytes: sumBy(read, (file) => {
+      return file.content.length;
+    }),
+  };
 };
 
 const openHandsSession = async (
@@ -88,7 +122,11 @@ const openHandsSession = async (
   }
 
   const fallbackMs = Date.now();
-  const entries = await conversationEntries(group.files, fallbackMs);
+  const {
+    entries,
+    modifiedMs,
+    sizeBytes,
+  } = await conversationEntries(group.files, fallbackMs);
 
   if (entries.length === 0) {
     return undefined;
@@ -110,10 +148,16 @@ const openHandsSession = async (
       projectId: UNKNOWN_PROJECT,
       preview: preview == null ? undefined : humanPreview(preview, appConfig.previewLength),
       messageCount: conversationMessageCount(entries),
-      firstTimestampMs: Math.min(...stamps),
-      lastTimestampMs: Math.max(...stamps),
-      modifiedMs: fallbackMs,
-      sizeBytes: 0,
+      // A conversation is one file per event, so these lists run long enough to
+      // overflow a spread into Math.min.
+      firstTimestampMs: minOf(stamps, (stamp) => {
+        return stamp;
+      }),
+      lastTimestampMs: maxOf(stamps, (stamp) => {
+        return stamp;
+      }),
+      modifiedMs,
+      sizeBytes,
     },
     entries,
   };
@@ -182,5 +226,5 @@ export const loadOpenHandsEntries = async (
     return candidate.conversationId === basename(dirname(eventsDir));
   });
 
-  return group == null ? undefined : conversationEntries(group.files, Date.now());
+  return group == null ? undefined : (await conversationEntries(group.files, Date.now())).entries;
 };

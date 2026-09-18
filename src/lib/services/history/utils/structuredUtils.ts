@@ -8,6 +8,7 @@ import {
 
 import { appConfig } from '@config/appConfig';
 
+import { epochMillis } from '@utils/epochUtils';
 import { parseJsonContainer } from '@utils/jsonUtils';
 import { humanPreview } from '@utils/titleUtils';
 
@@ -105,6 +106,23 @@ const textFrom = (value: JsonValue | undefined): string => {
     ?? textFrom(value.parts);
 };
 
+/*
+ * First source that yields text, not first that is non-nullish. A store writing
+ * `content: ''` or `content: []` beside the real text in `message` is answering
+ * the question, and `??` would stop at the empty one and drop the turn whole.
+ */
+const firstTextOf = (...values: readonly (JsonValue | undefined)[]): string => {
+  for (const value of values) {
+    const text = textFrom(value);
+
+    if (text.length > 0) {
+      return text;
+    }
+  }
+
+  return '';
+};
+
 const roleFrom = (record: JsonObject): string | undefined => {
   const message = nestedRecord(record, 'message');
 
@@ -133,18 +151,14 @@ const normalizedRole = (role: string | undefined): 'assistant' | 'system' | 'use
 
 const timestampFrom = (record: JsonObject, fallbackMs: number): string => {
   const raw = record.timestamp ?? record.created_at ?? record.createdAt ?? record.date ?? record.time;
-  const numeric = typeof raw === 'number' ? raw : Number.NaN;
-  let milliseconds = fallbackMs;
-
-  if (Number.isFinite(numeric)) {
-    milliseconds = numeric < 10_000_000_000 ? numeric * 1000 : numeric;
-  }
 
   if (typeof raw === 'string' && !Number.isNaN(Date.parse(raw))) {
     return new Date(raw).toISOString();
   }
 
-  return new Date(milliseconds).toISOString();
+  const milliseconds = typeof raw === 'number' ? epochMillis(raw) : undefined;
+
+  return new Date(milliseconds ?? fallbackMs).toISOString();
 };
 
 const recordsFrom = (value: JsonValue | undefined): readonly JsonObject[] => {
@@ -219,7 +233,7 @@ const entryFrom = (
 ): StructuredEntry | undefined => {
   const role = normalizedRole(roleFrom(record));
   const message = nestedRecord(record, 'message') ?? nestedRecord(record, 'data');
-  const text = textFrom(record.content ?? record.text ?? record.parts ?? message?.content ?? message?.text);
+  const text = firstTextOf(record.content, record.text, record.parts, message?.content, message?.text);
 
   if (role == null || text.length === 0) {
     return undefined;

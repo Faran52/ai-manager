@@ -15,3 +15,13 @@ export const maxOf = <T>(values: readonly T[], pick: (value: T) => number): numb
     return Math.max(best, pick(value));
   }, 0);
 };
+
+// The smallest picked value, or zero for an empty list, for the same reason as
+// maxOf. Empty reads as zero rather than Infinity, which no caller can render.
+export const minOf = <T>(values: readonly T[], pick: (value: T) => number): number => {
+  return values.length === 0
+    ? 0
+    : values.reduce((best, value) => {
+        return Math.min(best, pick(value));
+      }, Number.POSITIVE_INFINITY);
+};

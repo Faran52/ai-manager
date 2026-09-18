@@ -98,6 +98,49 @@ describe('parseStructuredHistory', () => {
     });
   });
 
+  test('reads past an empty content field to the text beside it', () => {
+    expect(parseStructuredHistory(JSON.stringify({
+      messages: [
+        {
+          role: 'assistant',
+          content: '',
+          message: { text: 'the real reply' },
+        },
+        {
+          role: 'user',
+          content: [],
+          message: { content: 'the real question' },
+        },
+      ],
+    }), '.json', stamp)).toMatchObject([
+      {
+        kind: 'assistant',
+        blocks: [{ text: 'the real reply' }],
+      },
+      {
+        kind: 'user',
+        text: 'the real question',
+      },
+    ]);
+  });
+
+  test('reads an epoch in seconds, microseconds or nanoseconds as the same instant', () => {
+    const at = (timestamp: number): string | undefined => {
+      return parseStructuredHistory(JSON.stringify({
+        messages: [{
+          role: 'user',
+          content: 'when',
+          timestamp,
+        }],
+      }), '.json', stamp)[0]?.timestamp;
+    };
+
+    expect(at(1_767_225_600)).toBe('2026-01-01T00:00:00.000Z');
+    expect(at(1_767_225_600_000_000)).toBe('2026-01-01T00:00:00.000Z');
+    expect(at(1_767_225_600_000_000_000)).toBe('2026-01-01T00:00:00.000Z');
+    expect(at(7)).toBe(new Date(stamp).toISOString());
+  });
+
   test('parses JSONL while skipping malformed and unrelated values', () => {
     const content = [
       '',

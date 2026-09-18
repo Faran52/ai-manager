@@ -791,7 +791,7 @@ describe('parseCopilotHistory', () => {
     expect(outcomes.get('t-multi')?.filePath).toBeUndefined();
     expect(outcomes.get('t-unknown')?.status).toBe('ok');
     expect(outcomes.get(brokenId)).toMatchObject({
-      status: 'error',
+      status: 'interrupted',
       text: 'Broken link fallback [](broken-%zz',
     });
     expect(outcomes.get(brokenId)?.filePath).toBeUndefined();

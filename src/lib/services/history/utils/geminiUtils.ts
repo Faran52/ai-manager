@@ -7,6 +7,7 @@ import { join } from 'node:path';
 
 import { appConfig } from '@config/appConfig';
 
+import { epochMillis } from '@utils/epochUtils';
 import {
   isJsonArray,
   isJsonObject,
@@ -91,7 +92,7 @@ const stampOf = (value: JsonValue | undefined): number | undefined => {
     return Number.isNaN(parsed) ? undefined : parsed;
   }
 
-  return typeof value === 'number' ? value : undefined;
+  return typeof value === 'number' ? epochMillis(value) : undefined;
 };
 
 // A Part is either plain text or a nested `{ text }`, per PartListUnion.

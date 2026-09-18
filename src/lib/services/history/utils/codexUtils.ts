@@ -108,6 +108,18 @@ interface ParsedCodexSession {
   readonly title: string | undefined;
 }
 
+/*
+ * `callId` is the call this patch belongs to, and is absent for a
+ * `patch_apply_end` event, whose own `call_id` is an execution id from a
+ * different namespace than the tool call's (`exec-1` against `call-1`), so
+ * there is nothing to match it on and the next outcome takes it.
+ */
+interface PendingPatch {
+  readonly callId: string | undefined;
+  readonly patch: readonly PatchHunk[] | undefined;
+  readonly changed: readonly ChangedFile[] | undefined;
+}
+
 interface CodexScan {
   actualSessionId: string;
   cwd: string;
@@ -119,9 +131,8 @@ interface CodexScan {
   title: string | undefined;
   gitBranch: string | undefined;
   // Codex reports what a patch did as its own event, between the tool call and
-  // the call's output, so these wait here for the outcome they belong to.
-  pendingPatch: readonly PatchHunk[] | undefined;
-  pendingChanged: readonly ChangedFile[] | undefined;
+  // the call's output, so this waits here for the outcome it belongs to.
+  pending: PendingPatch | undefined;
   counter: number;
 }
 
@@ -149,8 +160,16 @@ const isCodexLine = (value: unknown): value is CodexLine => {
   return typeof value === 'object' && value !== null;
 };
 
+/**
+ * Only a JSON object actually carrying `output` as text. Every other shape,
+ * including an array, keeps the raw string: a tool answering `{"stdout": ...}`
+ * or `[1,2]` has its text there, and reading `.output` off it loses the lot.
+ */
 const isCommandOutput = (value: unknown): value is CodexCommandOutput => {
-  return typeof value === 'object' && value !== null;
+  return typeof value === 'object'
+    && value !== null
+    && 'output' in value
+    && typeof value.output === 'string';
 };
 
 const parsedJson = (text: string): object | undefined => {
@@ -198,14 +217,30 @@ const outputFailed = (payload: CodexPayload): boolean => {
   return /^Script (?:failed|error)\b/u.test(rawOutput(payload).trimStart());
 };
 
-const outcomeFrom = (
-  payload: CodexPayload,
-  patch: readonly PatchHunk[] | undefined,
-  changed: readonly ChangedFile[] | undefined,
-): ToolOutcome => {
+/*
+ * The waiting patch, and only if it is this call's: one that named a call goes
+ * to that call alone, so a second tool finishing first is not credited with an
+ * edit it never made. A patch that named none is positional and the next
+ * outcome takes it.
+ */
+const takePatch = (scan: CodexScan, payload: CodexPayload): PendingPatch | undefined => {
+  const pending = scan.pending;
+
+  if (pending == null || (pending.callId != null && pending.callId !== (payload.call_id ?? ''))) {
+    return undefined;
+  }
+
+  scan.pending = undefined;
+
+  return pending;
+};
+
+const outcomeFrom = (payload: CodexPayload, pending: PendingPatch | undefined): ToolOutcome => {
   const output = outputContent(payload);
   const parsed = output.length === 0 ? undefined : parsedJson(output);
   const text = isCommandOutput(parsed) ? parsed.output : (output || undefined);
+  const patch = pending?.patch;
+  const changed = pending?.changed;
 
   return {
     toolUseId: payload.call_id ?? '',
@@ -254,8 +289,11 @@ const absorbPatchApply = (scan: CodexScan, payload: CodexPayload): void => {
     };
   });
 
-  scan.pendingPatch = hunks.length > 0 ? hunks : undefined;
-  scan.pendingChanged = changed.length > 0 ? changed : undefined;
+  scan.pending = {
+    callId: undefined,
+    patch: hunks.length > 0 ? hunks : undefined,
+    changed: changed.length > 0 ? changed : undefined,
+  };
 };
 
 // Codex reports an MCP call only once it has finished, one event carrying both, so
@@ -407,17 +445,17 @@ const absorbResponseItem = (scan: CodexScan, payload: CodexPayload, timestamp: s
   }
 
   if (payload.type === 'function_call' || payload.type === 'custom_tool_call') {
-    const decoded = decodeCodexTool(
-      payload.name,
-      payload.input ?? payload.arguments,
-      payload.call_id ?? payload.id ?? '',
-    );
+    const callId = payload.call_id ?? payload.id ?? '';
+    const decoded = decodeCodexTool(payload.name, payload.input ?? payload.arguments, callId);
 
     // apply_patch keeps its diff in the call source, so it waits here for the
     // output it pairs with, the same slot patch_apply_end fills.
     if (decoded.patch != null || decoded.changed != null) {
-      scan.pendingPatch = decoded.patch;
-      scan.pendingChanged = decoded.changed;
+      scan.pending = {
+        callId,
+        patch: decoded.patch,
+        changed: decoded.changed,
+      };
     }
 
     scan.entries.push({
@@ -440,10 +478,8 @@ const absorbResponseItem = (scan: CodexScan, payload: CodexPayload, timestamp: s
       sidechain: false,
       meta: true,
       text: '',
-      outcomes: [outcomeFrom(payload, scan.pendingPatch, scan.pendingChanged)],
+      outcomes: [outcomeFrom(payload, takePatch(scan, payload))],
     });
-    scan.pendingPatch = undefined;
-    scan.pendingChanged = undefined;
   }
   else if (payload.type === 'reasoning') {
     const thinking = (payload.summary ?? []).flatMap((part) => {
@@ -517,8 +553,7 @@ export const parseCodexHistory = (content: string): ParsedCodexSession => {
     model: undefined,
     title: undefined,
     gitBranch: undefined,
-    pendingPatch: undefined,
-    pendingChanged: undefined,
+    pending: undefined,
     counter: 0,
   };
 

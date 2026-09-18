@@ -706,6 +706,52 @@ describe('codex patches', () => {
     });
     expect(outcome?.patch?.[0]?.lines).toEqual(['-const a = 1;', '+const a = 2;']);
   });
+
+  test('keeps a call-sourced patch for its own call when another finishes first', () => {
+    const patch = [
+      '*** Begin Patch',
+      '*** Update File: /repo/order.ts',
+      '-const a = 1;',
+      '+const a = 2;',
+      '*** End Patch',
+    ].join('\\n');
+    const entries = parseCodexHistory([
+      line('session_meta', {
+        id: 'thread-order',
+        cwd: '/repo',
+      }),
+      line('response_item', {
+        type: 'custom_tool_call',
+        call_id: 'patchcall',
+        name: 'exec',
+        input: `const patch = "${patch}";\nawait tools.apply_patch({patch});`,
+      }),
+      line('response_item', {
+        type: 'custom_tool_call',
+        call_id: 'shellcall',
+        name: 'shell',
+        input: 'ls',
+      }),
+      line('response_item', {
+        type: 'custom_tool_call_output',
+        call_id: 'shellcall',
+        output: 'a.txt',
+      }),
+      line('response_item', {
+        type: 'custom_tool_call_output',
+        call_id: 'patchcall',
+        output: 'Success',
+      }),
+    ].join('\n')).entries;
+    const byCall = new Map(entries.flatMap((entry) => {
+      return entry.kind === 'user' ? entry.outcomes : [];
+    }).map((outcome) => {
+      return [outcome.toolUseId, outcome];
+    }));
+
+    expect(byCall.get('shellcall')?.patch).toBeUndefined();
+    expect(byCall.get('patchcall')?.patch?.[0]?.lines).toEqual(['-const a = 1;', '+const a = 2;']);
+  });
 });
 
 describe('codex exec command and output handling', () => {
@@ -747,6 +793,14 @@ describe('codex exec command and output handling', () => {
       return entry.kind === 'user' ? entry.outcomes : [];
     })[0];
   };
+
+  test('keeps json output that is not shaped as an output field', () => {
+    expect(firstOutcome(run('tools.exec_command({"cmd":"x"})', '{"stdout":"hello","exit_code":0}'))?.text)
+      .toBe('{"stdout":"hello","exit_code":0}');
+    expect(firstOutcome(run('tools.exec_command({"cmd":"x"})', '[1,2,3]'))?.text).toBe('[1,2,3]');
+    expect(firstOutcome(run('tools.exec_command({"cmd":"x"})', '{"output":42}'))?.text).toBe('{"output":42}');
+    expect(firstOutcome(run('tools.exec_command({"cmd":"x"})', '{"output":"unwrapped"}'))?.text).toBe('unwrapped');
+  });
 
   test('reads the command past nested braces, and by either cmd or command', () => {
     expect(toolCall(run(
