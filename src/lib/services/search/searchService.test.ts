@@ -14,12 +14,13 @@ import {
 
 import { agentOptions } from '@config/agents';
 
+import { writeSession } from '@mocks/claudeSessionFixtures';
+
 import { resolveAgentPaths } from '../agents/agentsService';
 
 import { searchAgentHistory } from './searchService';
 
 import type { AgentRoots } from '../agents/agentsService';
-import type { RawHistoryLine } from '../history/utils/claudeRawUtils';
 
 const claudeRoots = (root: string): AgentRoots => {
   return agentOptions.reduce<AgentRoots>((map, option) => {
@@ -47,24 +48,6 @@ const searchRoots = (root: string): AgentRoots => {
 
 const newDir = async (): Promise<string> => {
   return mkdtemp(join(tmpdir(), 'search-'));
-};
-
-const writeSession = async (
-  dir: string,
-  projectId: string,
-  fileName: string,
-  lines: readonly RawHistoryLine[],
-): Promise<void> => {
-  const projectDir = join(dir, 'projects', projectId);
-
-  await mkdir(projectDir, { recursive: true });
-  await writeFile(
-    join(projectDir, fileName),
-    lines.map((line) => {
-      return JSON.stringify(line);
-    }).join('\n'),
-    'utf8',
-  );
 };
 
 describe('searchAgentHistory', () => {

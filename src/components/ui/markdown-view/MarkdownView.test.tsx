@@ -8,20 +8,12 @@ import {
   vi,
 } from 'vitest';
 
+import { reducedMotion } from '@mocks/reducedMotionFixtures';
+
 import { MarkdownView } from './MarkdownView';
 
 const codeLine = (): string | undefined => {
   return document.querySelector('[data-code-line]')?.textContent ?? undefined;
-};
-
-const reducedMotion = (matches: boolean): void => {
-  vi.stubGlobal('matchMedia', () => {
-    return {
-      matches,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    };
-  });
 };
 
 afterEach(() => {

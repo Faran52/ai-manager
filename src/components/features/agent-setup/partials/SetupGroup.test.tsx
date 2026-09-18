@@ -14,7 +14,7 @@ test('labels its values, in the warning tone when asked', () => {
 
   expect(screen.getByText('MCP').tagName).toBe('DT');
   expect(screen.getByText('filesystem')).toBeDefined();
-  expect(screen.getByText('MCP').classList.contains('text-muted-foreground')).toBe(true);
+  expect(screen.getByText('MCP').dataset.tone).toBe('muted');
 
   rerender(
     <dl>
@@ -23,5 +23,5 @@ test('labels its values, in the warning tone when asked', () => {
       </SetupGroup>
     </dl>,
   );
-  expect(screen.getByText('Issues').classList.contains('text-warn')).toBe(true);
+  expect(screen.getByText('Issues').dataset.tone).toBe('warn');
 });

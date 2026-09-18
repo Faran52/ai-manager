@@ -7,17 +7,9 @@ import {
   vi,
 } from 'vitest';
 
-import { SegmentedControl } from './SegmentedControl';
+import { reducedMotion } from '@mocks/reducedMotionFixtures';
 
-const reducedMotion = (matches: boolean): void => {
-  vi.stubGlobal('matchMedia', () => {
-    return {
-      matches,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    };
-  });
-};
+import { SegmentedControl } from './SegmentedControl';
 
 afterEach(() => {
   vi.unstubAllGlobals();

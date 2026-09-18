@@ -8,17 +8,9 @@ import {
   vi,
 } from 'vitest';
 
-import { Disclosure } from './Disclosure';
+import { reducedMotion } from '@mocks/reducedMotionFixtures';
 
-const reducedMotion = (matches: boolean): void => {
-  vi.stubGlobal('matchMedia', () => {
-    return {
-      matches,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    };
-  });
-};
+import { Disclosure } from './Disclosure';
 
 afterEach(() => {
   vi.unstubAllGlobals();

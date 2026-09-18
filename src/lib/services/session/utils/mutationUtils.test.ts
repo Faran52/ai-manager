@@ -19,6 +19,8 @@ import {
 
 import { resolveAgentPaths } from '@services/agents/agentsService';
 
+import { openCodeStore } from '@mocks/openCodeStoreFixtures';
+
 import {
   deleteProject,
   deleteSession,
@@ -264,21 +266,7 @@ describe('OpenCode session deletion', () => {
     data: string,
     name = 'opencode.db',
   ): DatabaseSync => {
-    const database = new DatabaseSync(join(data, name));
-
-    database.exec(`
-      CREATE TABLE session (
-        id TEXT PRIMARY KEY, title TEXT, directory TEXT, parent_id TEXT,
-        time_created INTEGER, time_updated INTEGER
-      );
-      CREATE TABLE message (
-        id TEXT PRIMARY KEY, session_id TEXT, time_created INTEGER, data TEXT
-      );
-      CREATE TABLE part (
-        id TEXT PRIMARY KEY, message_id TEXT, session_id TEXT,
-        time_created INTEGER, data TEXT
-      );
-    `);
+    const database = openCodeStore(join(data, name));
 
     return database;
   };

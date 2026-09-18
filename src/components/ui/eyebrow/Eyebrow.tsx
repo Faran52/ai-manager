@@ -38,6 +38,7 @@ export const Eyebrow: FC<EyebrowProps> = ({
         className,
       )}
       data-eyebrow
+      data-tone={tone}
     >
       {children}
     </Tag>

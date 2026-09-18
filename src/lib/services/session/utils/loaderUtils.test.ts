@@ -14,6 +14,9 @@ import {
   test,
 } from 'vitest';
 
+import { writeSession } from '@mocks/claudeSessionFixtures';
+import { openCodeStore } from '@mocks/openCodeStoreFixtures';
+
 import { listOpenCodeSessions } from '../../history/utils/openCodeUtils';
 import { listSqliteSessions } from '../../history/utils/sqliteUtils';
 
@@ -27,24 +30,6 @@ const claudeDir = async (): Promise<string> => {
 
 const rootsFor = (dir: string): readonly string[] => {
   return [dir];
-};
-
-const writeSession = async (
-  dir: string,
-  projectId: string,
-  fileName: string,
-  lines: readonly (RawHistoryLine | string)[],
-): Promise<string> => {
-  const projectDir = join(dir, 'projects', projectId);
-
-  await mkdir(projectDir, { recursive: true });
-  const filePath = join(projectDir, fileName);
-
-  await writeFile(filePath, lines.map((entry) => {
-    return JSON.stringify(entry);
-  }).join('\n'), 'utf8');
-
-  return filePath;
 };
 
 const userLine = (text: string, sidechain = false): RawHistoryLine => {
@@ -317,21 +302,8 @@ test('loads a virtual SQLite session page', async () => {
 test('loads a virtual OpenCode session page from its synthetic reference', async () => {
   const root = await claudeDir();
   const filePath = join(root, 'opencode.db');
-  const database = new DatabaseSync(filePath);
+  const database = openCodeStore(filePath);
 
-  database.exec(`
-    CREATE TABLE session (
-      id TEXT PRIMARY KEY, title TEXT, directory TEXT, parent_id TEXT,
-      time_created INTEGER, time_updated INTEGER
-    );
-    CREATE TABLE message (
-      id TEXT PRIMARY KEY, session_id TEXT, time_created INTEGER, data TEXT
-    );
-    CREATE TABLE part (
-      id TEXT PRIMARY KEY, message_id TEXT, session_id TEXT,
-      time_created INTEGER, data TEXT
-    );
-  `);
   database.prepare(
     'INSERT INTO session (id, title, directory, parent_id, time_created, time_updated) VALUES (?, ?, ?, ?, ?, ?)',
   ).run('ses_1', null, root, null, 1_000, 2_000);

@@ -13,6 +13,8 @@ import {
   test,
 } from 'vitest';
 
+import { openCodeStore } from '@mocks/openCodeStoreFixtures';
+
 import {
   listAgentProjects,
   listAgentSessions,
@@ -170,22 +172,9 @@ test('routes compatible, structured, SQLite, and OpenCode agent families', async
 
   await mkdir(join(root, 'opencode'), { recursive: true });
 
-  const openCode = new DatabaseSync(openCodeDb);
+  const openCode = openCodeStore(openCodeDb);
   const sessionStart = Date.parse('2026-01-03T00:00:00Z');
 
-  openCode.exec(`
-    CREATE TABLE session (
-      id TEXT PRIMARY KEY, title TEXT, directory TEXT, parent_id TEXT,
-      time_created INTEGER, time_updated INTEGER
-    );
-    CREATE TABLE message (
-      id TEXT PRIMARY KEY, session_id TEXT, time_created INTEGER, data TEXT
-    );
-    CREATE TABLE part (
-      id TEXT PRIMARY KEY, message_id TEXT, session_id TEXT,
-      time_created INTEGER, data TEXT
-    );
-  `);
   openCode.prepare(
     'INSERT INTO session VALUES (?, ?, ?, ?, ?, ?)',
   ).run('ses_1', 'OpenCode chat', '/oc/project', null, sessionStart, sessionStart + 5_000);

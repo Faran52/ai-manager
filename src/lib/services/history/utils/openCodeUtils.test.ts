@@ -15,6 +15,8 @@ import {
   it,
 } from 'vitest';
 
+import { openCodeStore } from '@mocks/openCodeStoreFixtures';
+
 import {
   listOpenCodeProjects,
   listOpenCodeSessions,
@@ -98,21 +100,7 @@ beforeEach(async () => {
   await mkdir(join(root, 'data'), { recursive: true });
   databasePath = join(root, 'data', 'opencode.db');
 
-  const database = new DatabaseSync(databasePath);
-
-  database.exec(`
-    CREATE TABLE session (
-      id TEXT PRIMARY KEY, title TEXT, directory TEXT, parent_id TEXT,
-      time_created INTEGER, time_updated INTEGER
-    );
-    CREATE TABLE message (
-      id TEXT PRIMARY KEY, session_id TEXT, time_created INTEGER, data TEXT
-    );
-    CREATE TABLE part (
-      id TEXT PRIMARY KEY, message_id TEXT, session_id TEXT,
-      time_created INTEGER, data TEXT
-    );
-  `);
+  const database = openCodeStore(databasePath);
 
   createSession(database, 'ses_a', '/repo/alpha', 1_000);
   addMessage(database, 'msg_1', 'ses_a', 'user', 1_000);

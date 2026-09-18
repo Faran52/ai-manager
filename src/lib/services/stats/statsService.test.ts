@@ -16,6 +16,9 @@ import {
 
 import { handleGlobalStats } from '@lib/apis/endpoints';
 
+import { writeSession } from '@mocks/claudeSessionFixtures';
+import { openCodeStore } from '@mocks/openCodeStoreFixtures';
+
 import { resolveAgentPaths } from '../agents/agentsService';
 
 import { computeGlobalStats, computeProjectStats } from './statsService';
@@ -25,24 +28,6 @@ import type { RawHistoryLine } from '../history/utils/claudeRawUtils';
 
 const newDir = async (): Promise<string> => {
   return mkdtemp(join(tmpdir(), 'stats-'));
-};
-
-const writeSession = async (
-  dir: string,
-  projectId: string,
-  fileName: string,
-  lines: readonly RawHistoryLine[],
-): Promise<void> => {
-  const projectDir = join(dir, 'projects', projectId);
-
-  await mkdir(projectDir, { recursive: true });
-  await writeFile(
-    join(projectDir, fileName),
-    lines.map((line) => {
-      return JSON.stringify(line);
-    }).join('\n'),
-    'utf8',
-  );
 };
 
 const assistantTurn = (model: string, tokens: number, cost?: number): RawHistoryLine => {
@@ -468,21 +453,8 @@ describe('structured and SQLite statistics', () => {
 
     const openCodeRoot = await newDir();
     const databasePath = join(openCodeRoot, 'opencode.db');
-    const database = new DatabaseSync(databasePath);
+    const database = openCodeStore(databasePath);
 
-    database.exec(`
-      CREATE TABLE session (
-        id TEXT PRIMARY KEY, title TEXT, directory TEXT, parent_id TEXT,
-        time_created INTEGER, time_updated INTEGER
-      );
-      CREATE TABLE message (
-        id TEXT PRIMARY KEY, session_id TEXT, time_created INTEGER, data TEXT
-      );
-      CREATE TABLE part (
-        id TEXT PRIMARY KEY, message_id TEXT, session_id TEXT,
-        time_created INTEGER, data TEXT
-      );
-    `);
     database.prepare(
       'INSERT INTO session (id, title, directory, parent_id, time_created, time_updated) VALUES (?, ?, ?, ?, ?, ?)',
     ).run('ses_a', 'Session', '/repo/alpha', null, 1_000, 2_000);

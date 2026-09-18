@@ -8,7 +8,6 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
 
 import {
   afterEach,
@@ -18,6 +17,8 @@ import {
   test,
   vi,
 } from 'vitest';
+
+import { openCodeStore } from '@mocks/openCodeStoreFixtures';
 
 import { resolveAgentPaths } from '../agents/agentsService';
 
@@ -76,21 +77,8 @@ const addSharedDatabase = async (home: string): Promise<void> => {
 
   await mkdir(dataDir, { recursive: true });
 
-  const database = new DatabaseSync(join(dataDir, 'opencode.db'));
+  const database = openCodeStore(join(dataDir, 'opencode.db'));
 
-  database.exec(`
-    CREATE TABLE session (
-      id TEXT PRIMARY KEY, title TEXT, directory TEXT, parent_id TEXT,
-      time_created INTEGER, time_updated INTEGER
-    );
-    CREATE TABLE message (
-      id TEXT PRIMARY KEY, session_id TEXT, time_created INTEGER, data TEXT
-    );
-    CREATE TABLE part (
-      id TEXT PRIMARY KEY, message_id TEXT, session_id TEXT,
-      time_created INTEGER, data TEXT
-    );
-  `);
   database.prepare(
     'INSERT INTO session (id, title, directory, parent_id, time_created, time_updated) VALUES (?, ?, ?, ?, ?, ?)',
   ).run('ses_a', 'Session A', '/repo/alpha', null, 1_000, 2_000);
