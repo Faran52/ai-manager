@@ -99,10 +99,25 @@ jobs:
       # --publish never: the release is written once, by the job below, from
       # every platform's artifacts at the same time. electron-builder still
       # writes the latest*.yml the updater reads.
+      # A certificate that was never bought is an empty secret, and an empty
+      # CSC_LINK is not "no certificate" to electron-builder, it is a path: it
+      # resolves to the repo root and stops at "not a file". Unsigned is the
+      # decision here, so the build is told that rather than handed a blank.
+      - name: Note the signing material, or that there is none
+        shell: bash
+        env:
+          CERTIFICATE: ${{ secrets[matrix.certificate] }}
+          CERTIFICATE_PASSWORD: ${{ secrets[matrix.certificatePassword] }}
+        run: |
+          if [ -n "$CERTIFICATE" ]; then
+            echo "CSC_LINK=$CERTIFICATE" >> "$GITHUB_ENV"
+            echo "CSC_KEY_PASSWORD=$CERTIFICATE_PASSWORD" >> "$GITHUB_ENV"
+          else
+            echo "CSC_IDENTITY_AUTO_DISCOVERY=false" >> "$GITHUB_ENV"
+          fi
+
       - name: Build the installers
         env:
-          CSC_LINK: ${{ secrets[matrix.certificate] }}
-          CSC_KEY_PASSWORD: ${{ secrets[matrix.certificatePassword] }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
