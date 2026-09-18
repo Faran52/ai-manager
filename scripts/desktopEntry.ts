@@ -19,6 +19,7 @@ import {
   BrowserWindow,
   ipcMain,
   Menu,
+  shell,
   utilityProcess,
 } from 'electron';
 import electronUpdater from 'electron-updater';
@@ -317,6 +318,10 @@ ipcMain.handle('desktop:platform', () => {
 
 ipcMain.handle('desktop:menu', (_event, items: readonly AppMenuItem[]) => {
   Menu.setApplicationMenu(Menu.buildFromTemplate(items.map(toMenuItem)));
+});
+
+ipcMain.handle('desktop:reveal', (_event, target: string) => {
+  shell.showItemInFolder(target);
 });
 
 ipcMain.handle('desktop:about', openAbout);

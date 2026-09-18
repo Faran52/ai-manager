@@ -212,3 +212,61 @@ test('hides native mutation actions for read-only agents', () => {
   expect(screen.queryByText('Delete session')).toBeNull();
   expect(screen.queryByText('Copy resume command')).toBeNull();
 });
+
+test('offers reveal only in the desktop shell, named for the platform', async () => {
+  const revealInFolder = vi.fn();
+  const onClose = vi.fn();
+  const held = navigator.platform;
+  const pretend = (value: string): void => {
+    Object.defineProperty(navigator, 'platform', {
+      value,
+      configurable: true,
+    });
+  };
+  const props = {
+    position: {
+      x: 0,
+      y: 0,
+    },
+    onClose,
+    onCopied: vi.fn(),
+    onDeleteProject: vi.fn(),
+    onRenameSession: vi.fn(),
+    onDeleteSession: vi.fn(),
+  };
+  const target = {
+    kind: 'project',
+    project: {
+      agent: 'claude',
+      id: '/repo',
+      name: 'Repo',
+      actualPath: '/repo',
+      sessionCount: 1,
+      messageCount: 2,
+      lastActivityMs: 0,
+    },
+  } as const;
+
+  const { rerender } = render(<SidebarContextMenu target={target} {...props} />);
+
+  expect(screen.queryByText(/Reveal|Show in/u)).toBeNull();
+
+  pretend('MacIntel');
+  vi.stubGlobal('bindings', { revealInFolder });
+  rerender(<SidebarContextMenu target={target} {...props} />);
+
+  await userEvent.click(screen.getByRole('menuitem', { name: 'Reveal in Finder' }));
+
+  expect(revealInFolder).toHaveBeenCalledWith('/repo');
+  expect(onClose).toHaveBeenCalled();
+
+  pretend('Win32');
+  rerender(<SidebarContextMenu target={target} {...props} />);
+  expect(screen.getByRole('menuitem', { name: 'Show in File Explorer' })).toBeDefined();
+
+  pretend('Linux x86_64');
+  rerender(<SidebarContextMenu target={target} {...props} />);
+  expect(screen.getByRole('menuitem', { name: 'Show in File Manager' })).toBeDefined();
+
+  pretend(held);
+});

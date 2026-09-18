@@ -12,6 +12,9 @@ contextBridge.exposeInMainWorld('bindings', {
   setApplicationMenu: (items) => {
     return ipcRenderer.invoke('desktop:menu', items);
   },
+  revealInFolder: (target) => {
+    return ipcRenderer.invoke('desktop:reveal', target);
+  },
   // Windows keeps About and Settings in the app, so it is offered neither.
   ...process.platform === 'win32'
     ? {}

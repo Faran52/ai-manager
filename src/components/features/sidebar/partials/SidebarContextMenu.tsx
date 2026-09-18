@@ -4,6 +4,7 @@ import {
   Clipboard,
   FileText,
   Folder,
+  FolderOpen,
   FolderX,
   Pencil,
   Play,
@@ -14,6 +15,7 @@ import { agentBadgeLabel, agentOption } from '@config/agents';
 
 import { sessionLabel } from '@services/history/historyService';
 import { copyTextToClipboard } from '@utils/browserFilesUtils';
+import { browserPlatform } from '@utils/platformUtils';
 
 import { Menu, MenuItem } from '@ui/index';
 
@@ -51,6 +53,12 @@ interface MenuAction {
   readonly onSelect: () => void;
 }
 
+const REVEAL_LABELS = {
+  mac: 'revealInFinder',
+  windows: 'revealInExplorer',
+  linux: 'revealInFiles',
+} as const;
+
 export const SidebarContextMenu: FC<SidebarContextMenuProps> = ({
   target,
   position,
@@ -62,6 +70,7 @@ export const SidebarContextMenu: FC<SidebarContextMenuProps> = ({
 }) => {
   const { t } = useTranslation('sidebar');
   const projectPath = target.kind === 'project' ? target.project.actualPath : undefined;
+  const reveal = window.bindings?.revealInFolder;
   const sessionAgent = target.kind === 'session' ? agentOption(target.session.agent) : undefined;
   const resumeCommand = sessionAgent?.resumeCommand;
 
@@ -95,6 +104,16 @@ export const SidebarContextMenu: FC<SidebarContextMenuProps> = ({
               copy(target.project.id, t('projectIdCopied'));
             },
           },
+          ...(projectPath == null || reveal == null
+            ? []
+            : [{
+                label: t(REVEAL_LABELS[browserPlatform()]),
+                icon: <FolderOpen className="size-3.5" />,
+                onSelect: () => {
+                  onClose();
+                  void reveal(projectPath);
+                },
+              }]),
           ...(agentOption(target.project.agent).canDeleteProject
             ? [{
                 label: t('deleteProjectHistory'),

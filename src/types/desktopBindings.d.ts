@@ -61,6 +61,8 @@ interface DesktopUpdate {
 interface DesktopBindings {
   readonly desktopPlatform: () => Promise<string>;
   readonly setApplicationMenu: (items: readonly AppMenuItem[]) => Promise<void>;
+  // Opens the OS file manager on a path, selecting it.
+  readonly revealInFolder: (target: string) => Promise<void>;
   // Present only where these have a window of their own to be raised into.
   readonly openAbout?: (() => Promise<void>)
     | undefined;

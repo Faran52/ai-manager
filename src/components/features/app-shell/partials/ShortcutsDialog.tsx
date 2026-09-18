@@ -4,6 +4,7 @@ import { Keyboard } from 'lucide-react';
 
 import { appShortcuts, shortcutOrder } from '@config/shortcuts';
 
+import { isApplePlatform } from '@utils/platformUtils';
 import { shortcutLabel } from '@utils/shortcutUtils';
 
 import { Modal } from '@ui/index';
@@ -27,10 +28,6 @@ const LABEL_KEYS: Record<ShortcutId, string> = {
   reload: 'shortcutReload',
   toggleNavigator: 'shortcutToggleNavigator',
   showShortcuts: 'shortcutShowShortcuts',
-};
-
-const isApplePlatform = (): boolean => {
-  return navigator.platform.startsWith('Mac');
 };
 
 export const ShortcutsDialog: FC<ShortcutsDialogProps> = ({ open, onClose }) => {
