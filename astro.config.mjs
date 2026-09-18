@@ -1,7 +1,40 @@
+import { readFileSync } from 'node:fs';
+
 import node from '@astrojs/node';
 import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, passthroughImageService } from 'astro/config';
+
+// Read out of .git, not git rev-parse, which lint refuses for resolving off PATH.
+const headCommit = () => {
+  const head = readFileSync('.git/HEAD', 'utf8').trim();
+
+  if (!head.startsWith('ref: ')) {
+    return head;
+  }
+
+  const ref = head.slice(5);
+
+  try {
+    return readFileSync(`.git/${ref}`, 'utf8').trim();
+  }
+  catch {
+    const packed = readFileSync('.git/packed-refs', 'utf8');
+
+    return packed.split('\n').find((line) => {
+      return line.endsWith(` ${ref}`);
+    })?.split(' ')[0] ?? '';
+  }
+};
+
+const buildCommit = () => {
+  try {
+    return (process.env.GITHUB_SHA ?? headCommit()).slice(0, 7);
+  }
+  catch {
+    return '';
+  }
+};
 
 // React Compiler, via @astrojs/react's babel passthrough. Off under Vitest: its memo cache
 // leaves a permanently-uncovered branch per component, failing the 100% branch gate.
@@ -47,5 +80,6 @@ export default defineConfig({
      * sits just above that rather than off, so real growth still says so.
      */
     build: { chunkSizeWarningLimit: 1_200 },
+    define: { __BUILD_COMMIT__: JSON.stringify(buildCommit()) },
   },
 });

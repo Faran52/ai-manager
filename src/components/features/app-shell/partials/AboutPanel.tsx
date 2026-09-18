@@ -6,6 +6,8 @@ import { cn } from '@utils/cnUtils';
 
 import { Button } from '@ui/index';
 
+import { versionLine } from '../utils/aboutUtils';
+
 import type { ProbeStage } from '@features/updates';
 import type { FC } from 'react';
 
@@ -39,21 +41,27 @@ export const AboutPanel: FC<AboutPanelProps> = ({
     failed: tUpdate('checkFailed'),
   };
 
-  return (
-    <div className="grid justify-items-center gap-5" data-about-dialog>
-      {/* Decorative: the name below says the same thing, in words. */}
-      <img alt="" src="/icon-180.png" className="size-14 rounded-lg" />
+  const built = versionLine(t('version', { version: appConfig.version }), appConfig.buildCommit);
 
-      <div className="grid gap-1 text-center">
-        <h2 className="text-value font-semibold text-foreground">AI Manager</h2>
+  return (
+    <div className="mx-auto grid w-full max-w-60 justify-items-center gap-4" data-about-dialog>
+      {/* Decorative: the name below says the same thing, in words. */}
+      <img
+        alt=""
+        src="/icon-180.png"
+        className="size-16 rounded-[22%] shadow-lg shadow-black/30"
+      />
+
+      <div className="grid gap-0.5 text-center">
+        <h2 className="text-metric font-semibold tracking-tight text-foreground">AI Manager</h2>
         {/* A literal out of the build, so mono, like every other figure. */}
         <p className="font-mono text-figure text-muted-foreground" data-about-version>
-          {appConfig.version}
+          {built}
         </p>
       </div>
 
       {onCheck != null && (
-        <div className="grid w-full gap-2">
+        <div className="grid w-full gap-1.5">
           <Button
             variant="subtle"
             size="sm"

@@ -85,6 +85,7 @@
   "viewParsed": "مُنسَّق",
   "viewRaw": "خام",
   "checkUpdates": "التحقق من التحديثات…",
+  "version": "الإصدار {{version}}",
   "menuEdit": "تحرير",
   "menuView": "عرض",
   "menuWindow": "نافذة",

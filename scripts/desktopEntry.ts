@@ -247,8 +247,8 @@ const openPanel = async (path: string, options: BrowserWindowConstructorOptions)
 const openAbout = async (): Promise<void> => {
   await openPanel('/about', {
     title: 'About AI Manager',
-    width: 360,
-    height: 400,
+    width: 300,
+    height: 280,
     resizable: false,
   });
 };

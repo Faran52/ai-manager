@@ -18,8 +18,7 @@ export const AboutApp: FC = () => {
   return (
     <main
       className="
-        grid h-dvh place-items-center bg-background px-6 pt-2 pb-6
-        text-foreground
+        grid h-dvh place-items-center bg-background px-6 py-5 text-foreground
       "
       data-about-window
     >

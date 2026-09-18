@@ -85,6 +85,7 @@
   "viewParsed": "서식",
   "viewRaw": "원문",
   "checkUpdates": "업데이트 확인…",
+  "version": "버전 {{version}}",
   "menuEdit": "편집",
   "menuView": "보기",
   "menuWindow": "윈도우",

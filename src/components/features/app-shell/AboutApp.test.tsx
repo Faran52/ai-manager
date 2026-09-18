@@ -19,7 +19,9 @@ test('fills its own window with what the app says about itself', () => {
 
   expect(document.querySelector('[data-about-window]')).not.toBeNull();
   expect(screen.getByText('AI Manager')).toBeDefined();
-  expect(screen.getByText(appConfig.version)).toBeDefined();
+  expect(screen.getByText((text) => {
+    return text.includes(appConfig.version) && text.includes(appConfig.buildCommit);
+  })).toBeDefined();
 });
 
 test('asks the updater itself, sharing nothing with the window that opened it', async () => {

@@ -85,6 +85,7 @@
   "viewParsed": "Parsed",
   "viewRaw": "Raw",
   "checkUpdates": "Check for Updates…",
+  "version": "Version {{version}}",
   "menuEdit": "Edit",
   "menuView": "View",
   "menuWindow": "Window",

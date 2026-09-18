@@ -36,7 +36,9 @@ test('names the build it is running', () => {
   renderDialog('idle');
 
   expect(screen.getByText('AI Manager')).toBeDefined();
-  expect(screen.getByText(appConfig.version)).toBeDefined();
+  expect(screen.getByText((text) => {
+    return text.includes(appConfig.version) && text.includes(appConfig.buildCommit);
+  })).toBeDefined();
 });
 
 test('keeps the line empty until there is something to report', () => {

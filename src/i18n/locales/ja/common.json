@@ -85,6 +85,7 @@
   "viewParsed": "整形済み",
   "viewRaw": "原文",
   "checkUpdates": "アップデートを確認…",
+  "version": "バージョン {{version}}",
   "menuEdit": "編集",
   "menuView": "表示",
   "menuWindow": "ウインドウ",

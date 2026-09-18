@@ -32,7 +32,7 @@ export const AboutDialog: FC<AboutDialogProps> = ({
 
   return (
     <Modal open={open} onClose={onClose} title={t('settingsAbout')} widthClass="max-w-xs">
-      <div className="px-5 pt-6 pb-5">
+      <div className="p-5">
         <AboutPanel stage={stage} version={version} onCheck={onCheck} />
       </div>
     </Modal>

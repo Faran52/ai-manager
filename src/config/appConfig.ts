@@ -1,6 +1,7 @@
 export interface AppConfig {
   // Kept in step with package.json, the updater compares releases against it.
   readonly version: string;
+  readonly buildCommit: string;
   readonly pageSize: number;
   readonly maxPageSize: number;
   readonly previewLength: number;
@@ -11,6 +12,7 @@ export interface AppConfig {
 
 export const appConfig: AppConfig = {
   version: '0.3.0',
+  buildCommit: __BUILD_COMMIT__,
   pageSize: 120,
   maxPageSize: 400,
   previewLength: 140,

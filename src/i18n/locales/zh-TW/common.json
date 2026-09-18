@@ -85,6 +85,7 @@
   "viewParsed": "已解析",
   "viewRaw": "原文",
   "checkUpdates": "檢查更新…",
+  "version": "版本 {{version}}",
   "menuEdit": "編輯",
   "menuView": "檢視",
   "menuWindow": "視窗",
