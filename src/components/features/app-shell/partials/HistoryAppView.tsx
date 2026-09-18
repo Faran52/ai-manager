@@ -371,7 +371,6 @@ export const HistoryAppView: FC = () => {
         flex h-dvh flex-col overflow-hidden bg-recess text-foreground
       "
       >
-        <UpdateBanner />
         {/* The titlebar runs the full width, above the rail: the chrome
             frames the window, the rail is a control inside it. */}
         <AppHeader
@@ -408,6 +407,9 @@ export const HistoryAppView: FC = () => {
               )
             : null}
         />
+        {/* Below the titlebar, never above it: macOS puts the traffic lights at
+            a fixed point in the window and only that row reserves room for them. */}
+        <UpdateBanner />
 
         <div className="flex min-h-0 flex-1 overflow-hidden">
           {/*

@@ -35,17 +35,17 @@ export const UpdateBanner: FC = () => {
   return (
     <div
       className="
-        flex items-center gap-3 border-b border-border bg-accent px-3 py-1.5
-        text-xs
+        flex items-center gap-2 border-b border-border bg-primary/10 px-3 py-1.5
+        text-xs text-foreground-2
       "
       data-update-banner
     >
-      <Download className="size-3.5 text-primary" />
-      <span className="flex-1">
+      <Download className="size-3.5 shrink-0 text-primary" />
+      <span className="min-w-0 flex-1 truncate">
         {stage === 'downloading' ? t('downloading') : t('available', { version })}
       </span>
       {stage === 'available' && install != null && (
-        <Button size="sm" variant="ghost" onClick={install}>
+        <Button size="sm" variant="primary" onClick={install}>
           {t('install')}
         </Button>
       )}
