@@ -73,10 +73,17 @@ const viewOf = (entries: readonly HistoryEntry[], includeSidechain: boolean): Se
   return view;
 };
 
+/*
+ * `retain` is false for a whole-history sweep. Search and stats read every
+ * session once, and 599MB of history through a 128MB cache evicts all of it,
+ * so a sweep would cost the reader a re-parse of whatever they have open.
+ * A sweep still reads the cache; it just does not fill it.
+ */
 const readEntries = async (
   filePath: string,
   agent: AgentId,
   allowedRoots: readonly string[],
+  retain: boolean,
 ): Promise<readonly HistoryEntry[] | undefined> => {
   try {
     // Database-backed formats hand out synthetic references (`sqlite:`/`oc:`), so
@@ -98,11 +105,13 @@ const readEntries = async (
       return undefined;
     }
 
-    loadedSessions.set(filePath, {
-      mtimeMs: info.mtimeMs,
-      sizeBytes: info.size,
-      entries,
-    });
+    if (retain) {
+      loadedSessions.set(filePath, {
+        mtimeMs: info.mtimeMs,
+        sizeBytes: info.size,
+        entries,
+      });
+    }
 
     return entries;
   }
@@ -116,7 +125,7 @@ export const loadSessionEntriesOrEmpty = async (
   agent: AgentId,
   allowedRoots: readonly string[],
 ): Promise<readonly HistoryEntry[]> => {
-  return (await readEntries(filePath, agent, allowedRoots)) ?? [];
+  return (await readEntries(filePath, agent, allowedRoots, false)) ?? [];
 };
 
 export const loadSessionPage = async (
@@ -125,7 +134,7 @@ export const loadSessionPage = async (
   agent: AgentId,
   allowedRoots: readonly string[],
 ): Promise<SessionPage | undefined> => {
-  const entries = await readEntries(filePath, agent, allowedRoots);
+  const entries = await readEntries(filePath, agent, allowedRoots, true);
 
   if (entries == null) {
     return undefined;

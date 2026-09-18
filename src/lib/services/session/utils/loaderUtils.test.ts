@@ -1,6 +1,7 @@
 import {
   mkdir,
   mkdtemp,
+  utimes,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -146,6 +147,43 @@ describe('loadSessionEntriesOrEmpty', () => {
 
     expect(reloaded.some((entry) => {
       return entry.kind === 'user' && entry.text === 'second';
+    })).toBe(true);
+  });
+
+  test('leaves the cache alone, so a sweep never serves what it read', async () => {
+    const dir = await claudeDir();
+    const filePath = await writeSession(dir, 'p4', 's4.jsonl', [userLine('alpha')]);
+    const pinned = new Date(1_767_225_600_000);
+
+    await utimes(filePath, pinned, pinned);
+    await loadSessionEntriesOrEmpty(filePath, 'claude', rootsFor(dir));
+    await writeFile(filePath, JSON.stringify(userLine('omega')), 'utf8');
+    await utimes(filePath, pinned, pinned);
+    const second = await loadSessionEntriesOrEmpty(filePath, 'claude', rootsFor(dir));
+
+    expect(second.some((entry) => {
+      return entry.kind === 'user' && entry.text === 'omega';
+    })).toBe(true);
+  });
+
+  test('serves a page from cache when the file is unchanged', async () => {
+    const dir = await claudeDir();
+    const filePath = await writeSession(dir, 'p5', 's5.jsonl', [userLine('alpha')]);
+    const pinned = new Date(1_767_225_600_000);
+    const page = {
+      offset: 0,
+      limit: 10,
+      includeSidechain: true,
+    };
+
+    await utimes(filePath, pinned, pinned);
+    await loadSessionPage(filePath, page, 'claude', rootsFor(dir));
+    await writeFile(filePath, JSON.stringify(userLine('omega')), 'utf8');
+    await utimes(filePath, pinned, pinned);
+    const second = await loadSessionPage(filePath, page, 'claude', rootsFor(dir));
+
+    expect(second?.entries.some((entry) => {
+      return entry.kind === 'user' && entry.text === 'alpha';
     })).toBe(true);
   });
 });
