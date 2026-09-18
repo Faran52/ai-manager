@@ -1,4 +1,4 @@
-import { diffLines } from '@utils/diffUtils';
+import { diffLines } from '@services/history/historyService';
 
 import type {
   FileEditInput,

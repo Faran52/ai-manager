@@ -2,6 +2,7 @@
 // by their sibling services, so components can take history types without pulling in node:fs.
 export * from './types';
 export * from './utils/claudeRawUtils';
+export { diffLines } from './utils/diffUtils';
 export {
   findAgentProject,
   projectKeyOf,

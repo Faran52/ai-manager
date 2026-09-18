@@ -11,10 +11,7 @@ import {
   describe,
   expect,
   test,
-  vi,
 } from 'vitest';
-
-import { handleGlobalStats } from '@lib/apis/endpoints';
 
 import { writeSession } from '@mocks/claudeSessionFixtures';
 import { openCodeStore } from '@mocks/openCodeStoreFixtures';
@@ -613,24 +610,5 @@ describe('global statistics', () => {
     expect(defaultReport?.totals.billingTokens).toBe(20);
     expect(personalReport?.totals.sessions).toBe(1);
     expect(personalReport?.totals.billingTokens).toBe(30);
-  });
-
-  test('exposes global statistics through the endpoint handler', async () => {
-    const home = await newDir();
-
-    vi.stubEnv('CLAUDE_CONFIG_DIR', '');
-    vi.stubEnv('CODEX_HOME', '');
-
-    const response = await handleGlobalStats({ home });
-
-    vi.unstubAllEnvs();
-
-    expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({
-      stats: {
-        projectId: 'global',
-        agents: [],
-      },
-    });
   });
 });

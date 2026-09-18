@@ -6,12 +6,12 @@ import { sumBy } from 'es-toolkit';
 import { appConfig } from '@config/appConfig';
 
 import { maxOf } from '@utils/arrayUtils';
-import { diffLines, parseUnifiedDiff } from '@utils/diffUtils';
 import { humanPreview } from '@utils/titleUtils';
 
 import { parseToolInput, splitUserText } from '../../session/utils/parserUtils';
 
 import { decodeCodexTool } from './codexToolCallUtils';
+import { diffLines, parseUnifiedDiff } from './diffUtils';
 import { fileFactsStore } from './fileFactsUtils';
 import { conversationMessageCount } from './outcomeUtils';
 

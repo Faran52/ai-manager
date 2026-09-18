@@ -1,4 +1,4 @@
-import type { PatchHunk } from '@services/history/historyService';
+import type { PatchHunk } from '../types';
 
 const CONTEXT_LINES = 3;
 

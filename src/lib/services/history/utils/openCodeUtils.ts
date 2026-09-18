@@ -4,7 +4,6 @@ import { DatabaseSync } from 'node:sqlite';
 
 import { appConfig } from '@config/appConfig';
 
-import { parseUnifiedDiff } from '@utils/diffUtils';
 import { truncate } from '@utils/formatUtils';
 import { isJsonObject, parseJsonContainer } from '@utils/jsonUtils';
 import { containedIn } from '@utils/pathUtils';
@@ -22,6 +21,7 @@ import {
   OPENCODE_READ_ENVELOPE,
 } from '../constants';
 
+import { parseUnifiedDiff } from './diffUtils';
 import { conversationMessageCount } from './outcomeUtils';
 import { projectsFromSessions } from './projectSummaryUtils';
 import { databaseFiles } from './sqliteUtils';

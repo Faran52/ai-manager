@@ -1,7 +1,12 @@
+import { mkdtemp } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import {
   describe,
   expect,
   test,
+  vi,
 } from 'vitest';
 
 import {
@@ -11,7 +16,7 @@ import {
   stubAgentEnv,
 } from '@mocks/endpointRequestFixtures';
 
-import { handleProjectStats } from './statsEndpointUtils';
+import { handleGlobalStats, handleProjectStats } from './statsEndpointUtils';
 
 stubAgentEnv();
 
@@ -79,5 +84,26 @@ describe('stats validation', () => {
     });
 
     expect(await jsonOf(response)).toEqual({ stats: null });
+  });
+});
+
+describe('handleGlobalStats', () => {
+  test('reports every agent across the machine rather than one project', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'stats-endpoint-'));
+
+    vi.stubEnv('CLAUDE_CONFIG_DIR', '');
+    vi.stubEnv('CODEX_HOME', '');
+
+    const response = await handleGlobalStats({ home });
+
+    vi.unstubAllEnvs();
+
+    expect(response.status).toBe(200);
+    expect(await jsonOf(response)).toMatchObject({
+      stats: {
+        projectId: 'global',
+        agents: [],
+      },
+    });
   });
 });
