@@ -13,6 +13,13 @@ appId: com.faran52.ai-manager
 productName: AI Manager
 copyright: Copyright © 2026 Faran Ali
 
+# The window says "AI Manager"; the files must not. A space in a filename is
+# mangled twice and differently: electron-builder writes the update feed with
+# it replaced by "-", GitHub stores the asset with it replaced by ".", so the
+# URL the updater builds from the feed is one nobody uploaded. The package name
+# has no space in it, so nothing is left to disagree about.
+artifactName: ${name}-${version}-${arch}.${ext}
+
 directories:
   output: release
 
