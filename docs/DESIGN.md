@@ -70,10 +70,12 @@ rules below.
 that answers a click is `no-drag`. A window with no bar and no drag region cannot be moved at all,
 which is what the first attempt at this shipped.
 
-**Where the platform draws a menu, the app does not.** macOS, and the Linux desktops that lift a
-window menu into their panel, get a real menu bar holding About, Settings, the views and the editing
-roles. Windows has no global bar, so the rail keeps its gear and the same entries hang off it. The
-menu is described once by the page, in the reader's language, and only the surface differs.
+**Where the platform draws a menu, the app does not.** macOS gets a real menu bar holding About,
+Settings, the views and the editing roles. Windows has no global bar, so the rail keeps its gear and
+the same entries hang off it. The Linux desktops that lift a window menu into their panel should get
+one too and do not yet: the menu there has a fault that needs a Linux machine to see, so Linux keeps
+the rail meanwhile. The menu is described once by the page, in the reader's language, and only the
+surface differs.
 
 **About is a window where the platform has one to give, a dialog where it does not.** One panel, two
 frames, so nothing the app says about itself is written twice.

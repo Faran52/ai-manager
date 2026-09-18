@@ -8,10 +8,11 @@ import { applicationMenu } from '../utils/appMenuUtils';
 import type { AppCommand } from '@config/appCommands';
 
 /*
- * Windows draws no global menu bar, so the gear stays in the app's own titlebar
- * there. macOS and the Linux desktops that lift a window menu get the real one.
+ * macOS only for now. Windows draws no global menu bar at all, and the menu the
+ * Linux desktops lift into their panel has a fix outstanding that needs a Linux
+ * machine to find, so both keep the gear in the app's own titlebar meanwhile.
  */
-const WINDOWED_PLATFORM = 'windows';
+const MENU_PLATFORM = 'darwin';
 
 const install = async (
   bindings: DesktopBindings,
@@ -21,7 +22,7 @@ const install = async (
 ): Promise<void> => {
   const platform = await bindings.desktopPlatform();
 
-  if (platform === WINDOWED_PLATFORM) {
+  if (platform !== MENU_PLATFORM) {
     return;
   }
 
