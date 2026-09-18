@@ -61,9 +61,14 @@ export const AgentInstallSection: FC = () => {
   };
 
   return (
-    <section className="mt-4" data-health-group="agent-install">
-      <Eyebrow as="h3" className="px-1 pb-1">{t('installAgentsTitle')}</Eyebrow>
-      <ul className="grid gap-1 px-1">
+    <section className="mt-6" data-health-group="agent-install">
+      <Eyebrow as="h3" className="px-1 pb-3">{t('installAgentsTitle')}</Eyebrow>
+      <ul
+        className="
+          grid gap-2.5
+          lg:grid-cols-2
+        "
+      >
         {ids.map((agent) => {
           const status = agents[agent];
 
@@ -76,9 +81,20 @@ export const AgentInstallSection: FC = () => {
             <li
               key={agent}
               data-agent={agent}
-              className="flex items-center gap-2 text-sm text-muted-foreground"
+              className="
+                flex items-center gap-2 rounded-lg border border-border bg-card
+                px-3 py-2.5
+              "
             >
-              <span className="min-w-0 flex-1 truncate">{agentOption(agent).label}</span>
+              <span
+                aria-hidden="true"
+                className="
+                  project-provider-dot size-2 shrink-0 rounded-full bg-current
+                "
+              />
+              <span className="min-w-0 flex-1 truncate text-ui font-semibold">
+                {agentOption(agent).label}
+              </span>
               {status.installed
                 ? (
                     <Badge tone="success">

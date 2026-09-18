@@ -78,7 +78,7 @@ export const ProjectTree: FC<ProjectTreeProps> = ({
     return (
       <div className="px-3 py-8" data-projects-empty>
         <EmptyState
-          icon={<FolderSearch className="size-9" />}
+          icon={<FolderSearch />}
           title={t('noProjectSelected')}
           hint={t('selectProjectHint')}
         />

@@ -167,7 +167,7 @@ export const ArchiveView: FC<ArchiveViewProps> = ({
 
         {archives.status === 'ready' && list.length === 0 && (
           <EmptyState
-            icon={<Archive className="size-8" />}
+            icon={<Archive />}
             title={t('noArchives')}
             hint={selectedProject == null
               ? t('noArchivesHint')

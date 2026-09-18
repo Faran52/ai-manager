@@ -90,7 +90,7 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
   if (!projectSelected) {
     return (
       <EmptyState
-        icon={<HeartPulse className="size-5" />}
+        icon={<HeartPulse />}
         title={t('noProjectSelected', { ns: 'sidebar' })}
         hint={t('chooseProject')}
       />
@@ -100,7 +100,7 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
   if (projectPath.length === 0) {
     return (
       <EmptyState
-        icon={<HeartPulse className="size-5" />}
+        icon={<HeartPulse />}
         title={t('projectLocationUnknown', { ns: 'sidebar' })}
         hint={t('noFolderOnDisk')}
       />
@@ -194,19 +194,37 @@ export const AgentSetupPanel: FC<AgentSetupPanelProps> = ({
         </ul>
       )}
       {unconfigured.length > 0 && (
-        <section data-health-group="not-set-up">
-          <Eyebrow as="h3" className="px-1 pb-1">{t('notSetUpHere')}</Eyebrow>
-          <ul className="grid gap-1 px-1">
+        <section className="mt-6" data-health-group="not-set-up">
+          <Eyebrow as="h3" className="px-1 pb-3">{t('notSetUpHere')}</Eyebrow>
+          <ul
+            className="
+              grid gap-2.5
+              lg:grid-cols-2
+            "
+          >
             {unconfigured.map((setup) => {
               return (
                 <li
                   key={setupKey(setup)}
                   data-agent={setup.agent}
                   className="
-                    flex items-center gap-2 text-sm text-muted-foreground
+                    flex items-center gap-2 rounded-lg border border-border
+                    bg-card px-3 py-2.5
                   "
                 >
-                  {agentBadgeLabel(setup.agent, setup.profile)}
+                  <span
+                    aria-hidden="true"
+                    className="
+                      project-provider-dot size-2 shrink-0 rounded-full
+                      bg-current
+                    "
+                  />
+                  <span className="
+                    min-w-0 flex-1 truncate text-ui font-semibold
+                  "
+                  >
+                    {agentBadgeLabel(setup.agent, setup.profile)}
+                  </span>
                   <Badge>{t('notSetUp')}</Badge>
                 </li>
               );

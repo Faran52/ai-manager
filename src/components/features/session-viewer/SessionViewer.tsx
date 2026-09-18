@@ -212,7 +212,7 @@ export const SessionViewer: FC<SessionViewerProps> = ({
     return (
       <div className="flex flex-1 items-center justify-center" data-viewer-empty>
         <EmptyState
-          icon={<FileText className="size-10" />}
+          icon={<FileText />}
           title={t('noSessionSelected')}
           hint={t('pickSession')}
         />
@@ -236,7 +236,7 @@ export const SessionViewer: FC<SessionViewerProps> = ({
     // v8 ignore next -- unreachable by construction
     const failedTitle = feed.error ?? t('failedToLoad', { ns: 'common' });
 
-    body = <EmptyState icon={<CircleAlert className="size-10" />} title={failedTitle} />;
+    body = <EmptyState icon={<CircleAlert />} title={failedTitle} tone="error" />;
   }
   else {
     const remaining = feed.total - feed.entries.length;

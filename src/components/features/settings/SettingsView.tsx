@@ -160,7 +160,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
 
           {current == null && settings.status === 'ready' && (
             <EmptyState
-              icon={<SlidersHorizontal className="size-8" />}
+              icon={<SlidersHorizontal />}
               title={scopes.length === 0 ? t('noSettingsFile') : t('noScope')}
             />
           )}

@@ -92,9 +92,8 @@ export const AnalyticsView: FC<AnalyticsViewProps> = ({
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="flex flex-1 items-center justify-center">
           <EmptyState
-            icon={selectedStatus === 'error'
-              ? <CircleAlert className="size-10" />
-              : <BarChart3 className="size-10" />}
+            icon={selectedStatus === 'error' ? <CircleAlert /> : <BarChart3 />}
+            tone={selectedStatus === 'error' ? 'error' : 'accent'}
             title={selectedStatus === 'error'
               ? t('loadFailedFor', { project: projectName })
               : t('noAnalyticsFor', { project: projectName })}

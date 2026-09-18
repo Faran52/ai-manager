@@ -142,7 +142,7 @@ export const StoragePanel: FC<StoragePanelProps> = ({
           )}
 
           {shown.length === 0
-            ? <EmptyState icon={<HardDrive className="size-8" />} title={t('storageNone')} />
+            ? <EmptyState icon={<HardDrive />} title={t('storageNone')} />
             : (
                 <ul className="grid gap-3">
                   {shown.map((held, index) => {

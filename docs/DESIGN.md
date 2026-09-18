@@ -262,6 +262,15 @@ write a duration or an easing array inside a component.
 **Sizes come from the scales.** A component that needs a size not on a scale is telling you the
 scale is wrong; fix the scale.
 
+**A display icon sits on a plate.** Chrome icons are Lucide at 14 to 16px in a text colour. An empty
+state is not chrome, and three attempts at fixing it failed the same way: a bigger icon, then a
+thinner stroke, then purpose-drawn 48-grid glyphs. A grey hairline at 40px is a wireframe floating in
+space whoever drew it. What reads is colour and a surface, so the icon goes at 44px inside an 80px
+`rounded-xl` plate tinted `--primary` at 15%, which is the one place that radius is used for
+something other than the window frame and the pill chip. `EmptyState` owns that footprint: a call
+site passes an icon and never a size. A view that failed to load takes the error tone, because empty is not a
+failure and is not coloured like one.
+
 **Props are readonly and destructured in the signature.** No `{...props}` spreading: it makes the
 accepted prop set unknowable at the call site, and for a primitive the accepted prop set is the
 entire contract.

@@ -152,21 +152,21 @@ export const SessionList: FC<SessionListProps> = ({
       )}
       {status === 'ready' && !scoped && (
         <EmptyState
-          icon={<FolderClosed className="size-8" />}
+          icon={<FolderClosed />}
           title={t('selectProject')}
           hint={t('selectProjectHint')}
         />
       )}
       {status === 'ready' && scoped && total === 0 && !filtering && (
         <EmptyState
-          icon={<MessagesSquare className="size-8" />}
+          icon={<MessagesSquare />}
           title={t('noSessionsYet')}
           hint={t('noStoredSessions')}
         />
       )}
       {status === 'ready' && scoped && visible === 0 && (total > 0 || filtering) && (
         <EmptyState
-          icon={<Search className="size-8" />}
+          icon={<Search />}
           title={t('noSessionsMatch')}
           hint={t('adjustFilter')}
         />
