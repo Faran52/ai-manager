@@ -57,12 +57,22 @@ mac:
       arch: [arm64, x64]
 
 dmg:
-  # The drag-to-install window: the app on the left, Applications on the right.
+  # The install window is the first thing anyone sees of a dark app, and the
+  # stock one is light grey with a dashed arrow. build/background.tiff carries
+  # both resolutions, drawn from the same tokens the app uses, and it also says
+  # what to do when Gatekeeper refuses an unsigned build.
+  title: ${productName} ${version}
+  background: build/background.tiff
+  window:
+    width: 660
+    height: 420
+  iconSize: 104
+  # These have to agree with the artwork: the arrow is drawn between them.
   contents:
-    - x: 140
-      y: 200
-    - x: 400
-      y: 200
+    - x: 180
+      y: 232
+    - x: 480
+      y: 232
       type: link
       path: /Applications
 
