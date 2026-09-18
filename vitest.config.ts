@@ -21,6 +21,13 @@ export default getViteConfig({
      * against whatever that branch happens to hold.
      */
     exclude: ['**/node_modules/**', '**/dist/**', '.claude/**'],
+    /*
+     * Seven tests spawn a real child process, and the slowest measured 2142ms of
+     * the 5000ms default on ten cores at load 76, so the margin is 2.3x here and
+     * a two-core runner has less. What times out is process startup, not an
+     * assertion, and a hang is still caught, just later.
+     */
+    testTimeout: 15_000,
     coverage: {
       provider: 'v8',
       include: ['src/**/*.{ts,tsx,mts,js,jsx,mjs}'],
