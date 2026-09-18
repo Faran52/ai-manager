@@ -30,7 +30,9 @@ const noop = (): void => {
   return undefined;
 };
 
-const NOW = Date.UTC(2026, 0, 3);
+// Local noon, not a UTC midnight: recency groups are cut on local days, so a
+// fixture a second before midnight UTC is Today here and Yesterday on a runner.
+const NOW = new Date(2026, 0, 3, 12).getTime();
 
 const Harness: FC<HarnessProps> = ({
   sessions = [],
