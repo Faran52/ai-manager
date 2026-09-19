@@ -58,22 +58,36 @@ const capable = (manage: boolean): AgentCapabilities => {
   };
 };
 
+const DIRECTORY_SESSIONS = new Set<AgentId>(['antigravity', 'cline', 'openhands']);
+
+const sessionArtifact = (id: AgentId, format: AgentOption['format']): SessionArtifact => {
+  if (DIRECTORY_SESSIONS.has(id)) {
+    return 'directory';
+  }
+
+  return format === 'sqlite' ? 'shared-db' : 'file';
+};
+
+const UNDECODED_STORES = new Set<AgentId>(['amazonq', 'forgecode', 'kiro', 'trae']);
+
 // manage records whether the agent has a configuration surface worth managing.
 // Tier 2 carries it but surfaces only once an adapter proves the surface.
-const readOnlyAgent = (
+const plainAgent = (
   id: AgentId,
   label: string,
   format: AgentOption['format'],
   popular = false,
   manage = false,
 ): AgentOption => {
+  const deletable = !UNDECODED_STORES.has(id);
+
   return {
     id,
     label,
     format,
-    artifact: format === 'sqlite' ? 'shared-db' : 'file',
-    canDelete: false,
-    canDeleteProject: false,
+    artifact: sessionArtifact(id, format),
+    canDelete: deletable,
+    canDeleteProject: deletable,
     canRename: false,
     capabilities: capable(manage),
     popular,
@@ -100,7 +114,7 @@ export const agentOptions: readonly AgentOption[] = [
     format: 'codex',
     artifact: 'file',
     canDelete: true,
-    canDeleteProject: false,
+    canDeleteProject: true,
     canRename: true,
     capabilities: capable(true),
     popular: true,
@@ -112,57 +126,57 @@ export const agentOptions: readonly AgentOption[] = [
     format: 'copilot',
     artifact: 'file',
     canDelete: true,
-    canDeleteProject: false,
+    canDeleteProject: true,
     canRename: false,
     capabilities: capable(true),
     popular: true,
   },
-  readOnlyAgent('cursor', 'Cursor', 'sqlite', true, true),
+  plainAgent('cursor', 'Cursor', 'sqlite', true, true),
   {
     id: 'opencode',
     label: 'OpenCode',
     format: 'opencode',
     artifact: 'shared-db',
     canDelete: true,
-    canDeleteProject: false,
+    canDeleteProject: true,
     canRename: false,
     capabilities: capable(true),
     popular: true,
   },
-  readOnlyAgent('gemini', 'Gemini CLI', 'gemini', true, true),
-  readOnlyAgent('cline', 'Cline / Roo / Kilo', 'files', true, true),
-  readOnlyAgent('aider', 'Aider', 'files', true, true),
-  readOnlyAgent('continue', 'Continue', 'files', true, true),
-  readOnlyAgent('amazonq', 'Amazon Q', 'sqlite', true, true),
-  readOnlyAgent('kiro', 'Kiro', 'sqlite', true),
-  readOnlyAgent('goose', 'Goose', 'sqlite', true, true),
-  readOnlyAgent('qwen', 'Qwen Code', 'files', true, true),
-  readOnlyAgent('antigravity', 'Antigravity', 'antigravity', false, true),
-  readOnlyAgent('cursor-agent', 'Cursor Agent', 'files', false, true),
-  readOnlyAgent('forgecode', 'ForgeCode', 'sqlite'),
-  readOnlyAgent('codebuddy', 'CodeBuddy Code', 'claude'),
-  readOnlyAgent('grok', 'Grok CLI', 'grok', false, true),
+  plainAgent('gemini', 'Gemini CLI', 'gemini', true, true),
+  plainAgent('cline', 'Cline / Roo / Kilo', 'files', true, true),
+  plainAgent('aider', 'Aider', 'files', true, true),
+  plainAgent('continue', 'Continue', 'files', true, true),
+  plainAgent('amazonq', 'Amazon Q', 'sqlite', true, true),
+  plainAgent('kiro', 'Kiro', 'sqlite', true),
+  plainAgent('goose', 'Goose', 'sqlite', true, true),
+  plainAgent('qwen', 'Qwen Code', 'files', true, true),
+  plainAgent('antigravity', 'Antigravity', 'antigravity', false, true),
+  plainAgent('cursor-agent', 'Cursor Agent', 'files', false, true),
+  plainAgent('forgecode', 'ForgeCode', 'sqlite'),
+  plainAgent('codebuddy', 'CodeBuddy Code', 'claude'),
+  plainAgent('grok', 'Grok CLI', 'grok', false, true),
   {
     id: 'kimi',
     label: 'Kimi',
     format: 'files',
     artifact: 'file',
-    canDelete: false,
-    canDeleteProject: false,
+    canDelete: true,
+    canDeleteProject: true,
     canRename: false,
     capabilities: capable(false),
     resumeCommand: 'kimi -r',
   },
-  readOnlyAgent('pearai', 'PearAI', 'files'),
-  readOnlyAgent('crush', 'Crush', 'sqlite'),
-  readOnlyAgent('llm', 'LLM', 'sqlite'),
-  readOnlyAgent('openinterpreter', 'Open Interpreter', 'files'),
-  readOnlyAgent('pi', 'Pi', 'files'),
-  readOnlyAgent('ompi', 'oh-my-pi', 'files'),
-  readOnlyAgent('vibe', 'Mistral Vibe', 'files'),
-  readOnlyAgent('zed', 'Zed', 'sqlite', false, true),
-  readOnlyAgent('openhands', 'OpenHands', 'openhands'),
-  readOnlyAgent('trae', 'Trae', 'sqlite'),
+  plainAgent('pearai', 'PearAI', 'files'),
+  plainAgent('crush', 'Crush', 'sqlite'),
+  plainAgent('llm', 'LLM', 'sqlite'),
+  plainAgent('openinterpreter', 'Open Interpreter', 'files'),
+  plainAgent('pi', 'Pi', 'files'),
+  plainAgent('ompi', 'oh-my-pi', 'files'),
+  plainAgent('vibe', 'Mistral Vibe', 'files'),
+  plainAgent('zed', 'Zed', 'sqlite', false, true),
+  plainAgent('openhands', 'OpenHands', 'openhands'),
+  plainAgent('trae', 'Trae', 'sqlite'),
 ];
 
 const AGENTS_BY_ID = new Map<string, AgentOption>(agentOptions.map((option): [string, AgentOption] => {

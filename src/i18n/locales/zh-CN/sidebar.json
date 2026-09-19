@@ -5,7 +5,7 @@
   "all": "全部",
   "allAgents": "所有智能体",
   "cancelSelection": "取消选择会话",
-  "cannotBeUndone": "此操作无法撤销。",
+  "cannotBeUndone": "此操作无法撤销。如果某个代理仍在运行该会话，删除会中断该次运行，且无法恢复。",
   "clearSelected": "清除已选会话",
   "copyProjectId": "复制项目 ID",
   "copyProjectPath": "复制项目路径",

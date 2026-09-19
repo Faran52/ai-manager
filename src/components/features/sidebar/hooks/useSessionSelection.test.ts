@@ -33,7 +33,7 @@ const session = (id: string, agent: SessionSummary['agent'] = 'claude'): Session
 };
 
 const FIRST = session('a');
-const ALL = [FIRST, session('b'), session('c', 'cursor')];
+const ALL = [FIRST, session('b'), session('c', 'trae')];
 
 describe('useSessionSelection', () => {
   test('picks rows one at a time, or every deletable one at once', () => {

@@ -111,7 +111,7 @@ test('keeps an oversized title readable in the confirmation', () => {
 test('states that deletion is irreversible', () => {
   render(<ConfirmDeleteDialog sessions={[SESSION]} busy={false} onClose={vi.fn()} onConfirm={vi.fn()} />);
 
-  expect(screen.getByText('This cannot be undone.')).toBeDefined();
+  expect(screen.getByText(/cannot be undone\. If an agent is still running/u)).toBeDefined();
 });
 
 test('confirms deletion for multiple selected sessions', async () => {

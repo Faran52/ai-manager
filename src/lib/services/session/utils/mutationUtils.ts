@@ -3,16 +3,24 @@ import {
   lstat,
   realpath,
   rm,
+  stat,
 } from 'node:fs/promises';
-import { join, relative } from 'node:path';
+import {
+  basename,
+  dirname,
+  extname,
+  join,
+  relative,
+} from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
 import { agentOption } from '@config/agents';
 
 import { containedIn } from '@utils/pathUtils';
 
-import { pathsFor } from '../../agents/agentsService';
+import { listAgentSessions, pathsFor } from '../../agents/agentsService';
 import { deleteOpenCodeSession } from '../../history/utils/openCodeUtils';
+import { deleteSqliteSession } from '../../history/utils/sqliteUtils';
 import { forgetSessionPrompts } from '../../prompts/promptsService';
 
 import type { AgentId, AgentOption } from '@config/agents';
@@ -29,36 +37,66 @@ export interface ProjectMutationTarget {
   readonly projectId: string;
 }
 
-// Every file-backed agent whose sessions can be changed stores them as JSONL.
-const SESSION_EXTENSION = '.jsonl';
+const SESSION_EXTENSIONS = new Set(['.json', '.jsonl', '.md', '.ndjson', '.txt']);
 
-const requireDeletableAgent = (option: AgentOption): void => {
+const OUTSIDE = 'The session path is outside its agent history directory.';
+
+const requireDeletable = (option: AgentOption): void => {
   if (!option.canDelete) {
-    throw new Error(option.artifact === 'shared-db'
-      ? 'This agent keeps its sessions inside a shared database, so they stay read-only.'
-      : 'This agent does not support session changes.');
+    throw new Error('This agent keeps its sessions inside a shared database, so they stay read-only.');
   }
 };
 
 const safeSessionPath = async (
   roots: AgentRoots,
   target: SessionMutationTarget,
+  wantFile: boolean,
 ): Promise<string> => {
-  const option = agentOption(target.agent);
-
-  requireDeletableAgent(option);
-
-  if (!target.filePath.endsWith(SESSION_EXTENSION)) {
-    throw new Error('Only JSONL session files can be changed.');
-  }
-
   const [sessionPath, facts] = await Promise.all([realpath(target.filePath), lstat(target.filePath)]);
 
-  if (facts.isSymbolicLink() || !facts.isFile() || !await containedIn(pathsFor(roots, target.agent), sessionPath)) {
-    throw new Error('The session path is outside its agent history directory.');
+  if (facts.isSymbolicLink()
+    || (wantFile && !facts.isFile())
+    || !await containedIn(pathsFor(roots, target.agent), sessionPath)) {
+    throw new Error(OUTSIDE);
   }
 
   return sessionPath;
+};
+
+const safeSessionFile = async (
+  roots: AgentRoots,
+  target: SessionMutationTarget,
+  extensions: ReadonlySet<string> = SESSION_EXTENSIONS,
+): Promise<string> => {
+  if (!extensions.has(extname(target.filePath).toLowerCase())) {
+    throw new Error('That file is not a transcript this agent stores.');
+  }
+
+  return safeSessionPath(roots, target, true);
+};
+
+// Which file the reader opens differs per agent; the folder carries the id.
+const safeSessionDirectory = async (
+  roots: AgentRoots,
+  target: SessionMutationTarget,
+): Promise<string> => {
+  let current = await safeSessionPath(roots, target, false);
+
+  while (basename(current) !== target.actualSessionId) {
+    const parent = dirname(current);
+
+    if (parent === current) {
+      throw new Error('No session folder above that path carries the session id.');
+    }
+
+    current = parent;
+  }
+
+  if (!(await stat(current)).isDirectory() || !await containedIn(pathsFor(roots, target.agent), current)) {
+    throw new Error(OUTSIDE);
+  }
+
+  return current;
 };
 
 const codexDatabase = (roots: AgentRoots): DatabaseSync => {
@@ -72,11 +110,15 @@ export const renameSession = async (
 ): Promise<void> => {
   const title = rawTitle.trim();
 
+  if (!agentOption(target.agent).canRename) {
+    throw new Error('This agent does not support renaming a session.');
+  }
+
   if (title.length === 0 || title.length > 200 || title.includes('\n') || title.includes('\r')) {
     throw new Error('Enter a title between 1 and 200 characters.');
   }
 
-  await safeSessionPath(roots, target);
+  await safeSessionFile(roots, target, new Set(['.jsonl']));
 
   if (target.agent === 'codex') {
     const database = codexDatabase(roots);
@@ -109,17 +151,24 @@ export const deleteSession = async (
 ): Promise<void> => {
   const option = agentOption(target.agent);
 
-  requireDeletableAgent(option);
+  requireDeletable(option);
 
-  if (option.format === 'opencode') {
-    await deleteOpenCodeSession(target.filePath, pathsFor(roots, target.agent));
+  if (option.artifact === 'shared-db') {
+    await (option.format === 'opencode' ? deleteOpenCodeSession : deleteSqliteSession)(
+      target.filePath,
+      pathsFor(roots, target.agent),
+    );
 
     return;
   }
 
-  const filePath = await safeSessionPath(roots, target);
+  if (option.artifact === 'directory') {
+    await rm(await safeSessionDirectory(roots, target), { recursive: true });
 
-  await rm(filePath);
+    return;
+  }
+
+  await rm(await safeSessionFile(roots, target));
 
   // Only Claude Code keeps a prompt record, and only its own sessions appear in it.
   if (target.agent === 'claude') {
@@ -138,15 +187,17 @@ export const deleteSession = async (
   }
 };
 
-export const deleteProject = async (
+const deleteProjectFolder = async (
   roots: AgentRoots,
   target: ProjectMutationTarget,
 ): Promise<void> => {
-  if (!agentOption(target.agent).canDeleteProject || target.agent !== 'claude') {
-    throw new Error('This agent does not store projects in deletable history folders.');
+  const [root] = pathsFor(roots, target.agent);
+
+  if (root == null) {
+    throw new Error('This agent has no history directory on this machine.');
   }
 
-  const projectsDir = join(roots.claude[0], 'projects');
+  const projectsDir = join(root, 'projects');
   const requestedPath = join(projectsDir, target.projectId);
   const [rootPath, projectPath, facts] = await Promise.all([
     realpath(projectsDir),
@@ -160,4 +211,30 @@ export const deleteProject = async (
   }
 
   await rm(projectPath, { recursive: true });
+};
+
+export const deleteProject = async (
+  roots: AgentRoots,
+  target: ProjectMutationTarget,
+): Promise<void> => {
+  const option = agentOption(target.agent);
+
+  if (!option.canDeleteProject) {
+    throw new Error('This agent does not store projects in deletable history folders.');
+  }
+
+  if (option.format === 'claude') {
+    await deleteProjectFolder(roots, target);
+
+    return;
+  }
+
+  // Sequential: a shared store takes one writer at a time.
+  for (const session of await listAgentSessions(roots, target.agent, target.projectId)) {
+    await deleteSession(roots, {
+      agent: target.agent,
+      filePath: session.filePath,
+      actualSessionId: session.actualSessionId,
+    });
+  }
 };

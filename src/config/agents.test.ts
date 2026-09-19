@@ -43,18 +43,31 @@ test('defines every reference agent and its capabilities', () => {
     'amazonq', 'kiro', 'goose', 'qwen',
   ]);
   expect(agentOption('cursor')).toMatchObject({
-    canDelete: false,
-    canDeleteProject: false,
+    artifact: 'shared-db',
+    canDelete: true,
+    canDeleteProject: true,
     format: 'sqlite',
   });
   expect(agentOption('cursor').supportsSidechains).toBeUndefined();
   expect(agentOption('opencode')).toMatchObject({
     artifact: 'shared-db',
     canDelete: true,
-    canDeleteProject: false,
+    canDeleteProject: true,
     canRename: false,
     format: 'opencode',
   });
+  expect(agentOption('cline')).toMatchObject({
+    artifact: 'directory',
+    canDelete: true,
+  });
+  expect(agentOptions.filter((agent) => {
+    return !agent.canDelete;
+  }).map((agent) => {
+    return agent.id;
+  })).toEqual(['amazonq', 'kiro', 'forgecode', 'trae']);
+  expect(agentOptions.every((agent) => {
+    return agent.canDelete === agent.canDeleteProject;
+  })).toBe(true);
   expect(isAgentId('openhands')).toBe(true);
   expect(isAgentId('unknown')).toBe(false);
   expect(() => {

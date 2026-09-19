@@ -55,6 +55,8 @@ interface SqliteSession {
   readonly entries: readonly HistoryEntry[];
 }
 
+type SqliteDeletion = (database: DatabaseSync, sessionId: string) => void;
+
 const databaseExtensions = new Set(['.db', '.sqlite', '.sqlite3', '.vscdb']);
 const SQLITE_PREFIX = 'sqlite:';
 const ROW_LIMIT = 10_000;
@@ -585,6 +587,67 @@ export const listSqliteSessions = async (
   }).map((session) => {
     return session.summary;
   });
+};
+
+const childThenParent = (child: string, key: string, parent: string): SqliteDeletion => {
+  return (database, sessionId) => {
+    database.prepare(`DELETE FROM ${quoteIdentifier(child)} WHERE ${quoteIdentifier(key)} = ?`).run(sessionId);
+    database.prepare(`DELETE FROM ${quoteIdentifier(parent)} WHERE id = ?`).run(sessionId);
+  };
+};
+
+// Undefined where a "session" is a whole undecoded table, not a conversation.
+const DELETIONS: Readonly<Record<SqliteDecoder, SqliteDeletion | undefined>> = {
+  crush: childThenParent('messages', 'session_id', 'sessions'),
+  cursor: (database, sessionId) => {
+    database.prepare('DELETE FROM cursorDiskKV WHERE key = ?').run(`composerData:${sessionId}`);
+    database.prepare('DELETE FROM cursorDiskKV WHERE key LIKE ?').run(`bubbleId:${sessionId}:%`);
+  },
+  goose: childThenParent('messages', 'session_id', 'sessions'),
+  llm: childThenParent('responses', 'conversation_id', 'conversations'),
+  table: undefined,
+  zed: (database, sessionId) => {
+    database.prepare('DELETE FROM threads WHERE id = ?').run(sessionId);
+  },
+};
+
+export const deleteSqliteSession = async (
+  filePath: string,
+  allowedRoots: readonly string[],
+): Promise<void> => {
+  const reference = decodeReference(filePath);
+
+  if (reference?.decoder == null || reference.sessionId == null) {
+    throw new Error('This is not a usable session reference.');
+  }
+
+  const remove = DELETIONS[reference.decoder];
+
+  if (remove == null) {
+    throw new Error('This agent keeps its sessions inside a shared database, so they stay read-only.');
+  }
+
+  if (!await containedIn(allowedRoots, reference.databasePath)) {
+    throw new Error('The session database is outside its agent history directory.');
+  }
+
+  await stat(reference.databasePath);
+
+  const database = new DatabaseSync(reference.databasePath);
+
+  try {
+    database.exec('BEGIN');
+    remove(database, reference.sessionId);
+    database.exec('COMMIT');
+  }
+  catch (error) {
+    database.exec('ROLLBACK');
+
+    throw error;
+  }
+  finally {
+    database.close();
+  }
 };
 
 export const loadSqliteEntries = async (

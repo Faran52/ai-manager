@@ -49,7 +49,7 @@ test('confirms permanent project history deletion and preserves source wording',
   );
 
   expect(screen.getByText(/3 stored sessions/u)).toBeDefined();
-  expect(screen.getByText('This cannot be undone.')).toBeDefined();
+  expect(screen.getByText(/cannot be undone\. If an agent is still running/u)).toBeDefined();
   expect(screen.getByText(/source project folder on disk is untouched/u)).toBeDefined();
   await userEvent.click(screen.getByRole('button', { name: 'Delete permanently' }));
   expect(onConfirm).toHaveBeenCalledWith(PROJECT);

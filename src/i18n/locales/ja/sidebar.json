@@ -5,7 +5,7 @@
   "all": "すべて",
   "allAgents": "すべてのエージェント",
   "cancelSelection": "セッションの選択を解除",
-  "cannotBeUndone": "この操作は取り消せません。",
+  "cannotBeUndone": "この操作は取り消せません。エージェントがセッションを実行中の場合、削除するとその実行が中断され、再開できなくなります。",
   "clearSelected": "選択したセッションをクリア",
   "copyProjectId": "プロジェクト ID をコピー",
   "copyProjectPath": "プロジェクトのパスをコピー",

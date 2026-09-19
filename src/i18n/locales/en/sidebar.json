@@ -5,7 +5,7 @@
   "all": "All",
   "allAgents": "All agents",
   "cancelSelection": "Cancel session selection",
-  "cannotBeUndone": "This cannot be undone.",
+  "cannotBeUndone": "This cannot be undone. If an agent is still running the session, deleting it can disrupt that run, and it cannot be resumed.",
   "clearSelected": "Clear selected sessions",
   "copyProjectId": "Copy project ID",
   "copyProjectPath": "Copy project path",

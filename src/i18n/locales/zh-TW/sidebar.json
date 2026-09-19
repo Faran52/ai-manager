@@ -5,7 +5,7 @@
   "all": "全部",
   "allAgents": "所有代理",
   "cancelSelection": "取消選擇工作階段",
-  "cannotBeUndone": "此操作無法復原。",
+  "cannotBeUndone": "此操作無法復原。如果某個代理仍在執行該工作階段，刪除會中斷該次執行，且無法恢復。",
   "clearSelected": "清除已選工作階段",
   "copyProjectId": "複製專案 ID",
   "copyProjectPath": "複製專案路徑",

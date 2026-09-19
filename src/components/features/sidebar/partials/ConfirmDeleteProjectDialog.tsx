@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import { FolderX, TriangleAlert } from 'lucide-react';
 
-import { agentBadgeLabel } from '@config/agents';
+import { agentBadgeLabel, agentOption } from '@config/agents';
 
 import { ConfirmDialog, useLastPresent } from '@ui/index';
 
@@ -26,6 +26,7 @@ export const ConfirmDeleteProjectDialog: FC<ConfirmDeleteProjectDialogProps> = (
   const open = project != null;
   const target = useLastPresent(project);
   const agentLabel = target == null ? 'the agent' : agentBadgeLabel(target.agent, target.profile);
+  const wholeFolder = target != null && agentOption(target.agent).format === 'claude';
 
   return (
     <ConfirmDialog
@@ -44,7 +45,7 @@ export const ConfirmDeleteProjectDialog: FC<ConfirmDeleteProjectDialogProps> = (
           >
             <li>{`${String(target?.sessionCount ?? 0)} stored sessions, with their transcripts`}</li>
             <li>{t('renamedTitles')}</li>
-            <li>{t('deleteProjectDetail')}</li>
+            {wholeFolder ? <li>{t('deleteProjectDetail')}</li> : null}
           </ul>
           <p className="
             mt-2 flex items-center gap-1.5 font-medium text-destructive

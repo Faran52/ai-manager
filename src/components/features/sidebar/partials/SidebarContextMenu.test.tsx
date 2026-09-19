@@ -49,7 +49,7 @@ test('renders only supported actions for the selected project', () => {
       target={{
         kind: 'project',
         project: {
-          agent: 'codex',
+          agent: 'trae',
           id: '/repo',
           name: 'Repo',
           actualPath: '/repo',
@@ -184,7 +184,7 @@ test('hides native mutation actions for read-only agents', () => {
       target={{
         kind: 'session',
         session: {
-          agent: 'continue',
+          agent: 'trae',
           actualSessionId: 'chat',
           id: 'chat',
           filePath: '/chat.json',

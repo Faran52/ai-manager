@@ -5,7 +5,7 @@
   "all": "전체",
   "allAgents": "모든 에이전트",
   "cancelSelection": "세션 선택 취소",
-  "cannotBeUndone": "이 작업은 되돌릴 수 없습니다.",
+  "cannotBeUndone": "이 작업은 되돌릴 수 없습니다. 에이전트가 세션을 실행 중이면 삭제로 인해 해당 실행이 중단될 수 있으며, 다시 이어갈 수 없습니다.",
   "clearSelected": "선택한 세션 지우기",
   "copyProjectId": "프로젝트 ID 복사",
   "copyProjectPath": "프로젝트 경로 복사",
